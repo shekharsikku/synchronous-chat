@@ -1,0 +1,46 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "lib": [
+      "es6",
+      "dom"
+    ],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "baseUrl": ".",
+    "rootDir": "src",
+    "outDir": "dist",
+    "typeRoots": [
+      "node_modules/@types",
+      "src/@types"
+    ],
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "incremental": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": true,
+    "paths": {
+      "../*": [
+        "src/*"
+      ]
+    },
+  },
+  "ts-node": {
+    "files": true
+  },
+  "include": [
+    "src",
+    "dist",
+  ],
+  "exclude": [
+    "node_modules",
+  ]
+}
