@@ -30,6 +30,7 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (userInfo) {
       const socket = io(serverApiUrl, {
+        transports: ["polling"],
         withCredentials: true,
         query: { userId: userInfo._id }
       });
