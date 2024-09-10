@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import io, { Socket } from "socket.io-client";
 import { useAuthStore } from "@/zustand";
-import { baseUrl } from "@/lib/api";
 
 interface SocketContextType {
   socket: Socket | null;
@@ -18,6 +17,11 @@ const useSocket = (): SocketContextType => {
   return context;
 }
 
+const serverApiUrl =
+  import.meta.env.MODE === "development"
+    ? "http://localhost:4000"
+    : "/";
+
 const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const { userInfo } = useAuthStore();
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -25,7 +29,7 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (userInfo) {
-      const socket = io(baseUrl, {
+      const socket = io(serverApiUrl, {
         withCredentials: true,
         query: { userId: userInfo._id }
       });
@@ -40,8 +44,8 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         setOnlineUsers({ ...users });
       });
 
-      socket.on("messageRemove", (currentMessage) => {
-        console.log(`Message deleted: ${currentMessage._id}`);
+      socket.on("messageRemove", (_currentMessage) => {
+        // console.log(`Message deleted: ${currentMessage._id}`);
       });
 
       return () => {

@@ -9,7 +9,7 @@ import { useState } from "react";
 const ChatHeader = () => {
   const { selectedChatData, closeChat } = useChatStore();
   const [openUserInfoModal, setOpenUserInfoModal] = useState(false);
-  const defaultImage = import.meta.env.VITE_DEFAULT_USER_IMAGE_URL;
+  const defaultImage = "https://res.cloudinary.com/do1m5szld/image/upload/v1721983520/no-avatar_jvggxi.png";
 
   return (
     <div className="h-[10vh] border-b border-gray-200 flex items-center justify-between p-2" >
@@ -52,7 +52,7 @@ const ChatHeader = () => {
                 hover:border-2 border-gray-300 mx-auto transition-all duration-300" />
 
                 <hr className="mt-4 lg:mt-6" />
-                
+
                 <div className="flex flex-col items-center mt-3 gap-3 justify-center">
                   <h2 className="font-semibold text-gray-900 text-lg lg:text-xl flex gap-2 items-center">
                     {selectedChatData?.fullName} <span className="hidden lg:block text-lg">({selectedChatData?.username})</span></h2>

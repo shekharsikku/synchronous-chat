@@ -8,8 +8,6 @@ const env = cleanEnv(process.env, {
   CLOUDINARY_API_KEY: str(),
   CLOUDINARY_API_SECRET: str(),
 
-  DEFAULT_USER_IMAGE_URL: str(),
-
   ACCESS_TOKEN_SECRET: str(),
   ACCESS_TOKEN_EXPIRY: str(),
   ACCESS_COOKIE_EXPIRY: str(),
@@ -19,13 +17,11 @@ const env = cleanEnv(process.env, {
   REFRESH_COOKIE_EXPIRY: str(),
 
   COOKIES_SECRET: str(),
-  MONGODB_URI: str(),
-
-  CORS_ORIGIN: str(),
-  ALLOWED_METHODS: str(),
   PAYLOAD_LIMIT_ALLOWED: str(),
-
   PORT: port(),
+
+  MONGODB_URI: str(),
+  CORS_ORIGIN: str(),
   NODE_ENV: str(),
 });
 

@@ -8,6 +8,7 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const morgan_1 = __importDefault(require("morgan"));
 const cors_1 = __importDefault(require("cors"));
+const path_1 = __importDefault(require("path"));
 const env_1 = __importDefault(require("./utils/env"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json({
@@ -21,24 +22,15 @@ app.use(express_1.default.urlencoded({
 app.use(body_parser_1.default.urlencoded({
     extended: true,
 }));
-const allowedOrigins = env_1.default.CORS_ORIGIN;
-const origins = allowedOrigins.split(",");
-const allowedMethods = env_1.default.ALLOWED_METHODS;
-const methods = allowedMethods.split(",");
+const corsOrigin = env_1.default.CORS_ORIGIN;
 app.use((0, cors_1.default)({
-    origin: origins,
-    methods: methods,
+    origin: corsOrigin,
     credentials: true,
     optionsSuccessStatus: 204,
 }));
 app.use((0, cookie_parser_1.default)(env_1.default.COOKIES_SECRET));
 app.use("/public/temp", express_1.default.static("/public/temp"));
 env_1.default.NODE_ENV === "development" ? app.use((0, morgan_1.default)("dev")) : null;
-app.get("/", (_req, res) => {
-    return res
-        .status(200)
-        .send({ message: "Synchronous Chat by Shekhar Sharma!" });
-});
 const auth_1 = __importDefault(require("./routers/auth"));
 const user_1 = __importDefault(require("./routers/user"));
 const contact_1 = __importDefault(require("./routers/contact"));
@@ -47,6 +39,15 @@ app.use("/api/auth", auth_1.default);
 app.use("/api/user", user_1.default);
 app.use("/api/contact", contact_1.default);
 app.use("/api/message", message_1.default);
+app.use(express_1.default.static(path_1.default.join(__dirname, "../client/dist")));
+app.get("*", (_req, res) => {
+    if (env_1.default.NODE_ENV === "development") {
+        res.status(200).send({ message: "Welcome to Synchronous Chat!" });
+    }
+    else {
+        res.sendFile(path_1.default.join(__dirname, "../client/dist", "index.html"));
+    }
+});
 app.use((err, _req, res, next) => {
     try {
         console.error(`Error: ${err.message}`);

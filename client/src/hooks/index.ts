@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ChangeEvent, ChangeEventHandler, useState } from "react";
 import { useSocket } from "@/context/socket-context";
 import { useAuthStore, useChatStore } from "@/zustand";
-import notificationSound from "/assets/sound/notification.mp3";
+import notificationSound from "@/assets/sound/notification.mp3";
 import api from "@/lib/api";
 
 import { useDispatch } from "react-redux";
@@ -92,7 +92,7 @@ export const useAuthRefresh = () => {
       const response = await api.get("/api/auth/auth-refresh", {
         withCredentials: true,
       });
-      console.log(response.data);
+      console.log(response.data.message);
     } catch (error: any) {
       return null;
     }

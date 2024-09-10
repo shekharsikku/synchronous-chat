@@ -5,16 +5,11 @@ import app from "./app";
 
 const server = createServer(app);
 
-const allowedOrigins = env.CORS_ORIGIN;
-const origins = allowedOrigins.split(",");
-
-const allowedMethods = env.ALLOWED_METHODS;
-const methods = allowedMethods.split(",");
+const corsOrigin = env.CORS_ORIGIN;
 
 const io = new Server(server, {
   cors: {
-    origin: origins,
-    methods: methods,
+    origin: corsOrigin,
     credentials: true,
   },
 });

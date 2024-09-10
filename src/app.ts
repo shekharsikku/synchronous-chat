@@ -28,16 +28,11 @@ app.use(
   })
 );
 
-const allowedOrigins = env.CORS_ORIGIN;
-const origins = allowedOrigins.split(",");
-
-const allowedMethods = env.ALLOWED_METHODS;
-const methods = allowedMethods.split(",");
+const corsOrigin = env.CORS_ORIGIN;
 
 app.use(
   cors({
-    origin: origins,
-    methods: methods,
+    origin: corsOrigin,
     credentials: true,
     optionsSuccessStatus: 204,
   })
@@ -46,12 +41,6 @@ app.use(
 app.use(cookieParser(env.COOKIES_SECRET));
 app.use("/public/temp", express.static("/public/temp"));
 env.NODE_ENV === "development" ? app.use(morgan("dev")) : null;
-
-app.get("/", (_req: Request, res: Response) => {
-  return res
-    .status(200)
-    .send({ message: "Synchronous Chat by Shekhar Sharma!" });
-});
 
 import AuthRouter from "./routers/auth";
 import UserRouter from "./routers/user";
@@ -62,6 +51,16 @@ app.use("/api/auth", AuthRouter);
 app.use("/api/user", UserRouter);
 app.use("/api/contact", ContactRouter);
 app.use("/api/message", MessageRouter);
+
+app.use(express.static(path.join(__dirname, "../client/dist")));
+
+app.get("*", (_req: Request, res: Response) => {
+  if (env.NODE_ENV === "development") {
+    res.status(200).send({ message: "Welcome to Synchronous Chat!" });
+  } else {
+    res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
+  }
+});
 
 app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
   try {

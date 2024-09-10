@@ -10,14 +10,10 @@ const env_1 = __importDefault(require("./utils/env"));
 const app_1 = __importDefault(require("./app"));
 const server = (0, http_1.createServer)(app_1.default);
 exports.server = server;
-const allowedOrigins = env_1.default.CORS_ORIGIN;
-const origins = allowedOrigins.split(",");
-const allowedMethods = env_1.default.ALLOWED_METHODS;
-const methods = allowedMethods.split(",");
+const corsOrigin = env_1.default.CORS_ORIGIN;
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: origins,
-        methods: methods,
+        origin: corsOrigin,
         credentials: true,
     },
 });

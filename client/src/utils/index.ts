@@ -61,12 +61,6 @@ export const convertToBase64 = (file: File) => {
   });
 };
 
-// export const checkImageType = (filePath: string) => {
-//   const imageRegex =
-//     /\.(jpg|jpeg|png|gif|bmp|tiff|tif|webp|svg|ico|heic|heif)$/i;
-//   return imageRegex.test(filePath);
-// };
-
 export const checkImageType = (filePath: string): boolean => {
   const validExtensions = new Set([
     "jpg",
