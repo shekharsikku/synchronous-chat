@@ -22,7 +22,7 @@ const MessageContainer = () => {
 
   useEffect(() => {
     if (selectedChatData?._id) getMessages();
-  }, [selectedChatData?._id, setMessages]);
+  }, [selectedChatData?._id]);
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const [lastMessageId, setLastMessageId] = useState("");

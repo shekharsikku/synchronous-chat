@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { accessToken, upload } from "../middlewares";
+import { accessToken } from "../middlewares";
 import {
   deleteMessage,
   deleteMessages,

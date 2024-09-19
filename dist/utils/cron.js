@@ -12,27 +12,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const socket_1 = require("./socket");
-const mongodb_1 = __importDefault(require("./mongodb"));
-const env_1 = __importDefault(require("./utils/env"));
-const cron_1 = __importDefault(require("./utils/cron"));
-const uri = env_1.default.MONGODB_URI;
-const port = env_1.default.PORT;
-(() => __awaiter(void 0, void 0, void 0, function* () {
+const cron_1 = require("cron");
+const message_1 = __importDefault(require("../models/message"));
+const job = new cron_1.CronJob("0 0 * * * *", () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const state = yield (0, mongodb_1.default)(uri);
-        if (state == 1) {
-            cron_1.default.start();
-            socket_1.server.listen(port, () => {
-                console.log(`🚀 Server running on port: ${port}\n`);
-            });
-        }
-        else {
-            throw new Error("Invalid connection state!");
-        }
+        const hoursAgo = new Date();
+        hoursAgo.setHours(hoursAgo.getHours() - 24);
+        const result = yield message_1.default.deleteMany({
+            createdAt: { $lt: hoursAgo },
+        });
+        console.log("Response:", result);
     }
     catch (error) {
-        console.error(`Error: ${error.message}\n`);
-        process.exit(1);
+        console.log(`Error: ${error.message}`);
     }
-}))();
+    finally {
+        console.log(new Date().toString());
+    }
+}), null, false, "Asia/Kolkata");
+exports.default = job;

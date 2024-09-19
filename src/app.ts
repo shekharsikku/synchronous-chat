@@ -5,6 +5,12 @@ import morgan from "morgan";
 import cors from "cors";
 import path from "path";
 import env from "./utils/env";
+import {
+  AuthRouter,
+  UserRouter,
+  ContactRouter,
+  MessageRouter,
+} from "./routers";
 
 const app = express();
 
@@ -40,19 +46,19 @@ app.use(
 
 app.use(cookieParser(env.COOKIES_SECRET));
 app.use("/public/temp", express.static("/public/temp"));
-env.NODE_ENV === "development" ? app.use(morgan("dev")) : null;
 
-import AuthRouter from "./routers/auth";
-import UserRouter from "./routers/user";
-import ContactRouter from "./routers/contact";
-import MessageRouter from "./routers/message";
+if (env.NODE_ENV === "development") {
+  app.use(morgan("dev"));
+}
 
 app.use("/api/auth", AuthRouter);
 app.use("/api/user", UserRouter);
 app.use("/api/contact", ContactRouter);
 app.use("/api/message", MessageRouter);
 
-app.use(express.static(path.join(__dirname, "../client/dist")));
+if (env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../client/dist")));
+}
 
 app.get("*", (_req: Request, res: Response) => {
   if (env.NODE_ENV === "development") {

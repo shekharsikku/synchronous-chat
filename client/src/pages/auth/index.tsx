@@ -46,14 +46,9 @@ const Auth = () => {
       const data = await response.data.data;
       await setUserInfo(data);
       await setIsAuthenticated(true);
-      await setSignInValue(initialSignInValues);
 
       await dispatch(login(data));
-
-      if (response.data.success) {
-        const result = await api.delete("/api/message/delete", { withCredentials: true });
-        console.log(result.data.message);   // only for development purpose
-      }
+      await setSignInValue(initialSignInValues);
 
       if (data.profileSetup) {
         toast.info(response.data.message);

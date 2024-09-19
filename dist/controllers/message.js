@@ -133,7 +133,7 @@ const deleteMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
             $or: [{ sender: userId }, { recipient: userId }],
             createdAt: { $lt: oneDayAgo },
         });
-        return (0, utils_1.ApiResponse)(req, res, 202, `${result.deletedCount} old messages deleted!`, result);
+        return (0, utils_1.ApiResponse)(req, res, 202, "A day old messages deleted!", result);
     }
     catch (error) {
         console.log(`Error: ${error.message}`);

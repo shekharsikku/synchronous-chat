@@ -145,13 +145,8 @@ const deleteMessages = async (req: Request, res: Response) => {
       $or: [{ sender: userId }, { recipient: userId }],
       createdAt: { $lt: oneDayAgo },
     });
-    return ApiResponse(
-      req,
-      res,
-      202,
-      `${result.deletedCount} old messages deleted!`,
-      result
-    );
+
+    return ApiResponse(req, res, 202, "A day old messages deleted!", result);
   } catch (error: any) {
     console.log(`Error: ${error.message}`);
   }

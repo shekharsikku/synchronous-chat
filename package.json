@@ -32,6 +32,7 @@
     "cloudinary": "^2.3.1",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
+    "cron": "^3.1.7",
     "dotenv": "^16.4.5",
     "envalid": "^8.0.0",
     "express": "^4.19.2",
