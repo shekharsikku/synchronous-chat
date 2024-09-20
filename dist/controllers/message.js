@@ -125,15 +125,15 @@ const deleteMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.deleteMessage = deleteMessage;
 const deleteMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
-    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-    const oneDayAgo = new Date();
-    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
     try {
+        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+        const hoursAgo = new Date();
+        hoursAgo.setHours(hoursAgo.getHours() - 24);
         const result = yield message_1.default.deleteMany({
             $or: [{ sender: userId }, { recipient: userId }],
-            createdAt: { $lt: oneDayAgo },
+            createdAt: { $lt: hoursAgo },
         });
-        return (0, utils_1.ApiResponse)(req, res, 202, "A day old messages deleted!", result);
+        return (0, utils_1.ApiResponse)(req, res, 202, "Older messages deleted!", result);
     }
     catch (error) {
         console.log(`Error: ${error.message}`);

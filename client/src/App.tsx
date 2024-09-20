@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Auth, Chat, Profile } from "@/pages";
 import { useAuthStore } from "@/zustand";
 import { useGetUserInfo, useAuthRefresh } from "@/hooks";
@@ -19,6 +19,7 @@ const AuthRoute = ({ children }: Readonly<{
 }
 
 const App = () => {
+  const location = useLocation();
   const { getUserInfo } = useGetUserInfo();
   const { authenticationRefresh } = useAuthRefresh();
   const { userInfo, setUserInfo, isAuthenticated, setIsAuthenticated } = useAuthStore();
@@ -37,7 +38,7 @@ const App = () => {
 
   useEffect(() => {
     authenticationRefresh();
-  }, [])
+  }, [location])
 
   return (
     <Routes>

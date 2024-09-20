@@ -12,6 +12,6 @@ const router = Router();
 router.get("/:id", accessToken, getMessages);
 router.post("/send/:id", accessToken, sendMessage);
 router.delete("/delete/:id", accessToken, deleteMessage);
-router.get("/delete/older", deleteMessages);
+router.delete("/delete", accessToken, deleteMessages);
 
 export default router;

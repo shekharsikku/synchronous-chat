@@ -137,14 +137,16 @@ const deleteMessage = async (req: Request, res: Response) => {
 
 const deleteMessages = async (req: Request, res: Response) => {
   try {
+    const userId = req.user?._id;
     const hoursAgo = new Date();
     hoursAgo.setHours(hoursAgo.getHours() - 24);
 
     const result = await Message.deleteMany({
+      $or: [{ sender: userId }, { recipient: userId }],
       createdAt: { $lt: hoursAgo },
     });
 
-    return ApiResponse(req, res, 200, "Older messages deleted!", result);
+    return ApiResponse(req, res, 202, "Older messages deleted!", result);
   } catch (error: any) {
     console.log(`Error: ${error.message}`);
   }

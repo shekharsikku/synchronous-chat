@@ -92,7 +92,7 @@ export const useAuthRefresh = () => {
       const response = await api.get("/api/auth/auth-refresh", {
         withCredentials: true,
       });
-      console.log(response.data.message);
+      console.log({ auth: response.data });
     } catch (error: any) {
       return null;
     }

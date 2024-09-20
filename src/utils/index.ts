@@ -23,8 +23,8 @@ type ResponseType = {
 const ApiResponse = (
   _req: Request,
   res: Response,
-  code: number,
-  message: string,
+  code: number = 400,
+  message: string = "Something went wrong!",
   data: any = null,
 ) => {
   const success: boolean = code < 400 ? true : false;
