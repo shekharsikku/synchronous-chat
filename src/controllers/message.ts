@@ -136,17 +136,15 @@ const deleteMessage = async (req: Request, res: Response) => {
 };
 
 const deleteMessages = async (req: Request, res: Response) => {
-  const userId = req.user?._id;
-  const oneDayAgo = new Date();
-  oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-
   try {
+    const hoursAgo = new Date();
+    hoursAgo.setHours(hoursAgo.getHours() - 24);
+
     const result = await Message.deleteMany({
-      $or: [{ sender: userId }, { recipient: userId }],
-      createdAt: { $lt: oneDayAgo },
+      createdAt: { $lt: hoursAgo },
     });
 
-    return ApiResponse(req, res, 202, "A day old messages deleted!", result);
+    return ApiResponse(req, res, 200, "Older messages deleted!", result);
   } catch (error: any) {
     console.log(`Error: ${error.message}`);
   }
