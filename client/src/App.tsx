@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { Auth, Chat, Profile } from "@/pages";
 import { useAuthStore } from "@/zustand";
 import { useGetUserInfo, useAuthRefresh } from "@/hooks";
@@ -19,26 +19,29 @@ const AuthRoute = ({ children }: Readonly<{
 }
 
 const App = () => {
-  const location = useLocation();
   const { getUserInfo } = useGetUserInfo();
-  const { authenticationRefresh } = useAuthRefresh();
-  const { userInfo, setUserInfo, isAuthenticated, setIsAuthenticated } = useAuthStore();
+  const { authRefresh } = useAuthRefresh();
+  const { userInfo, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     if (!userInfo || !isAuthenticated) getUserInfo();
-  }, [userInfo, setUserInfo, isAuthenticated, setIsAuthenticated]);
+  }, [userInfo, isAuthenticated]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      console.clear();
-    }, 60000);
+      if (isAuthenticated) { authRefresh(); }
+    }, 18 * 60 * 1000);
 
     return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
-    authenticationRefresh();
-  }, [location])
+    const intervalId = setInterval(() => {
+      console.clear();
+    }, 60 * 60 * 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   return (
     <Routes>

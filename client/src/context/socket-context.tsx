@@ -17,10 +17,7 @@ const useSocket = (): SocketContextType => {
   return context;
 }
 
-const serverApiUrl =
-  import.meta.env.MODE === "development"
-    ? "http://localhost:4000"
-    : "/";
+const serverApiUrl = import.meta.env.DEV ? "http://localhost:4000" : "/";
 
 const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const { userInfo } = useAuthStore();
@@ -37,17 +34,13 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
       setSocket(socket);
 
-      // socket.on("connect", () => {
-      //   console.log("Client connected to socket server!");
-      // });
+      socket.on("connect", () => { });
 
       socket.on("getOnlineUsers", (users) => {
         setOnlineUsers({ ...users });
       });
 
-      socket.on("messageRemove", (_currentMessage) => {
-        // console.log(`Message deleted: ${currentMessage._id}`);
-      });
+      socket.on("messageRemove", (_currentMessage) => { });
 
       return () => {
         socket?.close();

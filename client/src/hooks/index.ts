@@ -87,17 +87,17 @@ export const useSignOutUser = () => {
 };
 
 export const useAuthRefresh = () => {
-  const authenticationRefresh = async () => {
+  const authRefresh = async () => {
     try {
       const response = await api.get("/api/auth/auth-refresh", {
         withCredentials: true,
       });
-      console.log({ auth: response.data });
+      return response.data;
     } catch (error: any) {
-      return null;
+      return error.response.data;
     }
   };
-  return { authenticationRefresh };
+  return { authRefresh };
 };
 
 export const useListenMessages = () => {

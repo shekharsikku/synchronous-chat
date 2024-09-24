@@ -40,9 +40,10 @@ const validateSchema = (schema) => (req, res, next) => {
 };
 exports.validateSchema = validateSchema;
 const generateToken = (_req, res, _id, setup) => {
+    const accessExpiry = parseInt(env_1.default.ACCESS_TOKEN_EXPIRY);
     const access = jsonwebtoken_1.default.sign({ _id }, env_1.default.ACCESS_TOKEN_SECRET, {
         algorithm: "HS256",
-        expiresIn: parseInt(env_1.default.ACCESS_TOKEN_EXPIRY),
+        expiresIn: accessExpiry,
     });
     res.cookie("access", access, {
         maxAge: parseInt(env_1.default.ACCESS_COOKIE_EXPIRY),
@@ -54,6 +55,7 @@ const generateToken = (_req, res, _id, setup) => {
         const refresh = jsonwebtoken_1.default.sign({ _id }, env_1.default.REFRESH_TOKEN_SECRET, {
             algorithm: "HS256",
             expiresIn: parseInt(env_1.default.REFRESH_TOKEN_EXPIRY),
+            notBefore: accessExpiry - 720,
         });
         res.cookie("refresh", refresh, {
             maxAge: parseInt(env_1.default.REFRESH_COOKIE_EXPIRY),

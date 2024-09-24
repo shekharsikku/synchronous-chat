@@ -38,9 +38,11 @@ const generateToken = (
   _id: Types.ObjectId,
   setup?: boolean
 ): UserTokenInterface => {
+  const accessExpiry = parseInt(env.ACCESS_TOKEN_EXPIRY);
+
   const access = jwt.sign({ _id }, env.ACCESS_TOKEN_SECRET, {
     algorithm: "HS256",
-    expiresIn: parseInt(env.ACCESS_TOKEN_EXPIRY),
+    expiresIn: accessExpiry,
   });
 
   res.cookie("access", access, {
@@ -54,6 +56,7 @@ const generateToken = (
     const refresh = jwt.sign({ _id }, env.REFRESH_TOKEN_SECRET, {
       algorithm: "HS256",
       expiresIn: parseInt(env.REFRESH_TOKEN_EXPIRY),
+      notBefore: accessExpiry - 720,
     });
 
     res.cookie("refresh", refresh, {

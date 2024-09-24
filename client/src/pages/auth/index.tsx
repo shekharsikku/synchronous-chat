@@ -51,8 +51,7 @@ const Auth = () => {
       await setSignInValue(initialSignInValues);
 
       if (response.data.success) {
-        const result = await api.delete("/api/message/delete", { withCredentials: true });
-        console.log({ result: result.data });   // for checking if older message is deleting or not!
+        await api.delete("/api/message/delete", { withCredentials: true });
       }
 
       if (data.profileSetup) {
