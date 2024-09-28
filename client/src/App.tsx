@@ -29,8 +29,9 @@ const App = () => {
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      if (isAuthenticated) { authRefresh(); }
-    }, 18 * 60 * 1000);
+      const response = authRefresh();
+      console.log({ response });
+    }, 10 * 60 * 1000);
 
     return () => clearInterval(intervalId);
   }, []);

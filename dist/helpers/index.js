@@ -17,14 +17,14 @@ const bcryptjs_1 = require("bcryptjs");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const env_1 = __importDefault(require("../utils/env"));
 const utils_1 = require("../utils");
-const generateHash = (password) => __awaiter(void 0, void 0, void 0, function* () {
+const generateHash = (plain) => __awaiter(void 0, void 0, void 0, function* () {
     const salt = yield (0, bcryptjs_1.genSalt)(12);
-    const hashed = yield (0, bcryptjs_1.hash)(password, salt);
+    const hashed = yield (0, bcryptjs_1.hash)(plain, salt);
     return hashed;
 });
 exports.generateHash = generateHash;
-const compareHash = (password, hashed) => __awaiter(void 0, void 0, void 0, function* () {
-    const checked = yield (0, bcryptjs_1.compare)(password, hashed);
+const compareHash = (plain, hashed) => __awaiter(void 0, void 0, void 0, function* () {
+    const checked = yield (0, bcryptjs_1.compare)(plain, hashed);
     return checked;
 });
 exports.compareHash = compareHash;
@@ -55,7 +55,7 @@ const generateToken = (_req, res, _id, setup) => {
         const refresh = jsonwebtoken_1.default.sign({ _id }, env_1.default.REFRESH_TOKEN_SECRET, {
             algorithm: "HS256",
             expiresIn: parseInt(env_1.default.REFRESH_TOKEN_EXPIRY),
-            notBefore: accessExpiry - 720,
+            notBefore: accessExpiry - 900,
         });
         res.cookie("refresh", refresh, {
             maxAge: parseInt(env_1.default.REFRESH_COOKIE_EXPIRY),

@@ -1,6 +1,7 @@
 import express, { NextFunction, Request, Response } from "express";
 import cookieParser from "cookie-parser";
-import bodyParser from "body-parser";
+import compression from "compression";
+import helmet from "helmet";
 import morgan from "morgan";
 import cors from "cors";
 import path from "path";
@@ -28,12 +29,6 @@ app.use(
   })
 );
 
-app.use(
-  bodyParser.urlencoded({
-    extended: true,
-  })
-);
-
 const corsOrigin = env.CORS_ORIGIN;
 
 app.use(
@@ -44,8 +39,22 @@ app.use(
   })
 );
 
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        imgSrc: ["'self'", "res.cloudinary.com"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      },
+    },
+  })
+);
+app.use(compression());
 app.use(cookieParser(env.COOKIES_SECRET));
-app.use("/public/temp", express.static("/public/temp"));
+app.use("/public/temp", express.static(path.join(__dirname, "../public/temp")));
 
 if (env.NODE_ENV === "development") {
   app.use(morgan("dev"));

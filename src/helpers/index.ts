@@ -7,17 +7,14 @@ import env from "../utils/env";
 import { UserTokenInterface } from "../interface";
 import { ApiResponse, ValidationError } from "../utils";
 
-const generateHash = async (password: string): Promise<string> => {
+const generateHash = async (plain: string): Promise<string> => {
   const salt = await genSalt(12);
-  const hashed = await hash(password, salt);
+  const hashed = await hash(plain, salt);
   return hashed;
 };
 
-const compareHash = async (
-  password: string,
-  hashed: string
-): Promise<boolean> => {
-  const checked = await compare(password, hashed);
+const compareHash = async (plain: string, hashed: string): Promise<boolean> => {
+  const checked = await compare(plain, hashed);
   return checked;
 };
 
@@ -56,7 +53,7 @@ const generateToken = (
     const refresh = jwt.sign({ _id }, env.REFRESH_TOKEN_SECRET, {
       algorithm: "HS256",
       expiresIn: parseInt(env.REFRESH_TOKEN_EXPIRY),
-      notBefore: accessExpiry - 720,
+      notBefore: accessExpiry - 900,
     });
 
     res.cookie("refresh", refresh, {

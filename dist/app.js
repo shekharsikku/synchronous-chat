@@ -5,7 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
-const body_parser_1 = __importDefault(require("body-parser"));
+const compression_1 = __importDefault(require("compression"));
+const helmet_1 = __importDefault(require("helmet"));
 const morgan_1 = __importDefault(require("morgan"));
 const cors_1 = __importDefault(require("cors"));
 const path_1 = __importDefault(require("path"));
@@ -20,17 +21,26 @@ app.use(express_1.default.urlencoded({
     limit: env_1.default.PAYLOAD_LIMIT_ALLOWED,
     extended: true,
 }));
-app.use(body_parser_1.default.urlencoded({
-    extended: true,
-}));
 const corsOrigin = env_1.default.CORS_ORIGIN;
 app.use((0, cors_1.default)({
     origin: corsOrigin,
     credentials: true,
     optionsSuccessStatus: 204,
 }));
+app.use((0, helmet_1.default)({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            imgSrc: ["'self'", "res.cloudinary.com"],
+            scriptSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        },
+    },
+}));
+app.use((0, compression_1.default)());
 app.use((0, cookie_parser_1.default)(env_1.default.COOKIES_SECRET));
-app.use("/public/temp", express_1.default.static("/public/temp"));
+app.use("/public/temp", express_1.default.static(path_1.default.join(__dirname, "../public/temp")));
 if (env_1.default.NODE_ENV === "development") {
     app.use((0, morgan_1.default)("dev"));
 }

@@ -13,12 +13,11 @@ const mongoose_1 = require("mongoose");
 const mongodb = (uri) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { connection } = yield (0, mongoose_1.connect)(uri);
-        console.log("Database connected successfully!");
         return connection.readyState;
     }
     catch (error) {
         console.error(`Error: ${error.message}`);
-        process.exit(1);
+        return null;
     }
 });
 exports.default = mongodb;
