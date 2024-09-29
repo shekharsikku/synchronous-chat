@@ -35,8 +35,8 @@ const App = () => {
 
     initialRefresh();
 
-    const intervalId = setInterval(() => {
-      const response = authRefresh();
+    const intervalId = setInterval(async () => {
+      const response = await authRefresh();
       console.log({ response });
     }, 10 * 60 * 1000);
 
