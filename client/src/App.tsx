@@ -28,6 +28,13 @@ const App = () => {
   }, [userInfo, isAuthenticated]);
 
   useEffect(() => {
+    const initialRefresh = async () => {
+      const response = await authRefresh();
+      console.log({ response });
+    };
+
+    initialRefresh();
+
     const intervalId = setInterval(() => {
       const response = authRefresh();
       console.log({ response });
