@@ -29,11 +29,9 @@ app.use(
   })
 );
 
-const corsOrigin = env.CORS_ORIGIN;
-
 app.use(
   cors({
-    origin: corsOrigin,
+    origin: env.CORS_ORIGIN,
     credentials: true,
     optionsSuccessStatus: 204,
   })
@@ -44,7 +42,7 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        imgSrc: ["'self'", "res.cloudinary.com"],
+        imgSrc: ["'self'", "res.cloudinary.com", "data:"],
         scriptSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
