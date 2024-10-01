@@ -1,35 +1,39 @@
 import { Router } from "express";
-import { validateSchema } from "../helpers";
-import { accessToken, upload } from "../middlewares";
-import { profileSetupSchema } from "../utils/schema";
+import { authAccess, upload } from "../middlewares";
+import { validateSchema, profileSchema, passwordSchema } from "../utils/schema";
 import {
-  userProfileSetup,
-  updateProfileImage,
-  deleteProfileImage,
-  getUserInformation,
+  profileSetup,
+  updateImage,
+  deleteImage,
   changePassword,
+  userInformation,
 } from "../controllers/user";
 
 const router = Router();
 
 router.patch(
   "/user-profile-setup",
-  accessToken,
-  validateSchema(profileSetupSchema),
-  userProfileSetup
+  authAccess,
+  validateSchema(profileSchema),
+  profileSetup
 );
 
 router.patch(
   "/update-profile-image",
-  accessToken,
+  authAccess,
   upload.single("profile-image"),
-  updateProfileImage
+  updateImage
 );
 
-router.patch("/change-password", accessToken, changePassword);
+router.patch(
+  "/change-password",
+  authAccess,
+  validateSchema(passwordSchema),
+  changePassword
+);
 
-router.delete("/delete-profile-image", accessToken, deleteProfileImage);
+router.delete("/delete-profile-image", authAccess, deleteImage);
 
-router.get("/user-information", accessToken, getUserInformation);
+router.get("/user-information", authAccess, userInformation);
 
 export default router;

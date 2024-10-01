@@ -12,11 +12,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.removeSpaces = exports.hasEmptyField = exports.generateToken = exports.validateSchema = exports.compareHash = exports.generateHash = void 0;
+exports.createAccessData = exports.maskedDetails = exports.removeSpaces = exports.hasEmptyField = exports.authorizeCookie = exports.generateRefresh = exports.generateAccess = exports.compareHash = exports.generateHash = void 0;
 const bcryptjs_1 = require("bcryptjs");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const env_1 = __importDefault(require("../utils/env"));
-const utils_1 = require("../utils");
 const generateHash = (plain) => __awaiter(void 0, void 0, void 0, function* () {
     const salt = yield (0, bcryptjs_1.genSalt)(12);
     const hashed = yield (0, bcryptjs_1.hash)(plain, salt);
@@ -28,46 +27,48 @@ const compareHash = (plain, hashed) => __awaiter(void 0, void 0, void 0, functio
     return checked;
 });
 exports.compareHash = compareHash;
-const validateSchema = (schema) => (req, res, next) => {
-    try {
-        schema.parse(req.body);
-        next();
-    }
-    catch (error) {
-        const errors = (0, utils_1.ValidationError)(error);
-        return (0, utils_1.ApiResponse)(req, res, 400, errors[0].message);
-    }
-};
-exports.validateSchema = validateSchema;
-const generateToken = (_req, res, _id, setup) => {
-    const accessExpiry = parseInt(env_1.default.ACCESS_TOKEN_EXPIRY);
-    const access = jsonwebtoken_1.default.sign({ _id }, env_1.default.ACCESS_TOKEN_SECRET, {
+const generateAccess = (res, user) => {
+    const accessExpiry = parseInt(env_1.default.ACCESS_EXPIRY);
+    const accessToken = jsonwebtoken_1.default.sign({ user }, env_1.default.ACCESS_SECRET, {
         algorithm: "HS256",
         expiresIn: accessExpiry,
     });
-    res.cookie("access", access, {
-        maxAge: parseInt(env_1.default.ACCESS_COOKIE_EXPIRY),
+    res.cookie("access", accessToken, {
+        maxAge: accessExpiry * 1000,
         httpOnly: true,
         sameSite: "strict",
         secure: env_1.default.NODE_ENV !== "development",
     });
-    if (!setup) {
-        const refresh = jsonwebtoken_1.default.sign({ _id }, env_1.default.REFRESH_TOKEN_SECRET, {
-            algorithm: "HS256",
-            expiresIn: parseInt(env_1.default.REFRESH_TOKEN_EXPIRY),
-            notBefore: accessExpiry - 900,
-        });
-        res.cookie("refresh", refresh, {
-            maxAge: parseInt(env_1.default.REFRESH_COOKIE_EXPIRY),
+    return accessToken;
+};
+exports.generateAccess = generateAccess;
+const generateRefresh = (res, uid) => {
+    const refreshExpiry = parseInt(env_1.default.REFRESH_EXPIRY);
+    const refreshToken = jsonwebtoken_1.default.sign({ uid }, env_1.default.REFRESH_SECRET, {
+        algorithm: "HS512",
+        expiresIn: refreshExpiry,
+    });
+    res.cookie("refresh", refreshToken, {
+        maxAge: refreshExpiry * 1000 * 2,
+        httpOnly: true,
+        sameSite: "strict",
+        secure: env_1.default.NODE_ENV !== "development",
+    });
+    return refreshToken;
+};
+exports.generateRefresh = generateRefresh;
+const authorizeCookie = (res, authorizeId) => {
+    const authExpiry = parseInt(env_1.default.REFRESH_EXPIRY);
+    if (authorizeId) {
+        res.cookie("auth_id", authorizeId, {
+            maxAge: authExpiry * 1000 * 2,
             httpOnly: true,
             sameSite: "strict",
             secure: env_1.default.NODE_ENV !== "development",
         });
-        return { access, refresh };
     }
-    return { access };
 };
-exports.generateToken = generateToken;
+exports.authorizeCookie = authorizeCookie;
 const hasEmptyField = (fields) => {
     return Object.values(fields).some((value) => value === "" || value === undefined);
 };
@@ -76,3 +77,37 @@ const removeSpaces = (str) => {
     return str.replace(/\s+/g, "");
 };
 exports.removeSpaces = removeSpaces;
+const capitalizeWord = (str) => {
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+const capitalizeWords = (str) => {
+    return str
+        .split(" ")
+        .map((word) => capitalizeWord(word))
+        .join(" ");
+};
+const maskedObjectId = (objectId) => {
+    const idStr = objectId.toString();
+    const maskedId = idStr.slice(0, 4) + "****" + idStr.slice(-4);
+    return maskedId;
+};
+const maskedEmail = (email) => {
+    const [localPart, domain] = email.split("@");
+    const maskedLocalPart = localPart.slice(0, 4) + "***";
+    return `${maskedLocalPart}@${domain}`;
+};
+const maskedDetails = (details) => {
+    const maskId = maskedObjectId(details._id);
+    const maskEmail = maskedEmail(details.email);
+    return {
+        _id: maskId,
+        email: maskEmail,
+        setup: details.setup,
+    };
+};
+exports.maskedDetails = maskedDetails;
+const createAccessData = (user) => {
+    const accessData = Object.assign(Object.assign({}, user.toObject()), { password: undefined, authentication: undefined });
+    return accessData;
+};
+exports.createAccessData = createAccessData;

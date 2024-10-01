@@ -13,10 +13,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getContactsList = exports.getAllContacts = exports.searchContact = void 0;
-const mongoose_1 = require("mongoose");
 const utils_1 = require("../utils");
-const user_1 = __importDefault(require("../models/user"));
+const mongoose_1 = require("mongoose");
 const message_1 = __importDefault(require("../models/message"));
+const user_1 = __importDefault(require("../models/user"));
 const searchContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
@@ -35,41 +35,40 @@ const searchContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         if (contacts.length <= 0) {
             throw new utils_1.ApiError(404, "No any contact available!");
         }
-        return (0, utils_1.ApiResponse)(req, res, 200, "All searched contacts!", contacts);
+        return (0, utils_1.ApiResponse)(res, 200, "All searched contacts!", contacts);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(req, res, error.code, error.message);
+        return (0, utils_1.ApiResponse)(res, error.code, error.message);
     }
 });
 exports.searchContact = searchContact;
 const getAllContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
-        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-        const users = yield user_1.default.find({ _id: { $ne: userId } });
+        const users = yield user_1.default.find({ _id: { $ne: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id } });
         if (!users || users.length == 0) {
             throw new utils_1.ApiError(404, "No any contact available!");
         }
         const contacts = users.map((user) => ({
-            label: user.username ? `${user.fullName} (${user.username})` : user.email,
+            label: user.username ? `${user.name} (${user.username})` : user.email,
             value: user._id,
         }));
-        return (0, utils_1.ApiResponse)(req, res, 200, "Contacts fetched successfully!", contacts);
+        return (0, utils_1.ApiResponse)(res, 200, "Contacts fetched successfully!", contacts);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(req, res, error.code, error.message);
+        return (0, utils_1.ApiResponse)(res, error.code, error.message);
     }
 });
 exports.getAllContacts = getAllContacts;
 const getContactsList = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
-        let userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-        userId = new mongoose_1.Types.ObjectId(userId);
+        let uid = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+        uid = new mongoose_1.Types.ObjectId(uid);
         const contacts = yield message_1.default.aggregate([
             {
                 $match: {
-                    $or: [{ sender: userId }, { recipient: userId }],
+                    $or: [{ sender: uid }, { recipient: uid }],
                 },
             },
             {
@@ -79,7 +78,7 @@ const getContactsList = (req, res) => __awaiter(void 0, void 0, void 0, function
                 $group: {
                     _id: {
                         $cond: {
-                            if: { $eq: ["$sender", userId] },
+                            if: { $eq: ["$sender", uid] },
                             then: "$recipient",
                             else: "$sender",
                         },
@@ -102,21 +101,22 @@ const getContactsList = (req, res) => __awaiter(void 0, void 0, void 0, function
                 $project: {
                     _id: 1,
                     lastMessageTime: 1,
+                    name: "$contactInfo.name",
                     email: "$contactInfo.email",
-                    fullName: "$contactInfo.fullName",
                     username: "$contactInfo.username",
-                    imageUrl: "$contactInfo.imageUrl",
-                    profileColor: "$contactInfo.profileColor",
+                    gender: "$contactInfo.gender",
+                    image: "$contactInfo.image",
+                    bio: "$contactInfo.bio",
                 },
             },
             {
                 $sort: { lastMessageTime: -1 },
             },
         ]);
-        return (0, utils_1.ApiResponse)(req, res, 200, "Contacts fetched successfully!", contacts);
+        return (0, utils_1.ApiResponse)(res, 200, "Contacts fetched successfully!", contacts);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(req, res, error.code || 500, error.message);
+        return (0, utils_1.ApiResponse)(res, error.code || 500, error.message);
     }
 });
 exports.getContactsList = getContactsList;

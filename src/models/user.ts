@@ -3,43 +3,54 @@ import { UserInterface } from "../interface";
 
 const UserSchema = new Schema<UserInterface>(
   {
+    name: {
+      type: String,
+      default: null,
+    },
     email: {
       type: String,
       required: true,
       unique: true,
+    },
+    username: {
+      type: String,
+      unique: true,
+      lowercase: true,
+      default: null,
     },
     password: {
       type: String,
       required: true,
       select: false,
     },
-    fullName: {
+    gender: {
       type: String,
-      required: false,
-      default: "",
+      enum: ["Male", "Female"],
+      default: null,
     },
-    username: {
+    image: {
       type: String,
-      lowercase: true,
-      required: false,
-      default: "",
+      default: null,
     },
-    imageUrl: {
+    bio: {
       type: String,
-      required: false,
-      default: "",
+      default: null,
     },
-    profileColor: {
-      type: String,
-      required: false,
-      default: "0",
-    },
-    profileSetup: {
+    setup: {
       type: Boolean,
-      default: true,
+      default: false,
     },
-    refreshToken: {
-      type: String,
+    authentication: {
+      type: [
+        {
+          token: String,
+          expiry: Date,
+          device: {
+            type: String,
+            default: null,
+          },
+        },
+      ],
       select: false,
     },
   },

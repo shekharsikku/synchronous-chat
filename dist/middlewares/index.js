@@ -12,65 +12,114 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.upload = exports.refreshToken = exports.accessToken = void 0;
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+exports.upload = exports.authRefresh = exports.authAccess = void 0;
 const utils_1 = require("../utils");
 const helpers_1 = require("../helpers");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const user_1 = __importDefault(require("../models/user"));
 const env_1 = __importDefault(require("../utils/env"));
 const multer_1 = __importDefault(require("multer"));
-const accessToken = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+const authAccess = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const accessToken = req.cookies.access;
         if (!accessToken) {
             throw new utils_1.ApiError(401, "Unauthorized access request!");
         }
-        const decodedPayload = jsonwebtoken_1.default.verify(accessToken, env_1.default.ACCESS_TOKEN_SECRET);
-        const accessUser = yield user_1.default.findById(decodedPayload._id).select("+refreshToken");
-        if (!decodedPayload || !accessUser) {
+        let decodedPayload;
+        try {
+            decodedPayload = jsonwebtoken_1.default.verify(accessToken, env_1.default.ACCESS_SECRET, {
+                algorithms: ["HS256"],
+            });
+        }
+        catch (error) {
             throw new utils_1.ApiError(403, "Invalid access request!");
         }
-        const authTokens = {
-            access: accessToken,
-            refresh: accessUser.refreshToken,
-        };
-        req.token = authTokens;
-        req.user = accessUser;
+        req.user = decodedPayload.user;
         next();
     }
     catch (error) {
-        if (error.name === "TokenExpiredError") {
-            return (0, utils_1.ApiResponse)(req, res, 401, "Access expired refresh required!!");
-        }
-        return (0, utils_1.ApiResponse)(req, res, error.code, error.message);
+        return (0, utils_1.ApiResponse)(res, error.code, error.message);
     }
 });
-exports.accessToken = accessToken;
-const refreshToken = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+exports.authAccess = authAccess;
+const deleteToken = (req, res, userId, refreshToken) => __awaiter(void 0, void 0, void 0, function* () {
+    const authorizeId = req.cookies.auth_id;
+    const deleteResponse = yield user_1.default.findOneAndUpdate({ _id: userId }, {
+        $pull: {
+            authentication: { _id: authorizeId, token: refreshToken },
+        },
+    }, { new: true });
+    if (deleteResponse) {
+        res.clearCookie("access");
+        res.clearCookie("refresh");
+        res.clearCookie("auth_id");
+    }
+});
+const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const refreshToken = req.cookies.refresh;
         if (!refreshToken) {
             throw new utils_1.ApiError(401, "Unauthorized refresh request!");
         }
-        const decodedPayload = jsonwebtoken_1.default.verify(refreshToken, env_1.default.REFRESH_TOKEN_SECRET);
-        const refreshUser = yield user_1.default.findById(decodedPayload === null || decodedPayload === void 0 ? void 0 : decodedPayload._id).select("+refreshToken");
-        if (!decodedPayload ||
-            !refreshUser ||
-            refreshToken !== (refreshUser === null || refreshUser === void 0 ? void 0 : refreshUser.refreshToken)) {
+        let decodedPayload;
+        try {
+            decodedPayload = jsonwebtoken_1.default.verify(refreshToken, env_1.default.REFRESH_SECRET, {
+                algorithms: ["HS512"],
+                ignoreExpiration: true,
+                ignoreNotBefore: true,
+            });
+        }
+        catch (error) {
             throw new utils_1.ApiError(401, "Invalid refresh request!");
         }
-        const { access, refresh } = (0, helpers_1.generateToken)(req, res, refreshUser._id, refreshUser.profileSetup);
-        refreshUser.refreshToken = refresh;
-        yield refreshUser.save({ validateBeforeSave: false });
-        const authTokens = { access, refresh };
-        req.token = authTokens;
+        const userId = decodedPayload.uid;
+        const currentTime = Math.floor(Date.now() / 1000);
+        const beforeExpires = decodedPayload.exp - parseInt(env_1.default.ACCESS_EXPIRY);
+        const requestUser = yield user_1.default.findOne({
+            _id: userId,
+            authentication: {
+                $elemMatch: { token: refreshToken },
+            },
+        });
+        if (!requestUser) {
+            throw new utils_1.ApiError(403, "Invalid user request!");
+        }
+        const accessData = (0, helpers_1.createAccessData)(requestUser);
+        if (currentTime >= beforeExpires && currentTime < decodedPayload.exp) {
+            const newRefreshToken = (0, helpers_1.generateRefresh)(res, userId);
+            const refreshExpiry = parseInt(env_1.default.REFRESH_EXPIRY);
+            const authorizeId = req.cookies.auth_id;
+            const updatedAuth = yield user_1.default.findOneAndUpdate({
+                _id: userId,
+                authentication: {
+                    $elemMatch: { _id: authorizeId, token: refreshToken },
+                },
+            }, {
+                $set: {
+                    "authentication.$.token": newRefreshToken,
+                    "authentication.$.expiry": new Date(Date.now() + refreshExpiry * 1000),
+                },
+            }, { new: true });
+            if (updatedAuth) {
+                (0, helpers_1.authorizeCookie)(res, authorizeId);
+                const accessToken = (0, helpers_1.generateAccess)(res, accessData);
+            }
+        }
+        else if (currentTime >= decodedPayload.exp) {
+            yield deleteToken(req, res, requestUser._id, refreshToken);
+            throw new utils_1.ApiError(401, "Please, login again to continue!");
+        }
+        else {
+            const accessToken = (0, helpers_1.generateAccess)(res, accessData);
+        }
+        req.user = requestUser;
         next();
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(req, res, error.code, error.message);
+        return (0, utils_1.ApiResponse)(res, error.code, error.message);
     }
 });
-exports.refreshToken = refreshToken;
+exports.authRefresh = authRefresh;
 const storage = multer_1.default.diskStorage({
     destination: function (_req, _file, cb) {
         cb(null, "./public/temp");

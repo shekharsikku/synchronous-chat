@@ -52,14 +52,11 @@ const MessageBar = () => {
 
     try {
       const imageFile = e.target.files[0];
-      await setMessage(`${imageFile?.name}`);
-
-      // console.log({ imageFile });
+      setMessage(`${imageFile?.name}`);
 
       if (imageFile) {
         const base64 = await convertToBase64(imageFile);
         setSelectedImage(base64);
-        // console.log({ base64 });
       }
     } catch (error: any) {
       console.log(`Error: ${error.message}`);
@@ -68,7 +65,7 @@ const MessageBar = () => {
 
   interface MessageData {
     type: "text" | "file",
-    message?: string,
+    text?: string,
     file?: string,
   }
 
@@ -81,16 +78,14 @@ const MessageBar = () => {
       if (selectedImage && message !== "") {
         messageData.file = selectedImage;
       } else {
-        messageData.message = message;
+        messageData.text = message;
       }
-
-      // console.log({ messageData });
 
       const response = await api.post(`/api/message/send/${selectedChatData?._id}`, messageData, {
         withCredentials: true,
       });
       const data = await response.data.data;
-      await setMessages([...messages, data]);
+      setMessages([...messages, data]);
 
       setMessage("");
       setSelectedImage(null);

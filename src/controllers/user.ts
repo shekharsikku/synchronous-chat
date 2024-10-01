@@ -6,176 +6,136 @@ import {
   extensionsToDelete,
   folderPath,
 } from "../utils/unlink";
-import User from "../models/user";
 import {
-  generateToken,
   hasEmptyField,
+  removeSpaces,
   generateHash,
   compareHash,
+  maskedDetails,
+  createAccessData,
+  generateAccess,
 } from "../helpers";
-import { UserProfileInterface, UserTokenInterface } from "../interface";
+import { DetailInterface } from "../interface";
+import User from "../models/user";
 
-const userProfileSetup = async (req: Request, res: Response) => {
+const profileSetup = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?._id;
-    const dataBody = await req.body;
+    const details = await req.body;
+    const username = removeSpaces(details?.username);
+    const requestUser = req.user!;
 
-    if (dataBody.email) {
-      throw new ApiError(403, "Cannot change email!");
-    }
+    if (username !== requestUser?.username) {
+      const existsUsername = await User.findOne({ username });
 
-    if (dataBody.username && dataBody.username !== req.user?.username) {
-      const existedUsername = await User.findOne({
-        username: dataBody.username,
-      });
-
-      if (existedUsername) {
+      if (existsUsername) {
         throw new ApiError(409, "Username already exists!");
       }
     }
 
+    const updateDetails: DetailInterface = {
+      name: details.name,
+      username,
+      gender: details.gender,
+      bio: details.bio,
+    };
+
+    const isEmpty = hasEmptyField({
+      name: details.name,
+      username,
+      gender: details.gender,
+    });
+
+    if (!isEmpty) {
+      updateDetails.setup = true;
+    }
+
     const updatedProfile = await User.findByIdAndUpdate(
-      userId,
-      { ...dataBody },
+      requestUser?._id,
+      { ...updateDetails },
       { new: true }
     );
 
-    if (updatedProfile) {
-      const userProfileFields: UserProfileInterface = {
-        email: updatedProfile.email,
-        username: updatedProfile.username,
-        fullName: updatedProfile.fullName,
-      };
-
-      const validateResult = hasEmptyField(userProfileFields);
-
-      if (!validateResult) {
-        userProfileFields._id = updatedProfile._id;
-        userProfileFields.imageUrl = updatedProfile.imageUrl;
-        userProfileFields.profileColor = updatedProfile.profileColor;
-
-        const { access, refresh } = generateToken(
-          req,
-          res,
-          updatedProfile._id,
-          false
-        );
-
-        updatedProfile.profileSetup = false;
-        updatedProfile.refreshToken = refresh;
-        await updatedProfile.save({ validateBeforeSave: false });
-
-        userProfileFields.authToken = { access, refresh };
-
-        return ApiResponse(
-          req,
-          res,
-          200,
-          "Profile setup completed successfully!",
-          userProfileFields
-        );
-      }
+    if (!updatedProfile) {
+      throw new ApiError(400, "Profile setup not completed!");
+    } else if (!updatedProfile.setup) {
+      const userData = maskedDetails(updatedProfile);
+      return ApiResponse(res, 200, "Please, complete your profile!", userData);
     }
-    throw new ApiError(400, "Profile setup not completed!");
+
+    const accessData = createAccessData(updatedProfile);
+    const accessToken = generateAccess(res, accessData);
+
+    return ApiResponse(res, 200, "Profile updated successfully!", accessData);
   } catch (error: any) {
-    return ApiResponse(req, res, error.code, error.message);
+    return ApiResponse(res, error.code, error.message);
   }
 };
 
-const updateProfileImage = async (req: Request, res: Response) => {
+const updateImage = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?._id;
-    const profileImagePath = req.file?.path;
+    const requestUser = req.user;
+    const imagePath = req.file?.path;
 
-    if (!profileImagePath) {
+    if (!imagePath) {
       throw new ApiError(400, "Profile image file required!");
     }
 
-    const uploadImage = await uploadOnCloudinary(profileImagePath);
+    const uploadImage = await uploadOnCloudinary(imagePath);
 
     if (!uploadImage || !uploadImage.url) {
       throw new ApiError(500, "Error while uploading profile image!");
     }
 
-    const userProfile = await User.findById(userId);
+    const userProfile = await User.findById(requestUser?._id);
 
-    if (userProfile && userProfile.imageUrl !== "") {
-      await deleteImageByUrl(userProfile.imageUrl!);
+    if (userProfile && userProfile.image !== "") {
+      await deleteImageByUrl(userProfile.image!);
     }
 
     if (userProfile && uploadImage.url) {
-      userProfile.imageUrl = uploadImage.url;
-      await userProfile.save({ validateBeforeSave: false });
+      userProfile.image = uploadImage.url;
+      await userProfile.save({ validateBeforeSave: true });
 
-      const tokens: UserTokenInterface = req.token!;
-      const responseData: UserProfileInterface = {
-        _id: userProfile._id,
-        email: userProfile.email,
-        username: userProfile.username,
-        fullName: userProfile.fullName,
-        imageUrl: userProfile.imageUrl,
-        profileColor: userProfile.profileColor,
-        profileSetup: userProfile.profileSetup,
-        authToken: tokens,
-      };
+      const accessData = createAccessData(userProfile);
+      const accessToken = generateAccess(res, accessData);
 
       return ApiResponse(
-        req,
         res,
         200,
         "Profile image updated successfully!",
-        responseData
+        accessData
       );
     }
     throw new ApiError(500, "Profile image not updated!");
   } catch (error: any) {
     unlinkFilesWithExtensions(folderPath, extensionsToDelete);
-    return ApiResponse(req, res, error.code, error.message);
+    return ApiResponse(res, error.code, error.message);
   }
 };
 
-const deleteProfileImage = async (req: Request, res: Response) => {
+const deleteImage = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?._id;
-    const userProfile = await User.findById(userId);
+    const requestUser = await User.findById(req.user?._id);
 
-    if (userProfile && userProfile.imageUrl !== "") {
-      await deleteImageByUrl(userProfile.imageUrl!);
-      userProfile.imageUrl = "";
-      await userProfile.save({ validateBeforeSave: false });
-      return ApiResponse(req, res, 301, "Profile image deleted successfully!");
+    if (requestUser && requestUser.image !== "") {
+      await deleteImageByUrl(requestUser.image!);
+
+      requestUser.image = "";
+      await requestUser.save({ validateBeforeSave: true });
+
+      const accessData = createAccessData(requestUser);
+      const accessToken = generateAccess(res, accessData);
+
+      return ApiResponse(
+        res,
+        301,
+        "Profile image deleted successfully!",
+        accessData
+      );
     }
     throw new ApiError(400, "Profile image not available!");
   } catch (error: any) {
-    return ApiResponse(req, res, error.code, error.message);
-  }
-};
-
-const getUserInformation = async (req: Request, res: Response) => {
-  try {
-    const data = req.user!;
-    const tokens: UserTokenInterface = req.token!;
-
-    const responseData: UserProfileInterface = {
-      _id: data._id,
-      email: data.email,
-      username: data.username,
-      fullName: data.fullName,
-      imageUrl: data.imageUrl,
-      profileColor: data.profileColor,
-      profileSetup: data.profileSetup,
-      authToken: tokens,
-    };
-
-    return ApiResponse(
-      req,
-      res,
-      200,
-      "User profile information!",
-      responseData
-    );
-  } catch (error: any) {
-    return ApiResponse(req, res, error.code, error.message);
+    return ApiResponse(res, error.code, error.message);
   }
 };
 
@@ -183,31 +143,57 @@ const changePassword = async (req: Request, res: Response) => {
   try {
     const { old_password, new_password } = await req.body;
 
-    const user = await User.findById(req.user?._id).select("+password");
+    const requestUser = await User.findById(req.user?._id).select("+password");
 
-    if (!user) {
-      throw new ApiError(403, "Invalid change request!");
+    if (!requestUser) {
+      throw new ApiError(403, "Invalid authorization!");
     }
 
-    const checked = await compareHash(old_password, user?.password!);
-
-    if (!checked) {
-      throw new ApiError(403, "Invalid old password!");
+    if (old_password === new_password) {
+      throw new ApiError(400, "Please, choose a different password!");
     }
 
-    user.password = await generateHash(new_password);
-    await user.save({ validateBeforeSave: false });
+    const validatePassword = await compareHash(
+      old_password,
+      requestUser.password!
+    );
 
-    return ApiResponse(req, res, 202, "Password changed successfully!");
+    if (!validatePassword) {
+      throw new ApiError(403, "Incorrect old password!");
+    }
+
+    const hashedPassword = await generateHash(new_password);
+
+    requestUser.password = hashedPassword;
+    await requestUser.save({ validateBeforeSave: true });
+
+    const accessData = createAccessData(requestUser);
+    const accessToken = generateAccess(res, accessData);
+
+    return ApiResponse(res, 202, "Password changed successfully!", accessData);
   } catch (error: any) {
-    return ApiResponse(req, res, error.code, error.message);
+    return ApiResponse(res, error.code, error.message);
+  }
+};
+
+const userInformation = async (req: Request, res: Response) => {
+  try {
+    const requestUser = req.user!;
+
+    if (requestUser?.setup) {
+      return ApiResponse(res, 200, "User profile information!", requestUser);
+    }
+    const userData = maskedDetails(requestUser);
+    return ApiResponse(res, 200, "Please, complete your profile!", userData);
+  } catch (error: any) {
+    return ApiResponse(res, error.code, error.message);
   }
 };
 
 export {
-  userProfileSetup,
-  updateProfileImage,
-  deleteProfileImage,
-  getUserInformation,
+  profileSetup,
+  updateImage,
+  deleteImage,
   changePassword,
+  userInformation,
 };

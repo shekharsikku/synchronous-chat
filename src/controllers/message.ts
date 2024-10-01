@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
 import { ApiResponse, ApiError } from "../utils";
+import { Request, Response } from "express";
 import { getSocketId, io } from "../socket";
 import { model, Types } from "mongoose";
 import Conversation from "../models/conversation";
@@ -7,54 +7,55 @@ import Message from "../models/message";
 
 const sendMessage = async (req: Request, res: Response) => {
   try {
-    const senderId = req.user?._id;
-    const { id: receiverId } = req.params;
-    const { type, message, file } = await req.body;
+    const sender = req.user?._id;
+    const { id: receiver } = req.params;
+    const { type, text, file } = await req.body;
 
     let conversation = await Conversation.findOne({
-      participants: { $all: [senderId, receiverId] },
+      participants: { $all: [sender, receiver] },
     });
 
     if (!conversation) {
       conversation = await Conversation.create({
-        participants: [senderId, receiverId],
+        participants: [sender, receiver],
       });
     }
 
-    const newMessage = new Message({
-      sender: senderId,
-      recipient: receiverId,
-      messageType: type,
-      textMessage: message,
-      fileUrl: file,
+    const message = new Message({
+      sender: sender,
+      recipient: receiver,
+      type: type,
+      text: text,
+      file: file,
     });
 
-    if (newMessage) {
-      conversation.messages.push(newMessage._id);
+    if (message) {
+      conversation.messages.push(message._id);
     }
 
-    await Promise.all([conversation.save(), newMessage.save()]);
-    const receiverSocketId = getSocketId(receiverId);
+    await Promise.all([conversation.save(), message.save()]);
+    const receiverSocketId = getSocketId(receiver);
 
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", newMessage);
+      io.to(receiverSocketId).emit("newMessage", message);
     }
-    return ApiResponse(req, res, 201, "Message sent successfully!", newMessage);
+    return ApiResponse(res, 201, "Message sent successfully!", message);
   } catch (error: any) {
-    return ApiResponse(req, res, 500, "Something Went Wrong!");
+    return ApiResponse(res, 500, "Something Went Wrong!");
   }
 };
 
-async function cleanupConversation(documentId: Types.ObjectId) {
-  const conversations = await Conversation.findById(documentId);
+async function cleanupConversation(conversationId: Types.ObjectId) {
+  const conversations = await Conversation.findById(conversationId);
 
   if (conversations) {
     const validMessages = [];
 
-    for (const messageId of conversations.messages) {
-      const messageExists = await model("Message").exists({ _id: messageId });
+    for (const message of conversations.messages) {
+      const messageExists = await model("Message").exists({ _id: message });
+
       if (messageExists) {
-        validMessages.push(messageId);
+        validMessages.push(message);
       }
     }
 
@@ -65,88 +66,75 @@ async function cleanupConversation(documentId: Types.ObjectId) {
 
 const getMessages = async (req: Request, res: Response) => {
   try {
-    const senderId = req.user?._id;
-    const { id: userToChatId } = req.params;
+    const sender = req.user?._id;
+    const { id: receiver } = req.params;
 
     const conversation = await Conversation.findOne({
-      participants: { $all: [senderId, userToChatId] },
+      participants: { $all: [sender, receiver] },
     }).populate("messages");
 
     if (!conversation) {
-      return ApiResponse(req, res, 200, "No any message available!", []);
+      return ApiResponse(res, 200, "No any message available!", []);
     }
 
     await cleanupConversation(conversation._id);
     const messages = conversation.messages;
 
-    return ApiResponse(
-      req,
-      res,
-      200,
-      "Messages fetched successfully!",
-      messages
-    );
+    return ApiResponse(res, 200, "Messages fetched successfully!", messages);
   } catch (error: any) {
-    return ApiResponse(req, res, 500, "Something Went Wrong!");
+    return ApiResponse(res, 500, "Something Went Wrong!");
   }
 };
 
 const deleteMessage = async (req: Request, res: Response) => {
   try {
-    const senderId = req.user?._id;
-    const { id: messageId } = req.params;
+    const uid = req.user?._id;
+    const { id } = req.params;
 
-    const currentMessage = await Message.findById(messageId);
+    const message = await Message.findById(id);
 
-    if (!currentMessage) {
+    if (!message) {
       throw new ApiError(404, "Message not found");
     }
 
-    const senderSocketId = getSocketId(String(currentMessage?.sender))!;
-    const receiverSocketId = getSocketId(String(currentMessage?.recipient))!;
+    const senderSocketId = getSocketId(String(message?.sender))!;
+    const receiverSocketId = getSocketId(String(message?.recipient))!;
 
-    if (currentMessage && currentMessage.sender?.equals(senderId)) {
-      currentMessage.messageType === "text"
-        ? (currentMessage.textMessage = "")
-        : (currentMessage.fileUrl = "");
+    if (message && message.sender?.equals(uid)) {
+      message.type === "text" ? (message.text = "") : (message.file = "");
 
-      await currentMessage.save({ validateBeforeSave: false });
+      await message.save({ validateBeforeSave: false });
 
       if (receiverSocketId) {
-        io.to(receiverSocketId).emit("messageRemove", currentMessage);
+        io.to(receiverSocketId).emit("messageRemove", message);
       }
-      io.to(senderSocketId).emit("messageRemove", currentMessage);
+      io.to(senderSocketId).emit("messageRemove", message);
 
       // this will emit event to all active clients
       // io.emit("messageRemove", currentMessage);
 
-      return ApiResponse(
-        req,
-        res,
-        200,
-        "Message deleted successfully!",
-        currentMessage
-      );
+      return ApiResponse(res, 200, "Message deleted successfully!", message);
     } else {
       throw new ApiError(403, "You can't delete this message!");
     }
   } catch (error: any) {
-    return ApiResponse(req, res, error.code, error.message);
+    return ApiResponse(res, error.code, error.message);
   }
 };
 
 const deleteMessages = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?._id;
+    const uid = req.user?._id;
+
     const hoursAgo = new Date();
     hoursAgo.setHours(hoursAgo.getHours() - 24);
 
     const result = await Message.deleteMany({
-      $or: [{ sender: userId }, { recipient: userId }],
+      $or: [{ sender: uid }, { recipient: uid }],
       createdAt: { $lt: hoursAgo },
     });
 
-    return ApiResponse(req, res, 202, "Older messages deleted!", result);
+    return ApiResponse(res, 202, "Older messages deleted!", result);
   } catch (error: any) {
     console.log(`Error: ${error.message}`);
   }

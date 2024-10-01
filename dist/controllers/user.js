@@ -12,152 +12,142 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.changePassword = exports.getUserInformation = exports.deleteProfileImage = exports.updateProfileImage = exports.userProfileSetup = void 0;
+exports.userInformation = exports.changePassword = exports.deleteImage = exports.updateImage = exports.profileSetup = void 0;
 const utils_1 = require("../utils");
 const cloudinary_1 = require("../utils/cloudinary");
 const unlink_1 = require("../utils/unlink");
-const user_1 = __importDefault(require("../models/user"));
 const helpers_1 = require("../helpers");
-const userProfileSetup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+const user_1 = __importDefault(require("../models/user"));
+const profileSetup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-        const dataBody = yield req.body;
-        if (dataBody.email) {
-            throw new utils_1.ApiError(403, "Cannot change email!");
-        }
-        if (dataBody.username && dataBody.username !== ((_b = req.user) === null || _b === void 0 ? void 0 : _b.username)) {
-            const existedUsername = yield user_1.default.findOne({
-                username: dataBody.username,
-            });
-            if (existedUsername) {
+        const details = yield req.body;
+        const username = (0, helpers_1.removeSpaces)(details === null || details === void 0 ? void 0 : details.username);
+        const requestUser = req.user;
+        if (username !== (requestUser === null || requestUser === void 0 ? void 0 : requestUser.username)) {
+            const existsUsername = yield user_1.default.findOne({ username });
+            if (existsUsername) {
                 throw new utils_1.ApiError(409, "Username already exists!");
             }
         }
-        const updatedProfile = yield user_1.default.findByIdAndUpdate(userId, Object.assign({}, dataBody), { new: true });
-        if (updatedProfile) {
-            const userProfileFields = {
-                email: updatedProfile.email,
-                username: updatedProfile.username,
-                fullName: updatedProfile.fullName,
-            };
-            const validateResult = (0, helpers_1.hasEmptyField)(userProfileFields);
-            if (!validateResult) {
-                userProfileFields._id = updatedProfile._id;
-                userProfileFields.imageUrl = updatedProfile.imageUrl;
-                userProfileFields.profileColor = updatedProfile.profileColor;
-                const { access, refresh } = (0, helpers_1.generateToken)(req, res, updatedProfile._id, false);
-                updatedProfile.profileSetup = false;
-                updatedProfile.refreshToken = refresh;
-                yield updatedProfile.save({ validateBeforeSave: false });
-                userProfileFields.authToken = { access, refresh };
-                return (0, utils_1.ApiResponse)(req, res, 200, "Profile setup completed successfully!", userProfileFields);
-            }
+        const updateDetails = {
+            name: details.name,
+            username,
+            gender: details.gender,
+            bio: details.bio,
+        };
+        const isEmpty = (0, helpers_1.hasEmptyField)({
+            name: details.name,
+            username,
+            gender: details.gender,
+        });
+        if (!isEmpty) {
+            updateDetails.setup = true;
         }
-        throw new utils_1.ApiError(400, "Profile setup not completed!");
+        const updatedProfile = yield user_1.default.findByIdAndUpdate(requestUser === null || requestUser === void 0 ? void 0 : requestUser._id, Object.assign({}, updateDetails), { new: true });
+        if (!updatedProfile) {
+            throw new utils_1.ApiError(400, "Profile setup not completed!");
+        }
+        else if (!updatedProfile.setup) {
+            const userData = (0, helpers_1.maskedDetails)(updatedProfile);
+            return (0, utils_1.ApiResponse)(res, 200, "Please, complete your profile!", userData);
+        }
+        const accessData = (0, helpers_1.createAccessData)(updatedProfile);
+        const accessToken = (0, helpers_1.generateAccess)(res, accessData);
+        return (0, utils_1.ApiResponse)(res, 200, "Profile updated successfully!", accessData);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(req, res, error.code, error.message);
+        return (0, utils_1.ApiResponse)(res, error.code, error.message);
     }
 });
-exports.userProfileSetup = userProfileSetup;
-const updateProfileImage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+exports.profileSetup = profileSetup;
+const updateImage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
-        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-        const profileImagePath = (_b = req.file) === null || _b === void 0 ? void 0 : _b.path;
-        if (!profileImagePath) {
+        const requestUser = req.user;
+        const imagePath = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path;
+        if (!imagePath) {
             throw new utils_1.ApiError(400, "Profile image file required!");
         }
-        const uploadImage = yield (0, cloudinary_1.uploadOnCloudinary)(profileImagePath);
+        const uploadImage = yield (0, cloudinary_1.uploadOnCloudinary)(imagePath);
         if (!uploadImage || !uploadImage.url) {
             throw new utils_1.ApiError(500, "Error while uploading profile image!");
         }
-        const userProfile = yield user_1.default.findById(userId);
-        if (userProfile && userProfile.imageUrl !== "") {
-            yield (0, cloudinary_1.deleteImageByUrl)(userProfile.imageUrl);
+        const userProfile = yield user_1.default.findById(requestUser === null || requestUser === void 0 ? void 0 : requestUser._id);
+        if (userProfile && userProfile.image !== "") {
+            yield (0, cloudinary_1.deleteImageByUrl)(userProfile.image);
         }
         if (userProfile && uploadImage.url) {
-            userProfile.imageUrl = uploadImage.url;
-            yield userProfile.save({ validateBeforeSave: false });
-            const tokens = req.token;
-            const responseData = {
-                _id: userProfile._id,
-                email: userProfile.email,
-                username: userProfile.username,
-                fullName: userProfile.fullName,
-                imageUrl: userProfile.imageUrl,
-                profileColor: userProfile.profileColor,
-                profileSetup: userProfile.profileSetup,
-                authToken: tokens,
-            };
-            return (0, utils_1.ApiResponse)(req, res, 200, "Profile image updated successfully!", responseData);
+            userProfile.image = uploadImage.url;
+            yield userProfile.save({ validateBeforeSave: true });
+            const accessData = (0, helpers_1.createAccessData)(userProfile);
+            const accessToken = (0, helpers_1.generateAccess)(res, accessData);
+            return (0, utils_1.ApiResponse)(res, 200, "Profile image updated successfully!", accessData);
         }
         throw new utils_1.ApiError(500, "Profile image not updated!");
     }
     catch (error) {
         (0, unlink_1.unlinkFilesWithExtensions)(unlink_1.folderPath, unlink_1.extensionsToDelete);
-        return (0, utils_1.ApiResponse)(req, res, error.code, error.message);
+        return (0, utils_1.ApiResponse)(res, error.code, error.message);
     }
 });
-exports.updateProfileImage = updateProfileImage;
-const deleteProfileImage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.updateImage = updateImage;
+const deleteImage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
-        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-        const userProfile = yield user_1.default.findById(userId);
-        if (userProfile && userProfile.imageUrl !== "") {
-            yield (0, cloudinary_1.deleteImageByUrl)(userProfile.imageUrl);
-            userProfile.imageUrl = "";
-            yield userProfile.save({ validateBeforeSave: false });
-            return (0, utils_1.ApiResponse)(req, res, 301, "Profile image deleted successfully!");
+        const requestUser = yield user_1.default.findById((_a = req.user) === null || _a === void 0 ? void 0 : _a._id);
+        if (requestUser && requestUser.image !== "") {
+            yield (0, cloudinary_1.deleteImageByUrl)(requestUser.image);
+            requestUser.image = "";
+            yield requestUser.save({ validateBeforeSave: true });
+            const accessData = (0, helpers_1.createAccessData)(requestUser);
+            const accessToken = (0, helpers_1.generateAccess)(res, accessData);
+            return (0, utils_1.ApiResponse)(res, 301, "Profile image deleted successfully!", accessData);
         }
         throw new utils_1.ApiError(400, "Profile image not available!");
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(req, res, error.code, error.message);
+        return (0, utils_1.ApiResponse)(res, error.code, error.message);
     }
 });
-exports.deleteProfileImage = deleteProfileImage;
-const getUserInformation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const data = req.user;
-        const tokens = req.token;
-        const responseData = {
-            _id: data._id,
-            email: data.email,
-            username: data.username,
-            fullName: data.fullName,
-            imageUrl: data.imageUrl,
-            profileColor: data.profileColor,
-            profileSetup: data.profileSetup,
-            authToken: tokens,
-        };
-        return (0, utils_1.ApiResponse)(req, res, 200, "User profile information!", responseData);
-    }
-    catch (error) {
-        return (0, utils_1.ApiResponse)(req, res, error.code, error.message);
-    }
-});
-exports.getUserInformation = getUserInformation;
+exports.deleteImage = deleteImage;
 const changePassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
         const { old_password, new_password } = yield req.body;
-        const user = yield user_1.default.findById((_a = req.user) === null || _a === void 0 ? void 0 : _a._id).select("+password");
-        if (!user) {
-            throw new utils_1.ApiError(403, "Invalid change request!");
+        const requestUser = yield user_1.default.findById((_a = req.user) === null || _a === void 0 ? void 0 : _a._id).select("+password");
+        if (!requestUser) {
+            throw new utils_1.ApiError(403, "Invalid authorization!");
         }
-        const checked = yield (0, helpers_1.compareHash)(old_password, user === null || user === void 0 ? void 0 : user.password);
-        if (!checked) {
-            throw new utils_1.ApiError(403, "Invalid old password!");
+        if (old_password === new_password) {
+            throw new utils_1.ApiError(400, "Please, choose a different password!");
         }
-        user.password = yield (0, helpers_1.generateHash)(new_password);
-        yield user.save({ validateBeforeSave: false });
-        return (0, utils_1.ApiResponse)(req, res, 202, "Password changed successfully!");
+        const validatePassword = yield (0, helpers_1.compareHash)(old_password, requestUser.password);
+        if (!validatePassword) {
+            throw new utils_1.ApiError(403, "Incorrect old password!");
+        }
+        const hashedPassword = yield (0, helpers_1.generateHash)(new_password);
+        requestUser.password = hashedPassword;
+        yield requestUser.save({ validateBeforeSave: true });
+        const accessData = (0, helpers_1.createAccessData)(requestUser);
+        const accessToken = (0, helpers_1.generateAccess)(res, accessData);
+        return (0, utils_1.ApiResponse)(res, 202, "Password changed successfully!", accessData);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(req, res, error.code, error.message);
+        return (0, utils_1.ApiResponse)(res, error.code, error.message);
     }
 });
 exports.changePassword = changePassword;
+const userInformation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const requestUser = req.user;
+        if (requestUser === null || requestUser === void 0 ? void 0 : requestUser.setup) {
+            return (0, utils_1.ApiResponse)(res, 200, "User profile information!", requestUser);
+        }
+        const userData = (0, helpers_1.maskedDetails)(requestUser);
+        return (0, utils_1.ApiResponse)(res, 200, "Please, complete your profile!", userData);
+    }
+    catch (error) {
+        return (0, utils_1.ApiResponse)(res, error.code, error.message);
+    }
+});
+exports.userInformation = userInformation;

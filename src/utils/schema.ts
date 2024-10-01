@@ -1,72 +1,60 @@
-import { z } from "zod";
+import { NextFunction, Request, Response } from "express";
+import { z, ZodSchema, ZodError } from "zod";
+import { ApiResponse } from "../utils";
 
-export const signUpSchema = z.object({
-  email: z
-    .string({
-      required_error: "Email required!",
-      invalid_type_error: "Invalid email type!",
-    })
-    .email({ message: "Invalid email format!" }),
-  password: z
-    .string({
-      required_error: "Password required!",
-      invalid_type_error: "Invalid password type!",
-    })
-    .min(6, { message: "Password too short!" }),
-  username: z
-    .string({ invalid_type_error: "Invalid username type!" })
-    .toLowerCase()
-    .min(3, { message: "Username too short!" })
-    .max(15, { message: "Username too long!" })
-    .optional(),
+const ValidationError = (
+  error: ZodError
+): { path: string; message: string }[] => {
+  return error.errors.map((err) => ({
+    path: err.path.join(", "),
+    message: err.message,
+  }));
+};
+
+const validateSchema =
+  (schema: ZodSchema) => (req: Request, res: Response, next: NextFunction) => {
+    try {
+      schema.parse(req.body);
+      next();
+    } catch (error: any) {
+      const errors = ValidationError(error);
+      console.log({ errors });
+      return ApiResponse(res, 400, "Validation error!", null, errors);
+    }
+  };
+
+const signUpSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
 });
 
-export const signInSchema = z
+const signInSchema = z
   .object({
-    email: z
-      .string({ invalid_type_error: "Invalid email type!" })
-      .email({ message: "Invalid email format!" })
-      .optional(),
-    username: z
-      .string({ invalid_type_error: "Invalid username type!" })
-      .optional(),
-    password: z.string({
-      required_error: "Password required!",
-      invalid_type_error: "Invalid password type!",
-    }),
+    email: z.string().email().optional(),
+    username: z.string().optional(),
+    password: z.string(),
   })
-  .refine((data) => data.username || data.email, {
+  .refine((data) => data.email || data.username, {
     message: "Email or Username required!",
     path: ["email", "username"],
   });
 
-export const profileSetupSchema = z
-  .object({
-    fullName: z
-      .string({ invalid_type_error: "Invalid fullName type!" })
-      .min(3, { message: "FullName too short!" })
-      .max(30, { message: "FullName too long!" })
-      .optional(),
-    username: z
-      .string({ invalid_type_error: "Invalid username type!" })
-      .toLowerCase()
-      .min(3, { message: "Username too short!" })
-      .max(15, { message: "Username too long!" })
-      .optional(),
-    profileColor: z
-      .string({ invalid_type_error: "ProfileColor must be string!" })
-      .optional(),
-  })
-  .refine(
-    (data) => {
-      return (
-        data.fullName !== undefined ||
-        data.username !== undefined ||
-        data.profileColor !== undefined
-      );
-    },
-    {
-      message: "Details required for profile setup!",
-      path: ["fullName", "username", "imageUrl", "profileColor"],
-    }
-  );
+const profileSchema = z.object({
+  name: z.string().min(3).max(30),
+  username: z.string().min(3).max(15),
+  gender: z.enum(["Male", "Female"]),
+  bio: z.string(),
+});
+
+const passwordSchema = z.object({
+  old_password: z.string(),
+  new_password: z.string().min(6),
+});
+
+export {
+  validateSchema,
+  signUpSchema,
+  signInSchema,
+  profileSchema,
+  passwordSchema,
+};

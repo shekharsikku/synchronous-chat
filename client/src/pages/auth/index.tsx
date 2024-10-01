@@ -5,21 +5,18 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
-
-import { signUpSchema, validateEmail, removeSpaces } from "@/utils";
-import { InitialValuesProps } from "@/hooks";
-import { useHandleForm } from "@/hooks";
+import { signUpSchema, signInSchema, validateEmail, removeSpaces } from "@/utils";
+import { InitialValuesProps, useHandleForm } from "@/hooks";
 import { useAuthStore } from "@/zustand";
-import api from "@/lib/api";
-
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { login } from "@/redux/reducer/auth";
+import api from "@/lib/api";
 
 const Auth = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { setUserInfo, setIsAuthenticated } = useAuthStore();
+  const { setIsAuthenticated } = useAuthStore();
 
   /** Handlers for sign-in */
 
@@ -41,28 +38,34 @@ const Auth = () => {
       signInData.username = removeSpaces(signInValue.credentials!);
     }
 
-    try {
-      const response = await api.post("/api/auth/sign-in", signInData, { withCredentials: true });
-      const data = await response.data.data;
-      await setUserInfo(data);
-      await setIsAuthenticated(true);
+    const validatedField = signInSchema.safeParse(signInData);
 
-      await dispatch(login(data));
-      await setSignInValue(initialSignInValues);
+    if (validatedField.success) {
+      try {
+        const response = await api.post("/api/auth/sign-in", validatedField.data, { withCredentials: true });
+        const data = await response.data.data;
 
-      if (response.data.success) {
-        await api.delete("/api/message/delete", { withCredentials: true });
+        setIsAuthenticated(true);
+        setSignInValue(initialSignInValues);
+
+        dispatch(login(data));
+
+        if (response.data.success) {
+          await api.delete("/api/message/delete", { withCredentials: true });
+        }
+
+        if (!data.setup) {
+          toast.info(response.data.message);
+          navigate("/profile");
+        } else {
+          toast.success(response.data.message);
+          navigate("/chat");
+        }
+      } catch (error: any) {
+        toast.error(error.response.data.message);
       }
-
-      if (data.profileSetup) {
-        toast.info(response.data.message);
-        navigate("/profile");
-      } else {
-        toast.success(response.data.message);
-        navigate("/chat");
-      }
-    } catch (error: any) {
-      toast.error(error.response.data.message);
+    } else {
+      toast.error(validatedField.error?.issues[0].message);
     }
   }
 

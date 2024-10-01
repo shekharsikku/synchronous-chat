@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { UserInfo } from "@/zustand/slice/auth";
 import { useChatStore } from "@/zustand";
 import { useDebounce } from "@/hooks";
-import { getColor } from "@/utils";
 import api from "@/lib/api";
 
 const AddNewChat = () => {
@@ -69,16 +68,16 @@ const AddNewChat = () => {
                 {searchedContacts.map((contact) => (
                   <div key={contact._id} className={`flex gap-4 border border-gray-200 w-full p-2 lg:px-3 xl:px-6 rounded
                     items-center hover:bg-gray-100/80 transition-all duration-300 cursor-pointer 
-                    ${contact.fullName === "" ? "disabled" : ""}`} onClick={() => selectNewContact(contact)}>
+                    ${contact.name === "" ? "disabled" : ""}`} onClick={() => selectNewContact(contact)}>
                     <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">
-                      <AvatarImage src={contact.imageUrl} alt="profile" className="object-fit h-full w-full" />
+                      <AvatarImage src={contact.image} alt="profile" className="object-fit h-full w-full" />
                       <AvatarFallback className={`uppercase h-full w-full text-xl border text-center font-medium 
-                      transition-all duration-300 ${getColor(parseInt(contact.profileColor!))}`}>
+                      transition-all duration-300`}>
                         {contact.username?.split("").shift() || contact.email?.split("").shift()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-neutral-700">{contact?.fullName}</span>
+                      <span className="text-sm font-semibold text-neutral-700">{contact?.name}</span>
                       <span className="text-xs font-semibold text-neutral-700">{contact.email}</span>
                     </div>
                   </div>

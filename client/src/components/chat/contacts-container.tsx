@@ -8,13 +8,12 @@ import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HiMiniSignal, HiMiniSignalSlash } from "react-icons/hi2";
 import { useChatStore } from "@/zustand";
-import { getColor } from "@/utils";
 import api from "@/lib/api";
 // import { useSelector } from "react-redux";
 
 const ContactsContainer = () => {
   // const { authenticated, userData } = useSelector((state: any) => state.auth);
-  // console.log({ authenticated, uid: userData._id });
+  // console.log({ authenticated, user: userData });
 
   const { onlineUsers } = useSocket();
   const { setSelectedChatType, setSelectedChatData, selectedChatData, setMessages, messages } = useChatStore();
@@ -24,7 +23,7 @@ const ContactsContainer = () => {
     try {
       const response = await api.get("/api/contact/dm-contacts", { withCredentials: true });
       const data = await response.data.data;
-      await setAllContacts(data);
+      setAllContacts(data);
     } catch (error: any) {
       console.log(`Error: ${error.message}`);
     }
@@ -57,19 +56,19 @@ const ContactsContainer = () => {
               {allContacts?.map((contact) => (
 
                 <div key={contact._id} className={`flex border border-gray-200 w-full p-2 lg:px-3 xl:px-6 rounded items-center hover:bg-gray-100/80 transition-all duration-300 cursor-pointer justify-between 
-                  ${contact.fullName === "" ? "disabled" : ""} 
-                  ${selectedChatData && selectedChatData._id === contact._id ? getColor(parseInt(contact.profileColor!)) : ""}`} onClick={() => selectNewContact(contact)}>
+                  ${contact.name === "" ? "disabled" : ""} 
+                  ${selectedChatData && selectedChatData._id === contact._id ? "bg-[#06d6a02a] text-[#06d6a0] border-[1px] border-[#06d6a0bb]" : ""}`} onClick={() => selectNewContact(contact)}>
 
                   <div className="flex items-center gap-4">
                     <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">
-                      <AvatarImage src={contact.imageUrl} alt="profile" className="object-fit h-full w-full" />
+                      <AvatarImage src={contact.image} alt="profile" className="object-fit h-full w-full" />
                       <AvatarFallback className={`uppercase h-full w-full text-xl border-[1px] text-center font-medium 
-                      transition-all duration-300 ${getColor(parseInt(contact.profileColor!))}`}>
+                      transition-all duration-300`}>
                         {contact.username?.split("").shift() || contact.email?.split("").shift()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-neutral-700">{contact?.fullName}</span>
+                      <span className="text-sm font-semibold text-neutral-700">{contact?.name}</span>
                       <span className="text-xs font-semibold text-neutral-700">{contact?.username}</span>
                     </div>
                   </div>

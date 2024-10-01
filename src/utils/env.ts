@@ -8,16 +8,14 @@ const env = cleanEnv(process.env, {
   CLOUDINARY_API_KEY: str(),
   CLOUDINARY_API_SECRET: str(),
 
-  ACCESS_TOKEN_SECRET: str(),
-  ACCESS_TOKEN_EXPIRY: str(),
-  ACCESS_COOKIE_EXPIRY: str(),
+  ACCESS_SECRET: str(),
+  ACCESS_EXPIRY: str(),
 
-  REFRESH_TOKEN_SECRET: str(),
-  REFRESH_TOKEN_EXPIRY: str(),
-  REFRESH_COOKIE_EXPIRY: str(),
+  REFRESH_SECRET: str(),
+  REFRESH_EXPIRY: str(),
 
   COOKIES_SECRET: str(),
-  PAYLOAD_LIMIT_ALLOWED: str(),
+  PAYLOAD_LIMIT: str(),
   PORT: port(),
 
   MONGODB_URI: str(),

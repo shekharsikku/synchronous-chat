@@ -47,10 +47,10 @@ export const useGetUserInfo = () => {
         withCredentials: true,
       });
       const data = await response.data.data;
-      await setUserInfo(data);
-      await setIsAuthenticated(true);
+      setUserInfo(data);
+      setIsAuthenticated(true);
 
-      await dispatch(currentUser(data));
+      dispatch(currentUser(data));
     } catch (error: any) {
       return null;
     }
@@ -72,12 +72,12 @@ export const useSignOutUser = () => {
         withCredentials: true,
       });
       toast.success(response.data.message);
-      await setIsAuthenticated(false);
-      await setUserInfo(null!);
-      await closeChat();
+      setIsAuthenticated(false);
+      setUserInfo(null!);
 
-      await dispatch(logout());
+      dispatch(logout());
 
+      closeChat();
       navigate("/auth");
     } catch (error: any) {
       toast.error(error.response.data.message);

@@ -13,7 +13,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   HiOutlineCloudArrowUp,
   HiOutlineTrash,
@@ -21,7 +28,7 @@ import {
   HiOutlineArrowRightOnRectangle,
   HiOutlineChatBubbleLeftRight,
 } from "react-icons/hi2";
-import { colors, getColor, changePasswordSchema } from "@/utils";
+import { changePasswordSchema } from "@/utils";
 import { useHandleForm, useSignOutUser } from "@/hooks";
 import { useAuthStore } from "@/zustand";
 import api from "@/lib/api";
@@ -33,36 +40,12 @@ const Profile = () => {
   const { handleSignOut } = useSignOutUser();
   const { userInfo, setUserInfo } = useAuthStore();
 
-  const [userFullName, setUserFullName] = useState(userInfo?.fullName);
-  const [userUsername, setUserUsername] = useState(userInfo?.username);
-  const [selectedColor, setSelectedColor] = useState(userInfo?.profileColor);
-  const [selectedImage, setSelectedImage] = useState(userInfo?.imageUrl);
-
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(userInfo?.image);
   const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
   const [openConfirmationModal, setOpenConfirmationModal] = useState(false);
   const [openImageDeletionModal, setOpenImageDeletionModal] = useState(false);
   const [imageUpdateFormData, setImageUpdateFormData] = useState<any | null>(null);
-
-  const saveDetailsChanges = async (e: any) => {
-    e.preventDefault();
-
-    try {
-      setIsLoading(true);
-      const profileDetails = {
-        fullName: userFullName,
-        username: userUsername,
-        profileColor: selectedColor
-      };
-      const response = await api.patch("/api/user/user-profile-setup", profileDetails, { withCredentials: true });
-      setUserInfo(response.data.data);
-      toast.success(response.data.message);
-    } catch (error: any) {
-      toast.error(error.response.data.message);
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
   const handleFileInputClick = () => {
     fileInputRef.current?.click();
@@ -72,16 +55,14 @@ const Profile = () => {
     e.preventDefault();
 
     const imageFile = e.target.files[0];
-    // console.log(imageFile);
 
     if (imageFile) {
       const formData = new FormData();
       formData.append("profile-image", imageFile);
 
       const fileReader = new FileReader();
-      fileReader.onload = () => {
-        // console.log(fileReader.result);
 
+      fileReader.onload = () => {
         const file = fileReader.result as string;
         setSelectedImage(file);
       }
@@ -119,12 +100,12 @@ const Profile = () => {
     try {
       setIsLoading(true);
       const response = await api.delete("/api/user/delete-profile-image", { withCredentials: true });
+      setUserInfo(response.data.data);
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
     } finally {
-      setSelectedImage("");
-      userInfo ? userInfo.imageUrl = "" : null;
+      setSelectedImage(userInfo?.image);
       setOpenImageDeletionModal(false);
       setIsLoading(false);
     }
@@ -145,8 +126,9 @@ const Profile = () => {
         const response = await api.patch("/api/user/change-password", validatedField.data, {
           withCredentials: true
         });
-        setPasswordValue(initialFieldsValue);
+        setUserInfo(response.data.data);
         setOpenPasswordDialog(false);
+        setPasswordValue(initialFieldsValue);
         toast.success(response.data.message);
       } catch (error: any) {
         toast.error(error.response.data.message);
@@ -158,15 +140,46 @@ const Profile = () => {
     }
   }
 
+  /** States and handler function for change user details */
+  const [userName, setUserName] = useState(userInfo?.name);
+  const [userUsername, setUserUsername] = useState(userInfo?.username);
+  const [userBio, setUserBio] = useState(userInfo?.bio);
+  const [userGender, setUserGender] = useState(userInfo?.gender);
+
+  const handleGenderChange = (value: string) => {
+    setUserGender(value);
+  };
+
+  const saveDetailsChanges = async (e: any) => {
+    e.preventDefault();
+    try {
+      setIsLoading(true);
+      const profileDetails = {
+        name: userName,
+        username: userUsername,
+        bio: userBio,
+        gender: userGender,
+      };
+      const response = await api.patch("/api/user/user-profile-setup", profileDetails, { withCredentials: true });
+      setUserInfo(response.data.data);
+      toast.success(response.data.message);
+    } catch (error: any) {
+      toast.error(error.response.data.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <main className="h-[100vh] w-[100vw] flex flex-col items-center justify-center">
       <div className="bg-white border-2 border-white text-opacity-90 shadow-2xl rounded-md grid lg:grid-cols-2 
       h-[95vh] w-[90vw] sm:w-[70vw] md:w-[60vw] lg:h-[80vh] lg:w-[80vw] xl:w-[60vw] lg:px-8 xl:py-8">
-        <div className="flex flex-col gap-3 lg:gap-4 items-center justify-end lg:justify-center">
-          <div className="lg:hidden flex flex-col gap-2 items-center justify-center">
-            <h2 className="text-3xl font-bold sm:text-4xl">Welcome User!</h2>
+
+        <div className="flex flex-col gap-3 items-center justify-end lg:justify-center lg:px-1">
+          <div className="flex flex-col gap-1 items-center justify-center">
+            <h2 className="text-2xl font-bold sm:text-3xl">Welcome User!</h2>
             <p className="text-sm lg:text-base font-normal text-center text-gray-500">
-              Complete your profile to continue!</p>
+              Let's get you set up!</p>
           </div>
           <div className="h-32 w-32 md:h-36 md:w-36 lg:h-40 lg:w-40 relative flex items-center justify-center
            rounded-full border-2 border-gray-100 hover:border-3">
@@ -175,8 +188,8 @@ const Profile = () => {
                 <TooltipTrigger className="w-full h-full">
                   <Avatar className="h-full w-full rounded-full overflow-hidden">
                     <AvatarImage src={selectedImage} alt="profile" className="object-fit h-full w-full" />
-                    <AvatarFallback className={`uppercase h-full w-full text-5xl border text-center font-medium 
-                      transition-all duration-300 hover:bg-black/90 ${getColor(parseInt(selectedColor!))}`}>
+                    <AvatarFallback className={`uppercase h-full w-full text-5xl border-[1px] text-center font-medium 
+                      transition-all duration-300 hover:bg-black/90 "bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]"`}>
                       {userUsername?.split("").shift() || userInfo?.email?.split("").shift()}
                     </AvatarFallback>
                   </Avatar>
@@ -198,21 +211,22 @@ const Profile = () => {
               className="hidden"
             />
           </div>
-          <div className="w-full flex flex-col gap-2 justify-center items-center">
-            <p className="text-xs lg:text-sm font-normal text-center text-gray-500 my-1 lg:my-2">
-              Choose your profile image & color?</p>
-            <div className="flex gap-4 justify-center">
-              {colors.map((color, index) => (
-                <div key={index} className={`${color} h-10 w-10 sm:h-12 sm:w-12 rounded-full 
-                cursor-pointer transition-all duration-300 
-              ${parseInt(selectedColor!) === index ? "outline outline-white/90 outline-1" : ""}`}
-                  onClick={() => setSelectedColor(String(index))}></div>
-              ))}
-            </div>
+          <div className="flex flex-col gap-3 w-4/5 mb-3 lg:mb-1">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="Email"
+              readOnly
+              defaultValue={userInfo?.email || ""}
+              className="rounded px-3 py-5"
+              autoComplete="off"
+            />
           </div>
-          <div className="hidden mt-1 lg:flex gap-4 w-4/6 items-center justify-center">
+          <div className="hidden mt-1 lg:flex gap-4 w-4/5 items-center justify-center">
             <Button size="sm" className="w-full" onClick={() => navigate("/chat")}
-              disabled={isLoading || userInfo?.profileSetup}>
+              disabled={isLoading || !userInfo?.setup}>
               <HiOutlineChatBubbleLeftRight size={20} /></Button>
             <Button size="sm" className="w-full" onClick={() => setOpenPasswordDialog(true)}
               disabled={isLoading}> <HiOutlineKey size={20} /></Button>
@@ -221,25 +235,18 @@ const Profile = () => {
           </div>
         </div>
 
-        <h3 className="lg:hidden text-center text-2xl font-semibold my-auto">Your Details!</h3>
-
         <div className="flex-1 flex flex-col gap-3 lg:gap-4 items-center justify-start lg:justify-center">
-          <div className="hidden lg:flex flex-col gap-2 items-center justify-center">
-            <h2 className="text-3xl font-bold sm:text-4xl">Welcome User!</h2>
-            <p className="text-xs lg:text-sm font-normal text-center text-gray-500">
-              Complete your profile to continue!</p>
-          </div>
           <div className="flex flex-col gap-3 w-4/5">
-            <Label htmlFor="fullName">Full Name</Label>
+            <Label htmlFor="fullName">Name</Label>
             <Input
               type="text"
-              id="fullName"
-              name="fullName"
-              placeholder="Full Name"
+              id="name"
+              name="name"
+              placeholder="Name"
               autoComplete="off"
               className="rounded px-3 py-5"
-              value={userFullName || ""}
-              onChange={(e: any) => setUserFullName(e.target.value)}
+              value={userName || ""}
+              onChange={(e: any) => setUserName(e.target.value)}
             />
             <Label htmlFor="username">Username</Label>
             <Input
@@ -252,25 +259,33 @@ const Profile = () => {
               value={userUsername || ""}
               onChange={(e: any) => setUserUsername(e.target.value)}
             />
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="bio">Bio</Label>
             <Input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="Email"
-              readOnly
-              defaultValue={userInfo?.email || ""}
-              className="rounded px-3 py-5"
+              type="text"
+              id="bio"
+              name="bio"
+              placeholder="Bio"
               autoComplete="off"
+              className="rounded px-3 py-5"
+              value={userBio || ""}
+              onChange={(e: any) => setUserBio(e.target.value)}
             />
+            <Label htmlFor="gender">Gender</Label>
+            <Select onValueChange={handleGenderChange} defaultValue={userGender}>
+              <SelectTrigger className="w-full" id="gender">
+                <SelectValue placeholder="Gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Male">Male</SelectItem>
+                <SelectItem value="Female">Female</SelectItem>
+              </SelectContent>
+            </Select>
             <Button type="submit" size="lg" className="w-full cursor-pointer transition-all duration-300 mt-1"
               onClick={saveDetailsChanges} disabled={isLoading}>Save Changes</Button>
-            <p className="hidden lg:block text-xs lg:text-sm text-center">
-              If your profile completed then continue?</p>
           </div>
           <div className="lg:hidden flex gap-4 w-4/5 items-center justify-center">
             <Button size="sm" className="w-full" onClick={() => navigate("/chat")}
-              disabled={isLoading || userInfo?.profileSetup}>
+              disabled={isLoading || !userInfo?.setup}>
               <HiOutlineChatBubbleLeftRight size={20} /></Button>
             <Button size="sm" className="w-full" onClick={() => setOpenPasswordDialog(true)} disabled={isLoading}>
               <HiOutlineKey size={20} /></Button>
@@ -351,7 +366,7 @@ const Profile = () => {
             <Button size="lg" variant="outline" className="p-2 px-5" onClick={() => {
               setImageUpdateFormData(null);
               setOpenConfirmationModal(false);
-              setSelectedImage(userInfo?.imageUrl);
+              setSelectedImage(userInfo?.image);
             }} disabled={isLoading}>Cancel</Button>
             <Button size="lg" variant="default" className="p-2 px-5"
               onClick={() => updateProfileImage(imageUpdateFormData)} disabled={isLoading}>
@@ -359,6 +374,7 @@ const Profile = () => {
           </div>
         </DialogContent>
       </Dialog>
+
       {/* Dialog for image delete confirmation */}
       <Dialog open={openImageDeletionModal} onOpenChange={setOpenImageDeletionModal}>
         <DialogContent className="h-auto w-80 md:w-96 flex flex-col rounded-sm items-start">

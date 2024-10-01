@@ -14,16 +14,15 @@ const env_1 = __importDefault(require("./utils/env"));
 const routers_1 = require("./routers");
 const app = (0, express_1.default)();
 app.use(express_1.default.json({
-    limit: env_1.default.PAYLOAD_LIMIT_ALLOWED,
+    limit: env_1.default.PAYLOAD_LIMIT,
     strict: true,
 }));
 app.use(express_1.default.urlencoded({
-    limit: env_1.default.PAYLOAD_LIMIT_ALLOWED,
+    limit: env_1.default.PAYLOAD_LIMIT,
     extended: true,
 }));
-const corsOrigin = env_1.default.CORS_ORIGIN;
 app.use((0, cors_1.default)({
-    origin: corsOrigin,
+    origin: env_1.default.CORS_ORIGIN,
     credentials: true,
     optionsSuccessStatus: 204,
 }));
@@ -31,7 +30,7 @@ app.use((0, helmet_1.default)({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            imgSrc: ["'self'", "res.cloudinary.com"],
+            imgSrc: ["'self'", "res.cloudinary.com", "data:"],
             scriptSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],

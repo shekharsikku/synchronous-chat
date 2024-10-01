@@ -3,17 +3,28 @@ import { z } from "zod";
 export const signUpSchema = z
   .object({
     email: z.string().email({ message: "Invalid email address!" }),
-    password: z.string(),
+    password: z.string().min(6, { message: "Password is too short!" }),
     confirm: z.string(),
   })
   .refine((data) => data.password === data.confirm, {
     message: "Confirm password not matching!",
   });
 
+export const signInSchema = z
+  .object({
+    email: z.string().email({ message: "Invalid email address!" }).optional(),
+    username: z.string().optional(),
+    password: z.string().min(1, { message: "Password is required!" }),
+  })
+  .refine((data) => data.email || data.username, {
+    message: "Email or Username required!",
+    path: ["email", "username"],
+  });
+
 export const changePasswordSchema = z
   .object({
     old_password: z.string(),
-    new_password: z.string().min(6, { message: "New password too short!" }),
+    new_password: z.string().min(6, { message: "New password is too short!" }),
     confirm_password: z
       .string()
       .min(6, { message: "Confirm password too short!" }),

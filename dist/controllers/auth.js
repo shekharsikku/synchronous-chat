@@ -12,95 +12,100 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.authRefresh = exports.signOutUser = exports.signInUser = exports.signUpUser = void 0;
+exports.refreshAuth = exports.signOutUser = exports.signInUser = exports.signUpUser = void 0;
 const utils_1 = require("../utils");
 const helpers_1 = require("../helpers");
 const user_1 = __importDefault(require("../models/user"));
+const env_1 = __importDefault(require("../utils/env"));
 const signUpUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { email, password, username } = yield req.body;
-        const existedUser = yield user_1.default.findOne({
-            $or: [{ email }, { username }],
-        });
-        if (existedUser) {
-            let field;
-            if (existedUser.email == email) {
-                field = "Email";
-            }
-            else {
-                field = "Username";
-            }
-            throw new utils_1.ApiError(409, `${field} already exists!`);
+        const { email, password } = yield req.body;
+        const existsEmail = yield user_1.default.findOne({ email });
+        if (existsEmail) {
+            throw new utils_1.ApiError(409, "Email already exists!");
         }
-        const hashed = yield (0, helpers_1.generateHash)(password);
-        const userData = {
+        const hashedPassword = yield (0, helpers_1.generateHash)(password);
+        const newUser = yield user_1.default.create({
             email,
-            password: hashed,
-        };
-        if (username) {
-            userData.username = (0, helpers_1.removeSpaces)(username);
-        }
-        const newUser = new user_1.default(userData);
-        const savedUser = yield newUser.save();
-        if (savedUser) {
-            return (0, utils_1.ApiResponse)(req, res, 201, "Signed up successfully!", savedUser._id);
-        }
-        throw new utils_1.ApiError(500, "Error while signup!");
+            password: hashedPassword,
+        });
+        const userData = (0, helpers_1.maskedDetails)(newUser);
+        return (0, utils_1.ApiResponse)(res, 201, "Signed up successfully!", userData);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(req, res, error.code, error.message);
+        return (0, utils_1.ApiResponse)(res, error.code, error.message);
     }
 });
 exports.signUpUser = signUpUser;
 const signInUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     try {
         const { email, password, username } = yield req.body;
-        const user = yield user_1.default.findOne({
-            $or: [{ email }, { username }],
-        }).select("+password");
-        if (!user) {
+        const conditions = [];
+        if (email) {
+            conditions.push({ email });
+        }
+        else if (username) {
+            conditions.push({ username });
+        }
+        else {
+            throw new utils_1.ApiError(400, "Email or Username required!");
+        }
+        const existsUser = yield user_1.default.findOne({
+            $or: conditions,
+        }).select("+password +authentication");
+        if (!existsUser) {
             throw new utils_1.ApiError(404, "User not exists!");
         }
-        const checked = yield (0, helpers_1.compareHash)(password, user.password);
-        if (!checked) {
+        const validatePassword = yield (0, helpers_1.compareHash)(password, existsUser.password);
+        if (!validatePassword) {
             throw new utils_1.ApiError(403, "Incorrect password!");
         }
-        const data = {
-            _id: user._id,
-            profileSetup: user.profileSetup,
-        };
-        if (user.profileSetup) {
-            const { access } = (0, helpers_1.generateToken)(req, res, user._id, user.profileSetup);
-            data.authToken = { access };
-            return (0, utils_1.ApiResponse)(req, res, 202, "Please, setup your profile!", data);
+        const accessData = (0, helpers_1.createAccessData)(existsUser);
+        const accessToken = (0, helpers_1.generateAccess)(res, accessData);
+        if (!accessData.setup) {
+            const userData = (0, helpers_1.maskedDetails)(accessData);
+            return (0, utils_1.ApiResponse)(res, 202, "Please, complete your profile!", userData);
         }
-        const { access, refresh } = (0, helpers_1.generateToken)(req, res, user._id, user.profileSetup);
-        user.refreshToken = refresh;
-        yield user.save({ validateBeforeSave: false });
-        data.authToken = { access, refresh };
-        return (0, utils_1.ApiResponse)(req, res, 200, "Signed in successfully!", data);
+        const refreshToken = (0, helpers_1.generateRefresh)(res, accessData._id);
+        const refreshExpiry = parseInt(env_1.default.REFRESH_EXPIRY);
+        (_a = existsUser.authentication) === null || _a === void 0 ? void 0 : _a.push({
+            token: refreshToken,
+            expiry: new Date(Date.now() + refreshExpiry * 1000),
+        });
+        const authorizeUser = yield existsUser.save();
+        const authorizeId = (_b = authorizeUser.authentication) === null || _b === void 0 ? void 0 : _b.filter((auth) => auth.token === refreshToken)[0]._id;
+        (0, helpers_1.authorizeCookie)(res, String(authorizeId));
+        return (0, utils_1.ApiResponse)(res, 200, "Signed in successfully!", {
+            _id: accessData._id,
+            email: accessData.email,
+            setup: accessData.setup,
+        });
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(req, res, error.code, error.message);
+        return (0, utils_1.ApiResponse)(res, error.code, error.message);
     }
 });
 exports.signInUser = signInUser;
 const signOutUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    yield user_1.default.findByIdAndUpdate((_a = req.user) === null || _a === void 0 ? void 0 : _a._id, {
-        $unset: {
-            refreshToken: 1,
-        },
-    }, {
-        new: true,
-    });
+    const requestUser = req.user;
+    const refreshToken = req.cookies.refresh;
+    const authorizeId = req.cookies.auth_id;
+    if (requestUser.setup && refreshToken && authorizeId) {
+        yield user_1.default.findOneAndUpdate({ _id: requestUser._id }, {
+            $pull: {
+                authentication: { _id: authorizeId, token: refreshToken },
+            },
+        }, { new: true });
+    }
     res.clearCookie("access");
     res.clearCookie("refresh");
-    return (0, utils_1.ApiResponse)(req, res, 200, "Signed out successfully!");
+    res.clearCookie("auth_id");
+    const userData = (0, helpers_1.maskedDetails)(requestUser);
+    return (0, utils_1.ApiResponse)(res, 200, "Signed out successfully!", userData);
 });
 exports.signOutUser = signOutUser;
-const authRefresh = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const tokens = req.token;
-    return (0, utils_1.ApiResponse)(req, res, 200, "Auth tokens refresh successfully!", tokens);
+const refreshAuth = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    return (0, utils_1.ApiResponse)(res, 200, "Authentication refreshed!", req.user);
 });
-exports.authRefresh = authRefresh;
+exports.refreshAuth = refreshAuth;

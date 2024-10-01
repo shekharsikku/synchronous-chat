@@ -1,67 +1,51 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.profileSetupSchema = exports.signInSchema = exports.signUpSchema = void 0;
+exports.passwordSchema = exports.profileSchema = exports.signInSchema = exports.signUpSchema = exports.validateSchema = void 0;
 const zod_1 = require("zod");
-exports.signUpSchema = zod_1.z.object({
-    email: zod_1.z
-        .string({
-        required_error: "Email required!",
-        invalid_type_error: "Invalid email type!",
-    })
-        .email({ message: "Invalid email format!" }),
-    password: zod_1.z
-        .string({
-        required_error: "Password required!",
-        invalid_type_error: "Invalid password type!",
-    })
-        .min(6, { message: "Password too short!" }),
-    username: zod_1.z
-        .string({ invalid_type_error: "Invalid username type!" })
-        .toLowerCase()
-        .min(3, { message: "Username too short!" })
-        .max(15, { message: "Username too long!" })
-        .optional(),
+const utils_1 = require("../utils");
+const ValidationError = (error) => {
+    return error.errors.map((err) => ({
+        path: err.path.join(", "),
+        message: err.message,
+    }));
+};
+const validateSchema = (schema) => (req, res, next) => {
+    try {
+        schema.parse(req.body);
+        next();
+    }
+    catch (error) {
+        const errors = ValidationError(error);
+        console.log({ errors });
+        return (0, utils_1.ApiResponse)(res, 400, "Validation error!", null, errors);
+    }
+};
+exports.validateSchema = validateSchema;
+const signUpSchema = zod_1.z.object({
+    email: zod_1.z.string().email(),
+    password: zod_1.z.string().min(6),
 });
-exports.signInSchema = zod_1.z
+exports.signUpSchema = signUpSchema;
+const signInSchema = zod_1.z
     .object({
-    email: zod_1.z
-        .string({ invalid_type_error: "Invalid email type!" })
-        .email({ message: "Invalid email format!" })
-        .optional(),
-    username: zod_1.z
-        .string({ invalid_type_error: "Invalid username type!" })
-        .optional(),
-    password: zod_1.z.string({
-        required_error: "Password required!",
-        invalid_type_error: "Invalid password type!",
-    }),
+    email: zod_1.z.string().email().optional(),
+    username: zod_1.z.string().optional(),
+    password: zod_1.z.string(),
 })
-    .refine((data) => data.username || data.email, {
+    .refine((data) => data.email || data.username, {
     message: "Email or Username required!",
     path: ["email", "username"],
 });
-exports.profileSetupSchema = zod_1.z
-    .object({
-    fullName: zod_1.z
-        .string({ invalid_type_error: "Invalid fullName type!" })
-        .min(3, { message: "FullName too short!" })
-        .max(30, { message: "FullName too long!" })
-        .optional(),
-    username: zod_1.z
-        .string({ invalid_type_error: "Invalid username type!" })
-        .toLowerCase()
-        .min(3, { message: "Username too short!" })
-        .max(15, { message: "Username too long!" })
-        .optional(),
-    profileColor: zod_1.z
-        .string({ invalid_type_error: "ProfileColor must be string!" })
-        .optional(),
-})
-    .refine((data) => {
-    return (data.fullName !== undefined ||
-        data.username !== undefined ||
-        data.profileColor !== undefined);
-}, {
-    message: "Details required for profile setup!",
-    path: ["fullName", "username", "imageUrl", "profileColor"],
+exports.signInSchema = signInSchema;
+const profileSchema = zod_1.z.object({
+    name: zod_1.z.string().min(3).max(30),
+    username: zod_1.z.string().min(3).max(15),
+    gender: zod_1.z.enum(["Male", "Female"]),
+    bio: zod_1.z.string(),
 });
+exports.profileSchema = profileSchema;
+const passwordSchema = zod_1.z.object({
+    old_password: zod_1.z.string(),
+    new_password: zod_1.z.string().min(6),
+});
+exports.passwordSchema = passwordSchema;

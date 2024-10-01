@@ -9,7 +9,7 @@ const Chat = () => {
   const { selectedChatType, selectedChatData } = useChatStore();
 
   useEffect(() => {
-    if (isAuthenticated && userInfo?.profileSetup) {
+    if (isAuthenticated && !userInfo?.setup) {
       navigate("/profile")
     }
   }, [navigate, userInfo, isAuthenticated]);

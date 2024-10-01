@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { accessToken } from "../middlewares";
+import { authAccess } from "../middlewares";
 import {
   getAllContacts,
   searchContact,
@@ -8,8 +8,8 @@ import {
 
 const router = Router();
 
-router.post("/search", accessToken, searchContact);
-router.get("/get-all", accessToken, getAllContacts);
-router.get("/dm-contacts", accessToken, getContactsList);
+router.post("/search", authAccess, searchContact);
+router.get("/get-all", authAccess, getAllContacts);
+router.get("/dm-contacts", authAccess, getContactsList);
 
 export default router;

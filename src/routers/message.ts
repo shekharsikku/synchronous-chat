@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { accessToken } from "../middlewares";
+import { authAccess } from "../middlewares";
 import {
   deleteMessage,
   deleteMessages,
@@ -9,9 +9,9 @@ import {
 
 const router = Router();
 
-router.get("/:id", accessToken, getMessages);
-router.post("/send/:id", accessToken, sendMessage);
-router.delete("/delete/:id", accessToken, deleteMessage);
-router.delete("/delete", accessToken, deleteMessages);
+router.get("/:id", authAccess, getMessages);
+router.post("/send/:id", authAccess, sendMessage);
+router.delete("/delete/:id", authAccess, deleteMessage);
+router.delete("/delete", authAccess, deleteMessages);
 
 export default router;

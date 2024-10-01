@@ -2,13 +2,16 @@ import { create } from "zustand";
 
 export interface UserInfo {
   _id?: string;
+  name?: string;
   email?: string;
-  fullName?: string;
   username?: string;
-  imageUrl?: string;
-  profileColor?: string;
-  profileSetup?: boolean;
-  authToken?: object;
+  gender?: string;
+  image?: string;
+  bio?: string;
+  setup?: boolean;
+  createdAt?: any;
+  updatedAt?: any;
+  __v?: number;
 }
 
 const useAuthStore = create<{

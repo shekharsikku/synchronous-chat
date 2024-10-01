@@ -12,21 +12,21 @@ const MessageSchema = new mongoose_1.Schema({
         ref: "User",
         required: true,
     },
-    messageType: {
+    type: {
         type: String,
         enum: ["text", "file"],
         required: true,
     },
-    textMessage: {
+    text: {
         type: String,
         required: function () {
-            return this.messageType === "text";
+            return this.type === "text";
         },
     },
-    fileUrl: {
+    file: {
         type: String,
         required: function () {
-            return this.messageType === "file";
+            return this.type === "file";
         },
     },
 }, {

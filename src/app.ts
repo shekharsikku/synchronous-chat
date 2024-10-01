@@ -17,23 +17,21 @@ const app = express();
 
 app.use(
   express.json({
-    limit: env.PAYLOAD_LIMIT_ALLOWED,
+    limit: env.PAYLOAD_LIMIT,
     strict: true,
   })
 );
 
 app.use(
   express.urlencoded({
-    limit: env.PAYLOAD_LIMIT_ALLOWED,
+    limit: env.PAYLOAD_LIMIT,
     extended: true,
   })
 );
 
-const corsOrigin = env.CORS_ORIGIN;
-
 app.use(
   cors({
-    origin: corsOrigin,
+    origin: env.CORS_ORIGIN,
     credentials: true,
     optionsSuccessStatus: 204,
   })
@@ -44,7 +42,7 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        imgSrc: ["'self'", "res.cloudinary.com"],
+        imgSrc: ["'self'", "res.cloudinary.com", "data:"],
         scriptSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],

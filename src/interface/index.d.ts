@@ -2,43 +2,33 @@ import { Types, Document } from "mongoose";
 
 interface UserInterface extends Document {
   _id?: Types.ObjectId;
+  name?: string;
   email: string;
-  password: string;
-  fullName?: string;
   username?: string;
-  imageUrl?: string;
-  profileColor?: string;
-  profileSetup?: boolean;
-  refreshToken?: string;
+  password?: string;
+  gender?: "Male" | "Female";
+  image?: string;
+  bio?: string;
+  setup?: boolean;
+  authentication?: {
+    _id?: Types.ObjectId;
+    token: string;
+    expiry: Date;
+    device?: string;
+  }[];
 }
 
-interface UserSignUpInterface {
-  email: string;
-  password: string;
-  username?: string;
-}
-
-interface UserTokenInterface {
+interface TokenInterface {
   access?: string;
   refresh?: string;
 }
 
-interface UserSignInInterface {
-  _id?: Types.ObjectId;
-  email?: string;
-  profileSetup?: boolean;
-  authToken?: UserTokenInterface;
-}
-
-interface UserProfileInterface {
-  _id?: Types.ObjectId;
-  email?: string;
-  fullName?: string;
+interface DetailInterface {
+  name?: string;
   username?: string;
-  imageUrl?: string;
-  profileColor?: string;
-  profileSetup?: boolean;
-  authToken?: UserTokenInterface;
+  gender?: "Male" | "Female";
+  bio?: string;
+  setup?: boolean;
 }
 
 interface ConversationInterface extends Document {
@@ -51,7 +41,7 @@ interface MessageInterface extends Document {
   _id?: Types.ObjectId;
   sender?: Types.ObjectId;
   recipient?: Types.ObjectId;
-  messageType?: string;
-  textMessage?: string;
-  fileUrl?: string;
+  type?: string;
+  text?: string;
+  file?: string;
 }

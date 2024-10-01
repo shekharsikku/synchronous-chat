@@ -1,135 +1,129 @@
 import { Request, Response } from "express";
 import { ApiError, ApiResponse } from "../utils";
-import { UserSignUpInterface, UserSignInInterface } from "../interface";
 import {
   compareHash,
   generateHash,
-  generateToken,
-  removeSpaces,
+  generateAccess,
+  generateRefresh,
+  authorizeCookie,
+  maskedDetails,
+  createAccessData,
 } from "../helpers";
 import User from "../models/user";
+import env from "../utils/env";
 
 const signUpUser = async (req: Request, res: Response) => {
   try {
-    const { email, password, username } = await req.body;
+    const { email, password } = await req.body;
 
-    const existedUser = await User.findOne({
-      $or: [{ email }, { username }],
+    const existsEmail = await User.findOne({ email });
+
+    if (existsEmail) {
+      throw new ApiError(409, "Email already exists!");
+    }
+
+    const hashedPassword = await generateHash(password);
+
+    const newUser = await User.create({
+      email,
+      password: hashedPassword,
     });
 
-    if (existedUser) {
-      let field: string;
-
-      if (existedUser.email == email) {
-        field = "Email";
-      } else {
-        field = "Username";
-      }
-
-      throw new ApiError(409, `${field} already exists!`);
-    }
-
-    const hashed = await generateHash(password);
-
-    const userData: UserSignUpInterface = {
-      email,
-      password: hashed,
-    };
-
-    if (username) {
-      userData.username = removeSpaces(username);
-    }
-
-    const newUser = new User(userData);
-    const savedUser = await newUser.save();
-
-    if (savedUser) {
-      return ApiResponse(
-        req,
-        res,
-        201,
-        "Signed up successfully!",
-        savedUser._id
-      );
-    }
-    throw new ApiError(500, "Error while signup!");
+    const userData = maskedDetails(newUser);
+    return ApiResponse(res, 201, "Signed up successfully!", userData);
   } catch (error: any) {
-    return ApiResponse(req, res, error.code, error.message);
+    return ApiResponse(res, error.code, error.message);
   }
 };
 
 const signInUser = async (req: Request, res: Response) => {
   try {
     const { email, password, username } = await req.body;
+    const conditions = [];
 
-    const user = await User.findOne({
-      $or: [{ email }, { username }],
-    }).select("+password");
+    if (email) {
+      conditions.push({ email });
+    } else if (username) {
+      conditions.push({ username });
+    } else {
+      throw new ApiError(400, "Email or Username required!");
+    }
 
-    if (!user) {
+    const existsUser = await User.findOne({
+      $or: conditions,
+    }).select("+password +authentication");
+
+    if (!existsUser) {
       throw new ApiError(404, "User not exists!");
     }
 
-    const checked = await compareHash(password, user.password);
+    const validatePassword = await compareHash(password, existsUser.password!);
 
-    if (!checked) {
+    if (!validatePassword) {
       throw new ApiError(403, "Incorrect password!");
     }
 
-    const data: UserSignInInterface = {
-      _id: user._id,
-      profileSetup: user.profileSetup,
-    };
+    const accessData = createAccessData(existsUser);
+    const accessToken = generateAccess(res, accessData);
 
-    if (user.profileSetup) {
-      const { access } = generateToken(req, res, user._id, user.profileSetup);
-      data.authToken = { access };
-      return ApiResponse(req, res, 202, "Please, setup your profile!", data);
+    if (!accessData.setup) {
+      const userData = maskedDetails(accessData);
+      return ApiResponse(res, 202, "Please, complete your profile!", userData);
     }
 
-    const { access, refresh } = generateToken(
-      req,
-      res,
-      user._id,
-      user.profileSetup
-    );
+    const refreshToken = generateRefresh(res, accessData._id!);
+    const refreshExpiry = parseInt(env.REFRESH_EXPIRY!);
 
-    user.refreshToken = refresh;
-    await user.save({ validateBeforeSave: false });
-    data.authToken = { access, refresh };
-    return ApiResponse(req, res, 200, "Signed in successfully!", data);
+    existsUser.authentication?.push({
+      token: refreshToken,
+      expiry: new Date(Date.now() + refreshExpiry * 1000),
+    });
+
+    const authorizeUser = await existsUser.save();
+
+    const authorizeId = authorizeUser.authentication?.filter(
+      (auth) => auth.token === refreshToken
+    )[0]._id!;
+
+    authorizeCookie(res, String(authorizeId));
+
+    return ApiResponse(res, 200, "Signed in successfully!", {
+      _id: accessData._id,
+      email: accessData.email,
+      setup: accessData.setup,
+    });
   } catch (error: any) {
-    return ApiResponse(req, res, error.code, error.message);
+    return ApiResponse(res, error.code, error.message);
   }
 };
 
 const signOutUser = async (req: Request, res: Response) => {
-  await User.findByIdAndUpdate(
-    req.user?._id,
-    {
-      $unset: {
-        refreshToken: 1,
+  const requestUser = req.user!;
+  const refreshToken = req.cookies.refresh;
+  const authorizeId = req.cookies.auth_id;
+
+  if (requestUser.setup && refreshToken && authorizeId) {
+    await User.findOneAndUpdate(
+      { _id: requestUser._id },
+      {
+        $pull: {
+          authentication: { _id: authorizeId, token: refreshToken },
+        },
       },
-    },
-    {
-      new: true,
-    }
-  );
+      { new: true }
+    );
+  }
 
   res.clearCookie("access");
   res.clearCookie("refresh");
-  return ApiResponse(req, res, 200, "Signed out successfully!");
+  res.clearCookie("auth_id");
+
+  const userData = maskedDetails(requestUser);
+  return ApiResponse(res, 200, "Signed out successfully!", userData);
 };
 
-const authRefresh = async (req: Request, res: Response) => {
-  const tokens = req.token;
-  return ApiResponse(
-    req,
-    res,
-    200,
-    "Auth tokens refresh successfully!",
-    tokens
-  );
+const refreshAuth = async (req: Request, res: Response) => {
+  return ApiResponse(res, 200, "Authentication refreshed!", req.user);
 };
 
-export { signUpUser, signInUser, signOutUser, authRefresh };
+export { signUpUser, signInUser, signOutUser, refreshAuth };

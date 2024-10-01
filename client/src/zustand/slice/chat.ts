@@ -5,9 +5,9 @@ export interface Message {
   _id: string;
   sender: string;
   recipient: string;
-  messageType: "text" | "file";
-  textMessage?: string;
-  fileUrl?: string;
+  type: "text" | "file";
+  text?: string;
+  file?: string;
   createdAt?: Date;
   updatedAt?: Date;
   __v?: any;

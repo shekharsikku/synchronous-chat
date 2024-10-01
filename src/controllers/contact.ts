@@ -1,8 +1,8 @@
+import { ApiResponse, ApiError } from "../utils";
 import { Request, Response } from "express";
 import { Types } from "mongoose";
-import { ApiResponse, ApiError } from "../utils";
-import User from "../models/user";
 import Message from "../models/message";
+import User from "../models/user";
 
 const searchContact = async (req: Request, res: Response) => {
   try {
@@ -26,47 +26,40 @@ const searchContact = async (req: Request, res: Response) => {
     if (contacts.length <= 0) {
       throw new ApiError(404, "No any contact available!");
     }
-    return ApiResponse(req, res, 200, "All searched contacts!", contacts);
+    return ApiResponse(res, 200, "All searched contacts!", contacts);
   } catch (error: any) {
-    return ApiResponse(req, res, error.code, error.message);
+    return ApiResponse(res, error.code, error.message);
   }
 };
 
 const getAllContacts = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?._id;
-    const users = await User.find({ _id: { $ne: userId } });
+    const users = await User.find({ _id: { $ne: req.user?._id } });
 
     if (!users || users.length == 0) {
       throw new ApiError(404, "No any contact available!");
     }
 
     const contacts = users.map((user) => ({
-      label: user.username ? `${user.fullName} (${user.username})` : user.email,
+      label: user.username ? `${user.name} (${user.username})` : user.email,
       value: user._id,
     }));
 
-    return ApiResponse(
-      req,
-      res,
-      200,
-      "Contacts fetched successfully!",
-      contacts
-    );
+    return ApiResponse(res, 200, "Contacts fetched successfully!", contacts);
   } catch (error: any) {
-    return ApiResponse(req, res, error.code, error.message);
+    return ApiResponse(res, error.code, error.message);
   }
 };
 
 const getContactsList = async (req: Request, res: Response) => {
   try {
-    let userId = req.user?._id;
-    userId = new Types.ObjectId(userId);
+    let uid = req.user?._id;
+    uid = new Types.ObjectId(uid);
 
     const contacts = await Message.aggregate([
       {
         $match: {
-          $or: [{ sender: userId }, { recipient: userId }],
+          $or: [{ sender: uid }, { recipient: uid }],
         },
       },
       {
@@ -76,7 +69,7 @@ const getContactsList = async (req: Request, res: Response) => {
         $group: {
           _id: {
             $cond: {
-              if: { $eq: ["$sender", userId] },
+              if: { $eq: ["$sender", uid] },
               then: "$recipient",
               else: "$sender",
             },
@@ -99,26 +92,21 @@ const getContactsList = async (req: Request, res: Response) => {
         $project: {
           _id: 1,
           lastMessageTime: 1,
+          name: "$contactInfo.name",
           email: "$contactInfo.email",
-          fullName: "$contactInfo.fullName",
           username: "$contactInfo.username",
-          imageUrl: "$contactInfo.imageUrl",
-          profileColor: "$contactInfo.profileColor",
+          gender: "$contactInfo.gender",
+          image: "$contactInfo.image",
+          bio: "$contactInfo.bio",
         },
       },
       {
         $sort: { lastMessageTime: -1 },
       },
     ]);
-    return ApiResponse(
-      req,
-      res,
-      200,
-      "Contacts fetched successfully!",
-      contacts
-    );
+    return ApiResponse(res, 200, "Contacts fetched successfully!", contacts);
   } catch (error: any) {
-    return ApiResponse(req, res, error.code || 500, error.message);
+    return ApiResponse(res, error.code || 500, error.message);
   }
 };
 

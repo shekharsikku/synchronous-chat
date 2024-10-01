@@ -36,7 +36,7 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
 
   const shakeClass = message._id === lastMessageId ? "shake" : "";
   const deletedMessage = message.sender === selectedChatData?._id
-    ? "This message was deleted." : "You deleted this message.";
+    ? "This message was deleted" : "You deleted this message";
 
   const copyToClipboard = (dataToCopy: string) => {
     try {
@@ -68,7 +68,7 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
       const response = await api.delete(`/api/message/delete/${id}`, { withCredentials: true });
       const deletedMessage = await response.data.data;
       const updatedMessages = messages.map(message => message._id === deletedMessage._id ? deletedMessage : message);
-      await setMessages([...updatedMessages]);
+      setMessages([...updatedMessages]);
       toast.info(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
@@ -85,7 +85,7 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
 
   const handleDownload = (messageFile: Message) => {
     const link = document.createElement('a');
-    link.href = messageFile.fileUrl!;
+    link.href = messageFile.file!;
     link.download = messageFile._id;
     document.body.appendChild(link);
     link.click();
@@ -106,12 +106,12 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
                   : "bg-gray-100 text-gray-900 border-white/10"} 
                 border inline-block p-3 rounded-sm my-1 break-words cursor-default
                 md:max-w-[90%] lg:max-w-[80%] xl:max-w-[70%] ${shakeClass}`}>
-                  {message.messageType === "text" ? (
-                    message.textMessage || deletedMessageInfo()
+                  {message.type === "text" ? (
+                    message.text || deletedMessageInfo()
                   ) : (
-                    message.fileUrl !== "" ? (
-                      checkImageType(message.fileUrl!) ? (
-                        <img src={message.fileUrl} alt="Image file"
+                    message.file !== "" ? (
+                      checkImageType(message.file!) ? (
+                        <img src={message.file} alt="Image file"
                           className="h-48 w-full md:h-60 md:w-auto" />
                       ) : (
                         <div className="flex items-center justify-center gap-2">
@@ -133,16 +133,16 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
                     ))}
                 </div>
               </TooltipTrigger>
-              {message.textMessage !== "" && (
+              {message.text !== "" && (
                 <TooltipContent className="flex gap-3 py-3">
-                  {message.messageType === "text" && (
-                    <Button variant="outline" size="icon" onClick={() => copyToClipboard(message.textMessage!)}>
+                  {message.type === "text" && (
+                    <Button variant="outline" size="icon" onClick={() => copyToClipboard(message.text!)}>
                       <HiOutlineClipboardDocument size={20} />
                     </Button>
                   )}
-                  {message.messageType === "file" && (
+                  {message.type === "file" && (
                     <>
-                      {checkImageType(message.fileUrl!) && (
+                      {checkImageType(message.file!) && (
                         <Button variant="outline" size="icon" onClick={() => setImageViewExtend(true)}>
                           <HiOutlineViewfinderCircle size={20} />
                         </Button>
@@ -165,7 +165,7 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
             </Tooltip>
           </TooltipProvider>
           <div className="text-xs text-gray-600 mb-2">
-            {message.textMessage === "" || message.fileUrl === ""
+            {message.text === "" || message.file === ""
               ? `${moment(message.updatedAt).format("LT")}`
               : `${moment(message.createdAt).format("LT")}`}
           </div>
@@ -176,7 +176,7 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
                 <DialogTitle className="text-start">Extend View Mode</DialogTitle>
                 <DialogDescription className="hidden"></DialogDescription>
               </DialogHeader>
-              <img src={message?.fileUrl} alt="Extend view" />
+              <img src={message?.file} alt="Extend view" />
             </DialogContent>
           </Dialog>
         </>

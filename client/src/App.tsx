@@ -29,16 +29,14 @@ const App = () => {
 
   useEffect(() => {
     const initialRefresh = async () => {
-      const response = await authRefresh();
-      console.log({ response });
+      await authRefresh();
     };
 
     initialRefresh();
 
     const intervalId = setInterval(async () => {
-      const response = await authRefresh();
-      console.log({ response });
-    }, 10 * 60 * 1000);
+      await authRefresh();
+    }, 50 * 60 * 1000);
 
     return () => clearInterval(intervalId);
   }, []);
