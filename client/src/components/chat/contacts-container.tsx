@@ -16,7 +16,7 @@ const ContactsContainer = () => {
   // console.log({ authenticated, user: userData });
 
   const { onlineUsers } = useSocket();
-  const { setSelectedChatType, setSelectedChatData, selectedChatData, setMessages, messages } = useChatStore();
+  const { setSelectedChatType, setSelectedChatData, selectedChatData, setMessages } = useChatStore();
   const [allContacts, setAllContacts] = useState<[UserInfo] | null>(null);
 
   const fetchAllContacts = async () => {
@@ -31,7 +31,7 @@ const ContactsContainer = () => {
 
   useEffect(() => {
     fetchAllContacts();
-  }, [setAllContacts, setMessages, messages]);
+  }, [setAllContacts, setMessages]);
 
   const selectNewContact = (contact: object) => {
     setSelectedChatType("contact");

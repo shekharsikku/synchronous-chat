@@ -5,14 +5,14 @@ import { ContactsContainer, EmptyChatContainer, ChatContainer } from "@/componen
 
 const Chat = () => {
   const navigate = useNavigate();
-  const { userInfo, isAuthenticated } = useAuthStore();
+  const { userInfo } = useAuthStore();
   const { selectedChatType, selectedChatData } = useChatStore();
 
   useEffect(() => {
-    if (isAuthenticated && !userInfo?.setup) {
+    if (userInfo?.setup === false) {
       navigate("/profile")
     }
-  }, [navigate, userInfo, isAuthenticated]);
+  }, [navigate, userInfo]);
 
   return (
     <main className="h-[100vh] flex overflow-hidden">

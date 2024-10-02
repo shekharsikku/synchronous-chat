@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteMessages = exports.deleteMessage = exports.getMessages = exports.sendMessage = void 0;
 const utils_1 = require("../utils");
 const socket_1 = require("../socket");
-const mongoose_1 = require("mongoose");
 const conversation_1 = __importDefault(require("../models/conversation"));
 const message_1 = __importDefault(require("../models/message"));
 const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -54,22 +53,40 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.sendMessage = sendMessage;
-function cleanupConversation(conversationId) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const conversations = yield conversation_1.default.findById(conversationId);
-        if (conversations) {
-            const validMessages = [];
-            for (const message of conversations.messages) {
-                const messageExists = yield (0, mongoose_1.model)("Message").exists({ _id: message });
-                if (messageExists) {
-                    validMessages.push(message);
-                }
-            }
-            conversations.messages = validMessages;
-            yield conversations.save();
-        }
-    });
+/*
+const cleanupConversation = async (conversationId: Types.ObjectId) => {
+  const conversations = await Conversation.findById(conversationId);
+
+  if (conversations) {
+    const validMessages = [];
+
+    for (const message of conversations.messages) {
+      const messageExists = await model("Message").exists({ _id: message });
+
+      if (messageExists) {
+        validMessages.push(message);
+      }
+    }
+
+    conversations.messages = validMessages;
+    await conversations.save();
+  }
 }
+*/
+const cleanupConversation = (conversationId) => __awaiter(void 0, void 0, void 0, function* () {
+    // Use lean() for faster retrieval
+    const conversations = yield conversation_1.default.findById(conversationId).lean();
+    if (conversations && conversations.messages.length > 0) {
+        // Batch check existence of all messages using $in
+        const validMessages = yield message_1.default.find({
+            _id: { $in: conversations.messages },
+        }).distinct("_id"); // Only retrieve message IDs
+        // Only update if there are messages that were removed
+        if (validMessages.length !== conversations.messages.length) {
+            yield conversation_1.default.updateOne({ _id: conversationId }, { $set: { messages: validMessages } });
+        }
+    }
+});
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {

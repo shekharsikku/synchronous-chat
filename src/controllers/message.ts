@@ -45,7 +45,8 @@ const sendMessage = async (req: Request, res: Response) => {
   }
 };
 
-async function cleanupConversation(conversationId: Types.ObjectId) {
+/*
+const cleanupConversation = async (conversationId: Types.ObjectId) => {
   const conversations = await Conversation.findById(conversationId);
 
   if (conversations) {
@@ -63,6 +64,27 @@ async function cleanupConversation(conversationId: Types.ObjectId) {
     await conversations.save();
   }
 }
+*/
+
+const cleanupConversation = async (conversationId: Types.ObjectId) => {
+  // Use lean() for faster retrieval
+  const conversations = await Conversation.findById(conversationId).lean();
+
+  if (conversations && conversations.messages.length > 0) {
+    // Batch check existence of all messages using $in
+    const validMessages = await Message.find({
+      _id: { $in: conversations.messages },
+    }).distinct("_id"); // Only retrieve message IDs
+
+    // Only update if there are messages that were removed
+    if (validMessages.length !== conversations.messages.length) {
+      await Conversation.updateOne(
+        { _id: conversationId },
+        { $set: { messages: validMessages } }
+      );
+    }
+  }
+};
 
 const getMessages = async (req: Request, res: Response) => {
   try {
