@@ -15,6 +15,7 @@ const UserSchema = new mongoose_1.Schema({
         type: String,
         unique: true,
         lowercase: true,
+        sparse: true,
         default: null,
     },
     password: {
@@ -54,6 +55,12 @@ const UserSchema = new mongoose_1.Schema({
     },
 }, {
     timestamps: true,
+});
+UserSchema.pre("save", function (next) {
+    if (!this.username || this.username.trim() === "") {
+        this.username = new mongoose_1.Types.ObjectId().toString();
+    }
+    next();
 });
 const User = (0, mongoose_1.model)("User", UserSchema);
 exports.default = User;

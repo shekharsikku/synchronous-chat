@@ -126,6 +126,12 @@ Open [http://localhost:4000](http://localhost:4000) or `PORT` you added `.env` v
 http://localhost:4000
 ```
 
+**Live WebApp**
+
+```bash
+https://synchronouschat.onrender.com
+```
+
 ### 🪄 Code by **Shekhar Sharma**
 
 ---

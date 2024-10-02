@@ -18,7 +18,6 @@ const validateSchema =
       next();
     } catch (error: any) {
       const errors = ValidationError(error);
-      console.log({ errors });
       return ApiResponse(res, 400, "Validation error!", null, errors);
     }
   };

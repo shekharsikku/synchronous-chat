@@ -22,8 +22,8 @@ type ResponseType = {
 
 const ApiResponse = (
   res: Response,
-  code: number = 400,
-  message: string = "Something went wrong!",
+  code: number,
+  message: string,
   data: any = null,
   error: any = null
 ) => {

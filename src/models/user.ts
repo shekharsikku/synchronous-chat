@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Types, Schema, model } from "mongoose";
 import { UserInterface } from "../interface";
 
 const UserSchema = new Schema<UserInterface>(
@@ -16,6 +16,7 @@ const UserSchema = new Schema<UserInterface>(
       type: String,
       unique: true,
       lowercase: true,
+      sparse: true,
       default: null,
     },
     password: {
@@ -58,6 +59,13 @@ const UserSchema = new Schema<UserInterface>(
     timestamps: true,
   }
 );
+
+UserSchema.pre("save", function (next) {
+  if (!this.username || this.username.trim() === "") {
+    this.username = new Types.ObjectId().toString();
+  }
+  next();
+});
 
 const User = model<UserInterface>("User", UserSchema);
 
