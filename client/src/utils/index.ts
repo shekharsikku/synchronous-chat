@@ -15,6 +15,7 @@ export const signInSchema = z
     email: z.string().email({ message: "Invalid email address!" }).optional(),
     username: z.string().optional(),
     password: z.string().min(1, { message: "Password is required!" }),
+    device_information: z.string().optional(),
   })
   .refine((data) => data.email || data.username, {
     message: "Email or Username required!",

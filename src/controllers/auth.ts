@@ -38,7 +38,7 @@ const signUpUser = async (req: Request, res: Response) => {
 
 const signInUser = async (req: Request, res: Response) => {
   try {
-    const { email, password, username } = await req.body;
+    const { email, password, username, device_information } = await req.body;
     const conditions = [];
 
     if (email) {
@@ -77,6 +77,7 @@ const signInUser = async (req: Request, res: Response) => {
     existsUser.authentication?.push({
       token: refreshToken,
       expiry: new Date(Date.now() + refreshExpiry * 1000),
+      device: device_information,
     });
 
     const authorizeUser = await existsUser.save();
