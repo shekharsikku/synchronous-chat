@@ -13,15 +13,27 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const cron_1 = require("cron");
+const user_1 = __importDefault(require("../models/user"));
 const message_1 = __importDefault(require("../models/message"));
 const job = new cron_1.CronJob("0 0 * * * *", () => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        /** for delete expired auth tokens */
+        const currentDate = new Date();
+        const authResult = yield user_1.default.updateMany({ "authentication.expiry": { $lt: currentDate } }, {
+            $pull: {
+                authentication: { expiry: { $lt: currentDate } },
+            },
+        });
+        /** for delete 24 hours old messages */
         const hoursAgo = new Date();
         hoursAgo.setHours(hoursAgo.getHours() - 24);
-        const result = yield message_1.default.deleteMany({
+        const messageResult = yield message_1.default.deleteMany({
             createdAt: { $lt: hoursAgo },
         });
-        console.log("Response:", result);
+        console.log("Result:", {
+            authentication: authResult,
+            messages: messageResult,
+        });
     }
     catch (error) {
         console.log(`Error: ${error.message}`);
