@@ -2,19 +2,23 @@ import { toast } from "sonner";
 import { useState, useEffect, useRef } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, } from "@/components/ui/tooltip";
 import { HiOutlineFaceSmile, HiMiniLink, HiOutlinePaperAirplane, HiOutlineBackspace } from "react-icons/hi2";
-import { useChatStore } from "@/zustand";
+import { useChatStore, useAuthStore } from "@/zustand";
 import { convertToBase64 } from "@/utils";
+import { useSocket } from "@/context/socket-context";
 import EmojiPicker from "emoji-picker-react";
 import api from "@/lib/api";
 
 const MessageBar = () => {
-  const { selectedChatData, messages, setMessages } = useChatStore();
+  const { socket } = useSocket();
+  const { userInfo } = useAuthStore();
+  const { selectedChatData, messages, setMessages, setIsPartnerTyping } = useChatStore();
 
   const emojiRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [message, setMessage] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const [emojiPicker, setEmojiPicker] = useState(false);
 
   useEffect(() => {
@@ -100,6 +104,42 @@ const MessageBar = () => {
     }
   };
 
+  useEffect(() => {
+    socket?.on("displayTyping", (data) => {
+      if (data.uid === userInfo?._id) {
+        setIsPartnerTyping(data.typing);
+      }
+    });
+
+    socket?.on("hideTyping", (data) => {
+      if (data.uid === userInfo?._id) {
+        setIsPartnerTyping(data.typing);
+      }
+    });
+
+    return () => {
+      socket?.off("displayTyping");
+      socket?.off("hideTyping");
+    };
+  }, [selectedChatData?._id]);
+
+  const handleTyping = () => {
+    if (!isTyping) {
+      setIsTyping(true);
+      socket?.emit("startTyping", selectedChatData?._id);
+
+      setTimeout(() => {
+        setIsTyping(false);
+        socket?.emit("stopTyping", selectedChatData?._id);
+      }, 2000);
+    }
+  };
+
+  const handleChange = (e: any) => {
+    setMessage(e.target.value);
+    handleTyping();
+  };
+
   return (
     <div className="h-[10vh] border-t border-gray-200 flex items-center justify-center p-2 lg:px-3">
       <div className="flex-1 flex rounded items-center justify-center gap-3 md:gap-5 bg-gray-100/80 px-4 h-full">
@@ -148,7 +188,7 @@ const MessageBar = () => {
           placeholder="Type a message"
           autoComplete="off"
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={handleChange}
           className="flex-1 bg-transparent px-2 py-4 md:px-4 rounded border-none 
           outline-none text-[14px] md:text-[14.5px] font-normal"
           disabled={selectedImage && message !== "" ? true : false}

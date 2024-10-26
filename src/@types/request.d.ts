@@ -1,9 +1,9 @@
 import "express";
-import { UserInterface, UserTokenInterface } from "../interface";
+import { UserInterface, TokenInterface } from "../interface";
 
 declare module "express" {
   interface Request {
     user?: UserInterface;
-    token?: UserTokenInterface;
+    token?: TokenInterface;
   }
 }

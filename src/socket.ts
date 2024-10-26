@@ -5,19 +5,17 @@ import app from "./app";
 
 const server = createServer(app);
 
-const corsOrigin = env.CORS_ORIGIN;
-
 const io = new Server(server, {
   cors: {
-    origin: corsOrigin,
+    origin: env.CORS_ORIGIN,
     credentials: true,
   },
 });
 
-export const userSocketMap = new Map<string, string>();
+const userSocketMap = new Map<string, string>();
 
-const getSocketId = (userSocketId: any) => {
-  return userSocketMap.get(userSocketId);
+const getSocketId = (socketUserId: any) => {
+  return userSocketMap.get(socketUserId);
 };
 
 io.on("connection", (socket: Socket) => {
@@ -34,6 +32,22 @@ io.on("connection", (socket: Socket) => {
 
   socket.on("messageDelete", (currentMessage) => {
     io.emit("messageRemove", currentMessage);
+  });
+
+  socket.on("startTyping", (userId) => {
+    const socketId = getSocketId(userId);
+
+    if (socketId) {
+      socket.to(socketId).emit("displayTyping", { uid: userId, typing: true });
+    }
+  });
+
+  socket.on("stopTyping", (userId) => {
+    const socketId = getSocketId(userId);
+
+    if (socketId) {
+      socket.to(socketId).emit("hideTyping", { uid: userId, typing: false });
+    }
   });
 
   socket.on("disconnect", () => {

@@ -24,6 +24,9 @@ const useChatStore = create<{
   setMessages: (messages: Message[]) => void;
 
   closeChat: () => void;
+
+  isPartnerTyping: boolean;
+  setIsPartnerTyping: (isPartnerTyping: boolean) => void;
 }>((set) => ({
   selectedChatType: "",
   setSelectedChatType: (selectedChatType: string) => set({ selectedChatType }),
@@ -41,6 +44,9 @@ const useChatStore = create<{
       selectedChatData: null,
       messages: [],
     }),
+
+  isPartnerTyping: false,
+  setIsPartnerTyping: (isPartnerTyping: boolean) => set({ isPartnerTyping }),
 }));
 
 export default useChatStore;

@@ -6,7 +6,7 @@ import { useChatStore } from "@/zustand";
 import { useState } from "react";
 
 const ChatHeader = () => {
-  const { selectedChatData, closeChat } = useChatStore();
+  const { selectedChatData, closeChat, isPartnerTyping } = useChatStore();
   const [openUserInfoModal, setOpenUserInfoModal] = useState(false);
   const defaultImage = "https://res.cloudinary.com/do1m5szld/image/upload/v1721983520/no-avatar_jvggxi.png";
 
@@ -21,9 +21,12 @@ const ChatHeader = () => {
               {selectedChatData?.username?.split("").shift() || selectedChatData?.email?.split("").shift()}
             </AvatarFallback>
           </Avatar>
-          <h3 className="font-semibold">
-            {selectedChatData?.name || selectedChatData?.username || selectedChatData?.email}
-          </h3>
+          <div className="flex flex-col">
+            <h3 className="font-semibold">
+              {selectedChatData?.name || selectedChatData?.username || selectedChatData?.email}
+            </h3>
+            {isPartnerTyping && <span className="text-[10px]">typing...</span>}
+          </div>
         </div>
         <div className="flex items-center justify-center gap-4">
           <Dialog open={openUserInfoModal} onOpenChange={setOpenUserInfoModal}>
