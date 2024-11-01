@@ -16,6 +16,7 @@ const MessageBar = () => {
   const emojiRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -127,13 +128,25 @@ const MessageBar = () => {
     if (!isTyping) {
       setIsTyping(true);
       socket?.emit("startTyping", selectedChatData?._id);
-
-      setTimeout(() => {
-        setIsTyping(false);
-        socket?.emit("stopTyping", selectedChatData?._id);
-      }, 2000);
     }
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      socket?.emit("stopTyping", selectedChatData?._id);
+    }, 2500);
   };
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleChange = (e: any) => {
     setMessage(e.target.value);
