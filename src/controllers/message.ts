@@ -124,7 +124,7 @@ const deleteMessage = async (req: Request, res: Response) => {
 
     if (message && message.sender?.equals(uid)) {
       message.type === "text" ? (message.text = "") : (message.file = "");
-
+      message.type = "deleted";
       await message.save({ validateBeforeSave: false });
 
       if (receiverSocketId) {

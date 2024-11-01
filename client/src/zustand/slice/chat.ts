@@ -5,7 +5,7 @@ export interface Message {
   _id: string;
   sender: string;
   recipient: string;
-  type: "text" | "file";
+  type: "text" | "file" | "deleted";
   text?: string;
   file?: string;
   createdAt?: Date;

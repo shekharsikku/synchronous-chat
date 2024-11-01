@@ -120,6 +120,7 @@ const deleteMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const receiverSocketId = (0, socket_1.getSocketId)(String(message === null || message === void 0 ? void 0 : message.recipient));
         if (message && ((_b = message.sender) === null || _b === void 0 ? void 0 : _b.equals(uid))) {
             message.type === "text" ? (message.text = "") : (message.file = "");
+            message.type = "deleted";
             yield message.save({ validateBeforeSave: false });
             if (receiverSocketId) {
                 socket_1.io.to(receiverSocketId).emit("messageRemove", message);

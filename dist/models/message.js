@@ -14,7 +14,7 @@ const MessageSchema = new mongoose_1.Schema({
     },
     type: {
         type: String,
-        enum: ["text", "file"],
+        enum: ["text", "file", "deleted"],
         required: true,
     },
     text: {

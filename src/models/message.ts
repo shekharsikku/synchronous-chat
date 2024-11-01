@@ -15,7 +15,7 @@ const MessageSchema = new Schema<MessageInterface>(
     },
     type: {
       type: String,
-      enum: ["text", "file"],
+      enum: ["text", "file", "deleted"],
       required: true,
     },
     text: {

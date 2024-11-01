@@ -3,9 +3,8 @@ import {
   HiOutlineNoSymbol,
   HiOutlineTrash,
   HiOutlineClipboardDocument,
-  HiOutlineEllipsisHorizontalCircle,
   HiOutlineCloudArrowDown,
-  HiOutlineFolderArrowDown,
+  HiOutlineDocumentArrowDown,
   HiOutlineViewfinderCircle
 } from "react-icons/hi2";
 import {
@@ -75,14 +74,6 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
     }
   }
 
-  const deletedMessageInfo = () => {
-    return (
-      <span className="flex items-center gap-1 italic cursor-not-allowed">
-        <HiOutlineNoSymbol /> {deletedMessage}
-      </span>
-    )
-  }
-
   const handleDownload = (messageFile: Message) => {
     const link = document.createElement('a');
     link.href = messageFile.file!;
@@ -104,36 +95,35 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
                 <div className={`${message.sender !== selectedChatData?._id
                   ? "bg-gray-200 text-gray-950 border-white/20"
                   : "bg-gray-100 text-gray-900 border-white/10"} 
-                border inline-block p-3 rounded-sm my-1 break-words cursor-default
-                md:max-w-[90%] lg:max-w-[80%] xl:max-w-[70%] ${shakeClass}`}>
-                  {message.type === "text" ? (
-                    message.text || deletedMessageInfo()
+                border inline-block p-3 rounded-sm my-1 break-words
+                md:max-w-[90%] lg:max-w-[80%] xl:max-w-[70%] ${shakeClass}
+                ${message.type === "deleted" ? "cursor-not-allowed" : "cursor-default"}`}>
+                  {/* Rendered if message is deleted or not */}
+                  {message.type === "deleted" ? (
+                    <span className="flex items-center gap-1 italic text-base">
+                      <HiOutlineNoSymbol size={16} /> {deletedMessage}
+                    </span>
                   ) : (
-                    message.file !== "" ? (
-                      checkImageType(message.file!) ? (
-                        <img src={message.file} alt="Image file"
-                          className="h-48 w-full md:h-60 md:w-auto" />
-                      ) : (
-                        <div className="flex items-center justify-center gap-2">
-                          {message.sender !== selectedChatData?._id ? (
-                            <>
-                              <HiOutlineFolderArrowDown size={20} />
-                              <span className="text-base">Download for view</span>
-                            </>
-                          ) : (
-                            <>
-                              <span className="text-base">Download for view</span>
-                              <HiOutlineFolderArrowDown size={20} />
-                            </>
-                          )}
-                        </div>
-                      )
-                    ) : (
-                      deletedMessageInfo()
-                    ))}
+                    <>
+                      {/* For test message type */}
+                      {message.type === "text" && (
+                        <span className="text-base">{message.text}</span>
+                      )}
+                      {/* For file message type */}
+                      {message.type === "file" && (
+                        checkImageType(message.file!) ? (
+                          <img src={message.file} alt="Image file"
+                            className="h-48 w-full md:h-60 md:w-auto" />
+                        ) : (
+                          <span className="flex items-center gap-1 text-base">
+                            <HiOutlineDocumentArrowDown size={16} /> Download for view this file
+                          </span>
+                        ))}
+                    </>
+                  )}
                 </div>
               </TooltipTrigger>
-              {message.text !== "" && (
+              {message.type !== "deleted" && (
                 <TooltipContent className="flex gap-3 py-3">
                   {message.type === "text" && (
                     <Button variant="outline" size="icon" onClick={() => copyToClipboard(message.text!)}>
@@ -157,9 +147,6 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
                       <HiOutlineTrash size={20} />
                     </Button>
                   )}
-                  <Button variant="outline" size="icon" onClick={() => console.log(message)}>
-                    <HiOutlineEllipsisHorizontalCircle size={20} />
-                  </Button>
                 </TooltipContent>
               )}
             </Tooltip>
