@@ -1,4 +1,9 @@
-import express, { NextFunction, Request, Response } from "express";
+import express, {
+  NextFunction,
+  Request,
+  Response,
+  ErrorRequestHandler,
+} from "express";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import helmet from "helmet";
@@ -77,7 +82,7 @@ if (env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../client/dist")));
 }
 
-app.get("*", (_req: Request, res: Response) => {
+app.all("*path", (_req: Request, res: Response) => {
   if (env.NODE_ENV === "development") {
     res.status(200).send({ message: "Welcome to Synchronous Chat!" });
   } else {
@@ -85,13 +90,9 @@ app.get("*", (_req: Request, res: Response) => {
   }
 });
 
-app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
-  try {
-    console.error(`Error: ${err.message}`);
-    return res.status(500).json({ message: "Internal server error!" });
-  } catch (error) {
-    next(error);
-  }
-});
+app.use(((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  console.error(`Error: ${err.message}`);
+  res.status(500).json({ message: "Internal server error!" });
+}) as ErrorRequestHandler);
 
 export default app;

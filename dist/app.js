@@ -60,7 +60,7 @@ app.use("/api/message", routers_1.MessageRouter);
 if (env_1.default.NODE_ENV === "production") {
     app.use(express_1.default.static(path_1.default.join(__dirname, "../client/dist")));
 }
-app.get("*", (_req, res) => {
+app.all("*path", (_req, res) => {
     if (env_1.default.NODE_ENV === "development") {
         res.status(200).send({ message: "Welcome to Synchronous Chat!" });
     }
@@ -68,13 +68,8 @@ app.get("*", (_req, res) => {
         res.sendFile(path_1.default.join(__dirname, "../client/dist", "index.html"));
     }
 });
-app.use((err, _req, res, next) => {
-    try {
-        console.error(`Error: ${err.message}`);
-        return res.status(500).json({ message: "Internal server error!" });
-    }
-    catch (error) {
-        next(error);
-    }
-});
+app.use(((err, _req, res, _next) => {
+    console.error(`Error: ${err.message}`);
+    res.status(500).json({ message: "Internal server error!" });
+}));
 exports.default = app;
