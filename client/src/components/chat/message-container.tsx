@@ -37,7 +37,7 @@ const MessageContainer = () => {
     }, 100);
   }, [messages]);
 
-  const renderMessages = () => {
+  const RenderMessages = () => {
     let lastDate = "";
 
     return messages.map((message) => {
@@ -60,7 +60,7 @@ const MessageContainer = () => {
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-hide py-2 md:p-4 px-6 w-full outline-none">
-      {renderMessages()}
+      <RenderMessages />
       <div ref={lastMessageRef} />
     </div>
   )

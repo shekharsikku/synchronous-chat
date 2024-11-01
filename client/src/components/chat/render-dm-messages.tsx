@@ -152,7 +152,7 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
             </Tooltip>
           </TooltipProvider>
           <div className="text-xs text-gray-600 mb-2">
-            {message.text === "" || message.file === ""
+            {message.type === "deleted"
               ? `${moment(message.updatedAt).format("LT")}`
               : `${moment(message.createdAt).format("LT")}`}
           </div>
