@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ChangeEvent, ChangeEventHandler, useState } from "react";
 import { useSocket } from "@/context/socket-context";
 import { useAuthStore, useChatStore } from "@/zustand";
-import notificationSound from "@/assets/sound/notification.mp3";
+import notificationSound from "@/assets/sound/message-alert.mp3";
 import api from "@/lib/api";
 
 import { useDispatch } from "react-redux";
@@ -56,7 +56,6 @@ export const useGetUserInfo = () => {
       return null;
     }
   };
-
   return { getUserInfo };
 };
 
@@ -138,6 +137,5 @@ export const useDebounce = (callback: Function, delay: number) => {
       callbackRef(...args);
     }, delay);
   };
-
   return debouncedFunction;
 };
