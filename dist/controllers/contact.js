@@ -60,19 +60,75 @@ const getAllContacts = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.getAllContacts = getAllContacts;
+/*
+const getContactsList = async (req: Request, res: Response) => {
+  try {
+    let uid = req.user?._id;
+    uid = new Types.ObjectId(uid);
+
+    const contacts = await Message.aggregate([
+      {
+        $match: {
+          $or: [{ sender: uid }, { recipient: uid }],
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $group: {
+          _id: {
+            $cond: {
+              if: { $eq: ["$sender", uid] },
+              then: "$recipient",
+              else: "$sender",
+            },
+          },
+          lastMessageTime: { $first: "$createdAt" },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "contactInfo",
+        },
+      },
+      {
+        $unwind: "$contactInfo",
+      },
+      {
+        $project: {
+          _id: 1,
+          lastMessageTime: 1,
+          name: "$contactInfo.name",
+          email: "$contactInfo.email",
+          username: "$contactInfo.username",
+          gender: "$contactInfo.gender",
+          image: "$contactInfo.image",
+          bio: "$contactInfo.bio",
+        },
+      },
+      {
+        $sort: { lastMessageTime: -1 },
+      },
+    ]);
+    return ApiResponse(res, 200, "Contacts fetched successfully!", contacts);
+  } catch (error: any) {
+    return ApiResponse(res, error.code || 500, error.message);
+  }
+};
+*/
 const getContactsList = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
-        let uid = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-        uid = new mongoose_1.Types.ObjectId(uid);
+        const uid = new mongoose_1.Types.ObjectId((_a = req.user) === null || _a === void 0 ? void 0 : _a._id);
         const contacts = yield message_1.default.aggregate([
             {
                 $match: {
                     $or: [{ sender: uid }, { recipient: uid }],
                 },
-            },
-            {
-                $sort: { createdAt: -1 },
             },
             {
                 $group: {
@@ -83,7 +139,7 @@ const getContactsList = (req, res) => __awaiter(void 0, void 0, void 0, function
                             else: "$sender",
                         },
                     },
-                    lastMessageTime: { $first: "$createdAt" },
+                    lastMessageTime: { $max: "$createdAt" }, // Use `$max` to avoid sorting before grouping
                 },
             },
             {
@@ -110,13 +166,13 @@ const getContactsList = (req, res) => __awaiter(void 0, void 0, void 0, function
                 },
             },
             {
-                $sort: { lastMessageTime: -1 },
+                $sort: { lastMessageTime: -1 }, // Final sorting by last message time
             },
         ]);
         return (0, utils_1.ApiResponse)(res, 200, "Contacts fetched successfully!", contacts);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, error.code || 500, error.message);
+        return (0, utils_1.ApiResponse)(res, error.code || 500, error.message || "An error occurred while fetching contacts.");
     }
 });
 exports.getContactsList = getContactsList;

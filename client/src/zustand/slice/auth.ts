@@ -12,6 +12,7 @@ export interface UserInfo {
   createdAt?: any;
   updatedAt?: any;
   __v?: number;
+  lastMessageTime?: any;
 }
 
 const useAuthStore = create<{

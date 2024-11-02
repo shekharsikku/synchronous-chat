@@ -4,8 +4,12 @@ import { useSignOutUser } from "@/hooks";
 import { HiOutlineArrowRightOnRectangle } from "react-icons/hi2";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, } from "@/components/ui/tooltip";
+import { useSelector } from "react-redux";
 
 const ProfileInfo = () => {
+  /** This state have authenticated and userData */
+  const { } = useSelector((state: any) => state.auth);
+
   const navigate = useNavigate();
   const { userInfo } = useAuthStore();
   const { handleSignOut } = useSignOutUser();
