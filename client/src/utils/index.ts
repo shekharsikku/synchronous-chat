@@ -108,3 +108,21 @@ export const checkImageType = (filePath: string): boolean => {
   if (!extractedExtension) return false;
   return validExtensions.has(extractedExtension.toLowerCase());
 };
+
+export const countUserMessages = (messages: any, selectedChat: any) => {
+  let sentCount = 0;
+  let receivedCount = 0;
+
+  messages.forEach((message: any) => {
+    if (message.sender === selectedChat._id) {
+      receivedCount += 1;
+    } else if (message.recipient === selectedChat._id) {
+      sentCount += 1;
+    }
+  });
+
+  return {
+    sent: sentCount,
+    received: receivedCount,
+  };
+};

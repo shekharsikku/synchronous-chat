@@ -8,7 +8,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/comp
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { UserInfo } from "@/zustand/slice/auth";
 import { useChatStore } from "@/zustand";
-import { useDebounce } from "@/hooks";
+import { useDebounce, useAvatar } from "@/hooks";
 import api from "@/lib/api";
 
 const AddNewChat = () => {
@@ -81,7 +81,7 @@ const AddNewChat = () => {
                     items-center hover:bg-gray-100/80 transition-all duration-300 cursor-pointer 
                     ${contact.name === "" ? "disabled" : ""}`} onClick={() => selectNewContact(contact)}>
                         <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">
-                          <AvatarImage src={contact.image} alt="profile" className="object-fit h-full w-full" />
+                          <AvatarImage src={useAvatar(contact)} alt="profile" className="object-fit h-full w-full" />
                           <AvatarFallback className={`uppercase h-full w-full text-xl border text-center font-medium 
                       transition-all duration-300`}>
                             {contact.username?.split("").shift() || contact.email?.split("").shift()}

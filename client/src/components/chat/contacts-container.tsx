@@ -9,6 +9,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HiMiniSignal, HiMiniSignalSlash } from "react-icons/hi2";
 import { useChatStore } from "@/zustand";
+import { useAvatar } from "@/hooks";
 import api from "@/lib/api";
 
 const ContactsContainer = () => {
@@ -110,7 +111,7 @@ const ContactsContainer = () => {
                   ${selectedChatData && selectedChatData._id === contact._id ? "bg-[#06d6a02a] text-[#06d6a0] border-[1px] border-[#06d6a0bb]" : ""}`} onClick={() => selectNewContact(contact)}>
                       <div className="flex items-center gap-4">
                         <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">
-                          <AvatarImage src={contact.image} alt="profile" className="object-fit h-full w-full" />
+                          <AvatarImage src={useAvatar(contact)} alt="profile" className="object-fit h-full w-full" />
                           <AvatarFallback className={`uppercase h-full w-full text-xl border-[1px] text-center font-medium 
                       transition-all duration-300`}>
                             {contact.username?.split("").shift() || contact.email?.split("").shift()}

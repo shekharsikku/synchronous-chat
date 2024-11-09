@@ -5,6 +5,9 @@ import { ChangeEvent, ChangeEventHandler, useState } from "react";
 import { useSocket } from "@/context/socket-context";
 import { useAuthStore, useChatStore } from "@/zustand";
 import notificationSound from "@/assets/sound/message-alert.mp3";
+import maleAvatar from "@/assets/male-avatar.jpg";
+import femaleAvatar from "@/assets/female-avatar.jpg";
+import noAvatar from "@/assets/no-avatar.png";
 import api from "@/lib/api";
 
 import { useDispatch } from "react-redux";
@@ -141,4 +144,21 @@ export const useDebounce = (callback: Function, delay: number) => {
     }, delay);
   };
   return debouncedFunction;
+};
+
+export const useAvatar = (userInformation: any) => {
+  let avatar;
+
+  if (userInformation.image) {
+    avatar = userInformation.image;
+  } else {
+    if (userInformation?.gender === "Male") {
+      avatar = maleAvatar;
+    } else if (userInformation?.gender === "Female") {
+      avatar = femaleAvatar;
+    } else {
+      avatar = noAvatar;
+    }
+  }
+  return avatar;
 };

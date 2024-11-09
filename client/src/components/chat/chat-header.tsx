@@ -3,19 +3,30 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useChatStore } from "@/zustand";
-import { useState } from "react";
+import { useAvatar } from "@/hooks";
+import { useEffect, useState } from "react";
+import { countUserMessages } from "@/utils";
+import moment from "moment";
 
 const ChatHeader = () => {
-  const { selectedChatData, closeChat, isPartnerTyping } = useChatStore();
+  const { selectedChatData, closeChat, isPartnerTyping, messages } = useChatStore();
   const [openUserInfoModal, setOpenUserInfoModal] = useState(false);
-  const defaultImage = "https://res.cloudinary.com/do1m5szld/image/upload/v1721983520/no-avatar_jvggxi.png";
+  const [sendNumber, setSendNumber] = useState(0);
+  const [receiveNumber, setReceiveNumber] = useState(0);
+  const userAvatar = useAvatar(selectedChatData);
+
+  useEffect(() => {
+    const { sent, received } = countUserMessages(messages, selectedChatData);
+    setSendNumber(sent);
+    setReceiveNumber(received);
+  }, [selectedChatData?._id, messages.length]);
 
   return (
     <div className="h-[10vh] border-b border-gray-200 flex items-center justify-between p-2" >
       <div className="h-full w-full rounded flex gap-5 items-center justify-between px-4 bg-gray-100/80">
         <div className="flex gap-3 items-center justify-center">
           <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">
-            <AvatarImage src={selectedChatData?.image} alt="profile" className="object-fit h-full w-full" />
+            <AvatarImage src={userAvatar} alt="profile" className="object-fit h-full w-full" />
             <AvatarFallback className={`uppercase h-full w-full text-xl border-[1px] text-center font-medium 
                       transition-all duration-300 bg-[#06d6a02a] text-[#06d6a0] border-[#06d6a0bb`}>
               {selectedChatData?.username?.split("").shift() || selectedChatData?.email?.split("").shift()}
@@ -42,26 +53,42 @@ const ChatHeader = () => {
               </Tooltip>
             </TooltipProvider>
 
-            <DialogContent className="h-auto w-72 lg:w-96 rounded-sm 
-            shadow-lg transition-all hover:shadow-2xl bg-gray-50 p-6 py-8">
+            <DialogContent className="w-72 lg:w-96 rounded-sm shadow-lg transition-all hover:shadow-2xl bg-white p-8">
               <DialogHeader className="hidden">
                 <DialogTitle></DialogTitle>
                 <DialogDescription></DialogDescription>
               </DialogHeader>
-              <div className="border border-gray-200 p-8 py-16 rounded flex flex-col bg-white">
-                <img src={selectedChatData?.image || defaultImage} alt="Avatar"
-                  className="w-28 h-28 lg:w-32 lg:h-32 object-cover rounded-full border 
-                hover:border-2 border-gray-300 mx-auto transition-all duration-300" />
-
-                <hr className="mt-4 lg:mt-6" />
-
-                <div className="flex flex-col items-center mt-3 gap-3 justify-center">
-                  <h2 className="font-semibold text-gray-900 text-lg lg:text-xl flex gap-2 items-center">
-                    {selectedChatData?.name} <span className="hidden lg:block text-lg">({selectedChatData?.username})</span></h2>
-                  <h6 className="text-xs text-gray-500">{selectedChatData?._id}</h6>
-                  <h3 className="text-sm lg:text-base text-gray-700 ">{selectedChatData?.email}</h3>
+              {/* Profile Image */}
+              <div className="flex justify-center">
+                <img className="w-24 h-24 lg:w-32 lg:h-32 rounded-full border-4 border-white 
+                shadow-lg -mt-20 lg:-mt-24 transition-all"
+                  src={userAvatar} alt="User profile"
+                />
+              </div>
+              {/* User Info */}
+              <div className="text-center mt-6">
+                <h2 className="text-2xl font-bold text-gray-800">{selectedChatData?.name}</h2>
+                <p className="text-gray-500">{selectedChatData?.username}</p>
+                <p className="mt-2 text-gray-600 text-sm">{selectedChatData?.bio}</p>
+              </div>
+              {/* User Stats */}
+              <div className="flex flex-col justify-around text-gray-800 text-sm mt-4 border-t border-gray-200 pt-4">
+                <p className="text-center text-xl mb-4 font-semibold">Message Stats</p>
+                <div className="flex justify-evenly">
+                  <div className="text-center">
+                    <p className="font-semibold text-lg">{sendNumber}</p>
+                    <p className="text-gray-500">Sent</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-semibold text-lg">{receiveNumber}</p>
+                    <p className="text-gray-500">Received</p>
+                  </div>
                 </div>
               </div>
+              {/* Last Message Time */}
+              <p className="text-center text-sm mt-4 text-gray-500">
+                {moment(selectedChatData?.lastMessageTime).format("MMMM Do YYYY, h:mm:ss a")}
+              </p>
             </DialogContent>
           </Dialog>
 

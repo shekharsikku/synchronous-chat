@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/zustand";
-import { useSignOutUser } from "@/hooks";
+import { useSignOutUser, useAvatar } from "@/hooks";
 import { HiOutlineArrowRightOnRectangle } from "react-icons/hi2";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, } from "@/components/ui/tooltip";
 import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
 
 const ProfileInfo = () => {
   /** This state have authenticated and userData */
@@ -13,6 +14,14 @@ const ProfileInfo = () => {
   const navigate = useNavigate();
   const { userInfo } = useAuthStore();
   const { handleSignOut } = useSignOutUser();
+  const [avatar, setAvatar] = useState<any>(null);
+
+  useEffect(() => {
+    if (userInfo) {
+      const userAvatar = useAvatar(userInfo);
+      setAvatar(userAvatar);
+    }
+  }, [userInfo]);
 
   return (
     <div className="absolute bottom-0 w-full h-[10vh] border border-gray-200 p-2 lg:px-3">
@@ -23,7 +32,7 @@ const ProfileInfo = () => {
             <TooltipTrigger>
               <div className="flex gap-4 items-center" onClick={() => navigate("/profile")}>
                 <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">
-                  <AvatarImage src={userInfo?.image} alt="profile" className="object-fit h-full w-full" />
+                  <AvatarImage src={avatar} alt="profile" className="object-fit h-full w-full" />
                   <AvatarFallback className={`uppercase h-full w-full text-xl border-[1px] text-center font-medium 
                       transition-all duration-300 bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]`}>
                     {userInfo?.username?.split("").shift() || userInfo?.email?.split("").shift()}

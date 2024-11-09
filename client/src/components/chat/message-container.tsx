@@ -3,20 +3,27 @@ import { useEffect, useRef, useState } from "react";
 import { useChatStore } from "@/zustand";
 import { useListenMessages } from "@/hooks";
 import { RenderDMMessages } from "./render-dm-messages";
+import { MessageSkeleton } from "./message-skeleton";
 import moment from "moment";
 import api from "@/lib/api";
 
 const MessageContainer = () => {
   useListenMessages();
   const { selectedChatType, selectedChatData, messages, setMessages } = useChatStore();
+  const [isLoading, setIsLoading] = useState(true);
 
   const getMessages = async () => {
     try {
+      setIsLoading(true);
       const response = await api.get(`/api/message/${selectedChatData?._id}`, { withCredentials: true });
       const data = await response.data.data;
       setMessages([...data]);
     } catch (error: any) {
       toast.error(error.message);
+    } finally {
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
     }
   };
 
@@ -35,7 +42,7 @@ const MessageContainer = () => {
     setTimeout(() => {
       lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
-  }, [messages]);
+  }, [messages, isLoading]);
 
   const RenderMessages = () => {
     let lastDate = "";
@@ -60,8 +67,8 @@ const MessageContainer = () => {
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-hide py-2 md:p-4 px-6 w-full outline-none">
-      <RenderMessages />
-      <div ref={lastMessageRef} />
+      {isLoading ? <MessageSkeleton /> : <RenderMessages />}
+      {!isLoading && <div ref={lastMessageRef} />}
     </div>
   )
 }
