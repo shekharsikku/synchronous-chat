@@ -65,7 +65,7 @@ const signInUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const accessToken = (0, helpers_1.generateAccess)(res, accessData);
         if (!accessData.setup) {
             const userData = (0, helpers_1.maskedDetails)(accessData);
-            return (0, utils_1.ApiResponse)(res, 202, "Please, complete your profile!", userData);
+            return (0, utils_1.ApiResponse)(res, 200, "Please, complete your profile!", userData);
         }
         const refreshToken = (0, helpers_1.generateRefresh)(res, accessData._id);
         const refreshExpiry = parseInt(env_1.default.REFRESH_EXPIRY);

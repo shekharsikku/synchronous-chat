@@ -68,7 +68,7 @@ const signInUser = async (req: Request, res: Response) => {
 
     if (!accessData.setup) {
       const userData = maskedDetails(accessData);
-      return ApiResponse(res, 202, "Please, complete your profile!", userData);
+      return ApiResponse(res, 200, "Please, complete your profile!", userData);
     }
 
     const refreshToken = generateRefresh(res, accessData._id!);

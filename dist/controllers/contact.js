@@ -29,13 +29,14 @@ const searchContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const contacts = yield user_1.default.find({
             $and: [
                 { _id: { $ne: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id } },
+                { setup: true },
                 { $or: [{ fullName: regex }, { username: regex }, { email: regex }] },
             ],
         });
         if (contacts.length <= 0) {
-            throw new utils_1.ApiError(404, "No any contact available!");
+            throw new utils_1.ApiError(404, "No contact found!");
         }
-        return (0, utils_1.ApiResponse)(res, 200, "All searched contacts!", contacts);
+        return (0, utils_1.ApiResponse)(res, 200, "Available contacts!", contacts);
     }
     catch (error) {
         return (0, utils_1.ApiResponse)(res, error.code, error.message);

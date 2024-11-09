@@ -1,7 +1,7 @@
 import { ApiResponse, ApiError } from "../utils";
 import { Request, Response } from "express";
 import { getSocketId, io } from "../socket";
-import { model, Types } from "mongoose";
+import { Types } from "mongoose";
 import Conversation from "../models/conversation";
 import Message from "../models/message";
 
@@ -67,13 +67,11 @@ const cleanupConversation = async (conversationId: Types.ObjectId) => {
 */
 
 const cleanupConversation = async (conversationId: Types.ObjectId) => {
-  // Use lean() for faster retrieval
-  const conversations = await Conversation.findById(conversationId).lean();
+  const conversations = await Conversation.findById(conversationId).lean(); // Use lean() for faster retrieval
 
   if (conversations && conversations.messages.length > 0) {
-    // Batch check existence of all messages using $in
     const validMessages = await Message.find({
-      _id: { $in: conversations.messages },
+      _id: { $in: conversations.messages }, // Batch check existence of all messages using $in
     }).distinct("_id"); // Only retrieve message IDs
 
     // Only update if there are messages that were removed
@@ -156,7 +154,7 @@ const deleteMessages = async (req: Request, res: Response) => {
       createdAt: { $lt: hoursAgo },
     });
 
-    return ApiResponse(res, 202, "Older messages deleted!", result);
+    return ApiResponse(res, 200, "Older messages deleted!", result);
   } catch (error: any) {
     console.log(`Error: ${error.message}`);
   }

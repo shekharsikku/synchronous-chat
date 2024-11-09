@@ -74,12 +74,10 @@ const cleanupConversation = async (conversationId: Types.ObjectId) => {
 }
 */
 const cleanupConversation = (conversationId) => __awaiter(void 0, void 0, void 0, function* () {
-    // Use lean() for faster retrieval
-    const conversations = yield conversation_1.default.findById(conversationId).lean();
+    const conversations = yield conversation_1.default.findById(conversationId).lean(); // Use lean() for faster retrieval
     if (conversations && conversations.messages.length > 0) {
-        // Batch check existence of all messages using $in
         const validMessages = yield message_1.default.find({
-            _id: { $in: conversations.messages },
+            _id: { $in: conversations.messages }, // Batch check existence of all messages using $in
         }).distinct("_id"); // Only retrieve message IDs
         // Only update if there are messages that were removed
         if (validMessages.length !== conversations.messages.length) {
@@ -149,7 +147,7 @@ const deleteMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
             $or: [{ sender: uid }, { recipient: uid }],
             createdAt: { $lt: hoursAgo },
         });
-        return (0, utils_1.ApiResponse)(res, 202, "Older messages deleted!", result);
+        return (0, utils_1.ApiResponse)(res, 200, "Older messages deleted!", result);
     }
     catch (error) {
         console.log(`Error: ${error.message}`);

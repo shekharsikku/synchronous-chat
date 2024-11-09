@@ -128,7 +128,7 @@ const deleteImage = async (req: Request, res: Response) => {
 
       return ApiResponse(
         res,
-        301,
+        200,
         "Profile image deleted successfully!",
         accessData
       );
@@ -170,7 +170,7 @@ const changePassword = async (req: Request, res: Response) => {
     const accessData = createAccessData(requestUser);
     const accessToken = generateAccess(res, accessData);
 
-    return ApiResponse(res, 202, "Password changed successfully!", accessData);
+    return ApiResponse(res, 200, "Password changed successfully!", accessData);
   } catch (error: any) {
     return ApiResponse(res, error.code, error.message);
   }

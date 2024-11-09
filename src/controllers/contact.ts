@@ -19,14 +19,15 @@ const searchContact = async (req: Request, res: Response) => {
     const contacts = await User.find({
       $and: [
         { _id: { $ne: req.user?._id } },
+        { setup: true },
         { $or: [{ fullName: regex }, { username: regex }, { email: regex }] },
       ],
     });
 
     if (contacts.length <= 0) {
-      throw new ApiError(404, "No any contact available!");
+      throw new ApiError(404, "No contact found!");
     }
-    return ApiResponse(res, 200, "All searched contacts!", contacts);
+    return ApiResponse(res, 200, "Available contacts!", contacts);
   } catch (error: any) {
     return ApiResponse(res, error.code, error.message);
   }

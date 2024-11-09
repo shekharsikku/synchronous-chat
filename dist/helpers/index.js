@@ -70,7 +70,7 @@ const authorizeCookie = (res, authorizeId) => {
 };
 exports.authorizeCookie = authorizeCookie;
 const hasEmptyField = (fields) => {
-    return Object.values(fields).some((value) => value === "" || value === undefined);
+    return Object.values(fields).some((value) => value === "" || value === undefined || value === null);
 };
 exports.hasEmptyField = hasEmptyField;
 const removeSpaces = (str) => {

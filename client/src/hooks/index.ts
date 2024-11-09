@@ -102,13 +102,16 @@ export const useAuthRefresh = () => {
 
 export const useListenMessages = () => {
   const { socket } = useSocket();
-  const { messages, setMessages } = useChatStore();
+  const { messages, setMessages, selectedChatData } = useChatStore();
 
   useEffect(() => {
     socket?.on("newMessage", (newMessage: any) => {
       const sound = new Audio(notificationSound);
       sound.play();
-      setMessages([...messages, newMessage]);
+
+      if (selectedChatData?._id === newMessage.sender) {
+        setMessages([...messages, newMessage]);
+      }
     });
 
     return () => {

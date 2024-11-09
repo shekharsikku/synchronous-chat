@@ -35,9 +35,14 @@ export const changePasswordSchema = z
     path: ["new_password", "confirm_password"],
   });
 
+export const validateUsername = (username: string) => {
+  const re = /^(?![_-])[a-z0-9_-]{3,15}(?<![_-])$/;
+  return re.test(username);
+};
+
 export const validateEmail = (email: string) => {
   const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-  return re.test(String(email).toLowerCase());
+  return re.test(email);
 };
 
 export const removeSpaces = (str: string) => {

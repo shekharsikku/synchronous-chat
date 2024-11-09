@@ -101,7 +101,7 @@ const deleteImage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             yield requestUser.save({ validateBeforeSave: true });
             const accessData = (0, helpers_1.createAccessData)(requestUser);
             const accessToken = (0, helpers_1.generateAccess)(res, accessData);
-            return (0, utils_1.ApiResponse)(res, 301, "Profile image deleted successfully!", accessData);
+            return (0, utils_1.ApiResponse)(res, 200, "Profile image deleted successfully!", accessData);
         }
         throw new utils_1.ApiError(400, "Profile image not available!");
     }
@@ -130,7 +130,7 @@ const changePassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
         yield requestUser.save({ validateBeforeSave: true });
         const accessData = (0, helpers_1.createAccessData)(requestUser);
         const accessToken = (0, helpers_1.generateAccess)(res, accessData);
-        return (0, utils_1.ApiResponse)(res, 202, "Password changed successfully!", accessData);
+        return (0, utils_1.ApiResponse)(res, 200, "Password changed successfully!", accessData);
     }
     catch (error) {
         return (0, utils_1.ApiResponse)(res, error.code, error.message);

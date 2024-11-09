@@ -67,7 +67,7 @@ const authorizeCookie = (res: Response, authorizeId: string) => {
 
 const hasEmptyField = (fields: object) => {
   return Object.values(fields).some(
-    (value) => value === "" || value === undefined
+    (value) => value === "" || value === undefined || value === null
   );
 };
 

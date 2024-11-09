@@ -1,4 +1,3 @@
-import { toast } from "sonner";
 import { useState } from "react";
 import { HiOutlinePlus } from "react-icons/hi2";
 import { ContactListSkeleton } from "./contact-list-skeleton";
@@ -27,7 +26,7 @@ const AddNewChat = () => {
           setSearchedContacts(response.data.data);
         }
       } catch (error: any) {
-        toast.error(error.response.data.message);
+        setSearchedContacts([]);
       } finally {
         setTimeout(() => {
           setIsFetching(false);
@@ -73,7 +72,7 @@ const AddNewChat = () => {
           ) : (
             <>
               {searchedContacts.length <= 0 ? (
-                <span className="text-gray-700">No any user available!</span>
+                <span className="text-gray-700 text-center my-auto">No any user available!</span>
               ) : (
                 <ScrollArea className="h-60 overflow-y-auto scrollbar-hide">
                   <div className="flex flex-col gap-4 py-[2px]">
@@ -90,7 +89,7 @@ const AddNewChat = () => {
                         </Avatar>
                         <div className="flex flex-col">
                           <span className="text-sm font-semibold text-neutral-700">{contact?.name}</span>
-                          <span className="text-xs font-semibold text-neutral-700">{contact.email}</span>
+                          <span className="text-xs font-semibold text-neutral-700">{contact?.username}</span>
                         </div>
                       </div>
                     ))}

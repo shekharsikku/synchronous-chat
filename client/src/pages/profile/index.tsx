@@ -28,7 +28,7 @@ import {
   HiOutlineArrowRightOnRectangle,
   HiOutlineChatBubbleLeftRight,
 } from "react-icons/hi2";
-import { changePasswordSchema } from "@/utils";
+import { changePasswordSchema, validateUsername } from "@/utils";
 import { useHandleForm, useSignOutUser } from "@/hooks";
 import { useAuthStore } from "@/zustand";
 import api from "@/lib/api";
@@ -154,15 +154,21 @@ const Profile = () => {
     e.preventDefault();
     try {
       setIsLoading(true);
-      const profileDetails = {
-        name: userName,
-        username: userUsername,
-        bio: userBio,
-        gender: userGender,
-      };
-      const response = await api.patch("/api/user/user-profile-setup", profileDetails, { withCredentials: true });
-      setUserInfo(response.data.data);
-      toast.success(response.data.message);
+      const isValid = validateUsername(userUsername!);
+
+      if (isValid) {
+        const profileDetails = {
+          name: userName,
+          username: userUsername,
+          bio: userBio,
+          gender: userGender,
+        };
+        const response = await api.patch("/api/user/user-profile-setup", profileDetails, { withCredentials: true });
+        setUserInfo(response.data.data);
+        toast.success(response.data.message);
+      } else {
+        toast.info("Invalid username!");
+      }
     } catch (error: any) {
       toast.error(error.response.data.message);
     } finally {
