@@ -12,7 +12,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.Fragment>
     <SocketProvider>
       <Provider store={store}>
-        <BrowserRouter>
+        <BrowserRouter future={{
+          v7_relativeSplatPath: true,
+          v7_startTransition: true
+        }}>
           <Toaster closeButton />
           <App />
         </BrowserRouter>
