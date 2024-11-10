@@ -39,10 +39,6 @@ io.on("connection", (socket: Socket) => {
     }, {} as Record<string, string[]>)
   );
 
-  socket.on("messageDelete", (currentMessage) => {
-    io.emit("messageRemove", currentMessage);
-  });
-
   socket.on("startTyping", (userId) => {
     const socketId = getSocketId(userId);
 

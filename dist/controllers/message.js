@@ -142,8 +142,6 @@ const deleteMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 socket_1.io.to(Array.from(receiverSocketId)).emit("messageRemove", message);
             }
             socket_1.io.to(Array.from(senderSocketId)).emit("messageRemove", message);
-            // this will emit event to all active clients
-            // io.emit("messageRemove", currentMessage);
             return (0, utils_1.ApiResponse)(res, 200, "Message deleted successfully!", message);
         }
         else {

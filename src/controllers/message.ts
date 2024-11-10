@@ -151,9 +151,6 @@ const deleteMessage = async (req: Request, res: Response) => {
       }
       io.to(Array.from(senderSocketId)).emit("messageRemove", message);
 
-      // this will emit event to all active clients
-      // io.emit("messageRemove", currentMessage);
-
       return ApiResponse(res, 200, "Message deleted successfully!", message);
     } else {
       throw new ApiError(403, "You can't delete this message!");

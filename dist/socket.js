@@ -39,9 +39,6 @@ io.on("connection", (socket) => {
         acc[userId] = Array.from(sockets);
         return acc;
     }, {}));
-    socket.on("messageDelete", (currentMessage) => {
-        io.emit("messageRemove", currentMessage);
-    });
     socket.on("startTyping", (userId) => {
         const socketId = getSocketId(userId);
         socket
