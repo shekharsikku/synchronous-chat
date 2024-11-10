@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import io, { Socket } from "socket.io-client";
 import { useAuthStore } from "@/zustand";
+import { handleNotification } from "@/utils";
 
 interface SocketContextType {
   socket: Socket | null;
@@ -38,6 +39,10 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
       socket.on("getOnlineUsers", (users) => {
         setOnlineUsers({ ...users });
+      });
+
+      socket.on("receiveMessage", ({ senderName, messageBody }) => {
+        handleNotification(senderName, messageBody)
       });
 
       socket.on("messageRemove", (_currentMessage) => { });

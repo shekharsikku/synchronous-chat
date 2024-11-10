@@ -18,9 +18,10 @@ const socket_1 = require("../socket");
 const conversation_1 = __importDefault(require("../models/conversation"));
 const message_1 = __importDefault(require("../models/message"));
 const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _a, _b;
     try {
         const sender = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+        const name = (_b = req.user) === null || _b === void 0 ? void 0 : _b.name;
         const { id: receiver } = req.params;
         const { type, text, file } = yield req.body;
         let conversation = yield conversation_1.default.findOne({
@@ -45,7 +46,22 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const senderSocketId = (0, socket_1.getSocketId)(String(sender));
         const receiverSocketId = (0, socket_1.getSocketId)(receiver);
         if (receiverSocketId.size > 0) {
-            socket_1.io.to(Array.from(receiverSocketId)).emit("newMessage", message);
+            const socketIds = Array.from(receiverSocketId);
+            socket_1.io.to(socketIds).emit("newMessage", message);
+            let body = "";
+            if (type === "text") {
+                body = "Received a text message!";
+            }
+            else if (type === "file") {
+                body = "Received a file message!";
+            }
+            else {
+                body = "New message received!";
+            }
+            socket_1.io.to(socketIds).emit("msgNotification", {
+                sender: name,
+                message: body,
+            });
         }
         socket_1.io.to(Array.from(senderSocketId)).emit("newMessage", message);
         return (0, utils_1.ApiResponse)(res, 201, "Message sent successfully!", message);

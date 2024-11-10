@@ -11,7 +11,7 @@ import api from "@/lib/api";
 const MessageBar = () => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
-  const { selectedChatData, messages, setMessages, setIsPartnerTyping } = useChatStore();
+  const { selectedChatData, setIsPartnerTyping } = useChatStore();
 
   const emojiRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -89,8 +89,11 @@ const MessageBar = () => {
       const response = await api.post(`/api/message/send/${selectedChatData?._id}`, messageData, {
         withCredentials: true,
       });
-      const data = await response.data.data;
-      setMessages([...messages, data]);
+      const data = await response.data;
+
+      if (data?.success) {
+        toast.info(data?.message);
+      }
 
       setMessage("");
       setSelectedImage(null);

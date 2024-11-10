@@ -1,4 +1,5 @@
 import { z } from "zod";
+import icon from "@/assets/favicon.ico";
 
 export const signUpSchema = z
   .object({
@@ -125,4 +126,18 @@ export const countUserMessages = (messages: any, selectedChat: any) => {
     sent: sentCount,
     received: receivedCount,
   };
+};
+
+export const handleNotification = (title: string, body: string) => {
+  if ("Notification" in window) {
+    Notification.requestPermission().then((permission) => {
+      if (permission === "granted") {
+        const notification = new Notification(title, {
+          body,
+          icon,
+        });
+        return notification;
+      }
+    });
+  }
 };

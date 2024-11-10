@@ -8,6 +8,7 @@ import Message from "../models/message";
 const sendMessage = async (req: Request, res: Response) => {
   try {
     const sender = req.user?._id;
+    const name = req.user?.name;
     const { id: receiver } = req.params;
     const { type, text, file } = await req.body;
 
@@ -38,7 +39,24 @@ const sendMessage = async (req: Request, res: Response) => {
     const receiverSocketId = getSocketId(receiver);
 
     if (receiverSocketId.size > 0) {
-      io.to(Array.from(receiverSocketId)).emit("newMessage", message);
+      const socketIds = Array.from(receiverSocketId);
+
+      io.to(socketIds).emit("newMessage", message);
+
+      let body = "";
+
+      if (type === "text") {
+        body = "Received a text message!";
+      } else if (type === "file") {
+        body = "Received a file message!";
+      } else {
+        body = "New message received!";
+      }
+
+      io.to(socketIds).emit("msgNotification", {
+        sender: name,
+        message: body,
+      });
     }
     io.to(Array.from(senderSocketId)).emit("newMessage", message);
 

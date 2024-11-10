@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ChangeEvent, ChangeEventHandler, useState } from "react";
 import { useSocket } from "@/context/socket-context";
 import { useAuthStore, useChatStore } from "@/zustand";
+import { handleNotification } from "@/utils";
 import notificationSound from "@/assets/sound/message-alert.mp3";
 import maleAvatar from "@/assets/male-avatar.jpg";
 import femaleAvatar from "@/assets/female-avatar.jpg";
@@ -108,21 +109,33 @@ export const useListenMessages = () => {
   const { userInfo } = useAuthStore();
   const { messages, setMessages, selectedChatData } = useChatStore();
 
-  useEffect(() => {
-    socket?.on("newMessage", (newMessage: any) => {
-      const sound = new Audio(notificationSound);
-      sound.play();
+  const listenersAttached = useRef(false);
 
-      if (
-        selectedChatData?._id === newMessage.sender ||
-        userInfo?._id === newMessage.sender
-      ) {
-        setMessages([...messages, newMessage]);
-      }
-    });
+  useEffect(() => {
+    if (!listenersAttached.current && socket) {
+      socket.on("newMessage", (newMessage: any) => {
+        const sound = new Audio(notificationSound);
+        sound.play();
+
+        if (
+          selectedChatData?._id === newMessage.sender ||
+          userInfo?._id === newMessage.sender
+        ) {
+          setMessages([...messages, newMessage]);
+        }
+      });
+
+      socket.on("msgNotification", (payload) => {
+        handleNotification(payload.sender, payload.message);
+      });
+
+      listenersAttached.current = true;
+    }
 
     return () => {
       socket?.off("newMessage");
+      socket?.off("msgNotification");
+      listenersAttached.current = false;
     };
   }, [socket, setMessages, messages]);
 };
