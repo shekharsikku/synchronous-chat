@@ -34,11 +34,14 @@ const sendMessage = async (req: Request, res: Response) => {
     }
 
     await Promise.all([conversation.save(), message.save()]);
+    const senderSocketId = getSocketId(String(sender));
     const receiverSocketId = getSocketId(receiver);
 
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", message);
+    if (receiverSocketId.size > 0) {
+      io.to(Array.from(receiverSocketId)).emit("newMessage", message);
     }
+    io.to(Array.from(senderSocketId)).emit("newMessage", message);
+
     return ApiResponse(res, 201, "Message sent successfully!", message);
   } catch (error: any) {
     return ApiResponse(res, 500, "Something Went Wrong!");
@@ -125,10 +128,10 @@ const deleteMessage = async (req: Request, res: Response) => {
       message.type = "deleted";
       await message.save({ validateBeforeSave: false });
 
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("messageRemove", message);
+      if (receiverSocketId.size > 0) {
+        io.to(Array.from(receiverSocketId)).emit("messageRemove", message);
       }
-      io.to(senderSocketId).emit("messageRemove", message);
+      io.to(Array.from(senderSocketId)).emit("messageRemove", message);
 
       // this will emit event to all active clients
       // io.emit("messageRemove", currentMessage);

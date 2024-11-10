@@ -12,23 +12,32 @@ const io = new Server(server, {
   },
 });
 
-const userSocketMap = new Map<string, string>();
+const userSocketMap = new Map<string, Set<string>>();
 
-const getSocketId = (socketUserId: any) => {
-  return userSocketMap.get(socketUserId);
+const getSocketId = (socketUserId: string) => {
+  return userSocketMap.get(socketUserId) || new Set<string>();
 };
 
 io.on("connection", (socket: Socket) => {
   const userId = socket.handshake.query.userId as string;
 
   if (userId) {
-    userSocketMap.set(userId, socket.id);
+    if (!userSocketMap.has(userId)) {
+      userSocketMap.set(userId, new Set());
+    }
+    userSocketMap.get(userId)?.add(socket.id);
     console.log(`UserId ${userId} connected with socketId ${socket.id}`);
   } else {
     console.log("Cannot get User ID for socket connection!");
   }
 
-  io.emit("getOnlineUsers", Object.fromEntries(userSocketMap.entries()));
+  io.emit(
+    "getOnlineUsers",
+    Array.from(userSocketMap.entries()).reduce((acc, [userId, sockets]) => {
+      acc[userId] = Array.from(sockets);
+      return acc;
+    }, {} as Record<string, string[]>)
+  );
 
   socket.on("messageDelete", (currentMessage) => {
     io.emit("messageRemove", currentMessage);
@@ -37,28 +46,38 @@ io.on("connection", (socket: Socket) => {
   socket.on("startTyping", (userId) => {
     const socketId = getSocketId(userId);
 
-    if (socketId) {
-      socket.to(socketId).emit("displayTyping", { uid: userId, typing: true });
-    }
+    socket
+      .to(Array.from(socketId))
+      .emit("displayTyping", { uid: userId, typing: true });
   });
 
   socket.on("stopTyping", (userId) => {
     const socketId = getSocketId(userId);
 
-    if (socketId) {
-      socket.to(socketId).emit("hideTyping", { uid: userId, typing: false });
-    }
+    socket
+      .to(Array.from(socketId))
+      .emit("hideTyping", { uid: userId, typing: false });
   });
 
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
-    for (const [userId, socketId] of userSocketMap.entries()) {
-      if (socketId === socket.id) {
-        userSocketMap.delete(userId);
+    for (const [userId, sockets] of userSocketMap.entries()) {
+      if (sockets.has(socket.id)) {
+        sockets.delete(socket.id);
+
+        if (sockets.size === 0) {
+          userSocketMap.delete(userId);
+        }
         break;
       }
     }
-    io.emit("getOnlineUsers", Object.fromEntries(userSocketMap.entries()));
+    io.emit(
+      "getOnlineUsers",
+      Array.from(userSocketMap.entries()).reduce((acc, [userId, sockets]) => {
+        acc[userId] = Array.from(sockets);
+        return acc;
+      }, {} as Record<string, string[]>)
+    );
   });
 });
 

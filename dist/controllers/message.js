@@ -42,10 +42,12 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             conversation.messages.push(message._id);
         }
         yield Promise.all([conversation.save(), message.save()]);
+        const senderSocketId = (0, socket_1.getSocketId)(String(sender));
         const receiverSocketId = (0, socket_1.getSocketId)(receiver);
-        if (receiverSocketId) {
-            socket_1.io.to(receiverSocketId).emit("newMessage", message);
+        if (receiverSocketId.size > 0) {
+            socket_1.io.to(Array.from(receiverSocketId)).emit("newMessage", message);
         }
+        socket_1.io.to(Array.from(senderSocketId)).emit("newMessage", message);
         return (0, utils_1.ApiResponse)(res, 201, "Message sent successfully!", message);
     }
     catch (error) {
@@ -120,10 +122,10 @@ const deleteMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             message.type === "text" ? (message.text = "") : (message.file = "");
             message.type = "deleted";
             yield message.save({ validateBeforeSave: false });
-            if (receiverSocketId) {
-                socket_1.io.to(receiverSocketId).emit("messageRemove", message);
+            if (receiverSocketId.size > 0) {
+                socket_1.io.to(Array.from(receiverSocketId)).emit("messageRemove", message);
             }
-            socket_1.io.to(senderSocketId).emit("messageRemove", message);
+            socket_1.io.to(Array.from(senderSocketId)).emit("messageRemove", message);
             // this will emit event to all active clients
             // io.emit("messageRemove", currentMessage);
             return (0, utils_1.ApiResponse)(res, 200, "Message deleted successfully!", message);
