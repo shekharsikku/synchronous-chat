@@ -36,7 +36,7 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
       socket.on("connect", () => { });
 
-      socket.on("getOnlineUsers", (users) => {
+      socket.on("get-online-users", (users) => {
         setOnlineUsers({ ...users });
       });
 

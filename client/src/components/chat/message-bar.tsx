@@ -11,7 +11,7 @@ import api from "@/lib/api";
 const MessageBar = () => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
-  const { selectedChatData, setIsPartnerTyping } = useChatStore();
+  const { selectedChatData, setIsPartnerTyping, chatRequestUser } = useChatStore();
 
   const emojiRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -109,28 +109,28 @@ const MessageBar = () => {
   };
 
   useEffect(() => {
-    socket?.on("displayTyping", (data) => {
-      if (data.uid === userInfo?._id) {
-        setIsPartnerTyping(data.typing);
+    socket?.on("display-typing", (typingUser) => {
+      if (typingUser.uid === userInfo?._id && chatRequestUser?._id === selectedChatData?._id) {
+        setIsPartnerTyping(typingUser.typing);
       }
     });
 
-    socket?.on("hideTyping", (data) => {
-      if (data.uid === userInfo?._id) {
-        setIsPartnerTyping(data.typing);
+    socket?.on("hide-typing", (typingUser) => {
+      if (typingUser.uid === userInfo?._id) {
+        setIsPartnerTyping(typingUser.typing);
       }
     });
 
     return () => {
-      socket?.off("displayTyping");
-      socket?.off("hideTyping");
+      socket?.off("display-typing");
+      socket?.off("hide-typing");
     };
   }, [selectedChatData?._id]);
 
   const handleTyping = () => {
     if (!isTyping) {
       setIsTyping(true);
-      socket?.emit("startTyping", selectedChatData?._id);
+      socket?.emit("start-typing", selectedChatData?._id);
     }
 
     if (typingTimeoutRef.current) {
@@ -139,7 +139,7 @@ const MessageBar = () => {
 
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false);
-      socket?.emit("stopTyping", selectedChatData?._id);
+      socket?.emit("stop-typing", selectedChatData?._id);
     }, 2500);
   };
 

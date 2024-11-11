@@ -113,19 +113,19 @@ export const useListenMessages = () => {
 
   useEffect(() => {
     if (!listenersAttached.current && socket) {
-      socket.on("newMessage", (newMessage: any) => {
+      socket.on("new-message", (message: any) => {
         const sound = new Audio(notificationSound);
         sound.play();
 
         if (
-          selectedChatData?._id === newMessage.sender ||
-          userInfo?._id === newMessage.sender
+          selectedChatData?._id === message.sender ||
+          userInfo?._id === message.sender
         ) {
-          setMessages([...messages, newMessage]);
+          setMessages([...messages, message]);
         }
       });
 
-      socket.on("msgNotification", (payload) => {
+      socket.on("message-notification", (payload) => {
         handleNotification(payload.sender, payload.message);
       });
 
@@ -133,8 +133,8 @@ export const useListenMessages = () => {
     }
 
     return () => {
-      socket?.off("newMessage");
-      socket?.off("msgNotification");
+      socket?.off("new-message");
+      socket?.off("message-notification");
       listenersAttached.current = false;
     };
   }, [socket, setMessages, messages]);

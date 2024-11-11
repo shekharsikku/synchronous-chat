@@ -47,7 +47,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const receiverSocketId = (0, socket_1.getSocketId)(receiver);
         if (receiverSocketId.size > 0) {
             const socketIds = Array.from(receiverSocketId);
-            socket_1.io.to(socketIds).emit("newMessage", message);
+            socket_1.io.to(socketIds).emit("new-message", message);
             let body = "";
             if (type === "text") {
                 body = "Received a text message!";
@@ -58,12 +58,12 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             else {
                 body = "New message received!";
             }
-            socket_1.io.to(socketIds).emit("msgNotification", {
+            socket_1.io.to(socketIds).emit("message-notification", {
                 sender: name,
                 message: body,
             });
         }
-        socket_1.io.to(Array.from(senderSocketId)).emit("newMessage", message);
+        socket_1.io.to(Array.from(senderSocketId)).emit("new-message", message);
         return (0, utils_1.ApiResponse)(res, 201, "Message sent successfully!", message);
     }
     catch (error) {
@@ -139,9 +139,9 @@ const deleteMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             message.type = "deleted";
             yield message.save({ validateBeforeSave: false });
             if (receiverSocketId.size > 0) {
-                socket_1.io.to(Array.from(receiverSocketId)).emit("messageRemove", message);
+                socket_1.io.to(Array.from(receiverSocketId)).emit("message-remove", message);
             }
-            socket_1.io.to(Array.from(senderSocketId)).emit("messageRemove", message);
+            socket_1.io.to(Array.from(senderSocketId)).emit("message-remove", message);
             return (0, utils_1.ApiResponse)(res, 200, "Message deleted successfully!", message);
         }
         else {

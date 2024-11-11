@@ -27,6 +27,9 @@ const useChatStore = create<{
 
   isPartnerTyping: boolean;
   setIsPartnerTyping: (isPartnerTyping: boolean) => void;
+
+  chatRequestUser: UserInfo | null;
+  setChatRequestUser: (chatRequestUser: UserInfo) => void
 }>((set) => ({
   selectedChatType: "",
   setSelectedChatType: (selectedChatType: string) => set({ selectedChatType }),
@@ -47,6 +50,10 @@ const useChatStore = create<{
 
   isPartnerTyping: false,
   setIsPartnerTyping: (isPartnerTyping: boolean) => set({ isPartnerTyping }),
+
+  chatRequestUser: null,
+  setChatRequestUser: (chatRequestUser: UserInfo) =>
+    set({ chatRequestUser })
 }));
 
 export default useChatStore;

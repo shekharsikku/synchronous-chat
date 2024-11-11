@@ -41,25 +41,23 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
     try {
       // const stringifiedData = JSON.stringify(dataToCopy, null, 2);
       navigator.clipboard.writeText(dataToCopy);
-      toast.success("Message copied to clipboard!");
+      toast.info("Message copied to clipboard!");
     } catch (error) {
       toast.error("Failed to copy message!");
     }
   };
 
   useEffect(() => {
-    if (socket) {
-      const handleRemoveMessage = (currentMessage: any) => {
-        const updatedMessages = messages.map(message => message._id === currentMessage._id ? currentMessage : message);
-        setMessages([...updatedMessages]);
+      const messageRemove = (current: any) => {
+        const updated = messages.map(message => message._id === current._id ? current : message);
+        setMessages([...updated]);
       };
 
-      socket.on("messageRemove", handleRemoveMessage);
+      socket?.on("message-remove", messageRemove);
 
       return () => {
-        socket.off("messageRemove", handleRemoveMessage);
+        socket?.off("message-remove", messageRemove);
       };
-    }
   }, [socket, messages, setMessages]);
 
   const deleteSelectedMessage = async (id: string) => {

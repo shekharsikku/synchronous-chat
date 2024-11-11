@@ -8,13 +8,15 @@ import { UserInfo } from "@/zustand/slice/auth";
 import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HiMiniSignal, HiMiniSignalSlash } from "react-icons/hi2";
-import { useChatStore } from "@/zustand";
+import { useChatStore, useAuthStore } from "@/zustand";
 import { useAvatar } from "@/hooks";
+import { toast } from "sonner";
 import api from "@/lib/api";
 
 const ContactsContainer = () => {
-  const { onlineUsers } = useSocket();
-  const { setSelectedChatType, setSelectedChatData, selectedChatData, messages } = useChatStore();
+  const { socket, onlineUsers } = useSocket();
+  const { userInfo } = useAuthStore();
+  const { setSelectedChatType, setSelectedChatData, selectedChatData, messages, setChatRequestUser } = useChatStore();
   const [allContacts, setAllContacts] = useState<[UserInfo] | null>(null);
   const [isFetching, setIsFetching] = useState(false);
   const [isExists, setIsExists] = useState(false);
@@ -84,7 +86,24 @@ const ContactsContainer = () => {
     setSelectedChatType("contact");
     setSelectedChatData(contact);
     setItRefresh(false);
+
+    const payload = { selectedUser: contact, currentUser: userInfo };
+    socket?.emit("before:contact-select", payload);
   }
+
+  useEffect(() => {
+    socket?.on("after:contact-select", ({ selectedUser: yourDetails, currentUser: requestUser }) => {
+
+      if (yourDetails._id === userInfo?._id) {
+        setChatRequestUser(requestUser);
+        toast.info(`Your contact is selected for chat by ${requestUser.name}!`);
+      }
+    });
+
+    return () => {
+      socket?.off("after:contact-select");
+    };
+  }, [socket, selectedChatData?._id]);
 
   return (
     <div className="relative md:w-[35vw] lg:w-[25vw] border-r border-gray-200 w-full h-full">

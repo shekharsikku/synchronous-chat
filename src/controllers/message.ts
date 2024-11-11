@@ -41,7 +41,7 @@ const sendMessage = async (req: Request, res: Response) => {
     if (receiverSocketId.size > 0) {
       const socketIds = Array.from(receiverSocketId);
 
-      io.to(socketIds).emit("newMessage", message);
+      io.to(socketIds).emit("new-message", message);
 
       let body = "";
 
@@ -53,12 +53,12 @@ const sendMessage = async (req: Request, res: Response) => {
         body = "New message received!";
       }
 
-      io.to(socketIds).emit("msgNotification", {
+      io.to(socketIds).emit("message-notification", {
         sender: name,
         message: body,
       });
     }
-    io.to(Array.from(senderSocketId)).emit("newMessage", message);
+    io.to(Array.from(senderSocketId)).emit("new-message", message);
 
     return ApiResponse(res, 201, "Message sent successfully!", message);
   } catch (error: any) {
@@ -147,9 +147,9 @@ const deleteMessage = async (req: Request, res: Response) => {
       await message.save({ validateBeforeSave: false });
 
       if (receiverSocketId.size > 0) {
-        io.to(Array.from(receiverSocketId)).emit("messageRemove", message);
+        io.to(Array.from(receiverSocketId)).emit("message-remove", message);
       }
-      io.to(Array.from(senderSocketId)).emit("messageRemove", message);
+      io.to(Array.from(senderSocketId)).emit("message-remove", message);
 
       return ApiResponse(res, 200, "Message deleted successfully!", message);
     } else {

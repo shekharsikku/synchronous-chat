@@ -32,27 +32,36 @@ io.on("connection", (socket: Socket) => {
   }
 
   io.emit(
-    "getOnlineUsers",
+    "get-online-users",
     Array.from(userSocketMap.entries()).reduce((acc, [userId, sockets]) => {
       acc[userId] = Array.from(sockets);
       return acc;
     }, {} as Record<string, string[]>)
   );
 
-  socket.on("startTyping", (userId) => {
-    const socketId = getSocketId(userId);
+  socket.on("before:contact-select", ({ selectedUser, currentUser }) => {
+    const socketId = getSocketId(selectedUser._id);
 
-    socket
-      .to(Array.from(socketId))
-      .emit("displayTyping", { uid: userId, typing: true });
+    io.to(Array.from(socketId)).emit("after:contact-select", {
+      selectedUser,
+      currentUser,
+    });
   });
 
-  socket.on("stopTyping", (userId) => {
+  socket.on("start-typing", (userId) => {
     const socketId = getSocketId(userId);
 
     socket
       .to(Array.from(socketId))
-      .emit("hideTyping", { uid: userId, typing: false });
+      .emit("display-typing", { uid: userId, typing: true });
+  });
+
+  socket.on("stop-typing", (userId) => {
+    const socketId = getSocketId(userId);
+
+    socket
+      .to(Array.from(socketId))
+      .emit("hide-typing", { uid: userId, typing: false });
   });
 
   socket.on("disconnect", () => {
@@ -68,7 +77,7 @@ io.on("connection", (socket: Socket) => {
       }
     }
     io.emit(
-      "getOnlineUsers",
+      "get-online-users",
       Array.from(userSocketMap.entries()).reduce((acc, [userId, sockets]) => {
         acc[userId] = Array.from(sockets);
         return acc;

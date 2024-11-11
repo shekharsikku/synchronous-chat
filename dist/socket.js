@@ -35,21 +35,28 @@ io.on("connection", (socket) => {
     else {
         console.log("Cannot get User ID for socket connection!");
     }
-    io.emit("getOnlineUsers", Array.from(userSocketMap.entries()).reduce((acc, [userId, sockets]) => {
+    io.emit("get-online-users", Array.from(userSocketMap.entries()).reduce((acc, [userId, sockets]) => {
         acc[userId] = Array.from(sockets);
         return acc;
     }, {}));
-    socket.on("startTyping", (userId) => {
-        const socketId = getSocketId(userId);
-        socket
-            .to(Array.from(socketId))
-            .emit("displayTyping", { uid: userId, typing: true });
+    socket.on("before:contact-select", ({ selectedUser, currentUser }) => {
+        const socketId = getSocketId(selectedUser._id);
+        io.to(Array.from(socketId)).emit("after:contact-select", {
+            selectedUser,
+            currentUser,
+        });
     });
-    socket.on("stopTyping", (userId) => {
+    socket.on("start-typing", (userId) => {
         const socketId = getSocketId(userId);
         socket
             .to(Array.from(socketId))
-            .emit("hideTyping", { uid: userId, typing: false });
+            .emit("display-typing", { uid: userId, typing: true });
+    });
+    socket.on("stop-typing", (userId) => {
+        const socketId = getSocketId(userId);
+        socket
+            .to(Array.from(socketId))
+            .emit("hide-typing", { uid: userId, typing: false });
     });
     socket.on("disconnect", () => {
         console.log(`User disconnected: ${socket.id}`);
@@ -62,7 +69,7 @@ io.on("connection", (socket) => {
                 break;
             }
         }
-        io.emit("getOnlineUsers", Array.from(userSocketMap.entries()).reduce((acc, [userId, sockets]) => {
+        io.emit("get-online-users", Array.from(userSocketMap.entries()).reduce((acc, [userId, sockets]) => {
             acc[userId] = Array.from(sockets);
             return acc;
         }, {}));
