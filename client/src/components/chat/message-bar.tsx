@@ -11,7 +11,7 @@ import api from "@/lib/api";
 const MessageBar = () => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
-  const { selectedChatData, setIsPartnerTyping, chatRequestUser } = useChatStore();
+  const { selectedChatData, setIsPartnerTyping } = useChatStore();
 
   const emojiRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -110,7 +110,7 @@ const MessageBar = () => {
 
   useEffect(() => {
     socket?.on("display-typing", (typingUser) => {
-      if (typingUser.uid === userInfo?._id && chatRequestUser?._id === selectedChatData?._id) {
+      if (typingUser.uid === userInfo?._id && selectedChatData?._id === typingUser.cid) {
         setIsPartnerTyping(typingUser.typing);
       }
     });
@@ -130,7 +130,7 @@ const MessageBar = () => {
   const handleTyping = () => {
     if (!isTyping) {
       setIsTyping(true);
-      socket?.emit("start-typing", selectedChatData?._id);
+      socket?.emit("start-typing", { selectedUser: selectedChatData?._id, currentUser: userInfo?._id });
     }
 
     if (typingTimeoutRef.current) {
@@ -139,7 +139,7 @@ const MessageBar = () => {
 
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false);
-      socket?.emit("stop-typing", selectedChatData?._id);
+      socket?.emit("stop-typing", { selectedUser: selectedChatData?._id, currentUser: userInfo?._id });
     }, 2500);
   };
 

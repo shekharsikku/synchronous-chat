@@ -39,29 +39,24 @@ io.on("connection", (socket: Socket) => {
     }, {} as Record<string, string[]>)
   );
 
-  socket.on("before:contact-select", ({ selectedUser, currentUser }) => {
-    const socketId = getSocketId(selectedUser._id);
+  socket.on("start-typing", ({ selectedUser, currentUser }) => {
+    const socketId = getSocketId(selectedUser);
 
-    io.to(Array.from(socketId)).emit("after:contact-select", {
-      selectedUser,
-      currentUser,
+    socket.to(Array.from(socketId)).emit("display-typing", {
+      uid: selectedUser,
+      cid: currentUser,
+      typing: true,
     });
   });
 
-  socket.on("start-typing", (userId) => {
-    const socketId = getSocketId(userId);
+  socket.on("stop-typing", ({ selectedUser, currentUser }) => {
+    const socketId = getSocketId(selectedUser);
 
-    socket
-      .to(Array.from(socketId))
-      .emit("display-typing", { uid: userId, typing: true });
-  });
-
-  socket.on("stop-typing", (userId) => {
-    const socketId = getSocketId(userId);
-
-    socket
-      .to(Array.from(socketId))
-      .emit("hide-typing", { uid: userId, typing: false });
+    socket.to(Array.from(socketId)).emit("hide-typing", {
+      uid: selectedUser,
+      cid: currentUser,
+      typing: false,
+    });
   });
 
   socket.on("disconnect", () => {
