@@ -59,6 +59,18 @@ io.on("connection", (socket: Socket) => {
     });
   });
 
+  socket.on("before:profile-update", ({ updatedDetails }) => {
+    const socketId = getSocketId(updatedDetails._id);
+
+    socket.to(Array.from(socketId)).emit("after:profile-update", {
+      updatedDetails,
+    });
+
+    // socketId.forEach((id) => {
+    //   io.to(id).emit("after:profile-update", { updatedDetails });
+    // });
+  });
+
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
     for (const [userId, sockets] of userSocketMap.entries()) {

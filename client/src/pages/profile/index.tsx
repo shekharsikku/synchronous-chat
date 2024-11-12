@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { useState, useRef, FormEvent } from "react";
+import { useState, useRef, useEffect, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,12 +31,14 @@ import {
 import { changePasswordSchema, validateUsername } from "@/utils";
 import { useHandleForm, useSignOutUser } from "@/hooks";
 import { useAuthStore } from "@/zustand";
+import { useSocket } from "@/context/socket-context";
 import api from "@/lib/api";
 
 const Profile = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const { socket } = useSocket();
   const { handleSignOut } = useSignOutUser();
   const { userInfo, setUserInfo } = useAuthStore();
 
@@ -166,6 +168,9 @@ const Profile = () => {
         const response = await api.patch("/api/user/user-profile-setup", profileDetails, { withCredentials: true });
         setUserInfo(response.data.data);
         toast.success(response.data.message);
+
+        /** Emitting event for update details to active clients of current user */
+        socket?.emit("before:profile-update", { updatedDetails: response.data.data });
       } else {
         toast.info("Invalid username!");
       }
@@ -175,6 +180,13 @@ const Profile = () => {
       setIsLoading(false);
     }
   }
+
+  useEffect(() => {
+    socket?.on("after:profile-update", ({ updatedDetails }) => {
+      setUserInfo({ ...updatedDetails });
+      toast.info("Your details has been updated!");
+    });
+  }, [socket]);
 
   return (
     <main className="h-[100vh] w-[100vw] flex flex-col items-center justify-center">
@@ -187,7 +199,7 @@ const Profile = () => {
             <p className="text-sm lg:text-base font-normal text-center text-gray-500">
               Let's get you set up!</p>
           </div>
-          <div className="h-32 w-32 md:h-36 md:w-36 lg:h-40 lg:w-40 relative flex items-center justify-center
+          <div className="hidden h-32 w-32 md:h-36 md:w-36 lg:h-40 lg:w-40 relative lg:flex items-center justify-center
            rounded-full border-2 border-gray-100 hover:border-3">
             <TooltipProvider>
               <Tooltip>

@@ -24,7 +24,6 @@ app.use(express_1.default.urlencoded({
 app.use((0, cors_1.default)({
     origin: env_1.default.CORS_ORIGIN,
     credentials: true,
-    optionsSuccessStatus: 204,
 }));
 app.use((0, helmet_1.default)({
     contentSecurityPolicy: {
