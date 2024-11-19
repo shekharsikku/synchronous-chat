@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import AuthRouter from "./auth";
 import UserRouter from "./user";
 import ContactRouter from "./contact";
@@ -14,5 +14,11 @@ router.use("/message", MessageRouter);
 /** Just for testing encryption api endpoint */
 import { TestEncryption } from "../utils/encryption";
 router.all("/encryption", TestEncryption);
+
+/** Just for server wake up from third party services */
+router.get("/wakeup", (req: Request, res: Response) => {
+  const from = req.query.from;
+  res.status(200).send({ message: `Wake up server from ${from}!` });
+});
 
 export default router;
