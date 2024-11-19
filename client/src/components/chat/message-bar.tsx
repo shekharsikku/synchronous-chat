@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, } from "@/components/ui/tooltip";
 import { HiOutlineFaceSmile, HiMiniLink, HiOutlinePaperAirplane, HiOutlineBackspace } from "react-icons/hi2";
 import { useChatStore, useAuthStore } from "@/zustand";
-import { convertToBase64 } from "@/utils";
+import { convertToBase64, encryptMessage } from "@/utils";
 import { useSocket } from "@/context/socket-context";
 import EmojiPicker from "emoji-picker-react";
 import api from "@/lib/api";
@@ -83,7 +83,7 @@ const MessageBar = () => {
       if (selectedImage && message !== "") {
         messageData.file = selectedImage;
       } else {
-        messageData.text = message;
+        messageData.text = encryptMessage(message, selectedChatData?._id!);
       }
 
       const response = await api.post(`/api/message/send/${selectedChatData?._id}`, messageData, {

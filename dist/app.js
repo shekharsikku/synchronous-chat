@@ -11,7 +11,7 @@ const morgan_1 = __importDefault(require("morgan"));
 const cors_1 = __importDefault(require("cors"));
 const path_1 = __importDefault(require("path"));
 const env_1 = __importDefault(require("./utils/env"));
-const routers_1 = require("./routers");
+const routers_1 = __importDefault(require("./routers"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json({
     limit: env_1.default.PAYLOAD_LIMIT,
@@ -49,18 +49,19 @@ app.use((0, helmet_1.default)({
 app.use((0, compression_1.default)());
 app.use((0, cookie_parser_1.default)(env_1.default.COOKIES_SECRET));
 app.use("/public/temp", express_1.default.static(path_1.default.join(__dirname, "../public/temp")));
-if (env_1.default.NODE_ENV === "development") {
+const isDevelopment = env_1.default.NODE_ENV === "development";
+/** Morgan logging middleware */
+if (isDevelopment) {
     app.use((0, morgan_1.default)("dev"));
 }
-app.use("/api/auth", routers_1.AuthRouter);
-app.use("/api/user", routers_1.UserRouter);
-app.use("/api/contact", routers_1.ContactRouter);
-app.use("/api/message", routers_1.MessageRouter);
-if (env_1.default.NODE_ENV === "production") {
+else {
+    app.use((0, morgan_1.default)("tiny"));
     app.use(express_1.default.static(path_1.default.join(__dirname, "../client/dist")));
 }
+/** Api routers middleware */
+app.use("/api", routers_1.default);
 app.all("*path", (_req, res) => {
-    if (env_1.default.NODE_ENV === "development") {
+    if (isDevelopment) {
         res.status(200).send({ message: "Welcome to Synchronous Chat!" });
     }
     else {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import CryptoJS from "crypto-js";
 import icon from "@/assets/favicon.ico";
 
 export const signUpSchema = z
@@ -140,4 +141,18 @@ export const handleNotification = (title: string, body: string) => {
       }
     });
   }
+};
+
+export const encryptMessage = (messageText: string, userId: string) => {
+  const secretKey = CryptoJS.SHA256(userId).toString(CryptoJS.enc.Base64);
+  const encrypted = CryptoJS.AES.encrypt(messageText, secretKey).toString();
+  return encrypted;
+};
+
+export const decryptMessage = (messageText: string, userId: string) => {
+  const secretKey = CryptoJS.SHA256(userId).toString(CryptoJS.enc.Base64);
+  const decrypted = CryptoJS.AES.decrypt(messageText, secretKey).toString(
+    CryptoJS.enc.Utf8
+  );
+  return decrypted;
 };

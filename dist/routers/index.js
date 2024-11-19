@@ -3,12 +3,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MessageRouter = exports.ContactRouter = exports.UserRouter = exports.AuthRouter = void 0;
+const express_1 = require("express");
 const auth_1 = __importDefault(require("./auth"));
-exports.AuthRouter = auth_1.default;
 const user_1 = __importDefault(require("./user"));
-exports.UserRouter = user_1.default;
 const contact_1 = __importDefault(require("./contact"));
-exports.ContactRouter = contact_1.default;
 const message_1 = __importDefault(require("./message"));
-exports.MessageRouter = message_1.default;
+const router = (0, express_1.Router)();
+router.use("/auth", auth_1.default);
+router.use("/user", user_1.default);
+router.use("/contact", contact_1.default);
+router.use("/message", message_1.default);
+/** Just for testing encryption api endpoint */
+const encryption_1 = require("../utils/encryption");
+router.all("/encryption", encryption_1.TestEncryption);
+exports.default = router;

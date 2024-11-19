@@ -11,12 +11,7 @@ import morgan from "morgan";
 import cors from "cors";
 import path from "path";
 import env from "./utils/env";
-import {
-  AuthRouter,
-  UserRouter,
-  ContactRouter,
-  MessageRouter,
-} from "./routers";
+import ApiRouters from "./routers";
 
 const app = express();
 
@@ -68,21 +63,21 @@ app.use(compression());
 app.use(cookieParser(env.COOKIES_SECRET));
 app.use("/public/temp", express.static(path.join(__dirname, "../public/temp")));
 
-if (env.NODE_ENV === "development") {
+const isDevelopment = env.NODE_ENV === "development";
+
+/** Morgan logging middleware */
+if (isDevelopment) {
   app.use(morgan("dev"));
-}
-
-app.use("/api/auth", AuthRouter);
-app.use("/api/user", UserRouter);
-app.use("/api/contact", ContactRouter);
-app.use("/api/message", MessageRouter);
-
-if (env.NODE_ENV === "production") {
+} else {
+  app.use(morgan("tiny"));
   app.use(express.static(path.join(__dirname, "../client/dist")));
 }
 
+/** Api routers middleware */
+app.use("/api", ApiRouters);
+
 app.all("*path", (_req: Request, res: Response) => {
-  if (env.NODE_ENV === "development") {
+  if (isDevelopment) {
     res.status(200).send({ message: "Welcome to Synchronous Chat!" });
   } else {
     res.sendFile(path.join(__dirname, "../client/dist", "index.html"));

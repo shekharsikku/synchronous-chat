@@ -23,14 +23,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Message } from "@/zustand/slice/chat";
 import { useSocket } from "@/context/socket-context";
-import { useChatStore } from "@/zustand"
+import { useChatStore, useAuthStore } from "@/zustand"
 import { useEffect, useState } from "react";
-import { checkImageType } from "@/utils";
+import { checkImageType, decryptMessage } from "@/utils";
 import moment from "moment";
 import api from "@/lib/api";
 
 const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMessageId: string }) => {
   const { socket } = useSocket();
+  const { userInfo } = useAuthStore();
   const { selectedChatData, messages, setMessages } = useChatStore();
 
   const shakeClass = message._id === lastMessageId ? "shake" : "";
@@ -48,16 +49,16 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
   };
 
   useEffect(() => {
-      const messageRemove = (current: any) => {
-        const updated = messages.map(message => message._id === current._id ? current : message);
-        setMessages([...updated]);
-      };
+    const messageRemove = (current: any) => {
+      const updated = messages.map(message => message._id === current._id ? current : message);
+      setMessages([...updated]);
+    };
 
-      socket?.on("message-remove", messageRemove);
+    socket?.on("message-remove", messageRemove);
 
-      return () => {
-        socket?.off("message-remove", messageRemove);
-      };
+    return () => {
+      socket?.off("message-remove", messageRemove);
+    };
   }, [socket, messages, setMessages]);
 
   const deleteSelectedMessage = async (id: string) => {
@@ -83,6 +84,19 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
 
   const [imageViewExtend, setImageViewExtend] = useState(false);
 
+  /** for convert encrypt message to plain text */
+  const plainText = (message: Message) => {
+    let messageKey = "";
+
+    if (message.sender === selectedChatData?._id) {
+      messageKey = userInfo?._id!;
+    } else {
+      messageKey = selectedChatData?._id!;
+    }
+
+    return decryptMessage(message.text!, messageKey);
+  }
+
   return (
     <div className={`${message.sender !== selectedChatData?._id ? "text-right" : "text-left"} w-full`}>
       {message && (
@@ -105,7 +119,7 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
                     <>
                       {/* For test message type */}
                       {message.type === "text" && (
-                        <span className="text-base">{message.text}</span>
+                        <span className="text-base">{plainText(message)}</span>
                       )}
                       {/* For file message type */}
                       {message.type === "file" && (
