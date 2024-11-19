@@ -38,10 +38,10 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
   const deletedMessage = message.sender === selectedChatData?._id
     ? "This message was deleted" : "You deleted this message";
 
-  const copyToClipboard = (dataToCopy: string) => {
+  const copyToClipboard = (text: string) => {
     try {
       // const stringifiedData = JSON.stringify(dataToCopy, null, 2);
-      navigator.clipboard.writeText(dataToCopy);
+      navigator.clipboard.writeText(text);
       toast.info("Message copied to clipboard!");
     } catch (error) {
       toast.error("Failed to copy message!");
@@ -138,7 +138,7 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
               {message.type !== "deleted" && (
                 <TooltipContent className="flex gap-3 py-3">
                   {message.type === "text" && (
-                    <Button variant="outline" size="icon" onClick={() => copyToClipboard(message.text!)}>
+                    <Button variant="outline" size="icon" onClick={() => copyToClipboard(plainText(message))}>
                       <HiOutlineClipboardDocument size={20} />
                     </Button>
                   )}

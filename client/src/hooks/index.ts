@@ -2,9 +2,9 @@ import { toast } from "sonner";
 import { useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChangeEvent, ChangeEventHandler, useState } from "react";
+import { Message } from "@/zustand/slice/chat";
 import { useSocket } from "@/context/socket-context";
 import { useAuthStore, useChatStore } from "@/zustand";
-import { handleNotification } from "@/utils";
 import notificationSound from "@/assets/sound/message-alert.mp3";
 import maleAvatar from "@/assets/male-avatar.jpg";
 import femaleAvatar from "@/assets/female-avatar.jpg";
@@ -107,16 +107,20 @@ export const useAuthRefresh = () => {
 export const useListenMessages = () => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
-  const { messages, setMessages, selectedChatData } = useChatStore();
+  const { messages, setMessages, selectedChatData, isSoundAllow } =
+    useChatStore();
 
   const listenersAttached = useRef(false);
 
   useEffect(() => {
-    if (!listenersAttached.current && socket) {
-      socket.on("new-message", (message: any) => {
-        const sound = new Audio(notificationSound);
-        sound.play();
-
+    if (socket && !listenersAttached.current) {
+      socket.on("new-message", (message: Message) => {
+        /** Play notification sound only if the message is for the current user */
+        if (message.recipient === userInfo?._id && isSoundAllow) {
+          const sound = new Audio(notificationSound);
+          sound.play();
+        }
+        /** Add the message to the chat if it's part of the selected chat */
         if (
           selectedChatData?._id === message.sender ||
           userInfo?._id === message.sender
@@ -124,20 +128,20 @@ export const useListenMessages = () => {
           setMessages([...messages, message]);
         }
       });
-
-      socket.on("message-notification", (payload) => {
-        handleNotification(payload.sender, payload.message);
-      });
-
       listenersAttached.current = true;
     }
-
     return () => {
       socket?.off("new-message");
-      socket?.off("message-notification");
       listenersAttached.current = false;
     };
-  }, [socket, setMessages, messages]);
+  }, [
+    socket,
+    messages,
+    setMessages,
+    isSoundAllow,
+    userInfo?._id,
+    selectedChatData?._id,
+  ]);
 };
 
 export const useDebounce = (callback: Function, delay: number) => {

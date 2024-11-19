@@ -28,14 +28,6 @@ const App = () => {
   }, [userInfo, isAuthenticated]);
 
   useEffect(() => {
-    if (Notification.permission === "default") {
-      Notification.requestPermission().then((permission) => {
-        if (permission !== "granted") {
-          console.warn("Notifications won't be shown without permission!");
-        }
-      });
-    }
-
     const initialRefresh = async () => {
       await authRefresh();
     };

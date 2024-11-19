@@ -27,6 +27,9 @@ const useChatStore = create<{
 
   isPartnerTyping: boolean;
   setIsPartnerTyping: (isPartnerTyping: boolean) => void;
+
+  isSoundAllow: boolean;
+  setIsSoundAllow: (isSoundAllow: boolean) => void;
 }>((set) => ({
   selectedChatType: "",
   setSelectedChatType: (selectedChatType: string) => set({ selectedChatType }),
@@ -47,6 +50,9 @@ const useChatStore = create<{
 
   isPartnerTyping: false,
   setIsPartnerTyping: (isPartnerTyping: boolean) => set({ isPartnerTyping }),
+
+  isSoundAllow: true,
+  setIsSoundAllow: (isSoundAllow: boolean) => set({ isSoundAllow }),
 }));
 
 export default useChatStore;

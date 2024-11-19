@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "@/zustand";
+import { useAuthStore, useChatStore } from "@/zustand";
 import { useSignOutUser, useAvatar } from "@/hooks";
-import { HiOutlineArrowRightOnRectangle } from "react-icons/hi2";
+import { HiOutlineArrowRightOnRectangle, HiOutlineSpeakerWave, HiOutlineSpeakerXMark } from "react-icons/hi2";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, } from "@/components/ui/tooltip";
 import { useSelector } from "react-redux";
@@ -14,6 +14,7 @@ const ProfileInfo = () => {
   const navigate = useNavigate();
   const { userInfo } = useAuthStore();
   const { handleSignOut } = useSignOutUser();
+  const { isSoundAllow, setIsSoundAllow } = useChatStore();
   const [avatar, setAvatar] = useState<any>(null);
 
   useEffect(() => {
@@ -50,17 +51,36 @@ const ProfileInfo = () => {
           </Tooltip>
         </TooltipProvider>
 
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger>
-              <HiOutlineArrowRightOnRectangle size={20} onClick={handleSignOut}
-                className="text-neutral-600 border-none outline-none transition-all duration-300" />
-            </TooltipTrigger>
-            <TooltipContent>
-              <span className="text-neutral-700 font-medium">Sign Out</span>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <div className="flex gap-3 md:gap-5">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                {isSoundAllow ? (
+                  <HiOutlineSpeakerWave size={20} onClick={() => setIsSoundAllow(false)}
+                    className="text-neutral-600 border-none outline-none transition-all duration-300" />
+                ) : (
+                  <HiOutlineSpeakerXMark size={20} onClick={() => setIsSoundAllow(true)}
+                    className="text-neutral-600 border-none outline-none transition-all duration-300" />
+                )}
+              </TooltipTrigger>
+              <TooltipContent>
+                <span className="text-neutral-700 font-medium">Sound</span>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <HiOutlineArrowRightOnRectangle size={20} onClick={handleSignOut}
+                  className="text-neutral-600 border-none outline-none transition-all duration-300" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <span className="text-neutral-700 font-medium">Sign Out</span>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
     </div>
   )

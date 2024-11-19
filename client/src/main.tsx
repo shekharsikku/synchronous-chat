@@ -16,7 +16,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           v7_relativeSplatPath: true,
           v7_startTransition: true
         }}>
-          <Toaster closeButton />
+          <Toaster closeButton duration={1500} />
           <App />
         </BrowserRouter>
       </Provider>
