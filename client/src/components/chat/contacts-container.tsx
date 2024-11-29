@@ -13,26 +13,22 @@ import { useAvatar } from "@/hooks";
 import api from "@/lib/api";
 
 const ContactsContainer = () => {
-  const { onlineUsers } = useSocket();
+  const { socket, onlineUsers } = useSocket();
   const { setSelectedChatType, setSelectedChatData, selectedChatData, messages } = useChatStore();
-  const [allContacts, setAllContacts] = useState<[UserInfo] | null>(null);
-  const [isFetching, setIsFetching] = useState(false);
-  const [isExists, setIsExists] = useState(false);
-  const [isAtZero, setIsAtZero] = useState(false);
-  const [itRefresh, setItRefresh] = useState(false);
+
+  const [fetching, setFetching] = useState(false);
+  const [contacts, setContacts] = useState<UserInfo[] | null>(null);
 
   const fetchAllContacts = async () => {
     try {
-      setIsFetching(true);
-      const response = await api.get("/api/contact/dm-contacts", { withCredentials: true });
+      setFetching(true);
+      const response = await api.get("/api/contact/fetch", { withCredentials: true });
       const data = await response.data.data;
-      setAllContacts(data);
+      setContacts(data);
     } catch (error: any) {
       console.log(`Error: ${error.message}`);
     } finally {
-      setTimeout(() => {
-        setIsFetching(false);
-      }, 500);
+      setFetching(false);
     }
   }
 
@@ -41,49 +37,61 @@ const ContactsContainer = () => {
   }, []);
 
   useEffect(() => {
-    if (allContacts) {
-      const isExist = allContacts?.some(obj => obj._id === selectedChatData?._id);
-      setIsExists(isExist);
+    socket?.on("conversation:updated", (data) => {
+      setContacts((previous: any) => {
+        const updatedContacts = previous?.map((current: any) =>
+          current._id === data._id
+            ? { ...current, interaction: data.interaction }
+            : current
+        );
 
-      const isFirst = allContacts[0]?._id === selectedChatData?._id;
-      setIsAtZero(isFirst);
-    }
-  }, [selectedChatData, allContacts])
+        const sortedContacts = updatedContacts?.sort(
+          (a: any, b: any) =>
+            new Date(b.interaction).getTime() - new Date(a.interaction).getTime()
+        );
 
-  const refreshContacts = () => {
-    const lastMessage = messages.at(-1)?.createdAt;
-    const lastMsgTime = new Date(lastMessage!);
+        return sortedContacts;
+      });
 
-    const chatMessage = selectedChatData?.lastMessageTime;
-    const lastChatTime = new Date(chatMessage!);
-
-    if (lastMsgTime > lastChatTime) {
-      setItRefresh(true);
-    } else {
-      setItRefresh(false);
-    }
-  }
-
-  useEffect(() => {
-    const refreshTimeout = setTimeout(() => {
-      refreshContacts();
-    }, 500);
-
-    return () => {
-      clearTimeout(refreshTimeout);
-    }
-  }, [messages.length]);
+      if (selectedChatData?._id === data._id) {
+        setSelectedChatData({ ...selectedChatData, interaction: data.interaction })
+      }
+    });
+  }, [socket]);
 
   useEffect(() => {
-    if (selectedChatData && (!isExists || (!isAtZero && itRefresh))) {
-      fetchAllContacts();
+    if (contacts && selectedChatData) {
+      const isExist = contacts?.some(obj => obj._id === selectedChatData?._id);
+
+      if (!isExist) {
+        const selected = { ...selectedChatData, interaction: new Date().toISOString() } as UserInfo;
+
+        const cleaned = Object.fromEntries(
+          Object.entries(selected).filter(([key]) => !["setup", "createdAt", "updatedAt", "__v"].includes(key))
+        );
+
+        setContacts((current: any) => [
+          ...current,
+          { ...cleaned },
+        ]);
+      }
     }
-  }, [isExists, isAtZero, itRefresh]);
+  }, [selectedChatData]);
+
+  useEffect(() => {
+    if (contacts && selectedChatData) {
+      const atFirst = contacts[0]?._id === selectedChatData?._id;
+
+      if (!atFirst) {
+        const updated = { ...selectedChatData, interaction: new Date().toISOString() } as UserInfo;
+        setSelectedChatData(updated);
+      };
+    }
+  }, [contacts, messages.length]);
 
   const selectNewContact = (contact: object) => {
     setSelectedChatType("contact");
     setSelectedChatData(contact);
-    setItRefresh(false);
   }
 
   return (
@@ -96,16 +104,16 @@ const ContactsContainer = () => {
           <Title title="Chat Messages" />
           <AddNewChat />
         </div>
-        {isFetching ? (
+        {fetching ? (
           <ContactListSkeleton animate="pulse" status />
         ) : (
           <>
-            {allContacts?.length! <= 0 ? (
+            {contacts?.length! <= 0 ? (
               <p className="text-neutral-700">No any chat available!</p>
             ) : (
               <ScrollArea className="min-h-[50px] max-h-[65vh] overflow-y-auto scrollbar-hide">
                 <div className="flex flex-col gap-4 py-[2px]">
-                  {allContacts?.map((contact) => (
+                  {contacts?.map((contact) => (
                     <div key={contact._id} className={`flex border border-gray-200 w-full p-2 lg:px-3 xl:px-6 rounded items-center hover:bg-gray-100/80 transition-all duration-300 cursor-pointer justify-between 
                   ${contact.name === "" ? "disabled" : ""} 
                   ${selectedChatData && selectedChatData._id === contact._id ? "bg-[#06d6a02a] text-[#06d6a0] border-[1px] border-[#06d6a0bb]" : ""}`} onClick={() => selectNewContact(contact)}>

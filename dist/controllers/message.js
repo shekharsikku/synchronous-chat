@@ -40,14 +40,29 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
         if (message) {
             conversation.messages.push(message._id);
+            conversation.interaction = new Date(Date.now());
         }
         yield Promise.all([conversation.save(), message.save()]);
         const senderSocketId = (0, socket_1.getSocketId)(String(sender));
         const receiverSocketId = (0, socket_1.getSocketId)(receiver);
         if (receiverSocketId.size > 0) {
-            socket_1.io.to(Array.from(receiverSocketId)).emit("new-message", message);
+            const receiverSockets = Array.from(receiverSocketId);
+            /** for update new message */
+            socket_1.io.to(receiverSockets).emit("new-message", message);
+            /** for update last chat contact */
+            socket_1.io.to(receiverSockets).emit("conversation:updated", {
+                _id: sender,
+                interaction: conversation.interaction,
+            });
         }
-        socket_1.io.to(Array.from(senderSocketId)).emit("new-message", message);
+        const senderSockets = Array.from(senderSocketId);
+        /** for update new message */
+        socket_1.io.to(senderSockets).emit("new-message", message);
+        /** for update last chat contact */
+        socket_1.io.to(senderSockets).emit("conversation:updated", {
+            _id: receiver,
+            interaction: conversation.interaction,
+        });
         return (0, utils_1.ApiResponse)(res, 201, "Message sent successfully!", message);
     }
     catch (error) {

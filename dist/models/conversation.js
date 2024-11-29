@@ -15,6 +15,10 @@ const ConversationSchema = new mongoose_1.Schema({
             default: [],
         },
     ],
+    interaction: {
+        type: Date,
+        default: Date.now,
+    },
 }, { timestamps: true });
 const Conversation = (0, mongoose_1.model)("Conversation", ConversationSchema);
 exports.default = Conversation;

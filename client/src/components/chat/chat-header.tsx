@@ -87,7 +87,7 @@ const ChatHeader = () => {
               </div>
               {/* Last Message Time */}
               <p className="text-center text-sm mt-4 text-gray-500">
-                {moment(selectedChatData?.lastMessageTime).format("MMMM Do YYYY, h:mm:ss a")}
+                {moment(selectedChatData?.interaction).format("MMMM Do YYYY, h:mm:ss a")}
               </p>
             </DialogContent>
           </Dialog>

@@ -31,6 +31,7 @@ const sendMessage = async (req: Request, res: Response) => {
 
     if (message) {
       conversation.messages.push(message._id);
+      conversation.interaction = new Date(Date.now());
     }
 
     await Promise.all([conversation.save(), message.save()]);
@@ -38,9 +39,28 @@ const sendMessage = async (req: Request, res: Response) => {
     const receiverSocketId = getSocketId(receiver);
 
     if (receiverSocketId.size > 0) {
-      io.to(Array.from(receiverSocketId)).emit("new-message", message);
+      const receiverSockets = Array.from(receiverSocketId);
+
+      /** for update new message */
+      io.to(receiverSockets).emit("new-message", message);
+
+      /** for update last chat contact */
+      io.to(receiverSockets).emit("conversation:updated", {
+        _id: sender,
+        interaction: conversation.interaction,
+      });
     }
-    io.to(Array.from(senderSocketId)).emit("new-message", message);
+
+    const senderSockets = Array.from(senderSocketId);
+
+    /** for update new message */
+    io.to(senderSockets).emit("new-message", message);
+
+    /** for update last chat contact */
+    io.to(senderSockets).emit("conversation:updated", {
+      _id: receiver,
+      interaction: conversation.interaction,
+    });
 
     return ApiResponse(res, 201, "Message sent successfully!", message);
   } catch (error: any) {

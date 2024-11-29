@@ -16,6 +16,10 @@ const ConversationSchema = new Schema<ConversationInterface>(
         default: [],
       },
     ],
+    interaction: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { timestamps: true }
 );

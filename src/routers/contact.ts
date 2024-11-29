@@ -1,15 +1,10 @@
 import { Router } from "express";
 import { authAccess } from "../middlewares";
-import {
-  getAllContacts,
-  searchContact,
-  getContactsList,
-} from "../controllers/contact";
+import { searchContact, fetchContacts } from "../controllers/contact";
 
 const router = Router();
 
 router.post("/search", authAccess, searchContact);
-router.get("/get-all", authAccess, getAllContacts);
-router.get("/dm-contacts", authAccess, getContactsList);
+router.get("/fetch", authAccess, fetchContacts);
 
 export default router;

@@ -12,11 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getContactsList = exports.getAllContacts = exports.searchContact = void 0;
+exports.fetchContacts = exports.getContactsList = exports.getAllContacts = exports.searchContact = void 0;
 const utils_1 = require("../utils");
 const mongoose_1 = require("mongoose");
 const message_1 = __importDefault(require("../models/message"));
 const user_1 = __importDefault(require("../models/user"));
+const conversation_1 = __importDefault(require("../models/conversation"));
 const searchContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
@@ -177,3 +178,26 @@ const getContactsList = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.getContactsList = getContactsList;
+const fetchContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const uid = new mongoose_1.Types.ObjectId((_a = req.user) === null || _a === void 0 ? void 0 : _a._id);
+        const conversations = yield conversation_1.default.find({
+            participants: uid,
+        })
+            .sort({ interaction: -1 })
+            .populate("participants", "name email username gender image bio")
+            .lean();
+        const contacts = conversations.map((conversation) => {
+            const contact = conversation.participants.find((participant) => participant._id.toString() !== uid.toString());
+            if (contact) {
+                return Object.assign(Object.assign({}, contact), { interaction: conversation.interaction });
+            }
+        });
+        return (0, utils_1.ApiResponse)(res, 200, "Contacts fetched successfully!", contacts);
+    }
+    catch (error) {
+        return (0, utils_1.ApiResponse)(res, error.code || 500, error.message || "An error occurred while fetching contacts.");
+    }
+});
+exports.fetchContacts = fetchContacts;

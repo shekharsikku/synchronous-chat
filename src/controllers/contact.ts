@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { Types } from "mongoose";
 import Message from "../models/message";
 import User from "../models/user";
+import Conversation from "../models/conversation";
 
 const searchContact = async (req: Request, res: Response) => {
   try {
@@ -173,4 +174,35 @@ const getContactsList = async (req: Request, res: Response) => {
   }
 };
 
-export { searchContact, getAllContacts, getContactsList };
+const fetchContacts = async (req: Request, res: Response) => {
+  try {
+    const uid = new Types.ObjectId(req.user?._id);
+
+    const conversations = await Conversation.find({
+      participants: uid,
+    })
+      .sort({ interaction: -1 })
+      .populate("participants", "name email username gender image bio")
+      .lean();
+
+    const contacts = conversations.map((conversation) => {
+      const contact = conversation.participants.find(
+        (participant) => participant._id.toString() !== uid.toString()
+      );
+
+      if (contact) {
+        return { ...contact, interaction: conversation.interaction };
+      }
+    });
+
+    return ApiResponse(res, 200, "Contacts fetched successfully!", contacts);
+  } catch (error: any) {
+    return ApiResponse(
+      res,
+      error.code || 500,
+      error.message || "An error occurred while fetching contacts."
+    );
+  }
+};
+
+export { searchContact, getAllContacts, getContactsList, fetchContacts };

@@ -21,9 +21,7 @@ const MessageContainer = () => {
     } catch (error: any) {
       toast.error(error.message);
     } finally {
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 500);
+      setIsLoading(false);
     }
   };
 
