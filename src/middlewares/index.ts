@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { ApiError, ApiResponse } from "../utils";
-import { UserInterface } from "../interface";
+import { UserInterface, TokenInterface } from "../interface";
 import { Types } from "mongoose";
 import {
   generateAccess,
@@ -106,6 +106,7 @@ const authRefresh = async (
       throw new ApiError(403, "Invalid user request!");
     }
 
+    let authTokens: TokenInterface = {};
     const accessData = createAccessData(requestUser);
 
     if (currentTime >= beforeExpires && currentTime < decodedPayload.exp!) {
@@ -134,15 +135,19 @@ const authRefresh = async (
       if (updatedAuth) {
         authorizeCookie(res, authorizeId!);
         const accessToken = generateAccess(res, accessData);
+        authTokens.access = accessToken;
+        authTokens.refresh = newRefreshToken;
       }
     } else if (currentTime >= decodedPayload.exp!) {
       await deleteToken(req, res, requestUser._id, refreshToken);
       throw new ApiError(401, "Please, login again to continue!");
     } else {
       const accessToken = generateAccess(res, accessData);
+      authTokens.access = accessToken;
     }
 
     req.user = requestUser;
+    req.token = authTokens;
     next();
   } catch (error: any) {
     return ApiResponse(res, error.code, error.message);

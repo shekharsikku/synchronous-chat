@@ -124,7 +124,8 @@ const signOutUser = async (req: Request, res: Response) => {
 };
 
 const refreshAuth = async (req: Request, res: Response) => {
-  return ApiResponse(res, 200, "Authentication refreshed!", req.user);
+  const refreshData = { user: req.user, token: req.token };
+  return ApiResponse(res, 200, "Authentication refreshed!");
 };
 
 export { signUpUser, signInUser, signOutUser, refreshAuth };

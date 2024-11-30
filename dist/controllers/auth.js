@@ -107,6 +107,7 @@ const signOutUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.signOutUser = signOutUser;
 const refreshAuth = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    return (0, utils_1.ApiResponse)(res, 200, "Authentication refreshed!", req.user);
+    const refreshData = { user: req.user, token: req.token };
+    return (0, utils_1.ApiResponse)(res, 200, "Authentication refreshed!");
 });
 exports.refreshAuth = refreshAuth;

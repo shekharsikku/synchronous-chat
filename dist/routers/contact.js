@@ -6,4 +6,5 @@ const contact_1 = require("../controllers/contact");
 const router = (0, express_1.Router)();
 router.post("/search", middlewares_1.authAccess, contact_1.searchContact);
 router.get("/fetch", middlewares_1.authAccess, contact_1.fetchContacts);
+router.get("/available", middlewares_1.authAccess, contact_1.availableContact);
 exports.default = router;

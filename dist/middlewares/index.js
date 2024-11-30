@@ -84,6 +84,7 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         if (!requestUser) {
             throw new utils_1.ApiError(403, "Invalid user request!");
         }
+        let authTokens = {};
         const accessData = (0, helpers_1.createAccessData)(requestUser);
         if (currentTime >= beforeExpires && currentTime < decodedPayload.exp) {
             const newRefreshToken = (0, helpers_1.generateRefresh)(res, userId);
@@ -103,6 +104,8 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             if (updatedAuth) {
                 (0, helpers_1.authorizeCookie)(res, authorizeId);
                 const accessToken = (0, helpers_1.generateAccess)(res, accessData);
+                authTokens.access = accessToken;
+                authTokens.refresh = newRefreshToken;
             }
         }
         else if (currentTime >= decodedPayload.exp) {
@@ -111,8 +114,10 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         }
         else {
             const accessToken = (0, helpers_1.generateAccess)(res, accessData);
+            authTokens.access = accessToken;
         }
         req.user = requestUser;
+        req.token = authTokens;
         next();
     }
     catch (error) {

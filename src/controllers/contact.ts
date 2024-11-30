@@ -1,7 +1,6 @@
 import { ApiResponse, ApiError } from "../utils";
 import { Request, Response } from "express";
 import { Types } from "mongoose";
-import Message from "../models/message";
 import User from "../models/user";
 import Conversation from "../models/conversation";
 
@@ -34,11 +33,11 @@ const searchContact = async (req: Request, res: Response) => {
   }
 };
 
-const getAllContacts = async (req: Request, res: Response) => {
+const availableContact = async (req: Request, res: Response) => {
   try {
-    const users = await User.find({ _id: { $ne: req.user?._id } });
+    const users = await User.find({ _id: { $ne: req.user?._id }, setup: true });
 
-    if (!users || users.length == 0) {
+    if (users.length == 0) {
       throw new ApiError(404, "No any contact available!");
     }
 
@@ -54,7 +53,7 @@ const getAllContacts = async (req: Request, res: Response) => {
 };
 
 /*
-const getContactsList = async (req: Request, res: Response) => {
+const fetchContacts = async (req: Request, res: Response) => {
   try {
     let uid = req.user?._id;
     uid = new Types.ObjectId(uid);
@@ -112,12 +111,11 @@ const getContactsList = async (req: Request, res: Response) => {
     return ApiResponse(res, error.code || 500, error.message);
   }
 };
-*/
 
-const getContactsList = async (req: Request, res: Response) => {
+const fetchContacts = async (req: Request, res: Response) => {
   try {
     const uid = new Types.ObjectId(req.user?._id);
-
+    
     const contacts = await Message.aggregate([
       {
         $match: {
@@ -163,7 +161,7 @@ const getContactsList = async (req: Request, res: Response) => {
         $sort: { lastMessageTime: -1 }, // Final sorting by last message time
       },
     ]);
-
+    
     return ApiResponse(res, 200, "Contacts fetched successfully!", contacts);
   } catch (error: any) {
     return ApiResponse(
@@ -173,6 +171,7 @@ const getContactsList = async (req: Request, res: Response) => {
     );
   }
 };
+*/
 
 const fetchContacts = async (req: Request, res: Response) => {
   try {
@@ -205,4 +204,4 @@ const fetchContacts = async (req: Request, res: Response) => {
   }
 };
 
-export { searchContact, getAllContacts, getContactsList, fetchContacts };
+export { searchContact, availableContact, fetchContacts };

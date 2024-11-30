@@ -28,25 +28,26 @@ const App = () => {
   }, [userInfo, isAuthenticated]);
 
   useEffect(() => {
-    const initialRefresh = async () => {
-      await authRefresh();
-    };
-
+    /** refresh token on app load */
+    const initialRefresh = async () => await authRefresh();
     initialRefresh();
 
-    const intervalId = setInterval(async () => {
+    /** regular refresh every 50 minutes */
+    const intervalRefresh = setInterval(async () => {
       await authRefresh();
     }, 50 * 60 * 1000);
 
-    return () => clearInterval(intervalId);
+    /** cleanup function for next app mount/unmount */
+    return () => clearInterval(intervalRefresh);
   }, []);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      console.clear();
-    }, 60 * 60 * 1000);
+    /** refresh token when the user comes online */
+    const onlineRefresh = async () => await authRefresh();
+    window.addEventListener("online", onlineRefresh);
 
-    return () => clearInterval(intervalId);
+    /** cleanup function for next app mount/unmount */
+    return () => window.removeEventListener("online", onlineRefresh);
   }, []);
 
   return (

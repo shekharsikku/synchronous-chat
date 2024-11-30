@@ -12,10 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchContacts = exports.getContactsList = exports.getAllContacts = exports.searchContact = void 0;
+exports.fetchContacts = exports.availableContact = exports.searchContact = void 0;
 const utils_1 = require("../utils");
 const mongoose_1 = require("mongoose");
-const message_1 = __importDefault(require("../models/message"));
 const user_1 = __importDefault(require("../models/user"));
 const conversation_1 = __importDefault(require("../models/conversation"));
 const searchContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -44,11 +43,11 @@ const searchContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.searchContact = searchContact;
-const getAllContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const availableContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
-        const users = yield user_1.default.find({ _id: { $ne: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id } });
-        if (!users || users.length == 0) {
+        const users = yield user_1.default.find({ _id: { $ne: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id }, setup: true });
+        if (users.length == 0) {
             throw new utils_1.ApiError(404, "No any contact available!");
         }
         const contacts = users.map((user) => ({
@@ -61,9 +60,9 @@ const getAllContacts = (req, res) => __awaiter(void 0, void 0, void 0, function*
         return (0, utils_1.ApiResponse)(res, error.code, error.message);
     }
 });
-exports.getAllContacts = getAllContacts;
+exports.availableContact = availableContact;
 /*
-const getContactsList = async (req: Request, res: Response) => {
+const fetchContacts = async (req: Request, res: Response) => {
   try {
     let uid = req.user?._id;
     uid = new Types.ObjectId(uid);
@@ -121,63 +120,67 @@ const getContactsList = async (req: Request, res: Response) => {
     return ApiResponse(res, error.code || 500, error.message);
   }
 };
+
+const fetchContacts = async (req: Request, res: Response) => {
+  try {
+    const uid = new Types.ObjectId(req.user?._id);
+    
+    const contacts = await Message.aggregate([
+      {
+        $match: {
+          $or: [{ sender: uid }, { recipient: uid }],
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $cond: {
+              if: { $eq: ["$sender", uid] },
+              then: "$recipient",
+              else: "$sender",
+            },
+          },
+          lastMessageTime: { $max: "$createdAt" }, // Use `$max` to avoid sorting before grouping
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "contactInfo",
+        },
+      },
+      {
+        $unwind: "$contactInfo",
+      },
+      {
+        $project: {
+          _id: 1,
+          lastMessageTime: 1,
+          name: "$contactInfo.name",
+          email: "$contactInfo.email",
+          username: "$contactInfo.username",
+          gender: "$contactInfo.gender",
+          image: "$contactInfo.image",
+          bio: "$contactInfo.bio",
+        },
+      },
+      {
+        $sort: { lastMessageTime: -1 }, // Final sorting by last message time
+      },
+    ]);
+    
+    return ApiResponse(res, 200, "Contacts fetched successfully!", contacts);
+  } catch (error: any) {
+    return ApiResponse(
+      res,
+      error.code || 500,
+      error.message || "An error occurred while fetching contacts."
+    );
+  }
+};
 */
-const getContactsList = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    try {
-        const uid = new mongoose_1.Types.ObjectId((_a = req.user) === null || _a === void 0 ? void 0 : _a._id);
-        const contacts = yield message_1.default.aggregate([
-            {
-                $match: {
-                    $or: [{ sender: uid }, { recipient: uid }],
-                },
-            },
-            {
-                $group: {
-                    _id: {
-                        $cond: {
-                            if: { $eq: ["$sender", uid] },
-                            then: "$recipient",
-                            else: "$sender",
-                        },
-                    },
-                    lastMessageTime: { $max: "$createdAt" }, // Use `$max` to avoid sorting before grouping
-                },
-            },
-            {
-                $lookup: {
-                    from: "users",
-                    localField: "_id",
-                    foreignField: "_id",
-                    as: "contactInfo",
-                },
-            },
-            {
-                $unwind: "$contactInfo",
-            },
-            {
-                $project: {
-                    _id: 1,
-                    lastMessageTime: 1,
-                    name: "$contactInfo.name",
-                    email: "$contactInfo.email",
-                    username: "$contactInfo.username",
-                    gender: "$contactInfo.gender",
-                    image: "$contactInfo.image",
-                    bio: "$contactInfo.bio",
-                },
-            },
-            {
-                $sort: { lastMessageTime: -1 }, // Final sorting by last message time
-            },
-        ]);
-        return (0, utils_1.ApiResponse)(res, 200, "Contacts fetched successfully!", contacts);
-    }
-    catch (error) {
-        return (0, utils_1.ApiResponse)(res, error.code || 500, error.message || "An error occurred while fetching contacts.");
-    }
-});
-exports.getContactsList = getContactsList;
 const fetchContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
