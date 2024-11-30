@@ -84,17 +84,24 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
 
   const [imageViewExtend, setImageViewExtend] = useState(false);
 
+  const isDevelopment = import.meta.env.DEV;
+
   /** for convert encrypt message to plain text */
   const plainText = (message: Message) => {
-    let messageKey = "";
+    try {
+      let messageKey = "";
 
-    if (message.sender === selectedChatData?._id) {
-      messageKey = userInfo?._id!;
-    } else {
-      messageKey = selectedChatData?._id!;
+      if (message.sender === selectedChatData?._id) {
+        messageKey = userInfo?._id!;
+      } else {
+        messageKey = selectedChatData?._id!;
+      }
+
+      return decryptMessage(message.text!, messageKey);
+    } catch (error) {
+      isDevelopment && console.error("Plain text decryption failed:", error);
+      return "Decryption Error!";
     }
-
-    return decryptMessage(message.text!, messageKey);
   }
 
   return (
@@ -118,7 +125,7 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
                   ) : (
                     <>
                       {/* For test message type */}
-                      {message.type === "text" && (
+                      {message.type === "text" && message.text !== "" && (
                         <span className="text-base">{plainText(message)}</span>
                       )}
                       {/* For file message type */}

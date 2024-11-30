@@ -20,6 +20,7 @@ const MessageBar = () => {
 
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [emojiPicker, setEmojiPicker] = useState(false);
 
   useEffect(() => {
@@ -75,6 +76,9 @@ const MessageBar = () => {
   }
 
   const handleSendMessage = async () => {
+    if (isSending || message === "") return;
+    setIsSending(true);
+
     try {
       const messageData: MessageData = {
         type: selectedImage ? "file" : "text",
@@ -99,11 +103,13 @@ const MessageBar = () => {
       setSelectedImage(null);
     } catch (error: any) {
       toast.error(error.response.data.message);
+    } finally {
+      setIsSending(false);
     }
   }
 
   const handleEnterKeyDown = (e: any) => {
-    if (e.key === 'Enter' && message !== "") {
+    if (e.key === "Enter" && message !== "" && !isSending) {
       handleSendMessage();
     }
   };
