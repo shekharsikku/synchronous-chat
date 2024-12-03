@@ -93,7 +93,7 @@ const authRefresh = async (
 
     const userId = decodedPayload.uid as Types.ObjectId;
     const currentTime = Math.floor(Date.now() / 1000);
-    const beforeExpires = decodedPayload.exp! - parseInt(env.ACCESS_EXPIRY);
+    const beforeExpires = decodedPayload.exp! - env.ACCESS_EXPIRY;
 
     const requestUser = await User.findOne({
       _id: userId,
@@ -111,7 +111,7 @@ const authRefresh = async (
 
     if (currentTime >= beforeExpires && currentTime < decodedPayload.exp!) {
       const newRefreshToken = generateRefresh(res, userId);
-      const refreshExpiry = parseInt(env.REFRESH_EXPIRY!);
+      const refreshExpiry = env.REFRESH_EXPIRY;
       const authorizeId = req.cookies.auth_id;
 
       const updatedAuth = await User.findOneAndUpdate(

@@ -72,7 +72,7 @@ const signInUser = async (req: Request, res: Response) => {
     }
 
     const refreshToken = generateRefresh(res, accessData._id!);
-    const refreshExpiry = parseInt(env.REFRESH_EXPIRY!);
+    const refreshExpiry = env.REFRESH_EXPIRY;
 
     existsUser.authentication?.push({
       token: refreshToken,

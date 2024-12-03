@@ -68,7 +68,7 @@ const signInUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             return (0, utils_1.ApiResponse)(res, 200, "Please, complete your profile!", userData);
         }
         const refreshToken = (0, helpers_1.generateRefresh)(res, accessData._id);
-        const refreshExpiry = parseInt(env_1.default.REFRESH_EXPIRY);
+        const refreshExpiry = env_1.default.REFRESH_EXPIRY;
         (_a = existsUser.authentication) === null || _a === void 0 ? void 0 : _a.push({
             token: refreshToken,
             expiry: new Date(Date.now() + refreshExpiry * 1000),

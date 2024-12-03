@@ -17,7 +17,7 @@ const compareHash = async (plain: string, hashed: string): Promise<boolean> => {
 };
 
 const generateAccess = (res: Response, user?: UserInterface) => {
-  const accessExpiry = parseInt(env.ACCESS_EXPIRY);
+  const accessExpiry = env.ACCESS_EXPIRY;
 
   const accessToken = jwt.sign({ user }, env.ACCESS_SECRET, {
     algorithm: "HS256",
@@ -28,14 +28,14 @@ const generateAccess = (res: Response, user?: UserInterface) => {
     maxAge: accessExpiry * 1000,
     httpOnly: true,
     sameSite: "strict",
-    secure: env.NODE_ENV !== "development",
+    secure: env.isProd,
   });
 
   return accessToken;
 };
 
 const generateRefresh = (res: Response, uid: Types.ObjectId) => {
-  const refreshExpiry = parseInt(env.REFRESH_EXPIRY);
+  const refreshExpiry = env.REFRESH_EXPIRY;
 
   const refreshToken = jwt.sign({ uid }, env.REFRESH_SECRET, {
     algorithm: "HS512",
@@ -46,21 +46,21 @@ const generateRefresh = (res: Response, uid: Types.ObjectId) => {
     maxAge: refreshExpiry * 1000 * 2,
     httpOnly: true,
     sameSite: "strict",
-    secure: env.NODE_ENV !== "development",
+    secure: env.isProd,
   });
 
   return refreshToken;
 };
 
 const authorizeCookie = (res: Response, authorizeId: string) => {
-  const authExpiry = parseInt(env.REFRESH_EXPIRY!);
+  const authExpiry = env.REFRESH_EXPIRY;
 
   if (authorizeId) {
     res.cookie("auth_id", authorizeId, {
       maxAge: authExpiry * 1000 * 2,
       httpOnly: true,
       sameSite: "strict",
-      secure: env.NODE_ENV !== "development",
+      secure: env.isProd,
     });
   }
 };

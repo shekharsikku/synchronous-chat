@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { cleanEnv, str, port } from "envalid";
+import { cleanEnv, str, url, num, port } from "envalid";
 
 dotenv.config();
 
@@ -9,18 +9,18 @@ const env = cleanEnv(process.env, {
   CLOUDINARY_API_SECRET: str(),
 
   ACCESS_SECRET: str(),
-  ACCESS_EXPIRY: str(),
+  ACCESS_EXPIRY: num(),
 
   REFRESH_SECRET: str(),
-  REFRESH_EXPIRY: str(),
+  REFRESH_EXPIRY: num(),
 
   COOKIES_SECRET: str(),
   PAYLOAD_LIMIT: str(),
   PORT: port(),
 
-  MONGODB_URI: str(),
+  MONGODB_URI: url(),
   CORS_ORIGIN: str(),
-  NODE_ENV: str(),
+  NODE_ENV: str({ choices: ["development", "production"] }),
 });
 
 export default env;

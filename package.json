@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "1.3.7",
+  "version": "1.3.8",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -34,7 +34,7 @@
     "cors": "^2.8.5",
     "cron": "^3.2.1",
     "crypto-js": "^4.2.0",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.6",
     "envalid": "^8.0.0",
     "express": "^5.0.1",
     "helmet": "^8.0.0",

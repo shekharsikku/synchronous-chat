@@ -74,7 +74,7 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         }
         const userId = decodedPayload.uid;
         const currentTime = Math.floor(Date.now() / 1000);
-        const beforeExpires = decodedPayload.exp - parseInt(env_1.default.ACCESS_EXPIRY);
+        const beforeExpires = decodedPayload.exp - env_1.default.ACCESS_EXPIRY;
         const requestUser = yield user_1.default.findOne({
             _id: userId,
             authentication: {
@@ -88,7 +88,7 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         const accessData = (0, helpers_1.createAccessData)(requestUser);
         if (currentTime >= beforeExpires && currentTime < decodedPayload.exp) {
             const newRefreshToken = (0, helpers_1.generateRefresh)(res, userId);
-            const refreshExpiry = parseInt(env_1.default.REFRESH_EXPIRY);
+            const refreshExpiry = env_1.default.REFRESH_EXPIRY;
             const authorizeId = req.cookies.auth_id;
             const updatedAuth = yield user_1.default.findOneAndUpdate({
                 _id: userId,

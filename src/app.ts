@@ -63,10 +63,8 @@ app.use(compression());
 app.use(cookieParser(env.COOKIES_SECRET));
 app.use("/public/temp", express.static(path.join(__dirname, "../public/temp")));
 
-const isDevelopment = env.NODE_ENV === "development";
-
 /** Morgan logging middleware */
-if (isDevelopment) {
+if (env.isDev) {
   app.use(morgan("dev"));
 } else {
   app.use(morgan("tiny"));
@@ -77,7 +75,7 @@ if (isDevelopment) {
 app.use("/api", ApiRouters);
 
 app.all("*path", (_req: Request, res: Response) => {
-  if (isDevelopment) {
+  if (env.isDev) {
     res.status(200).send({ message: "Welcome to Synchronous Chat!" });
   } else {
     res.sendFile(path.join(__dirname, "../client/dist", "index.html"));

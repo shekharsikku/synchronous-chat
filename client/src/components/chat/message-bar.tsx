@@ -11,7 +11,7 @@ import api from "@/lib/api";
 const MessageBar = () => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
-  const { selectedChatData, setIsPartnerTyping } = useChatStore();
+  const { selectedChatData, setIsPartnerTyping, messages } = useChatStore();
 
   const emojiRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -56,11 +56,20 @@ const MessageBar = () => {
   const handleAttachChange = async (e: any) => {
     e.preventDefault();
 
+    const maxSizeAllow = 9; // Size in MB
+    const maxBytesAllow = maxSizeAllow * 1024 * 1024;
+
     try {
       const imageFile = e.target.files[0];
       setMessage(`${imageFile?.name}`);
 
       if (imageFile) {
+        if (imageFile.size > maxBytesAllow) {
+          setMessage("");
+          toast.info("File size exceeds the max limit!");
+          return;
+        }
+
         const base64 = await convertToBase64(imageFile);
         setSelectedImage(base64);
       }
@@ -90,13 +99,17 @@ const MessageBar = () => {
         messageData.text = encryptMessage(message, selectedChatData?._id!);
       }
 
+      if (selectedImage) {
+        setMessage("Sending...");
+      }
+
       const response = await api.post(`/api/message/send/${selectedChatData?._id}`, messageData, {
         withCredentials: true,
       });
       const data = await response.data;
 
-      if (data?.success) {
-        toast.info(data?.message);
+      if (data?.success && messages.length <= 0) {
+        toast.success(data?.message);
       }
 
       setMessage("");
@@ -212,7 +225,7 @@ const MessageBar = () => {
           value={message}
           onChange={handleChange}
           className="flex-1 bg-transparent px-2 py-4 md:px-4 rounded border-none 
-          outline-none text-[14px] md:text-[14.5px] font-normal"
+          outline-none text-[14px] md:text-[14.5px] font-normal disabled:text-blue-700"
           disabled={selectedImage && message !== "" ? true : false}
           ref={inputRef}
           onKeyDown={handleEnterKeyDown}

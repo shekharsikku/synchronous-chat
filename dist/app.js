@@ -49,9 +49,8 @@ app.use((0, helmet_1.default)({
 app.use((0, compression_1.default)());
 app.use((0, cookie_parser_1.default)(env_1.default.COOKIES_SECRET));
 app.use("/public/temp", express_1.default.static(path_1.default.join(__dirname, "../public/temp")));
-const isDevelopment = env_1.default.NODE_ENV === "development";
 /** Morgan logging middleware */
-if (isDevelopment) {
+if (env_1.default.isDev) {
     app.use((0, morgan_1.default)("dev"));
 }
 else {
@@ -61,7 +60,7 @@ else {
 /** Api routers middleware */
 app.use("/api", routers_1.default);
 app.all("*path", (_req, res) => {
-    if (isDevelopment) {
+    if (env_1.default.isDev) {
         res.status(200).send({ message: "Welcome to Synchronous Chat!" });
     }
     else {

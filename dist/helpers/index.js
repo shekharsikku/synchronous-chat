@@ -28,7 +28,7 @@ const compareHash = (plain, hashed) => __awaiter(void 0, void 0, void 0, functio
 });
 exports.compareHash = compareHash;
 const generateAccess = (res, user) => {
-    const accessExpiry = parseInt(env_1.default.ACCESS_EXPIRY);
+    const accessExpiry = env_1.default.ACCESS_EXPIRY;
     const accessToken = jsonwebtoken_1.default.sign({ user }, env_1.default.ACCESS_SECRET, {
         algorithm: "HS256",
         expiresIn: accessExpiry,
@@ -37,13 +37,13 @@ const generateAccess = (res, user) => {
         maxAge: accessExpiry * 1000,
         httpOnly: true,
         sameSite: "strict",
-        secure: env_1.default.NODE_ENV !== "development",
+        secure: env_1.default.isProd,
     });
     return accessToken;
 };
 exports.generateAccess = generateAccess;
 const generateRefresh = (res, uid) => {
-    const refreshExpiry = parseInt(env_1.default.REFRESH_EXPIRY);
+    const refreshExpiry = env_1.default.REFRESH_EXPIRY;
     const refreshToken = jsonwebtoken_1.default.sign({ uid }, env_1.default.REFRESH_SECRET, {
         algorithm: "HS512",
         expiresIn: refreshExpiry,
@@ -52,19 +52,19 @@ const generateRefresh = (res, uid) => {
         maxAge: refreshExpiry * 1000 * 2,
         httpOnly: true,
         sameSite: "strict",
-        secure: env_1.default.NODE_ENV !== "development",
+        secure: env_1.default.isProd,
     });
     return refreshToken;
 };
 exports.generateRefresh = generateRefresh;
 const authorizeCookie = (res, authorizeId) => {
-    const authExpiry = parseInt(env_1.default.REFRESH_EXPIRY);
+    const authExpiry = env_1.default.REFRESH_EXPIRY;
     if (authorizeId) {
         res.cookie("auth_id", authorizeId, {
             maxAge: authExpiry * 1000 * 2,
             httpOnly: true,
             sameSite: "strict",
-            secure: env_1.default.NODE_ENV !== "development",
+            secure: env_1.default.isProd,
         });
     }
 };

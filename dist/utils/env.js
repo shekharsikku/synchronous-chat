@@ -11,14 +11,14 @@ const env = (0, envalid_1.cleanEnv)(process.env, {
     CLOUDINARY_API_KEY: (0, envalid_1.str)(),
     CLOUDINARY_API_SECRET: (0, envalid_1.str)(),
     ACCESS_SECRET: (0, envalid_1.str)(),
-    ACCESS_EXPIRY: (0, envalid_1.str)(),
+    ACCESS_EXPIRY: (0, envalid_1.num)(),
     REFRESH_SECRET: (0, envalid_1.str)(),
-    REFRESH_EXPIRY: (0, envalid_1.str)(),
+    REFRESH_EXPIRY: (0, envalid_1.num)(),
     COOKIES_SECRET: (0, envalid_1.str)(),
     PAYLOAD_LIMIT: (0, envalid_1.str)(),
     PORT: (0, envalid_1.port)(),
-    MONGODB_URI: (0, envalid_1.str)(),
+    MONGODB_URI: (0, envalid_1.url)(),
     CORS_ORIGIN: (0, envalid_1.str)(),
-    NODE_ENV: (0, envalid_1.str)(),
+    NODE_ENV: (0, envalid_1.str)({ choices: ["development", "production"] }),
 });
 exports.default = env;

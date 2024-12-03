@@ -56,9 +56,17 @@ const Profile = () => {
   const handleImageSelectClick = async (e: any) => {
     e.preventDefault();
 
+    const maxSizeAllow = 5; // Size in MB
+    const maxBytesAllow = maxSizeAllow * 1024 * 1024;
     const imageFile = e.target.files[0];
 
     if (imageFile) {
+      if (imageFile.size > maxBytesAllow) {
+        setSelectedImage("");
+        toast.info("File size exceeds the max limit!");
+        return;
+      }
+
       const formData = new FormData();
       formData.append("profile-image", imageFile);
 
