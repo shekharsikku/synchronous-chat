@@ -131,8 +131,7 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
                       {/* For file message type */}
                       {message.type === "file" && (
                         checkImageType(message.file!) ? (
-                          <img src={message.file} alt="Image file"
-                            className="h-48 w-full md:h-60 md:w-auto" />
+                          <img src={message.file} alt="Image file" className="h-60 w-auto rounded" />
                         ) : (
                           <span className="flex items-center gap-1 text-base">
                             <HiOutlineDocumentArrowDown size={16} /> Download for view this file
@@ -177,12 +176,14 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
           </div>
           {/* Dialog for image extend view */}
           <Dialog open={imageViewExtend} onOpenChange={setImageViewExtend}>
-            <DialogContent className="h-auto w-72 md:w-80 lg:w-96 xl:w-auto rounded-sm">
+            <DialogContent className="h-96 w-[95vw] lg:h-auto lg:w-auto bg-gray-50 rounded">
               <DialogHeader>
                 <DialogTitle className="text-start">Extend View Mode</DialogTitle>
                 <DialogDescription className="hidden"></DialogDescription>
               </DialogHeader>
-              <img src={message?.file} alt="Extend view" />
+              <div className="min-h-max">
+                <img src={message?.file} alt="Extend view" className="size-fit rounded" />
+              </div>
             </DialogContent>
           </Dialog>
         </>

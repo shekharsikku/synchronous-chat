@@ -170,7 +170,7 @@ export const useDebounce = (callback: Function, delay: number) => {
 export const useAvatar = (userInformation: any) => {
   let avatar;
 
-  if (userInformation.image) {
+  if (userInformation?.image) {
     avatar = userInformation.image;
   } else {
     if (userInformation?.gender === "Male") {
