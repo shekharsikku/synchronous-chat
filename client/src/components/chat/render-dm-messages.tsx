@@ -63,7 +63,7 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
 
   const deleteSelectedMessage = async (id: string) => {
     try {
-      const response = await api.delete(`/api/message/delete/${id}`, { withCredentials: true });
+      const response = await api.delete(`/api/message/delete/${id}`);
       const deletedMessage = await response.data.data;
       const updatedMessages = messages.map(message => message._id === deletedMessage._id ? deletedMessage : message);
       setMessages([...updatedMessages]);

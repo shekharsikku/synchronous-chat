@@ -21,7 +21,7 @@ const AddNewChat = () => {
     if (searchTerm.length > 0) {
       try {
         setIsFetching(true);
-        const response = await api.post("/api/contact/search", { searchTerm }, { withCredentials: true })
+        const response = await api.post("/api/contact/search", { searchTerm });
         if (response.data.data) {
           setSearchedContacts(response.data.data);
         }

@@ -103,9 +103,7 @@ const MessageBar = () => {
         setMessage("Sending...");
       }
 
-      const response = await api.post(`/api/message/send/${selectedChatData?._id}`, messageData, {
-        withCredentials: true,
-      });
+      const response = await api.post(`/api/message/send/${selectedChatData?._id}`, messageData);
       const data = await response.data;
 
       if (data?.success && messages.length <= 0) {

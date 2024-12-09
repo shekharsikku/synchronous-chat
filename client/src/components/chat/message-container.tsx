@@ -15,7 +15,7 @@ const MessageContainer = () => {
   const getMessages = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get(`/api/message/${selectedChatData?._id}`, { withCredentials: true });
+      const response = await api.get(`/api/message/${selectedChatData?._id}`);
       const data = await response.data.data;
       setMessages([...data]);
     } catch (error: any) {

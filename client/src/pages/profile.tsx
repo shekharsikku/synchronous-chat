@@ -93,7 +93,6 @@ const Profile = () => {
         headers: {
           "Content-Type": "multipart/form-data"
         },
-        withCredentials: true
       });
       setUserInfo(response.data.data);
       toast.success(response.data.message);
@@ -109,7 +108,7 @@ const Profile = () => {
   const handleImageDeleteClick = async () => {
     try {
       setIsLoading(true);
-      const response = await api.delete("/api/user/delete-profile-image", { withCredentials: true });
+      const response = await api.delete("/api/user/delete-profile-image");
       setUserInfo(response.data.data);
       toast.success(response.data.message);
     } catch (error: any) {
@@ -133,9 +132,7 @@ const Profile = () => {
     if (validatedField.success) {
       try {
         setIsLoading(true);
-        const response = await api.patch("/api/user/change-password", validatedField.data, {
-          withCredentials: true
-        });
+        const response = await api.patch("/api/user/change-password", validatedField.data);
         setUserInfo(response.data.data);
         setOpenPasswordDialog(false);
         setPasswordValue(initialFieldsValue);
@@ -173,7 +170,7 @@ const Profile = () => {
           bio: userBio,
           gender: userGender,
         };
-        const response = await api.patch("/api/user/user-profile-setup", profileDetails, { withCredentials: true });
+        const response = await api.patch("/api/user/user-profile-setup", profileDetails);
         setUserInfo(response.data.data);
         toast.success(response.data.message);
 

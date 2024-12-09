@@ -56,7 +56,7 @@ const Auth = () => {
 
     if (validatedField.success) {
       try {
-        const response = await api.post("/api/auth/sign-in", validatedField.data, { withCredentials: true });
+        const response = await api.post("/api/auth/sign-in", validatedField.data);
         const result = await response.data.data;
 
         setIsAuthenticated(true);
@@ -65,7 +65,7 @@ const Auth = () => {
         dispatch(login(result));
 
         if (result.setup) {
-          await api.delete("/api/message/delete", { withCredentials: true });
+          await api.delete("/api/message/delete");
           toast.success(response.data.message);
           navigate("/chat");
         } else {
@@ -91,7 +91,7 @@ const Auth = () => {
 
     if (validatedField.success) {
       try {
-        const response = await api.post("/api/auth/sign-up", validatedField.data, { withCredentials: true });
+        const response = await api.post("/api/auth/sign-up", validatedField.data);
         setSignUpValue(initialSignUpValue);
         toast.success(response.data.message);
       } catch (error: any) {

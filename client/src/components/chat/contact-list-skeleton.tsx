@@ -1,4 +1,3 @@
-
 const ContactListSkeleton = ({
   animate,
   count = 5,

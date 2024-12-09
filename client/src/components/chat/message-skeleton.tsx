@@ -1,4 +1,3 @@
-
 const MessageSkeleton = () => {
   return (
     <div className="flex flex-col gap-4 transition-all duration-300">
