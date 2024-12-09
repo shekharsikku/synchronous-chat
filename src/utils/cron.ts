@@ -1,6 +1,8 @@
 import { CronJob } from "cron";
-import User from "../models/user";
+import Conversation from "../models/conversation";
 import Message from "../models/message";
+import User from "../models/user";
+import env from "./env";
 
 const job = new CronJob(
   "0 0 * * * *",
@@ -9,7 +11,7 @@ const job = new CronJob(
       /** for delete expired auth tokens */
       const currentDate = new Date();
 
-      const authResult = await User.updateMany(
+      const authenticationResult = await User.updateMany(
         { "authentication.expiry": { $lt: currentDate } },
         {
           $pull: {
@@ -26,10 +28,21 @@ const job = new CronJob(
         createdAt: { $lt: hoursAgo },
       });
 
-      console.log("Result:", {
-        authentication: authResult,
-        messages: messageResult,
+      /** for delete conversation that not interacted for 7 days*/
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const conversationResult = await Conversation.deleteMany({
+        interaction: { $lt: sevenDaysAgo },
       });
+
+      if (env.isDev) {
+        console.log("Result:", {
+          authentication: authenticationResult,
+          conversations: conversationResult,
+          messages: messageResult,
+        });
+      }
     } catch (error: any) {
       console.log(`Error: ${error.message}`);
     } finally {

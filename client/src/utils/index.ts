@@ -127,3 +127,45 @@ export const decryptMessage = (messageText: string, userId: string) => {
   );
   return decrypted;
 };
+
+export const validateDummyEmail = (email: string): boolean => {
+  const restrictedWords = [
+    "example",
+    "demo",
+    "temp",
+    "sample",
+    "fake",
+    "new",
+    "you",
+    "abc",
+    "xyz",
+    "placeholder",
+    "kuch",
+    "user",
+    "email",
+    "reply",
+    "noreply",
+    "dummy",
+    "admin",
+    "webmaster",
+    "support",
+    "junk",
+    "spam",
+    "valid",
+    "invalid",
+    "known",
+    "unknown",
+    "null",
+    "not",
+    "ing",
+    "env",
+    "dev",
+    "pro",
+    "prod",
+    "test",
+    "staging",
+    "noob",
+  ];
+  const emailLower = email.toLowerCase();
+  return restrictedWords.some((word) => emailLower.includes(word));
+};

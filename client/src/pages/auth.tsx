@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 import { isMobile, isTablet, isDesktop, browserName, osName, osVersion } from "react-device-detect";
-import { signUpSchema, signInSchema, validateEmail, removeSpaces } from "@/utils";
+import { signUpSchema, signInSchema, validateEmail, removeSpaces, validateDummyEmail } from "@/utils";
 import { InitialValuesProps, useHandleForm } from "@/hooks";
 import { useAuthStore } from "@/zustand";
 import { useNavigate } from "react-router-dom";
@@ -89,16 +89,24 @@ const Auth = () => {
     e.preventDefault();
     const validatedField = signUpSchema.safeParse(signUpValue);
 
-    if (validatedField.success) {
-      try {
-        const response = await api.post("/api/auth/sign-up", validatedField.data);
-        setSignUpValue(initialSignUpValue);
-        toast.success(response.data.message);
-      } catch (error: any) {
-        toast.error(error.response.data.message);
-      }
-    } else {
+    if (validatedField.error) {
       toast.error(validatedField.error?.issues[0].message);
+      return;
+    }
+
+    const isDummy = validateDummyEmail(validatedField.data.email);
+
+    if (isDummy) {
+      toast.info("Email not allowed choose a different one!");
+      return;
+    }
+
+    try {
+      const response = await api.post("/api/auth/sign-up", validatedField.data);
+      setSignUpValue(initialSignUpValue);
+      toast.success(response.data.message);
+    } catch (error: any) {
+      toast.error(error.response.data.message);
     }
   }
 
