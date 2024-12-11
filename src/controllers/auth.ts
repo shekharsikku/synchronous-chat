@@ -8,6 +8,7 @@ import {
   authorizeCookie,
   maskedDetails,
   createAccessData,
+  publicIpAddress,
 } from "../helpers";
 import User from "../models/user";
 import env from "../utils/env";
@@ -38,7 +39,7 @@ const signUpUser = async (req: Request, res: Response) => {
 
 const signInUser = async (req: Request, res: Response) => {
   try {
-    const { email, password, username, device_information } = await req.body;
+    const { email, password, username } = await req.body;
     const conditions = [];
 
     if (email) {
@@ -73,15 +74,15 @@ const signInUser = async (req: Request, res: Response) => {
 
     const refreshToken = generateRefresh(res, accessData._id!);
     const refreshExpiry = env.REFRESH_EXPIRY;
+    const ipAddress = await publicIpAddress();
 
     existsUser.authentication?.push({
       token: refreshToken,
       expiry: new Date(Date.now() + refreshExpiry * 1000),
-      device: device_information,
+      device: ipAddress.ip,
     });
 
     const authorizeUser = await existsUser.save();
-
     const authorizeId = authorizeUser.authentication?.filter(
       (auth) => auth.token === refreshToken
     )[0]._id!;

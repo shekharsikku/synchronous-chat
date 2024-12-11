@@ -30,7 +30,6 @@ const signInSchema = zod_1.z
     email: zod_1.z.string().email().optional(),
     username: zod_1.z.string().optional(),
     password: zod_1.z.string(),
-    device_information: zod_1.z.string().optional(),
 })
     .refine((data) => data.email || data.username, {
     message: "Email or Username required!",

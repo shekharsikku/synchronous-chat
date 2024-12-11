@@ -40,7 +40,7 @@ exports.signUpUser = signUpUser;
 const signInUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     try {
-        const { email, password, username, device_information } = yield req.body;
+        const { email, password, username } = yield req.body;
         const conditions = [];
         if (email) {
             conditions.push({ email });
@@ -69,10 +69,11 @@ const signInUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         }
         const refreshToken = (0, helpers_1.generateRefresh)(res, accessData._id);
         const refreshExpiry = env_1.default.REFRESH_EXPIRY;
+        const ipAddress = yield (0, helpers_1.publicIpAddress)();
         (_a = existsUser.authentication) === null || _a === void 0 ? void 0 : _a.push({
             token: refreshToken,
             expiry: new Date(Date.now() + refreshExpiry * 1000),
-            device: device_information,
+            device: ipAddress.ip,
         });
         const authorizeUser = yield existsUser.save();
         const authorizeId = (_b = authorizeUser.authentication) === null || _b === void 0 ? void 0 : _b.filter((auth) => auth.token === refreshToken)[0]._id;

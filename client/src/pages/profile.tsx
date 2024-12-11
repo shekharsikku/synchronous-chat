@@ -5,7 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, } from "@/components/ui/tooltip";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import {
   Dialog,
   DialogContent,
@@ -204,27 +209,27 @@ const Profile = () => {
             <p className="text-sm lg:text-base font-normal text-center text-gray-500">
               Let's get you set up!</p>
           </div>
-          <div className="hidden h-32 w-32 md:h-36 md:w-36 lg:h-40 lg:w-40 relative lg:flex items-center justify-center
+          <div className="hidden size-32 md:size-36 lg:size-40 relative lg:flex items-center justify-center
            rounded-full border-2 border-gray-100 hover:border-3">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger className="w-full h-full">
-                  <Avatar className="h-full w-full rounded-full overflow-hidden">
-                    <AvatarImage src={selectedImage} alt="profile" className="object-fit h-full w-full" />
-                    <AvatarFallback className={`uppercase h-full w-full text-5xl border-[1px] text-center font-medium 
+            <ContextMenu>
+              <ContextMenuTrigger className="w-full h-full">
+                <Avatar className="h-full w-full rounded-full overflow-hidden">
+                  <AvatarImage src={selectedImage} alt="profile" className="object-fit h-full w-full" />
+                  <AvatarFallback className={`uppercase h-full w-full text-5xl border-[1px] text-center font-medium 
                       transition-all duration-300 hover:bg-black/90 "bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]"`}>
-                      {userUsername?.split("").shift() || userInfo?.email?.split("").shift()}
-                    </AvatarFallback>
-                  </Avatar>
-                </TooltipTrigger>
-                <TooltipContent className="flex gap-3 py-3">
-                  <Button variant="outline" size="icon" onClick={() => setOpenImageDeletionModal(true)}>
-                    <HiOutlineTrash size={20} /></Button>
-                  <Button variant="outline" size="icon" onClick={handleFileInputClick}>
-                    <HiOutlineCloudArrowUp size={20} /></Button>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                    {userUsername?.split("").shift() || userInfo?.email?.split("").shift()}
+                  </AvatarFallback>
+                </Avatar>
+              </ContextMenuTrigger>
+              <ContextMenuContent className="w-20 flex flex-col gap-2 p-2 transition-all duration-500">
+                <ContextMenuItem className="flex gap-2" onClick={() => setOpenImageDeletionModal(true)}>
+                  <HiOutlineTrash size={16} /> Delete
+                </ContextMenuItem>
+                <ContextMenuItem className="flex gap-2" onClick={handleFileInputClick}>
+                  <HiOutlineCloudArrowUp size={16} /> Upload
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
             <input
               type="file"
               ref={fileInputRef}

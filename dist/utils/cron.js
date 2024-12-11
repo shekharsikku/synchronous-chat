@@ -13,13 +13,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const cron_1 = require("cron");
-const user_1 = __importDefault(require("../models/user"));
+const conversation_1 = __importDefault(require("../models/conversation"));
 const message_1 = __importDefault(require("../models/message"));
+const user_1 = __importDefault(require("../models/user"));
+const env_1 = __importDefault(require("./env"));
 const job = new cron_1.CronJob("0 0 * * * *", () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         /** for delete expired auth tokens */
         const currentDate = new Date();
-        const authResult = yield user_1.default.updateMany({ "authentication.expiry": { $lt: currentDate } }, {
+        const authenticationResult = yield user_1.default.updateMany({ "authentication.expiry": { $lt: currentDate } }, {
             $pull: {
                 authentication: { expiry: { $lt: currentDate } },
             },
@@ -30,10 +32,19 @@ const job = new cron_1.CronJob("0 0 * * * *", () => __awaiter(void 0, void 0, vo
         const messageResult = yield message_1.default.deleteMany({
             createdAt: { $lt: hoursAgo },
         });
-        console.log("Result:", {
-            authentication: authResult,
-            messages: messageResult,
+        /** for delete conversation that not interacted for 7 days*/
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const conversationResult = yield conversation_1.default.deleteMany({
+            interaction: { $lt: sevenDaysAgo },
         });
+        if (env_1.default.isDev) {
+            console.log("Result:", {
+                authentication: authenticationResult,
+                conversations: conversationResult,
+                messages: messageResult,
+            });
+        }
     }
     catch (error) {
         console.log(`Error: ${error.message}`);

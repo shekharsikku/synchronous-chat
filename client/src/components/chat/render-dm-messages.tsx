@@ -8,19 +8,18 @@ import {
   HiOutlineViewfinderCircle
 } from "react-icons/hi2";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import { Message } from "@/zustand/slice/chat";
 import { useSocket } from "@/context/socket-context";
 import { useChatStore, useAuthStore } from "@/zustand"
@@ -108,67 +107,63 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
     <div className={`${message.sender !== selectedChatData?._id ? "text-right" : "text-left"} w-full`}>
       {message && (
         <>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className={`${message.sender !== selectedChatData?._id
-                  ? "bg-gray-200 text-gray-950 border-white/20"
-                  : "bg-gray-100 text-gray-900 border-white/10"} 
+          <ContextMenu>
+            <ContextMenuTrigger className={`${message.sender !== selectedChatData?._id
+              ? "bg-gray-200 text-gray-950 border-white/20"
+              : "bg-gray-100 text-gray-900 border-white/10"} 
                 border inline-block p-3 rounded-sm my-1 break-words
                 md:max-w-[90%] lg:max-w-[80%] xl:max-w-[70%] ${shakeClass}
                 ${message.type === "deleted" ? "cursor-not-allowed" : "cursor-default"}`}>
-                  {/* Rendered if message is deleted or not */}
-                  {message.type === "deleted" ? (
-                    <span className="flex items-center gap-1 italic text-base">
-                      <HiOutlineNoSymbol size={16} /> {deletedMessage}
-                    </span>
-                  ) : (
-                    <>
-                      {/* For test message type */}
-                      {message.type === "text" && message.text !== "" && (
-                        <span className="text-base">{plainText(message)}</span>
-                      )}
-                      {/* For file message type */}
-                      {message.type === "file" && (
-                        checkImageType(message.file!) ? (
-                          <img src={message.file} alt="Image file" className="h-60 w-auto rounded" />
-                        ) : (
-                          <span className="flex items-center gap-1 text-base">
-                            <HiOutlineDocumentArrowDown size={16} /> Download for view this file
-                          </span>
-                        ))}
-                    </>
+              {/* Right click here */}
+              {message.type === "deleted" ? (
+                <span className="flex items-center gap-1 italic text-base">
+                  <HiOutlineNoSymbol size={16} /> {deletedMessage}
+                </span>
+              ) : (
+                <>
+                  {/* For test message type */}
+                  {message.type === "text" && message.text !== "" && (
+                    <span className="text-base">{plainText(message)}</span>
                   )}
-                </div>
-              </TooltipTrigger>
-              {message.type !== "deleted" && (
-                <TooltipContent className="flex gap-3 py-3">
-                  {message.type === "text" && (
-                    <Button variant="outline" size="icon" onClick={() => copyToClipboard(plainText(message))}>
-                      <HiOutlineClipboardDocument size={20} />
-                    </Button>
-                  )}
+                  {/* For file message type */}
                   {message.type === "file" && (
-                    <>
-                      {checkImageType(message.file!) && (
-                        <Button variant="outline" size="icon" onClick={() => setImageViewExtend(true)}>
-                          <HiOutlineViewfinderCircle size={20} />
-                        </Button>
-                      )}
-                      <Button variant="outline" size="icon" onClick={() => handleDownload(message)}>
-                        <HiOutlineCloudArrowDown size={20} />
-                      </Button>
-                    </>
-                  )}
-                  {message.recipient === selectedChatData?._id && (
-                    <Button variant="outline" size="icon" onClick={() => deleteSelectedMessage(message._id)}>
-                      <HiOutlineTrash size={20} />
-                    </Button>
-                  )}
-                </TooltipContent>
+                    checkImageType(message.file!) ? (
+                      <img src={message.file} alt="Image file" className="h-60 w-auto rounded" />
+                    ) : (
+                      <span className="flex items-center gap-1 text-base">
+                        <HiOutlineDocumentArrowDown size={16} /> Download for view this file
+                      </span>
+                    ))}
+                </>
               )}
-            </Tooltip>
-          </TooltipProvider>
+            </ContextMenuTrigger>
+            {message.type !== "deleted" && (
+              <ContextMenuContent className="w-20 flex flex-col gap-2 p-2 transition-all duration-500">
+                {message.type === "text" && (
+                  <ContextMenuItem className="flex gap-2" onClick={() => copyToClipboard(plainText(message))}>
+                    <HiOutlineClipboardDocument size={16} /> Copy
+                  </ContextMenuItem>
+                )}
+                {message.type === "file" && (
+                  <>
+                    {checkImageType(message.file!) && (
+                      <ContextMenuItem className="flex gap-2" onClick={() => setImageViewExtend(true)}>
+                        <HiOutlineViewfinderCircle size={16} /> View
+                      </ContextMenuItem>
+                    )}
+                    <ContextMenuItem className="flex gap-2" onClick={() => handleDownload(message)}>
+                      <HiOutlineCloudArrowDown size={16} /> Download
+                    </ContextMenuItem>
+                  </>
+                )}
+                {message.recipient === selectedChatData?._id && (
+                  <ContextMenuItem className="flex gap-2" onClick={() => deleteSelectedMessage(message._id)}>
+                    <HiOutlineTrash size={16} /> Delete
+                  </ContextMenuItem>
+                )}
+              </ContextMenuContent>
+            )}
+          </ContextMenu>
           <div className="text-xs text-gray-600 mb-2">
             {message.type === "deleted"
               ? `${moment(message.updatedAt).format("LT")}`

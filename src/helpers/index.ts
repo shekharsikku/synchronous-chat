@@ -117,6 +117,17 @@ const createAccessData = (user: UserInterface) => {
   return accessData as UserInterface;
 };
 
+const publicIpAddress = async () => {
+  try {
+    const response = await fetch(env.IPIFY_ADDRESS_URL);
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.log(`Error: ${error.message}`);
+    return null;
+  }
+};
+
 export {
   generateHash,
   compareHash,
@@ -127,4 +138,5 @@ export {
   removeSpaces,
   maskedDetails,
   createAccessData,
+  publicIpAddress,
 };

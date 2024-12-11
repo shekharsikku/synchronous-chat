@@ -23,7 +23,6 @@ export interface InitialValuesProps {
   old_password?: string;
   new_password?: string;
   confirm_password?: string;
-  device_information?: string;
 }
 
 export const useHandleForm = (

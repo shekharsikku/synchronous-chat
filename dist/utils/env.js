@@ -10,6 +10,7 @@ const env = (0, envalid_1.cleanEnv)(process.env, {
     CLOUDINARY_CLOUD_NAME: (0, envalid_1.str)(),
     CLOUDINARY_API_KEY: (0, envalid_1.str)(),
     CLOUDINARY_API_SECRET: (0, envalid_1.str)(),
+    IPIFY_ADDRESS_URL: (0, envalid_1.url)(),
     ACCESS_SECRET: (0, envalid_1.str)(),
     ACCESS_EXPIRY: (0, envalid_1.num)(),
     REFRESH_SECRET: (0, envalid_1.str)(),

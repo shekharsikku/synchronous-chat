@@ -7,6 +7,7 @@ const env = cleanEnv(process.env, {
   CLOUDINARY_CLOUD_NAME: str(),
   CLOUDINARY_API_KEY: str(),
   CLOUDINARY_API_SECRET: str(),
+  IPIFY_ADDRESS_URL: url(),
 
   ACCESS_SECRET: str(),
   ACCESS_EXPIRY: num(),

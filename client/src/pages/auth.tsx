@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
-import { isMobile, isTablet, isDesktop, browserName, osName, osVersion } from "react-device-detect";
 import { signUpSchema, signInSchema, validateEmail, removeSpaces, validateDummyEmail } from "@/utils";
 import { InitialValuesProps, useHandleForm } from "@/hooks";
 import { useAuthStore } from "@/zustand";
@@ -26,22 +25,8 @@ const Auth = () => {
 
   const handleSignInSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    const getDeviceInfo = () => {
-      const deviceInfo = {
-        isMobile,
-        isTablet,
-        isDesktop,
-        browserName,
-        osName,
-        osVersion,
-      };
-      return JSON.stringify(deviceInfo);
-    };
-
     const signInData: InitialValuesProps = {
       password: signInValue.password,
-      device_information: getDeviceInfo(),
     }
 
     const isEmail = validateEmail(removeSpaces(signInValue.credentials!));
