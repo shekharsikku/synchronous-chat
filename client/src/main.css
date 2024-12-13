@@ -155,3 +155,7 @@
     background-position: 200% 0;
   }
 }
+
+.contact-list-height {
+  height: calc(100vh - 10rem);
+}

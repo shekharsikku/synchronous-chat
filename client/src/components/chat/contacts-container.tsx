@@ -95,51 +95,54 @@ const ContactsContainer = () => {
   }
 
   return (
-    <div className="relative md:w-[35vw] lg:w-[25vw] border-r border-gray-200 w-full h-full">
-      <div className="h-[10vh] border-b border-gray-200 p-2">
+    <div className="relative md:w-[35vw] lg:w-[25vw] border-r w-full h-full">
+      <div className="h-20 border-b p-2">
         <Logo />
       </div>
-      <div className="my-6 lg:my-8 px-4 lg:px-6 xl:px-10 flex flex-col gap-6">
-        <div className="flex items-center justify-between">
-          <Title title="Chat Messages" />
-          <AddNewChat />
-        </div>
-        {fetching ? (
-          <ContactListSkeleton animate="pulse" status />
-        ) : (
-          <>
-            {contacts?.length! <= 0 ? (
-              <p className="text-neutral-700">No any chat available!</p>
-            ) : (
-              <ScrollArea className="min-h-[50px] max-h-[65vh] overflow-y-auto scrollbar-hide">
-                <div className="flex flex-col gap-4 py-[2px]">
-                  {contacts?.map((contact) => (
-                    <div key={contact?._id} className={`flex border border-gray-200 w-full p-2 lg:px-3 xl:px-6 rounded items-center hover:bg-gray-100/80 transition-all duration-300 cursor-pointer justify-between 
-                  ${contact?.name === "" ? "disabled" : ""} 
-                  ${selectedChatData && selectedChatData._id === contact._id ? "bg-[#06d6a02a] text-[#06d6a0] border-[1px] border-[#06d6a0bb]" : ""}`} onClick={() => selectNewContact(contact)}>
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">
-                          <AvatarImage src={useAvatar(contact)} alt="profile" className="object-fit h-full w-full" />
-                          <AvatarFallback className={`uppercase h-full w-full text-xl border-[1px] text-center font-medium 
+      <div className="w-full overflow-hidden contact-list-height">
+        <div className="h-full w-full flex flex-col gap-6 p-6">
+          <div className="flex items-center justify-between">
+            <Title title="Chat Messages" />
+            <AddNewChat />
+          </div>
+          {fetching ? (
+            <div className="h-full overflow-y-scroll scrollbar-hide">
+              <ContactListSkeleton animate="pulse" status count={10} />
+            </div>
+          ) : (
+            <>
+              {contacts?.length! <= 0 ? (
+                <p className="text-neutral-700">No any chat available!</p>
+              ) : (
+                <ScrollArea className="h-full overflow-y-auto scrollbar-hide">
+                  <div className="flex flex-col gap-4">
+                    {contacts?.map((contact) => (
+                      <div key={contact?._id} className={`w-full flex items-center justify-between cursor-pointer transition-all duration-300 rounded border p-2 lg:px-4 xl:px-6 text-gray-600 hover:bg-gray-100 
+                        ${selectedChatData && selectedChatData._id === contact._id && "bg-gray-100/80 text-gray-700 border-gray-300/50"} ${contact?.setup === false && "disabled"} `} onClick={() => selectNewContact(contact)}>
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">
+                            <AvatarImage src={useAvatar(contact)} alt="profile" className="object-fit h-full w-full" />
+                            <AvatarFallback className={`uppercase h-full w-full text-xl border-[1px] text-center font-medium 
                       transition-all duration-300`}>
-                            {contact?.username?.split("").shift() || contact?.email?.split("").shift()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-semibold text-neutral-700">{contact?.name}</span>
-                          <span className="text-xs font-semibold text-neutral-700">{contact?.username}</span>
+                              {contact?.username?.split("").shift() || contact?.email?.split("").shift()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-neutral-700">{contact?.name}</span>
+                            <span className="text-xs font-semibold text-neutral-700">{contact?.username}</span>
+                          </div>
                         </div>
+                        {onlineUsers.hasOwnProperty(contact?._id!)
+                          ? <HiMiniSignal size={18} />
+                          : <HiMiniSignalSlash size={18} />}
                       </div>
-                      {onlineUsers.hasOwnProperty(contact?._id!)
-                        ? <HiMiniSignal size={18} />
-                        : <HiMiniSignalSlash size={18} />}
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            )}
-          </>
-        )}
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </>
+          )}
+        </div>
       </div>
       <ProfileInfo />
     </div>

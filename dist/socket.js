@@ -60,9 +60,6 @@ io.on("connection", (socket) => {
         socket.to(Array.from(socketId)).emit("after:profile-update", {
             updatedDetails,
         });
-        // socketId.forEach((id) => {
-        //   io.to(id).emit("after:profile-update", { updatedDetails });
-        // });
     });
     socket.on("disconnect", () => {
         console.log(`User disconnected: ${socket.id}`);

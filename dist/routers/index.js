@@ -13,10 +13,8 @@ router.use("/auth", auth_1.default);
 router.use("/user", user_1.default);
 router.use("/contact", contact_1.default);
 router.use("/message", message_1.default);
-/** Just for testing encryption api endpoint */
 const encryption_1 = require("../utils/encryption");
 router.all("/encryption", encryption_1.TestEncryption);
-/** Just for server wake up from third party services */
 router.get("/wakeup", (req, res) => {
     const from = req.query.from;
     res.status(200).send({ message: `Wake up server from ${from}!` });

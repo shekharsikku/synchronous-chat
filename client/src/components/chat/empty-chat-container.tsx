@@ -1,9 +1,9 @@
-import { HiLanguage, HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
-import { LuGithub, LuLinkedin, LuInstagram } from "react-icons/lu";
 import { Link } from "react-router-dom";
+import { FaLinkedin, FaGithub } from "react-icons/fa6";
+import { HiLanguage, HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 
 const EmptyChatContainer = () => {
-  const iconProps = { size: 24, stroke: 1.6 };
+  const iconProps = { size: 24, stroke: 1.5 };
 
   return (
     <div className="flex-1 bg-transparent hidden md:flex flex-col items-center justify-center gap-4">
@@ -20,16 +20,12 @@ const EmptyChatContainer = () => {
       </h6>
       <div className="flex space-x-4 xl:space-x-6 transition-all duration-500 mt-2">
         <Link to="https://www.github.com/shekharsikku" target="_blank"
-          className="text-neutral-600 hover:text-neutral-800 border-none outline-none transition-all duration-300">
-          <LuGithub size={iconProps.size} strokeWidth={iconProps.stroke} />
+          className="text-neutral-900 hover:text-neutral-600 border-none outline-none transition-all duration-300">
+          <FaGithub size={iconProps.size} strokeWidth={iconProps.stroke} />
         </Link>
         <Link to="https://www.linkedin.com/in/shekharsikku/" target="_blank"
-          className="text-neutral-600 hover:text-neutral-800 border-none outline-none transition-all duration-300">
-          <LuLinkedin size={iconProps.size} strokeWidth={iconProps.stroke} />
-        </Link>
-        <Link to="https://www.instagram.com/shekharsikku/" target="_blank"
-          className="text-neutral-600 hover:text-neutral-800 border-none outline-none transition-all duration-300">
-          <LuInstagram size={iconProps.size} strokeWidth={iconProps.stroke} />
+          className="text-neutral-900 hover:text-neutral-600 border-none outline-none transition-all duration-300">
+          <FaLinkedin size={iconProps.size} strokeWidth={iconProps.stroke} />
         </Link>
       </div>
     </div>

@@ -25,7 +25,7 @@ const ProfileInfo = () => {
   }, [userInfo]);
 
   return (
-    <div className="absolute bottom-0 w-full h-[10vh] border border-gray-200 p-2 lg:px-3">
+    <div className="absolute bottom-0 w-full h-20 border-t p-2">
       <div className="bg-gray-100/80 rounded h-full w-full flex items-center justify-between px-4">
 
         <TooltipProvider>

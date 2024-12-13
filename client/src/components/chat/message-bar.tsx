@@ -174,7 +174,7 @@ const MessageBar = () => {
   };
 
   return (
-    <div className="h-[10vh] border-t border-gray-200 flex items-center justify-center p-2 lg:px-3">
+    <div className="h-20 border-t flex items-center justify-center p-2">
       <div className="flex-1 flex rounded items-center justify-center gap-3 md:gap-5 bg-gray-100/80 px-4 h-full">
 
         <div className="flex gap-3 md:gap-5 relative">

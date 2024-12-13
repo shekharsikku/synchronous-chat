@@ -47,18 +47,14 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const receiverSocketId = (0, socket_1.getSocketId)(receiver);
         if (receiverSocketId.size > 0) {
             const receiverSockets = Array.from(receiverSocketId);
-            /** for update new message */
             socket_1.io.to(receiverSockets).emit("new-message", message);
-            /** for update last chat contact */
             socket_1.io.to(receiverSockets).emit("conversation:updated", {
                 _id: sender,
                 interaction: conversation.interaction,
             });
         }
         const senderSockets = Array.from(senderSocketId);
-        /** for update new message */
         socket_1.io.to(senderSockets).emit("new-message", message);
-        /** for update last chat contact */
         socket_1.io.to(senderSockets).emit("conversation:updated", {
             _id: receiver,
             interaction: conversation.interaction,
@@ -70,33 +66,12 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.sendMessage = sendMessage;
-/*
-const cleanupConversation = async (conversationId: Types.ObjectId) => {
-  const conversations = await Conversation.findById(conversationId);
-
-  if (conversations) {
-    const validMessages = [];
-
-    for (const message of conversations.messages) {
-      const messageExists = await model("Message").exists({ _id: message });
-
-      if (messageExists) {
-        validMessages.push(message);
-      }
-    }
-
-    conversations.messages = validMessages;
-    await conversations.save();
-  }
-}
-*/
 const cleanupConversation = (conversationId) => __awaiter(void 0, void 0, void 0, function* () {
-    const conversations = yield conversation_1.default.findById(conversationId).lean(); // Use lean() for faster retrieval
+    const conversations = yield conversation_1.default.findById(conversationId).lean();
     if (conversations && conversations.messages.length > 0) {
         const validMessages = yield message_1.default.find({
-            _id: { $in: conversations.messages }, // Batch check existence of all messages using $in
-        }).distinct("_id"); // Only retrieve message IDs
-        // Only update if there are messages that were removed
+            _id: { $in: conversations.messages },
+        }).distinct("_id");
         if (validMessages.length !== conversations.messages.length) {
             yield conversation_1.default.updateOne({ _id: conversationId }, { $set: { messages: validMessages } });
         }

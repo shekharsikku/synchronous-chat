@@ -15,7 +15,7 @@ const Chat = () => {
   }, [navigate, userInfo]);
 
   return (
-    <main className="h-[100vh] flex overflow-hidden">
+    <main className="h-screen w-screen flex overflow-hidden">
       <div className="h-full w-full md:hidden">
         {!selectedChatData ? <ContactsContainer /> : <ChatContainer />}
       </div>

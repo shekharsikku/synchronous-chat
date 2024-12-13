@@ -199,7 +199,7 @@ const Profile = () => {
   }, [socket]);
 
   return (
-    <main className="h-[100vh] w-[100vw] flex flex-col items-center justify-center">
+    <main className="h-screen w-screen flex flex-col items-center justify-center">
       <div className="bg-white border-2 border-white text-opacity-90 shadow-2xl rounded-md grid lg:grid-cols-2 
       h-[95vh] w-[90vw] sm:w-[70vw] md:w-[60vw] lg:h-[80vh] lg:w-[80vw] xl:w-[60vw] lg:px-8 xl:py-8">
 

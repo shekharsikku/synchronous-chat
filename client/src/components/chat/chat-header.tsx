@@ -22,7 +22,7 @@ const ChatHeader = () => {
   }, [selectedChatData?._id, messages.length]);
 
   return (
-    <div className="h-[10vh] border-b border-gray-200 flex items-center justify-between p-2" >
+    <div className="h-20 border-b flex items-center justify-between p-2">
       <div className="h-full w-full rounded flex gap-5 items-center justify-between px-4 bg-gray-100/80">
         <div className="flex gap-3 items-center justify-center">
           <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">

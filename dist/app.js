@@ -49,7 +49,6 @@ app.use((0, helmet_1.default)({
 app.use((0, compression_1.default)());
 app.use((0, cookie_parser_1.default)(env_1.default.COOKIES_SECRET));
 app.use("/public/temp", express_1.default.static(path_1.default.join(__dirname, "../public/temp")));
-/** Morgan logging middleware */
 if (env_1.default.isDev) {
     app.use((0, morgan_1.default)("dev"));
 }
@@ -57,7 +56,6 @@ else {
     app.use((0, morgan_1.default)("tiny"));
     app.use(express_1.default.static(path_1.default.join(__dirname, "../client/dist")));
 }
-/** Api routers middleware */
 app.use("/api", routers_1.default);
 app.all("*path", (_req, res) => {
     if (env_1.default.isDev) {

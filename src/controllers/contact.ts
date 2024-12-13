@@ -108,7 +108,7 @@ const fetchContacts = async (req: Request, res: Response) => {
     ]);
     return ApiResponse(res, 200, "Contacts fetched successfully!", contacts);
   } catch (error: any) {
-    return ApiResponse(res, error.code || 500, error.message);
+    return ApiResponse(res, 500, "An error occurred while fetching contacts!");
   }
 };
 
@@ -164,11 +164,7 @@ const fetchContacts = async (req: Request, res: Response) => {
     
     return ApiResponse(res, 200, "Contacts fetched successfully!", contacts);
   } catch (error: any) {
-    return ApiResponse(
-      res,
-      error.code || 500,
-      error.message || "An error occurred while fetching contacts."
-    );
+    return ApiResponse(res, 500, "An error occurred while fetching contacts!");
   }
 };
 */
@@ -191,16 +187,14 @@ const fetchContacts = async (req: Request, res: Response) => {
 
       if (contact) {
         return { ...contact, interaction: conversation.interaction };
+      } else {
+        return;
       }
     });
 
     return ApiResponse(res, 200, "Contacts fetched successfully!", contacts);
   } catch (error: any) {
-    return ApiResponse(
-      res,
-      error.code || 500,
-      error.message || "An error occurred while fetching contacts."
-    );
+    return ApiResponse(res, 500, "An error occurred while fetching contacts!");
   }
 };
 
