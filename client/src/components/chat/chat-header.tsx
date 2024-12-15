@@ -22,12 +22,12 @@ const ChatHeader = () => {
   }, [selectedChatData?._id, messages.length]);
 
   return (
-    <div className="h-20 border-b flex items-center justify-between p-2">
-      <div className="h-full w-full rounded flex gap-5 items-center justify-between px-4 bg-gray-100/80">
-        <div className="flex gap-3 items-center justify-center">
+    <div className="h-16 border-b flex items-center justify-between p-2">
+      <div className="h-full w-full rounded flex items-center justify-between px-4 bg-gray-100/80">
+        <div className="flex gap-4 items-center justify-center">
           <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">
             <AvatarImage src={userAvatar} alt="profile" className="object-fit h-full w-full" />
-            <AvatarFallback className={`uppercase h-full w-full text-xl border-[1px] text-center font-medium 
+            <AvatarFallback className={`uppercase h-full w-full text-xl border text-center font-medium 
                       transition-all duration-300 bg-[#06d6a02a] text-[#06d6a0] border-[#06d6a0bb`}>
               {selectedChatData?.username?.split("").shift() || selectedChatData?.email?.split("").shift()}
             </AvatarFallback>

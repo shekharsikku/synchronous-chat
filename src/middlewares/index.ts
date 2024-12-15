@@ -7,6 +7,7 @@ import {
   generateRefresh,
   createAccessData,
   authorizeCookie,
+  publicIpAddress,
 } from "../helpers";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import User from "../models/user";
@@ -43,13 +44,11 @@ const authAccess = async (
 };
 
 const deleteToken = async (
-  req: Request,
   res: Response,
   userId: Types.ObjectId,
+  authorizeId: string,
   refreshToken: string
 ) => {
-  const authorizeId = req.cookies.auth_id;
-
   const deleteResponse = await User.findOneAndUpdate(
     { _id: userId },
     {
@@ -63,7 +62,7 @@ const deleteToken = async (
   if (deleteResponse) {
     res.clearCookie("access");
     res.clearCookie("refresh");
-    res.clearCookie("auth_id");
+    res.clearCookie("session");
   }
 };
 
@@ -74,6 +73,7 @@ const authRefresh = async (
 ): Promise<any> => {
   try {
     const refreshToken = req.cookies.refresh;
+    const authorizeId = req.cookies.session;
 
     if (!refreshToken) {
       throw new ApiError(401, "Unauthorized refresh request!");
@@ -88,17 +88,22 @@ const authRefresh = async (
         ignoreNotBefore: true,
       }) as JwtPayload;
     } catch (error: any) {
-      throw new ApiError(401, "Invalid refresh request!");
+      throw new ApiError(403, "Invalid refresh request!");
     }
 
     const userId = decodedPayload.uid as Types.ObjectId;
     const currentTime = Math.floor(Date.now() / 1000);
     const beforeExpires = decodedPayload.exp! - env.ACCESS_EXPIRY;
+    const ipAddress = await publicIpAddress();
 
     const requestUser = await User.findOne({
       _id: userId,
       authentication: {
-        $elemMatch: { token: refreshToken },
+        $elemMatch: {
+          _id: authorizeId,
+          token: refreshToken,
+          device: ipAddress.ip,
+        },
       },
     });
 
@@ -112,7 +117,6 @@ const authRefresh = async (
     if (currentTime >= beforeExpires && currentTime < decodedPayload.exp!) {
       const newRefreshToken = generateRefresh(res, userId);
       const refreshExpiry = env.REFRESH_EXPIRY;
-      const authorizeId = req.cookies.auth_id;
 
       const updatedAuth = await User.findOneAndUpdate(
         {
@@ -133,13 +137,15 @@ const authRefresh = async (
       );
 
       if (updatedAuth) {
-        authorizeCookie(res, authorizeId!);
+        authorizeCookie(res, authorizeId);
         const accessToken = generateAccess(res, accessData);
         authTokens.access = accessToken;
         authTokens.refresh = newRefreshToken;
+      } else {
+        throw new ApiError(403, "Invalid refresh request!");
       }
     } else if (currentTime >= decodedPayload.exp!) {
-      await deleteToken(req, res, requestUser._id, refreshToken);
+      await deleteToken(res, requestUser._id, authorizeId, refreshToken);
       throw new ApiError(401, "Please, login again to continue!");
     } else {
       const accessToken = generateAccess(res, accessData);

@@ -25,16 +25,15 @@ const ProfileInfo = () => {
   }, [userInfo]);
 
   return (
-    <div className="absolute bottom-0 w-full h-20 border-t p-2">
+    <div className="absolute bottom-0 w-full h-16 border-t p-2">
       <div className="bg-gray-100/80 rounded h-full w-full flex items-center justify-between px-4">
-
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger>
               <div className="flex gap-4 items-center" onClick={() => navigate("/profile")}>
                 <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">
                   <AvatarImage src={avatar} alt="profile" className="object-fit h-full w-full" />
-                  <AvatarFallback className={`uppercase h-full w-full text-xl border-[1px] text-center font-medium 
+                  <AvatarFallback className={`uppercase h-full w-full text-xl border text-center font-medium 
                       transition-all duration-300 bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]`}>
                     {userInfo?.username?.split("").shift() || userInfo?.email?.split("").shift()}
                   </AvatarFallback>
@@ -51,7 +50,7 @@ const ProfileInfo = () => {
           </Tooltip>
         </TooltipProvider>
 
-        <div className="flex gap-3 md:gap-5">
+        <div className="flex gap-4">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>

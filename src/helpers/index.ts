@@ -55,7 +55,7 @@ const generateRefresh = (res: Response, uid: Types.ObjectId) => {
 const authorizeCookie = (res: Response, authId: string) => {
   const authExpiry = env.REFRESH_EXPIRY;
 
-  res.cookie("auth_id", authId, {
+  res.cookie("session", authId, {
     maxAge: authExpiry * 1000 * 2,
     httpOnly: true,
     sameSite: "strict",

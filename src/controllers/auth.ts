@@ -102,7 +102,7 @@ const signInUser = async (req: Request, res: Response) => {
 const signOutUser = async (req: Request, res: Response) => {
   const requestUser = req.user!;
   const refreshToken = req.cookies.refresh;
-  const authorizeId = req.cookies.auth_id;
+  const authorizeId = req.cookies.session;
 
   if (requestUser.setup && refreshToken && authorizeId) {
     await User.findOneAndUpdate(
@@ -118,7 +118,7 @@ const signOutUser = async (req: Request, res: Response) => {
 
   res.clearCookie("access");
   res.clearCookie("refresh");
-  res.clearCookie("auth_id");
+  res.clearCookie("session");
 
   const userData = maskedDetails(requestUser);
   return ApiResponse(res, 200, "Signed out successfully!", userData);

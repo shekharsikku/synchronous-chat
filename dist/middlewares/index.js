@@ -42,8 +42,7 @@ const authAccess = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.authAccess = authAccess;
-const deleteToken = (req, res, userId, refreshToken) => __awaiter(void 0, void 0, void 0, function* () {
-    const authorizeId = req.cookies.auth_id;
+const deleteToken = (res, userId, authorizeId, refreshToken) => __awaiter(void 0, void 0, void 0, function* () {
     const deleteResponse = yield user_1.default.findOneAndUpdate({ _id: userId }, {
         $pull: {
             authentication: { _id: authorizeId, token: refreshToken },
@@ -52,12 +51,13 @@ const deleteToken = (req, res, userId, refreshToken) => __awaiter(void 0, void 0
     if (deleteResponse) {
         res.clearCookie("access");
         res.clearCookie("refresh");
-        res.clearCookie("auth_id");
+        res.clearCookie("session");
     }
 });
 const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const refreshToken = req.cookies.refresh;
+        const authorizeId = req.cookies.session;
         if (!refreshToken) {
             throw new utils_1.ApiError(401, "Unauthorized refresh request!");
         }
@@ -70,15 +70,20 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             });
         }
         catch (error) {
-            throw new utils_1.ApiError(401, "Invalid refresh request!");
+            throw new utils_1.ApiError(403, "Invalid refresh request!");
         }
         const userId = decodedPayload.uid;
         const currentTime = Math.floor(Date.now() / 1000);
         const beforeExpires = decodedPayload.exp - env_1.default.ACCESS_EXPIRY;
+        const ipAddress = yield (0, helpers_1.publicIpAddress)();
         const requestUser = yield user_1.default.findOne({
             _id: userId,
             authentication: {
-                $elemMatch: { token: refreshToken },
+                $elemMatch: {
+                    _id: authorizeId,
+                    token: refreshToken,
+                    device: ipAddress.ip,
+                },
             },
         });
         if (!requestUser) {
@@ -89,7 +94,6 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         if (currentTime >= beforeExpires && currentTime < decodedPayload.exp) {
             const newRefreshToken = (0, helpers_1.generateRefresh)(res, userId);
             const refreshExpiry = env_1.default.REFRESH_EXPIRY;
-            const authorizeId = req.cookies.auth_id;
             const updatedAuth = yield user_1.default.findOneAndUpdate({
                 _id: userId,
                 authentication: {
@@ -107,9 +111,12 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
                 authTokens.access = accessToken;
                 authTokens.refresh = newRefreshToken;
             }
+            else {
+                throw new utils_1.ApiError(403, "Invalid refresh request!");
+            }
         }
         else if (currentTime >= decodedPayload.exp) {
-            yield deleteToken(req, res, requestUser._id, refreshToken);
+            yield deleteToken(res, requestUser._id, authorizeId, refreshToken);
             throw new utils_1.ApiError(401, "Please, login again to continue!");
         }
         else {

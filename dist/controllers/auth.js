@@ -92,7 +92,7 @@ exports.signInUser = signInUser;
 const signOutUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const requestUser = req.user;
     const refreshToken = req.cookies.refresh;
-    const authorizeId = req.cookies.auth_id;
+    const authorizeId = req.cookies.session;
     if (requestUser.setup && refreshToken && authorizeId) {
         yield user_1.default.findOneAndUpdate({ _id: requestUser._id }, {
             $pull: {
@@ -102,7 +102,7 @@ const signOutUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
     res.clearCookie("access");
     res.clearCookie("refresh");
-    res.clearCookie("auth_id");
+    res.clearCookie("session");
     const userData = (0, helpers_1.maskedDetails)(requestUser);
     return (0, utils_1.ApiResponse)(res, 200, "Signed out successfully!", userData);
 });

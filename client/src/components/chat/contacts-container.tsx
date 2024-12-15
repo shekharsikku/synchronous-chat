@@ -95,8 +95,8 @@ const ContactsContainer = () => {
   }
 
   return (
-    <div className="relative md:w-[35vw] lg:w-[25vw] border-r w-full h-full">
-      <div className="h-20 border-b p-2">
+    <div className="relative md:w-[35vw] lg:w-[30vw] xl:w-[25vw] border-r w-full h-full">
+      <div className="h-16 border-b p-2">
         <Logo />
       </div>
       <div className="w-full overflow-hidden contact-list-height">
