@@ -43,29 +43,6 @@ const authAccess = async (
   }
 };
 
-const deleteToken = async (
-  res: Response,
-  userId: Types.ObjectId,
-  authorizeId: string,
-  refreshToken: string
-) => {
-  const deleteResponse = await User.findOneAndUpdate(
-    { _id: userId },
-    {
-      $pull: {
-        authentication: { _id: authorizeId, token: refreshToken },
-      },
-    },
-    { new: true }
-  );
-
-  if (deleteResponse) {
-    res.clearCookie("access");
-    res.clearCookie("refresh");
-    res.clearCookie("session");
-  }
-};
-
 const authRefresh = async (
   req: Request,
   res: Response,
@@ -145,7 +122,19 @@ const authRefresh = async (
         throw new ApiError(403, "Invalid refresh request!");
       }
     } else if (currentTime >= decodedPayload.exp!) {
-      await deleteToken(res, requestUser._id, authorizeId, refreshToken);
+      await User.updateOne(
+        { _id: requestUser._id },
+        {
+          $pull: {
+            authentication: { _id: authorizeId, token: refreshToken },
+          },
+        }
+      );
+
+      res.clearCookie("access");
+      res.clearCookie("refresh");
+      res.clearCookie("session");
+
       throw new ApiError(401, "Please, login again to continue!");
     } else {
       const accessToken = generateAccess(res, accessData);

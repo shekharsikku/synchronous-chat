@@ -42,18 +42,6 @@ const authAccess = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.authAccess = authAccess;
-const deleteToken = (res, userId, authorizeId, refreshToken) => __awaiter(void 0, void 0, void 0, function* () {
-    const deleteResponse = yield user_1.default.findOneAndUpdate({ _id: userId }, {
-        $pull: {
-            authentication: { _id: authorizeId, token: refreshToken },
-        },
-    }, { new: true });
-    if (deleteResponse) {
-        res.clearCookie("access");
-        res.clearCookie("refresh");
-        res.clearCookie("session");
-    }
-});
 const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const refreshToken = req.cookies.refresh;
@@ -116,7 +104,14 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             }
         }
         else if (currentTime >= decodedPayload.exp) {
-            yield deleteToken(res, requestUser._id, authorizeId, refreshToken);
+            yield user_1.default.updateOne({ _id: requestUser._id }, {
+                $pull: {
+                    authentication: { _id: authorizeId, token: refreshToken },
+                },
+            });
+            res.clearCookie("access");
+            res.clearCookie("refresh");
+            res.clearCookie("session");
             throw new utils_1.ApiError(401, "Please, login again to continue!");
         }
         else {

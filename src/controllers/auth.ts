@@ -105,14 +105,13 @@ const signOutUser = async (req: Request, res: Response) => {
   const authorizeId = req.cookies.session;
 
   if (requestUser.setup && refreshToken && authorizeId) {
-    await User.findOneAndUpdate(
+    await User.updateOne(
       { _id: requestUser._id },
       {
         $pull: {
           authentication: { _id: authorizeId, token: refreshToken },
         },
-      },
-      { new: true }
+      }
     );
   }
 
