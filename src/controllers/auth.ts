@@ -87,7 +87,7 @@ const signInUser = async (req: Request, res: Response) => {
       (auth) => auth.token === refreshToken
     )[0]._id!;
 
-    authorizeCookie(res, String(authorizeId));
+    authorizeCookie(res, authorizeId.toString());
 
     return ApiResponse(res, 200, "Signed in successfully!", {
       _id: accessData._id,

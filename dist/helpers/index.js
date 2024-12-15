@@ -57,16 +57,14 @@ const generateRefresh = (res, uid) => {
     return refreshToken;
 };
 exports.generateRefresh = generateRefresh;
-const authorizeCookie = (res, authorizeId) => {
+const authorizeCookie = (res, authId) => {
     const authExpiry = env_1.default.REFRESH_EXPIRY;
-    if (authorizeId) {
-        res.cookie("auth_id", authorizeId, {
-            maxAge: authExpiry * 1000 * 2,
-            httpOnly: true,
-            sameSite: "strict",
-            secure: env_1.default.isProd,
-        });
-    }
+    res.cookie("auth_id", authId, {
+        maxAge: authExpiry * 1000 * 2,
+        httpOnly: true,
+        sameSite: "strict",
+        secure: env_1.default.isProd,
+    });
 };
 exports.authorizeCookie = authorizeCookie;
 const hasEmptyField = (fields) => {

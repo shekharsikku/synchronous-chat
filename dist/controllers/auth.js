@@ -77,7 +77,7 @@ const signInUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         });
         const authorizeUser = yield existsUser.save();
         const authorizeId = (_b = authorizeUser.authentication) === null || _b === void 0 ? void 0 : _b.filter((auth) => auth.token === refreshToken)[0]._id;
-        (0, helpers_1.authorizeCookie)(res, String(authorizeId));
+        (0, helpers_1.authorizeCookie)(res, authorizeId.toString());
         return (0, utils_1.ApiResponse)(res, 200, "Signed in successfully!", {
             _id: accessData._id,
             email: accessData.email,

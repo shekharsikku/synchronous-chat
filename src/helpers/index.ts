@@ -52,17 +52,15 @@ const generateRefresh = (res: Response, uid: Types.ObjectId) => {
   return refreshToken;
 };
 
-const authorizeCookie = (res: Response, authorizeId: string) => {
+const authorizeCookie = (res: Response, authId: string) => {
   const authExpiry = env.REFRESH_EXPIRY;
 
-  if (authorizeId) {
-    res.cookie("auth_id", authorizeId, {
-      maxAge: authExpiry * 1000 * 2,
-      httpOnly: true,
-      sameSite: "strict",
-      secure: env.isProd,
-    });
-  }
+  res.cookie("auth_id", authId, {
+    maxAge: authExpiry * 1000 * 2,
+    httpOnly: true,
+    sameSite: "strict",
+    secure: env.isProd,
+  });
 };
 
 const hasEmptyField = (fields: object) => {
