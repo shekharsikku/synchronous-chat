@@ -1,5 +1,6 @@
 import { toast } from "sonner";
 import { FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -96,14 +97,14 @@ const Auth = () => {
   }
 
   return (
-    <main className="h-screen w-screen flex items-center justify-center">
-      <div className="bg-white border-2 border-white text-opacity-90 shadow-2xl rounded-md grid lg:grid-cols-2
+    <main className="h-screen w-screen grid place-content-center">
+      <div className="shadow-2xl rounded-md grid lg:grid-cols-2
       h-[70vh] w-[90vw] sm:w-[70vw] md:w-[60vw] lg:h-[80vh] lg:w-[80vw] xl:w-[60vw] lg:px-8 xl:py-8">
-        <div className="flex flex-col gap-4 items-center justify-center">
+        <div className="flex flex-col gap-2 items-center justify-center">
           <div className="flex flex-col items-center justify-center gap-2">
             <h1 className="text-3xl sm:text-4xl font-bold">Welcome User!</h1>
-            <p className="text-sm lg:text-base font-normal text-center text-gray-700">
-              Enter the details to get started!</p>
+            <p className="text-sm sm:text-base font-normal text-center text-gray-700">
+              Enter your details to get started!</p>
           </div>
           <div className="w-full flex items-center justify-center">
             <Tabs defaultValue="sign-in" className="w-4/5">
@@ -188,8 +189,9 @@ const Auth = () => {
               A realtime fast and secure with best user experience!</p>
             <h3 className="w-64 text-base text-center text-gray-700">
               Share you smile with this world find friends & enjoy!</h3>
-            <h6 className="text-xs font-medium text-gray-500">
-              Created using MERN Stack by Shekhar Sharma!
+            <h6 className="text-sm font-medium text-gray-500">
+              Created with ❤︎ by <Link to="https://www.github.com/shekharsikku" target="_blank" className="hover:underline">
+                Shekhar Sharma </Link>
             </h6>
           </div>
         </div>

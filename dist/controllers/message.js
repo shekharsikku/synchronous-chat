@@ -21,7 +21,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     var _a;
     try {
         const sender = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-        const { id: receiver } = req.params;
+        const receiver = req.params.id;
         const { type, text, file } = yield req.body;
         let conversation = yield conversation_1.default.findOne({
             participants: { $all: [sender, receiver] },
@@ -81,10 +81,12 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     var _a;
     try {
         const sender = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-        const { id: receiver } = req.params;
+        const receiver = req.params.id;
         const conversation = yield conversation_1.default.findOne({
             participants: { $all: [sender, receiver] },
-        }).populate("messages");
+        })
+            .populate("messages")
+            .lean();
         if (!conversation) {
             return (0, utils_1.ApiResponse)(res, 200, "No any message available!", []);
         }
@@ -101,8 +103,8 @@ const deleteMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     var _a, _b;
     try {
         const uid = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-        const { id } = req.params;
-        const message = yield message_1.default.findById(id);
+        const mid = req.params.id;
+        const message = yield message_1.default.findById(mid);
         if (!message) {
             throw new utils_1.ApiError(404, "Message not found");
         }

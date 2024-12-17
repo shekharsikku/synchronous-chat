@@ -32,7 +32,7 @@ const searchContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 { setup: true },
                 { $or: [{ fullName: regex }, { username: regex }, { email: regex }] },
             ],
-        });
+        }).lean();
         if (contacts.length <= 0) {
             throw new utils_1.ApiError(404, "No contact found!");
         }
@@ -46,12 +46,15 @@ exports.searchContact = searchContact;
 const availableContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
-        const users = yield user_1.default.find({ _id: { $ne: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id }, setup: true });
+        const users = yield user_1.default.find({
+            _id: { $ne: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id },
+            setup: true,
+        }).lean();
         if (users.length == 0) {
             throw new utils_1.ApiError(404, "No any contact available!");
         }
         const contacts = users.map((user) => ({
-            label: user.username ? `${user.name} (${user.username})` : user.email,
+            label: `${user.name} (${user.username})`,
             value: user._id,
         }));
         return (0, utils_1.ApiResponse)(res, 200, "Contacts fetched successfully!", contacts);

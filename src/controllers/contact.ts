@@ -22,7 +22,7 @@ const searchContact = async (req: Request, res: Response) => {
         { setup: true },
         { $or: [{ fullName: regex }, { username: regex }, { email: regex }] },
       ],
-    });
+    }).lean();
 
     if (contacts.length <= 0) {
       throw new ApiError(404, "No contact found!");
@@ -35,14 +35,17 @@ const searchContact = async (req: Request, res: Response) => {
 
 const availableContact = async (req: Request, res: Response) => {
   try {
-    const users = await User.find({ _id: { $ne: req.user?._id }, setup: true });
+    const users = await User.find({
+      _id: { $ne: req.user?._id },
+      setup: true,
+    }).lean();
 
     if (users.length == 0) {
       throw new ApiError(404, "No any contact available!");
     }
 
     const contacts = users.map((user) => ({
-      label: user.username ? `${user.name} (${user.username})` : user.email,
+      label: `${user.name} (${user.username})`,
       value: user._id,
     }));
 

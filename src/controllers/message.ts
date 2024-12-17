@@ -8,7 +8,7 @@ import Message from "../models/message";
 const sendMessage = async (req: Request, res: Response) => {
   try {
     const sender = req.user?._id;
-    const { id: receiver } = req.params;
+    const receiver = req.params.id;
     const { type, text, file } = await req.body;
 
     let conversation = await Conversation.findOne({
@@ -110,11 +110,13 @@ const cleanupConversation = async (conversationId: Types.ObjectId) => {
 const getMessages = async (req: Request, res: Response) => {
   try {
     const sender = req.user?._id;
-    const { id: receiver } = req.params;
+    const receiver = req.params.id;
 
     const conversation = await Conversation.findOne({
       participants: { $all: [sender, receiver] },
-    }).populate("messages");
+    })
+      .populate("messages")
+      .lean();
 
     if (!conversation) {
       return ApiResponse(res, 200, "No any message available!", []);
@@ -132,9 +134,9 @@ const getMessages = async (req: Request, res: Response) => {
 const deleteMessage = async (req: Request, res: Response) => {
   try {
     const uid = req.user?._id;
-    const { id } = req.params;
+    const mid = req.params.id;
 
-    const message = await Message.findById(id);
+    const message = await Message.findById(mid);
 
     if (!message) {
       throw new ApiError(404, "Message not found");
