@@ -32,7 +32,7 @@ const ApiResponse = (
 
   if (data) response.data = data;
   if (error) response.error = error;
-  res.status(code).send({ ...response });
+  res.status(code).json({ ...response });
 };
 
 export { ApiError, ApiResponse };

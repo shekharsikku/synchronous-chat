@@ -46,7 +46,7 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     try {
         const refreshToken = req.cookies.refresh;
         const authorizeId = req.cookies.session;
-        if (!refreshToken) {
+        if (!refreshToken || !authorizeId) {
             throw new utils_1.ApiError(401, "Unauthorized refresh request!");
         }
         let decodedPayload;

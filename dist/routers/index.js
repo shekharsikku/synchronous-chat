@@ -17,6 +17,6 @@ const encryption_1 = require("../utils/encryption");
 router.all("/encryption", encryption_1.TestEncryption);
 router.get("/wakeup", (req, res) => {
     const from = req.query.from;
-    res.status(200).send({ message: `Wake up server from ${from}!` });
+    res.status(200).json({ message: `Wake up server from ${from}!` });
 });
 exports.default = router;

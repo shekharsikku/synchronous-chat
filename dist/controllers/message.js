@@ -47,14 +47,14 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const receiverSocketId = (0, socket_1.getSocketId)(receiver);
         if (receiverSocketId.size > 0) {
             const receiverSockets = Array.from(receiverSocketId);
-            socket_1.io.to(receiverSockets).emit("new-message", message);
+            socket_1.io.to(receiverSockets).emit("message:receive", message);
             socket_1.io.to(receiverSockets).emit("conversation:updated", {
                 _id: sender,
                 interaction: conversation.interaction,
             });
         }
         const senderSockets = Array.from(senderSocketId);
-        socket_1.io.to(senderSockets).emit("new-message", message);
+        socket_1.io.to(senderSockets).emit("message:receive", message);
         socket_1.io.to(senderSockets).emit("conversation:updated", {
             _id: receiver,
             interaction: conversation.interaction,
@@ -115,9 +115,9 @@ const deleteMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             message.type = "deleted";
             yield message.save({ validateBeforeSave: false });
             if (receiverSocketId.size > 0) {
-                socket_1.io.to(Array.from(receiverSocketId)).emit("message-remove", message);
+                socket_1.io.to(Array.from(receiverSocketId)).emit("message:remove", message);
             }
-            socket_1.io.to(Array.from(senderSocketId)).emit("message-remove", message);
+            socket_1.io.to(Array.from(senderSocketId)).emit("message:remove", message);
             return (0, utils_1.ApiResponse)(res, 200, "Message deleted successfully!", message);
         }
         else {

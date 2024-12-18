@@ -113,7 +113,7 @@ export const useListenMessages = () => {
 
   useEffect(() => {
     if (socket && !listenersAttached.current) {
-      socket.on("new-message", (message: Message) => {
+      socket.on("message:receive", (message: Message) => {
         /** Play notification sound only if the message is for the current user */
         if (message.recipient === userInfo?._id && isSoundAllow) {
           const sound = new Audio(notificationSound);

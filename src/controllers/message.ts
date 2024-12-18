@@ -42,7 +42,7 @@ const sendMessage = async (req: Request, res: Response) => {
       const receiverSockets = Array.from(receiverSocketId);
 
       /** for update new message */
-      io.to(receiverSockets).emit("new-message", message);
+      io.to(receiverSockets).emit("message:receive", message);
 
       /** for update last chat contact */
       io.to(receiverSockets).emit("conversation:updated", {
@@ -54,7 +54,7 @@ const sendMessage = async (req: Request, res: Response) => {
     const senderSockets = Array.from(senderSocketId);
 
     /** for update new message */
-    io.to(senderSockets).emit("new-message", message);
+    io.to(senderSockets).emit("message:receive", message);
 
     /** for update last chat contact */
     io.to(senderSockets).emit("conversation:updated", {
@@ -151,9 +151,9 @@ const deleteMessage = async (req: Request, res: Response) => {
       await message.save({ validateBeforeSave: false });
 
       if (receiverSocketId.size > 0) {
-        io.to(Array.from(receiverSocketId)).emit("message-remove", message);
+        io.to(Array.from(receiverSocketId)).emit("message:remove", message);
       }
-      io.to(Array.from(senderSocketId)).emit("message-remove", message);
+      io.to(Array.from(senderSocketId)).emit("message:remove", message);
 
       return ApiResponse(res, 200, "Message deleted successfully!", message);
     } else {

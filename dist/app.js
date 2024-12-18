@@ -59,7 +59,7 @@ else {
 app.use("/api", routers_1.default);
 app.all("*path", (_req, res) => {
     if (env_1.default.isDev) {
-        res.status(200).send({ message: "Welcome to Synchronous Chat!" });
+        res.status(200).json({ message: "Welcome to Synchronous Chat!" });
     }
     else {
         res.sendFile(path_1.default.join(__dirname, "../client/dist", "index.html"));
@@ -67,6 +67,6 @@ app.all("*path", (_req, res) => {
 });
 app.use(((err, _req, res, _next) => {
     console.error(`Error: ${err.message}`);
-    res.status(500).json({ message: "Internal server error!" });
+    res.status(500).json({ message: "Internal Server Error!" });
 }));
 exports.default = app;

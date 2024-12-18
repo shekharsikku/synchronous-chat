@@ -18,7 +18,7 @@ router.all("/encryption", TestEncryption);
 /** Just for server wake up from third party services */
 router.get("/wakeup", (req: Request, res: Response) => {
   const from = req.query.from;
-  res.status(200).send({ message: `Wake up server from ${from}!` });
+  res.status(200).json({ message: `Wake up server from ${from}!` });
 });
 
 export default router;

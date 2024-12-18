@@ -126,28 +126,28 @@ const MessageBar = () => {
   };
 
   useEffect(() => {
-    socket?.on("display-typing", (typingUser) => {
+    socket?.on("typing:display", (typingUser) => {
       if (typingUser.uid === userInfo?._id && selectedChatData?._id === typingUser.cid) {
         setIsPartnerTyping(typingUser.typing);
       }
     });
 
-    socket?.on("hide-typing", (typingUser) => {
+    socket?.on("typing:hide", (typingUser) => {
       if (typingUser.uid === userInfo?._id) {
         setIsPartnerTyping(typingUser.typing);
       }
     });
 
     return () => {
-      socket?.off("display-typing");
-      socket?.off("hide-typing");
+      socket?.off("typing:display");
+      socket?.off("typing:hide");
     };
   }, [selectedChatData?._id]);
 
   const handleTyping = () => {
     if (!isTyping) {
       setIsTyping(true);
-      socket?.emit("start-typing", { selectedUser: selectedChatData?._id, currentUser: userInfo?._id });
+      socket?.emit("typing:start", { selectedUser: selectedChatData?._id, currentUser: userInfo?._id });
     }
 
     if (typingTimeoutRef.current) {
@@ -156,7 +156,7 @@ const MessageBar = () => {
 
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false);
-      socket?.emit("stop-typing", { selectedUser: selectedChatData?._id, currentUser: userInfo?._id });
+      socket?.emit("typing:stop", { selectedUser: selectedChatData?._id, currentUser: userInfo?._id });
     }, 2500);
   };
 

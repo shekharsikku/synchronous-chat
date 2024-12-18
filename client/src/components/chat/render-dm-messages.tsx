@@ -53,10 +53,10 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
       setMessages([...updated]);
     };
 
-    socket?.on("message-remove", messageRemove);
+    socket?.on("message:remove", messageRemove);
 
     return () => {
-      socket?.off("message-remove", messageRemove);
+      socket?.off("message:remove", messageRemove);
     };
   }, [socket, messages, setMessages]);
 

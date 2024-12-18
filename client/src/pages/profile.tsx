@@ -180,7 +180,7 @@ const Profile = () => {
         toast.success(response.data.message);
 
         /** Emitting event for update details to active clients of current user */
-        socket?.emit("before:profile-update", { updatedDetails: response.data.data });
+        socket?.emit("before:profileupdate", { updatedDetails: response.data.data });
       } else {
         toast.info("Invalid username!");
       }
@@ -192,7 +192,7 @@ const Profile = () => {
   }
 
   useEffect(() => {
-    socket?.on("after:profile-update", ({ updatedDetails }) => {
+    socket?.on("after:profileupdate", ({ updatedDetails }) => {
       setUserInfo({ ...updatedDetails });
       toast.info("Your details has been updated!");
     });

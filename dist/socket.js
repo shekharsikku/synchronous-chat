@@ -35,29 +35,29 @@ io.on("connection", (socket) => {
     else {
         console.log("Cannot get User ID for socket connection!");
     }
-    io.emit("get-online-users", Array.from(userSocketMap.entries()).reduce((acc, [userId, sockets]) => {
+    io.emit("users:online", Array.from(userSocketMap.entries()).reduce((acc, [userId, sockets]) => {
         acc[userId] = Array.from(sockets);
         return acc;
     }, {}));
-    socket.on("start-typing", ({ selectedUser, currentUser }) => {
+    socket.on("typing:start", ({ selectedUser, currentUser }) => {
         const socketId = getSocketId(selectedUser);
-        socket.to(Array.from(socketId)).emit("display-typing", {
+        socket.to(Array.from(socketId)).emit("typing:display", {
             uid: selectedUser,
             cid: currentUser,
             typing: true,
         });
     });
-    socket.on("stop-typing", ({ selectedUser, currentUser }) => {
+    socket.on("typing:stop", ({ selectedUser, currentUser }) => {
         const socketId = getSocketId(selectedUser);
-        socket.to(Array.from(socketId)).emit("hide-typing", {
+        socket.to(Array.from(socketId)).emit("typing:hide", {
             uid: selectedUser,
             cid: currentUser,
             typing: false,
         });
     });
-    socket.on("before:profile-update", ({ updatedDetails }) => {
+    socket.on("before:profileupdate", ({ updatedDetails }) => {
         const socketId = getSocketId(updatedDetails._id);
-        socket.to(Array.from(socketId)).emit("after:profile-update", {
+        socket.to(Array.from(socketId)).emit("after:profileupdate", {
             updatedDetails,
         });
     });
@@ -72,7 +72,7 @@ io.on("connection", (socket) => {
                 break;
             }
         }
-        io.emit("get-online-users", Array.from(userSocketMap.entries()).reduce((acc, [userId, sockets]) => {
+        io.emit("users:online", Array.from(userSocketMap.entries()).reduce((acc, [userId, sockets]) => {
             acc[userId] = Array.from(sockets);
             return acc;
         }, {}));

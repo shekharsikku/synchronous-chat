@@ -76,7 +76,7 @@ app.use("/api", ApiRouters);
 
 app.all("*path", (_req: Request, res: Response) => {
   if (env.isDev) {
-    res.status(200).send({ message: "Welcome to Synchronous Chat!" });
+    res.status(200).json({ message: "Welcome to Synchronous Chat!" });
   } else {
     res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
   }
@@ -84,7 +84,7 @@ app.all("*path", (_req: Request, res: Response) => {
 
 app.use(((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error(`Error: ${err.message}`);
-  res.status(500).json({ message: "Internal server error!" });
+  res.status(500).json({ message: "Internal Server Error!" });
 }) as ErrorRequestHandler);
 
 export default app;

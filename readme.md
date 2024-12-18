@@ -1,11 +1,11 @@
-# Synchronous Chat - Realtime Chat Application
+## Synchronous Chat - Realtime Chat Application
 
-## 🌟 Introduction
+### Introduction
 
 Built with the MERN Stack, SocketIO, TailwindCSS, ShadcnUI.
 It enable the user for chat with other user in realtime.
 
-## ⚙️ Tech Stack
+### Tech Stack
 
 - React
 - Node.js
@@ -14,23 +14,23 @@ It enable the user for chat with other user in realtime.
 - TypeScript
 - Tailwind CSS
 - ShadcnUI
-- SocketIO
+- Socket.IO
 
-## 🔋 Features
+### Features
 
-👉 **Authentication**: Authentication & Authorization with JWT.
+**Authentication**: Authentication & Authorization with JWT.
 
-👉 **Messaging**: Realtime messaging with SocketIO.
+**Messaging**: Realtime messaging with SocketIO.
 
-👉 **User Status**: Online user status (SocketIO and React Context).
+**User Status**: Online user status (SocketIO and React Context).
 
-👉 **State Manage**: Global state management with Zustand.
+**State Manage**: Global state management with Zustand.
 
-👉 **Error Handling**: Error handling both on the server and on the client.
+**Error Handling**: Error handling both on the server and on the client.
 
-## ⭐ Quick Start
+### Quick Start
 
-**⏳ Prerequisites**
+**Prerequisites**
 
 Make sure you have the following installed on your machine:
 
@@ -38,7 +38,7 @@ Make sure you have the following installed on your machine:
 - [Node.js](https://nodejs.org/en)
 - [npm](https://www.npmjs.com/) (Node Package Manager)
 
-### 🚀 Setup Instructions
+### Setup Instructions
 
 **Clone This Repository**
 
@@ -64,6 +64,7 @@ Rename, `.env.sample` filename in server dir to `.env` and add all required fiel
 CLOUDINARY_CLOUD_NAME=""
 CLOUDINARY_API_KEY=""
 CLOUDINARY_API_SECRET=""
+IPIFY_ADDRESS_URL=""
 
 ACCESS_SECRET=""
 ACCESS_EXPIRY=""
@@ -132,6 +133,6 @@ http://localhost:4000
 https://synchronouschat.onrender.com
 ```
 
-### 🪄 Code by **Shekhar Sharma**
+### Code by [**Shekhar Sharma**](https://github.com/shekharsikku)
 
 ---

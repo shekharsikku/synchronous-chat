@@ -52,7 +52,7 @@ const authRefresh = async (
     const refreshToken = req.cookies.refresh;
     const authorizeId = req.cookies.session;
 
-    if (!refreshToken) {
+    if (!refreshToken || !authorizeId) {
       throw new ApiError(401, "Unauthorized refresh request!");
     }
 
