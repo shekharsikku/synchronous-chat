@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { UserInfo } from "@/zustand/slice/auth";
 import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { HiMiniSignal, HiMiniSignalSlash } from "react-icons/hi2";
+import { HiOutlineBolt, HiOutlineBoltSlash } from "react-icons/hi2";
 import { useChatStore } from "@/zustand";
 import { useAvatar } from "@/hooks";
 import api from "@/lib/api";
@@ -117,13 +117,12 @@ const ContactsContainer = () => {
                 <ScrollArea className="h-full overflow-y-auto scrollbar-hide">
                   <div className="flex flex-col gap-4">
                     {contacts?.map((contact) => (
-                      <div key={contact?._id} className={`w-full flex items-center justify-between cursor-pointer transition-all duration-300 rounded border p-2 lg:px-4 xl:px-6 text-gray-600 hover:bg-gray-100 
+                      <div key={contact?._id} className={`w-full flex items-center justify-between cursor-pointer transition-all duration-300 rounded border py-2 px-4 xl:px-6 text-gray-600 hover:bg-gray-100 
                         ${selectedChatData && selectedChatData._id === contact._id && "bg-gray-100/80 text-gray-700 border-gray-300/50"} ${contact?.setup === false && "disabled"} `} onClick={() => selectNewContact(contact)}>
                         <div className="flex items-center gap-4">
                           <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">
                             <AvatarImage src={useAvatar(contact)} alt="profile" className="object-fit h-full w-full" />
-                            <AvatarFallback className={`uppercase h-full w-full text-xl border-[1px] text-center font-medium 
-                      transition-all duration-300`}>
+                            <AvatarFallback className={`uppercase h-full w-full text-xl border text-center font-medium transition-all duration-300`}>
                               {contact?.username?.split("").shift() || contact?.email?.split("").shift()}
                             </AvatarFallback>
                           </Avatar>
@@ -133,8 +132,8 @@ const ContactsContainer = () => {
                           </div>
                         </div>
                         {onlineUsers.hasOwnProperty(contact?._id!)
-                          ? <HiMiniSignal size={18} />
-                          : <HiMiniSignalSlash size={18} />}
+                          ? <HiOutlineBolt size={18} />
+                          : <HiOutlineBoltSlash size={18} />}
                       </div>
                     ))}
                   </div>

@@ -201,15 +201,14 @@ const Profile = () => {
   return (
     <main className="h-screen w-screen flex flex-col items-center justify-center">
       <div className="bg-white border-2 border-white text-opacity-90 shadow-2xl rounded-md grid lg:grid-cols-2 
-      h-[95vh] w-[90vw] sm:w-[70vw] md:w-[60vw] lg:h-[80vh] lg:w-[80vw] xl:w-[60vw] lg:px-8 xl:py-8">
-
+      h-[80vh] w-[90vw] sm:w-[70vw] md:w-[60vw] lg:w-[80vw] xl:w-[60vw] lg:px-8 xl:py-8">
         <div className="flex flex-col gap-3 items-center justify-end lg:justify-center lg:px-1">
           <div className="flex flex-col gap-1 items-center justify-center">
             <h2 className="text-2xl font-bold sm:text-3xl">Welcome User!</h2>
             <p className="text-sm lg:text-base font-normal text-center text-gray-500">
               Let's get you set up!</p>
           </div>
-          <div className="hidden size-32 md:size-36 lg:size-40 relative lg:flex items-center justify-center
+          <div className="hidden size-36 xl:size-40 relative lg:flex items-center justify-center
            rounded-full border-2 border-gray-100 hover:border-3">
             <ContextMenu>
               <ContextMenuTrigger className="w-full h-full">

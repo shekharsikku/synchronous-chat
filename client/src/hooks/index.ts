@@ -130,7 +130,7 @@ export const useListenMessages = () => {
       listenersAttached.current = true;
     }
     return () => {
-      socket?.off("new-message");
+      socket?.off("message:receive");
       listenersAttached.current = false;
     };
   }, [
