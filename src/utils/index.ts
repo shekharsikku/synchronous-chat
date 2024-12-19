@@ -12,7 +12,7 @@ class ApiError extends Error {
   }
 }
 
-type ResponseType = {
+type TypeResponse = {
   code: number;
   success: boolean;
   message: string;
@@ -28,11 +28,11 @@ const ApiResponse = (
   error: any = null
 ) => {
   const success: boolean = code < 400 ? true : false;
-  const response: ResponseType = { code, success, message };
+  const response: TypeResponse = { code, success, message };
 
   if (data) response.data = data;
   if (error) response.error = error;
-  res.status(code).json({ ...response });
+  res.status(code).json(response);
 };
 
 export { ApiError, ApiResponse };

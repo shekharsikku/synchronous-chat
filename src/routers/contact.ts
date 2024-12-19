@@ -8,7 +8,7 @@ import {
 
 const router = Router();
 
-router.post("/search", authAccess, searchContact);
+router.get("/search", authAccess, searchContact);
 router.get("/fetch", authAccess, fetchContacts);
 router.get("/available", authAccess, availableContact);
 

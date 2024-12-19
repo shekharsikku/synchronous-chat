@@ -16,8 +16,7 @@ const MessageContainer = () => {
     try {
       setIsLoading(true);
       const response = await api.get(`/api/message/${selectedChatData?._id}`);
-      const data = await response.data.data;
-      setMessages([...data]);
+      setMessages(response.data.data);
     } catch (error: any) {
       toast.error(error.message);
     } finally {

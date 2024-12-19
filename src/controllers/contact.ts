@@ -6,27 +6,27 @@ import Conversation from "../models/conversation";
 
 const searchContact = async (req: Request, res: Response) => {
   try {
-    const { searchTerm: search }: { searchTerm: string } = await req.body;
+    const search = req.query.search as string;
 
-    if (search === undefined || search === null) {
+    if (!search) {
       throw new ApiError(400, "Search terms is required!");
     }
 
     const terms = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
     const regex = new RegExp(terms, "i");
 
     const contacts = await User.find({
       $and: [
         { _id: { $ne: req.user?._id } },
         { setup: true },
-        { $or: [{ fullName: regex }, { username: regex }, { email: regex }] },
+        { $or: [{ name: regex }, { username: regex }, { email: regex }] },
       ],
     }).lean();
 
-    if (contacts.length <= 0) {
-      throw new ApiError(404, "No contact found!");
+    if (contacts.length == 0) {
+      throw new ApiError(404, "No any contact found!");
     }
+
     return ApiResponse(res, 200, "Available contacts!", contacts);
   } catch (error: any) {
     return ApiResponse(res, error.code, error.message);
@@ -183,17 +183,17 @@ const fetchContacts = async (req: Request, res: Response) => {
       .populate("participants", "name email username gender image bio")
       .lean();
 
-    const contacts = conversations.map((conversation) => {
-      const contact = conversation.participants.find(
-        (participant) => participant._id.toString() !== uid.toString()
-      );
+    const contacts = conversations
+      .map((conversation) => {
+        const contact = conversation.participants.find(
+          (participant: any) => !participant._id.equals(uid)
+        );
 
-      if (contact) {
-        return { ...contact, interaction: conversation.interaction };
-      } else {
-        return;
-      }
-    });
+        return contact
+          ? { ...contact, interaction: conversation.interaction }
+          : null;
+      })
+      .filter(Boolean);
 
     return ApiResponse(res, 200, "Contacts fetched successfully!", contacts);
   } catch (error: any) {

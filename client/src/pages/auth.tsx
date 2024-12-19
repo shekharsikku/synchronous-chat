@@ -47,7 +47,6 @@ const Auth = () => {
 
         setIsAuthenticated(true);
         setSignInValue(initialSignInValues);
-
         dispatch(login(result));
 
         if (result.setup) {

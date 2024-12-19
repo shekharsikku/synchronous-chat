@@ -17,6 +17,6 @@ const ApiResponse = (res, code, message, data = null, error = null) => {
         response.data = data;
     if (error)
         response.error = error;
-    res.status(code).json(Object.assign({}, response));
+    res.status(code).json(response);
 };
 exports.ApiResponse = ApiResponse;

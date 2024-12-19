@@ -21,16 +21,12 @@ const AddNewChat = () => {
     if (searchTerm.length > 0) {
       try {
         setIsFetching(true);
-        const response = await api.post("/api/contact/search", { searchTerm });
-        if (response.data.data) {
-          setSearchedContacts(response.data.data);
-        }
+        const response = await api.get(`api/contact/search?search=${searchTerm}`);
+        setSearchedContacts(response.data.data)
       } catch (error: any) {
         setSearchedContacts([]);
       } finally {
-        setTimeout(() => {
-          setIsFetching(false);
-        }, 500)
+        setTimeout(() => setIsFetching(false), 500);
       }
     }
   }, 500);

@@ -20,8 +20,8 @@ const conversation_1 = __importDefault(require("../models/conversation"));
 const searchContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
-        const { searchTerm: search } = yield req.body;
-        if (search === undefined || search === null) {
+        const search = req.query.search;
+        if (!search) {
             throw new utils_1.ApiError(400, "Search terms is required!");
         }
         const terms = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -30,11 +30,11 @@ const searchContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             $and: [
                 { _id: { $ne: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id } },
                 { setup: true },
-                { $or: [{ fullName: regex }, { username: regex }, { email: regex }] },
+                { $or: [{ name: regex }, { username: regex }, { email: regex }] },
             ],
         }).lean();
-        if (contacts.length <= 0) {
-            throw new utils_1.ApiError(404, "No contact found!");
+        if (contacts.length == 0) {
+            throw new utils_1.ApiError(404, "No any contact found!");
         }
         return (0, utils_1.ApiResponse)(res, 200, "Available contacts!", contacts);
     }
@@ -74,15 +74,13 @@ const fetchContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             .sort({ interaction: -1 })
             .populate("participants", "name email username gender image bio")
             .lean();
-        const contacts = conversations.map((conversation) => {
-            const contact = conversation.participants.find((participant) => participant._id.toString() !== uid.toString());
-            if (contact) {
-                return Object.assign(Object.assign({}, contact), { interaction: conversation.interaction });
-            }
-            else {
-                return;
-            }
-        });
+        const contacts = conversations
+            .map((conversation) => {
+            const contact = conversation.participants.find((participant) => !participant._id.equals(uid));
+            return contact
+                ? Object.assign(Object.assign({}, contact), { interaction: conversation.interaction }) : null;
+        })
+            .filter(Boolean);
         return (0, utils_1.ApiResponse)(res, 200, "Contacts fetched successfully!", contacts);
     }
     catch (error) {

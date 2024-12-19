@@ -11,14 +11,12 @@ import moment from "moment";
 const ChatHeader = () => {
   const { selectedChatData, closeChat, isPartnerTyping, messages } = useChatStore();
   const [openUserInfoModal, setOpenUserInfoModal] = useState(false);
-  const [sendNumber, setSendNumber] = useState(0);
-  const [receiveNumber, setReceiveNumber] = useState(0);
+  const [messageStats, setMessageStats] = useState({ sent: 0, received: 0 });
   const userAvatar = useAvatar(selectedChatData);
 
   useEffect(() => {
     const { sent, received } = countUserMessages(messages, selectedChatData);
-    setSendNumber(sent);
-    setReceiveNumber(received);
+    setMessageStats({ sent, received });
   }, [selectedChatData?._id, messages.length]);
 
   return (
@@ -76,11 +74,11 @@ const ChatHeader = () => {
                 <p className="text-center text-xl mb-4 font-semibold">Message Stats</p>
                 <div className="flex justify-evenly">
                   <div className="text-center">
-                    <p className="font-semibold text-lg">{sendNumber}</p>
+                    <p className="font-semibold text-lg">{messageStats.sent}</p>
                     <p className="text-gray-500">Sent</p>
                   </div>
                   <div className="text-center">
-                    <p className="font-semibold text-lg">{receiveNumber}</p>
+                    <p className="font-semibold text-lg">{messageStats.received}</p>
                     <p className="text-gray-500">Received</p>
                   </div>
                 </div>

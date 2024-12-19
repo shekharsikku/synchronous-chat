@@ -23,8 +23,7 @@ const ContactsContainer = () => {
     try {
       setFetching(true);
       const response = await api.get("/api/contact/fetch");
-      const data = await response.data.data;
-      setContacts(data);
+      setContacts(response.data.data);
     } catch (error: any) {
       console.log(`Error: ${error.message}`);
     } finally {

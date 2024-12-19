@@ -49,8 +49,8 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
 
   useEffect(() => {
     const messageRemove = (current: any) => {
-      const updated = messages.map(message => message._id === current._id ? current : message);
-      setMessages([...updated]);
+      const updatedMessages = messages.map(message => message._id === current._id ? current : message);
+      setMessages(updatedMessages);
     };
 
     socket?.on("message:remove", messageRemove);

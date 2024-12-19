@@ -47,13 +47,10 @@ export const useGetUserInfo = () => {
 
   const getUserInfo = async () => {
     try {
-      const response = await api.get("/api/user/user-information", {
-        withCredentials: true,
-      });
+      const response = await api.get("/api/user/user-information");
       const data = await response.data.data;
       setUserInfo(data);
       setIsAuthenticated(true);
-
       dispatch(currentUser(data));
     } catch (error: any) {
       return null;
@@ -71,15 +68,11 @@ export const useSignOutUser = () => {
   const handleSignOut = async (e: any) => {
     e.preventDefault();
     try {
-      const response = await api.delete("/api/auth/sign-out", {
-        withCredentials: true,
-      });
+      const response = await api.delete("/api/auth/sign-out");
       toast.success(response.data.message);
       setIsAuthenticated(false);
-      setUserInfo(null!);
-
+      setUserInfo(null!);      
       dispatch(logout());
-
       closeChat();
       navigate("/auth");
     } catch (error: any) {
@@ -92,9 +85,7 @@ export const useSignOutUser = () => {
 export const useAuthRefresh = () => {
   const authRefresh = async () => {
     try {
-      const response = await api.get("/api/auth/auth-refresh", {
-        withCredentials: true,
-      });
+      const response = await api.get("/api/auth/auth-refresh");
       return response.data;
     } catch (error: any) {
       return error.response.data;

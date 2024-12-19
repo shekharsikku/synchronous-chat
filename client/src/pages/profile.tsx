@@ -193,7 +193,7 @@ const Profile = () => {
 
   useEffect(() => {
     socket?.on("after:profileupdate", ({ updatedDetails }) => {
-      setUserInfo({ ...updatedDetails });
+      setUserInfo(updatedDetails);
       toast.info("Your details has been updated!");
     });
   }, [socket]);
