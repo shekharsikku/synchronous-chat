@@ -95,7 +95,7 @@ const authRefresh = async (
       const newRefreshToken = generateRefresh(res, userId);
       const refreshExpiry = env.REFRESH_EXPIRY;
 
-      const updatedAuth = await User.findOneAndUpdate(
+      const updatedAuth = await User.updateOne(
         {
           _id: userId,
           authentication: {
@@ -109,11 +109,10 @@ const authRefresh = async (
               Date.now() + refreshExpiry * 1000
             ),
           },
-        },
-        { new: true }
+        }
       );
 
-      if (updatedAuth) {
+      if (updatedAuth.modifiedCount > 0) {
         authorizeCookie(res, authorizeId);
         const accessToken = generateAccess(res, accessData);
         authTokens.access = accessToken;
@@ -123,7 +122,7 @@ const authRefresh = async (
       }
     } else if (currentTime >= decodedPayload.exp!) {
       await User.updateOne(
-        { _id: requestUser._id },
+        { _id: userId },
         {
           $pull: {
             authentication: { _id: authorizeId, token: refreshToken },
@@ -141,7 +140,7 @@ const authRefresh = async (
       authTokens.access = accessToken;
     }
 
-    req.user = requestUser;
+    req.user = accessData;
     req.token = authTokens;
     next();
   } catch (error: any) {
