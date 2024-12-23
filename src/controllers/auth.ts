@@ -8,7 +8,6 @@ import {
   authorizeCookie,
   maskedDetails,
   createAccessData,
-  publicIpAddress,
 } from "../helpers";
 import User from "../models/user";
 import env from "../utils/env";
@@ -74,12 +73,10 @@ const signInUser = async (req: Request, res: Response) => {
 
     const refreshToken = generateRefresh(res, accessData._id!);
     const refreshExpiry = env.REFRESH_EXPIRY;
-    const ipAddress = await publicIpAddress();
 
     existsUser.authentication?.push({
       token: refreshToken,
       expiry: new Date(Date.now() + refreshExpiry * 1000),
-      device: ipAddress.ip,
     });
 
     const authorizeUser = await existsUser.save();
@@ -102,7 +99,7 @@ const signInUser = async (req: Request, res: Response) => {
 const signOutUser = async (req: Request, res: Response) => {
   const requestUser = req.user!;
   const refreshToken = req.cookies.refresh;
-  const authorizeId = req.cookies.session;
+  const authorizeId = req.cookies.current;
 
   if (requestUser.setup && refreshToken && authorizeId) {
     await User.updateOne(
@@ -117,7 +114,7 @@ const signOutUser = async (req: Request, res: Response) => {
 
   res.clearCookie("access");
   res.clearCookie("refresh");
-  res.clearCookie("session");
+  res.clearCookie("current");
 
   const userData = maskedDetails(requestUser);
   return ApiResponse(res, 200, "Signed out successfully!", userData);

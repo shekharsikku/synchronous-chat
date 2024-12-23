@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.publicIpAddress = exports.createAccessData = exports.maskedDetails = exports.removeSpaces = exports.hasEmptyField = exports.authorizeCookie = exports.generateRefresh = exports.generateAccess = exports.compareHash = exports.generateHash = void 0;
+exports.createAccessData = exports.maskedDetails = exports.removeSpaces = exports.hasEmptyField = exports.authorizeCookie = exports.generateRefresh = exports.generateAccess = exports.compareHash = exports.generateHash = void 0;
 const bcryptjs_1 = require("bcryptjs");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const env_1 = __importDefault(require("../utils/env"));
@@ -59,7 +59,7 @@ const generateRefresh = (res, uid) => {
 exports.generateRefresh = generateRefresh;
 const authorizeCookie = (res, authId) => {
     const authExpiry = env_1.default.REFRESH_EXPIRY;
-    res.cookie("session", authId, {
+    res.cookie("current", authId, {
         maxAge: authExpiry * 1000 * 2,
         httpOnly: true,
         sameSite: "strict",
@@ -109,15 +109,3 @@ const createAccessData = (user) => {
     return accessData;
 };
 exports.createAccessData = createAccessData;
-const publicIpAddress = () => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const response = yield fetch(env_1.default.IPIFY_ADDRESS_URL);
-        const result = yield response.json();
-        return result;
-    }
-    catch (error) {
-        console.log(`Error: ${error.message}`);
-        return null;
-    }
-});
-exports.publicIpAddress = publicIpAddress;

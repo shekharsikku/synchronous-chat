@@ -69,11 +69,9 @@ const signInUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         }
         const refreshToken = (0, helpers_1.generateRefresh)(res, accessData._id);
         const refreshExpiry = env_1.default.REFRESH_EXPIRY;
-        const ipAddress = yield (0, helpers_1.publicIpAddress)();
         (_a = existsUser.authentication) === null || _a === void 0 ? void 0 : _a.push({
             token: refreshToken,
             expiry: new Date(Date.now() + refreshExpiry * 1000),
-            device: ipAddress.ip,
         });
         const authorizeUser = yield existsUser.save();
         const authorizeId = (_b = authorizeUser.authentication) === null || _b === void 0 ? void 0 : _b.filter((auth) => auth.token === refreshToken)[0]._id;
@@ -92,7 +90,7 @@ exports.signInUser = signInUser;
 const signOutUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const requestUser = req.user;
     const refreshToken = req.cookies.refresh;
-    const authorizeId = req.cookies.session;
+    const authorizeId = req.cookies.current;
     if (requestUser.setup && refreshToken && authorizeId) {
         yield user_1.default.updateOne({ _id: requestUser._id }, {
             $pull: {
@@ -102,7 +100,7 @@ const signOutUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
     res.clearCookie("access");
     res.clearCookie("refresh");
-    res.clearCookie("session");
+    res.clearCookie("current");
     const userData = (0, helpers_1.maskedDetails)(requestUser);
     return (0, utils_1.ApiResponse)(res, 200, "Signed out successfully!", userData);
 });

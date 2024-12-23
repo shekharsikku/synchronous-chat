@@ -46,10 +46,6 @@ const UserSchema = new Schema<UserInterface>(
         {
           token: String,
           expiry: Date,
-          device: {
-            type: String,
-            default: null,
-          },
         },
       ],
       select: false,

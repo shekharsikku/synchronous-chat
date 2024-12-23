@@ -25,7 +25,7 @@ const ProfileInfo = () => {
   }, [userInfo]);
 
   return (
-    <div className="absolute bottom-0 w-full h-16 border-t p-2">
+    <div className="absolute bottom-0 w-full h-bar border-t p-2">
       <div className="bg-gray-100/80 rounded h-full w-full flex items-center justify-between px-4">
         <TooltipProvider>
           <Tooltip>
@@ -39,7 +39,7 @@ const ProfileInfo = () => {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col text-left">
-                  <span className="text-sm font-semibold text-neutral-700">{userInfo?.name}</span>
+                  <span className="text-sm font-bold text-neutral-700">{userInfo?.name}</span>
                   <span className="text-xs font-semibold text-neutral-700">{userInfo?.username}</span>
                 </div>
               </div>

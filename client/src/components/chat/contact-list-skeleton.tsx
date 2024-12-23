@@ -21,7 +21,7 @@ const ContactListSkeleton = ({
             </div>
           </div>
           {/* Online/Offline indicator skeleton */}
-          {status && <div className="h-5 w-5 bg-gray-300 rounded-full animate-${animate}" />}
+          {status && <div className="size-5 bg-gray-300 rounded-full animate-${animate}" />}
         </div>
       ))}
     </div>

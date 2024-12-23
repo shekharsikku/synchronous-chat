@@ -20,7 +20,7 @@ const ChatHeader = () => {
   }, [selectedChatData?._id, messages.length]);
 
   return (
-    <div className="h-16 border-b flex items-center justify-between p-2">
+    <div className="h-bar border-b flex items-center justify-between p-2">
       <div className="h-full w-full rounded flex items-center justify-between px-4 bg-gray-100/80">
         <div className="flex gap-4 items-center justify-center">
           <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">
@@ -31,10 +31,10 @@ const ChatHeader = () => {
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <h3 className="font-semibold">
+            <h3 className="font-bold">
               {selectedChatData?.name || selectedChatData?.username || selectedChatData?.email}
             </h3>
-            {isPartnerTyping && <span className="text-[10px]">typing...</span>}
+            {isPartnerTyping && <span className="text-xs">typing...</span>}
           </div>
         </div>
         <div className="flex items-center justify-center gap-4">

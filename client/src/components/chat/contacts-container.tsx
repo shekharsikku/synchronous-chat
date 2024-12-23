@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { UserInfo } from "@/zustand/slice/auth";
 import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { HiOutlineBolt, HiOutlineBoltSlash } from "react-icons/hi2";
+import { HiMiniSignal, HiMiniSignalSlash } from "react-icons/hi2";
 import { useChatStore } from "@/zustand";
 import { useAvatar } from "@/hooks";
 import api from "@/lib/api";
@@ -95,10 +95,10 @@ const ContactsContainer = () => {
 
   return (
     <div className="relative md:w-[35vw] lg:w-[30vw] xl:w-[25vw] border-r w-full h-full">
-      <div className="h-16 border-b p-2">
+      <div className="h-bar border-b p-2">
         <Logo />
       </div>
-      <div className="w-full overflow-hidden contact-list-height">
+      <div className="h-clh w-full overflow-hidden">
         <div className="h-full w-full flex flex-col gap-6 p-6">
           <div className="flex items-center justify-between">
             <Title title="Chat Messages" />
@@ -126,13 +126,13 @@ const ContactsContainer = () => {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex flex-col">
-                            <span className="text-sm font-semibold text-neutral-700">{contact?.name}</span>
+                            <span className="text-sm font-bold text-neutral-700">{contact?.name}</span>
                             <span className="text-xs font-semibold text-neutral-700">{contact?.username}</span>
                           </div>
                         </div>
                         {onlineUsers.hasOwnProperty(contact?._id!)
-                          ? <HiOutlineBolt size={18} />
-                          : <HiOutlineBoltSlash size={18} />}
+                          ? <HiMiniSignal size={18} />
+                          : <HiMiniSignalSlash size={18} />}
                       </div>
                     ))}
                   </div>

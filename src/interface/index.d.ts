@@ -14,7 +14,6 @@ interface UserInterface extends Document {
     _id?: Types.ObjectId;
     token: string;
     expiry: Date;
-    device?: string;
   }[];
 }
 
@@ -24,10 +23,10 @@ interface TokenInterface {
 }
 
 interface DetailInterface {
-  name?: string;
-  username?: string;
-  gender?: "Male" | "Female";
-  bio?: string;
+  name: string;
+  username: string;
+  gender: "Male" | "Female";
+  bio: string;
   setup?: boolean;
 }
 
@@ -40,9 +39,9 @@ interface ConversationInterface extends Document {
 
 interface MessageInterface extends Document {
   _id?: Types.ObjectId;
-  sender?: Types.ObjectId;
-  recipient?: Types.ObjectId;
-  type?: string;
-  text?: string;
-  file?: string;
+  sender: Types.ObjectId;
+  recipient: Types.ObjectId;
+  type: string;
+  text: string;
+  file: string;
 }

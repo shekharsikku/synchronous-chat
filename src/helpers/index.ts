@@ -55,7 +55,7 @@ const generateRefresh = (res: Response, uid: Types.ObjectId) => {
 const authorizeCookie = (res: Response, authId: string) => {
   const authExpiry = env.REFRESH_EXPIRY;
 
-  res.cookie("session", authId, {
+  res.cookie("current", authId, {
     maxAge: authExpiry * 1000 * 2,
     httpOnly: true,
     sameSite: "strict",
@@ -115,17 +115,6 @@ const createAccessData = (user: UserInterface) => {
   return accessData as UserInterface;
 };
 
-const publicIpAddress = async () => {
-  try {
-    const response = await fetch(env.IPIFY_ADDRESS_URL);
-    const result = await response.json();
-    return result;
-  } catch (error: any) {
-    console.log(`Error: ${error.message}`);
-    return null;
-  }
-};
-
 export {
   generateHash,
   compareHash,
@@ -136,5 +125,4 @@ export {
   removeSpaces,
   maskedDetails,
   createAccessData,
-  publicIpAddress,
 };

@@ -50,7 +50,6 @@ const Auth = () => {
         dispatch(login(result));
 
         if (result.setup) {
-          await api.delete("/api/message/delete");
           toast.success(response.data.message);
           navigate("/chat");
         } else {
@@ -97,16 +96,16 @@ const Auth = () => {
 
   return (
     <main className="h-screen w-screen grid place-content-center">
-      <div className="shadow-2xl rounded-md grid lg:grid-cols-2
-      h-[70vh] w-[90vw] sm:w-[70vw] md:w-[60vw] lg:h-[80vh] lg:w-[80vw] xl:w-[60vw] lg:px-8 xl:py-8">
+      <div className="shadow-2xl rounded-md grid lg:grid-cols-2 transition-all duration-0 
+      h-max w-[90vw] sm:w-[70vw] md:w-[50vw] lg:w-max px-8 sm:px-12 py-16 lg:p-20 lg:gap-16">
         <div className="flex flex-col gap-2 items-center justify-center">
           <div className="flex flex-col items-center justify-center gap-2">
-            <h1 className="text-3xl sm:text-4xl font-bold">Welcome User!</h1>
-            <p className="text-sm sm:text-base font-normal text-center text-gray-700">
+            <h1 className="text-3xl sm:text-4xl font-extrabold">Welcome User!</h1>
+            <p className="text-sm sm:text-base text-center text-gray-700">
               Enter your details to get started!</p>
           </div>
           <div className="w-full flex items-center justify-center">
-            <Tabs defaultValue="sign-in" className="w-4/5">
+            <Tabs defaultValue="sign-in" className="w-full">
               <TabsList className="bg-transparent rounded-none w-full">
                 <TabsTrigger value="sign-in" className="data-[state=active]:bg-transparent text-black text-opacity-90 border-b-2 rounded-none w-full data-[state=active]:text-black data-[state=active]:font-semibold data-[state=active]:border-b-gray-700 p-3 transition-all duration-300">Sign In</TabsTrigger>
                 <TabsTrigger value="sign-up" className="data-[state=active]:bg-transparent text-black text-opacity-90 border-b-2 rounded-none w-full data-[state=active]:text-black data-[state=active]:font-semibold data-[state=active]:border-b-gray-700 p-3 transition-all duration-300">Sign Up</TabsTrigger>
@@ -156,7 +155,7 @@ const Auth = () => {
                     id="password"
                     name="password"
                     type="password"
-                    placeholder="********"
+                    placeholder="••••••••"
                     autoComplete="off"
                     onChange={signUpHandleChange}
                     value={signUpValue.password || ""}
@@ -166,7 +165,7 @@ const Auth = () => {
                     id="confirm"
                     name="confirm"
                     type="password"
-                    placeholder="********"
+                    placeholder="••••••••"
                     autoComplete="off"
                     onChange={signUpHandleChange}
                     value={signUpValue.confirm || ""}
@@ -183,12 +182,12 @@ const Auth = () => {
         <div className="hidden lg:grid place-items-center">
           <div className="flex flex-col gap-2 items-center justify-center">
             <HiOutlineChatBubbleLeftRight size={100} />
-            <h1 className="text-4xl font-bold text-gray-900">Synchronous Chat!</h1>
+            <h1 className="text-4xl font-extrabold text-gray-900">Synchronous Chat!</h1>
             <p className="text-sm font-normal text-gray-500">
               A realtime fast and secure with best user experience!</p>
             <h3 className="w-64 text-base text-center text-gray-700">
               Share you smile with this world find friends & enjoy!</h3>
-            <h6 className="text-sm font-medium text-gray-500">
+            <h6 className="text-sm font-semibold text-gray-500">
               Created with ❤︎ by <Link to="https://www.github.com/shekharsikku" target="_blank" className="hover:underline">
                 Shekhar Sharma </Link>
             </h6>

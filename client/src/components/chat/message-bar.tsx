@@ -174,7 +174,7 @@ const MessageBar = () => {
   };
 
   return (
-    <div className="h-16 border-t flex items-center justify-center p-2">
+    <div className="h-bar border-t flex items-center justify-center p-2">
       <div className="flex-1 flex rounded items-center justify-center gap-4 bg-gray-100/80 px-4 h-full">
         <div className="flex gap-4 relative">
           <TooltipProvider>
@@ -221,8 +221,8 @@ const MessageBar = () => {
           autoComplete="off"
           value={message}
           onChange={handleChange}
-          className="flex-1 bg-transparent p-2 rounded border-none outline-none text-sm 
-          font-normal tracking-wider disabled:text-blue-800"
+          className="flex-1 bg-transparent px-1 py-2 border-none outline-none 
+          text-sm tracking-wider disabled:text-blue-800 font-medium"
           disabled={selectedImage && message !== "" ? true : false}
           ref={inputRef}
           onKeyDown={handleEnterKeyDown}

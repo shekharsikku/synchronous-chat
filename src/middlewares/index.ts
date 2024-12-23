@@ -7,7 +7,6 @@ import {
   generateRefresh,
   createAccessData,
   authorizeCookie,
-  publicIpAddress,
 } from "../helpers";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import User from "../models/user";
@@ -50,7 +49,7 @@ const authRefresh = async (
 ): Promise<any> => {
   try {
     const refreshToken = req.cookies.refresh;
-    const authorizeId = req.cookies.session;
+    const authorizeId = req.cookies.current;
 
     if (!refreshToken || !authorizeId) {
       throw new ApiError(401, "Unauthorized refresh request!");
@@ -71,7 +70,6 @@ const authRefresh = async (
     const userId = decodedPayload.uid as Types.ObjectId;
     const currentTime = Math.floor(Date.now() / 1000);
     const beforeExpires = decodedPayload.exp! - env.ACCESS_EXPIRY;
-    const ipAddress = await publicIpAddress();
 
     const requestUser = await User.findOne({
       _id: userId,
@@ -79,7 +77,6 @@ const authRefresh = async (
         $elemMatch: {
           _id: authorizeId,
           token: refreshToken,
-          device: ipAddress.ip,
         },
       },
     });
@@ -132,7 +129,7 @@ const authRefresh = async (
 
       res.clearCookie("access");
       res.clearCookie("refresh");
-      res.clearCookie("session");
+      res.clearCookie("current");
 
       throw new ApiError(401, "Please, login again to continue!");
     } else {

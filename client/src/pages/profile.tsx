@@ -199,13 +199,13 @@ const Profile = () => {
   }, [socket]);
 
   return (
-    <main className="h-screen w-screen flex flex-col items-center justify-center">
+    <main className="h-screen w-screen grid place-content-center">
       <div className="bg-white border-2 border-white text-opacity-90 shadow-2xl rounded-md grid lg:grid-cols-2 
-      h-[80vh] w-[90vw] sm:w-[70vw] md:w-[60vw] lg:w-[80vw] xl:w-[60vw] lg:px-8 xl:py-8">
-        <div className="flex flex-col gap-3 items-center justify-end lg:justify-center lg:px-1">
-          <div className="flex flex-col gap-1 items-center justify-center">
-            <h2 className="text-2xl font-bold sm:text-3xl">Welcome User!</h2>
-            <p className="text-sm lg:text-base font-normal text-center text-gray-500">
+      h-max w-[90vw] sm:w-[70vw] md:w-[50vw] lg:w-[70vw] xl:w-[60vw] px-8 sm:px-12 py-16 lg:p-20 lg:gap-16">
+        <div className="w-full flex flex-col gap-3 items-center justify-end lg:justify-center">
+          <div className="w-full flex flex-col gap-2 items-center justify-center">
+            <h2 className="text-3xl font-extrabold xl:text-4xl">Welcome User!</h2>
+            <p className="text-sm sm:text-base text-center text-gray-700">
               Let's get you set up!</p>
           </div>
           <div className="hidden size-36 xl:size-40 relative lg:flex items-center justify-center
@@ -213,9 +213,8 @@ const Profile = () => {
             <ContextMenu>
               <ContextMenuTrigger className="w-full h-full">
                 <Avatar className="h-full w-full rounded-full overflow-hidden">
-                  <AvatarImage src={selectedImage} alt="profile" className="object-fit h-full w-full" />
-                  <AvatarFallback className={`uppercase h-full w-full text-5xl border-[1px] text-center font-medium 
-                      transition-all duration-300 hover:bg-black/90 "bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]"`}>
+                  <AvatarImage src={selectedImage} alt="profile" className="object-fit size-full" />
+                  <AvatarFallback className={`uppercase size-full text-5xl border text-center font-bold transition-all hover:bg-black/90 bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]`}>
                     {userUsername?.split("").shift() || userInfo?.email?.split("").shift()}
                   </AvatarFallback>
                 </Avatar>
@@ -238,7 +237,7 @@ const Profile = () => {
               className="hidden"
             />
           </div>
-          <div className="flex flex-col gap-3 w-4/5 mb-3 lg:mb-1">
+          <div className="flex flex-col gap-3 w-full mb-3 lg:mb-1">
             <Label htmlFor="email">Email</Label>
             <Input
               type="email"
@@ -251,7 +250,7 @@ const Profile = () => {
               autoComplete="off"
             />
           </div>
-          <div className="hidden mt-1 lg:flex gap-4 w-4/5 items-center justify-center">
+          <div className="hidden lg:flex gap-6 w-full items-center justify-center">
             <Button size="sm" className="w-full" onClick={() => navigate("/chat")}
               disabled={isLoading || !userInfo?.setup}>
               <HiOutlineChatBubbleLeftRight size={20} /></Button>
@@ -263,7 +262,7 @@ const Profile = () => {
         </div>
 
         <div className="flex-1 flex flex-col gap-3 lg:gap-4 items-center justify-start lg:justify-center">
-          <div className="flex flex-col gap-3 w-4/5">
+          <div className="flex flex-col gap-3 w-full">
             <Label htmlFor="fullName">Name</Label>
             <Input
               type="text"
@@ -307,10 +306,10 @@ const Profile = () => {
                 <SelectItem value="Female">Female</SelectItem>
               </SelectContent>
             </Select>
-            <Button type="submit" size="lg" className="w-full cursor-pointer transition-all duration-300 mt-1"
+            <Button type="submit" size="lg" className="w-full cursor-pointer transition-all duration-300 mt-2"
               onClick={saveDetailsChanges} disabled={isLoading}>Save Changes</Button>
           </div>
-          <div className="lg:hidden flex gap-4 w-4/5 items-center justify-center">
+          <div className="lg:hidden flex gap-4 md:gap-6 w-full items-center justify-center mt-2">
             <Button size="sm" className="w-full" onClick={() => navigate("/chat")}
               disabled={isLoading || !userInfo?.setup}>
               <HiOutlineChatBubbleLeftRight size={20} /></Button>
@@ -337,7 +336,7 @@ const Profile = () => {
               id="old_password"
               name="old_password"
               type="password"
-              placeholder="********"
+              placeholder="••••••••"
               autoComplete="off"
               className="rounded px-3 py-5"
               onChange={passwordHandleChange}
@@ -349,7 +348,7 @@ const Profile = () => {
               id="new_password"
               name="new_password"
               type="password"
-              placeholder="********"
+              placeholder="••••••••"
               autoComplete="off"
               className="rounded px-3 py-5"
               onChange={passwordHandleChange}
@@ -361,7 +360,7 @@ const Profile = () => {
               id="confirm_password"
               name="confirm_password"
               type="password"
-              placeholder="********"
+              placeholder="••••••••"
               autoComplete="off"
               className="rounded px-3 py-5"
               onChange={passwordHandleChange}

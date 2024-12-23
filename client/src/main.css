@@ -1,4 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -63,24 +64,12 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border font-nunito;
   }
 
   body {
     @apply bg-background text-foreground;
   }
-
-  input {
-    font-size: 13px;
-    font-weight: 400;
-    letter-spacing: 0.5px;
-  }
-}
-
-.poppins-medium {
-  font-family: "Poppins", sans-serif;
-  font-weight: 600;
-  font-style: normal;
 }
 
 .epr-body,
@@ -154,8 +143,4 @@
   100% {
     background-position: 200% 0;
   }
-}
-
-.contact-list-height {
-  height: calc(100vh - 8rem);
 }

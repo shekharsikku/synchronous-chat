@@ -45,10 +45,6 @@ const UserSchema = new mongoose_1.Schema({
             {
                 token: String,
                 expiry: Date,
-                device: {
-                    type: String,
-                    default: null,
-                },
             },
         ],
         select: false,

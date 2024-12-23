@@ -45,7 +45,7 @@ exports.authAccess = authAccess;
 const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const refreshToken = req.cookies.refresh;
-        const authorizeId = req.cookies.session;
+        const authorizeId = req.cookies.current;
         if (!refreshToken || !authorizeId) {
             throw new utils_1.ApiError(401, "Unauthorized refresh request!");
         }
@@ -63,14 +63,12 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         const userId = decodedPayload.uid;
         const currentTime = Math.floor(Date.now() / 1000);
         const beforeExpires = decodedPayload.exp - env_1.default.ACCESS_EXPIRY;
-        const ipAddress = yield (0, helpers_1.publicIpAddress)();
         const requestUser = yield user_1.default.findOne({
             _id: userId,
             authentication: {
                 $elemMatch: {
                     _id: authorizeId,
                     token: refreshToken,
-                    device: ipAddress.ip,
                 },
             },
         });
@@ -111,7 +109,7 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             });
             res.clearCookie("access");
             res.clearCookie("refresh");
-            res.clearCookie("session");
+            res.clearCookie("current");
             throw new utils_1.ApiError(401, "Please, login again to continue!");
         }
         else {
