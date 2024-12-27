@@ -53,7 +53,7 @@ const AddNewChat = () => {
       </TooltipProvider>
       <DialogContent className="h-96 w-80 md:w-96 flex flex-col rounded-sm">
         <DialogHeader>
-          <DialogTitle>New Chat</DialogTitle>
+          <DialogTitle className="font-bold">New Chat</DialogTitle>
           <DialogDescription className="hidden"></DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-5 h-full w-full overflow-y-scroll scrollbar-hide">

@@ -77,6 +77,7 @@ module.exports = {
         clh: "calc(100vh - 9rem)",
       },
       fontFamily: {
+        inter: ["Inter", "sans-serif"],
         nunito: ["Nunito", "sans-serif"],
         poppins: ["Poppins", "sans-serif"],
       },

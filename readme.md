@@ -64,7 +64,6 @@ Rename, `.env.sample` filename in server dir to `.env` and add all required fiel
 CLOUDINARY_CLOUD_NAME=""
 CLOUDINARY_API_KEY=""
 CLOUDINARY_API_SECRET=""
-IPIFY_ADDRESS_URL=""
 
 ACCESS_SECRET=""
 ACCESS_EXPIRY=""

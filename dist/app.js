@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const express_rate_limit_1 = require("express-rate-limit");
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const compression_1 = __importDefault(require("compression"));
 const helmet_1 = __importDefault(require("helmet"));
@@ -56,7 +57,14 @@ else {
     app.use((0, morgan_1.default)("tiny"));
     app.use(express_1.default.static(path_1.default.join(__dirname, "../client/dist")));
 }
-app.use("/api", routers_1.default);
+const limiter = (0, express_rate_limit_1.rateLimit)({
+    windowMs: 60 * 1000,
+    max: 100,
+    message: { message: "Maximum number of requests exceeded!" },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use("/api", limiter, routers_1.default);
 app.all("*path", (_req, res) => {
     if (env_1.default.isDev) {
         res.status(200).json({ message: "Welcome to Synchronous Chat!" });

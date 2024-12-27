@@ -4,6 +4,7 @@ import express, {
   Response,
   ErrorRequestHandler,
 } from "express";
+import { rateLimit } from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import helmet from "helmet";
@@ -11,7 +12,7 @@ import morgan from "morgan";
 import cors from "cors";
 import path from "path";
 import env from "./utils/env";
-import ApiRouters from "./routers";
+import routers from "./routers";
 
 const app = express();
 
@@ -71,8 +72,16 @@ if (env.isDev) {
   app.use(express.static(path.join(__dirname, "../client/dist")));
 }
 
-/** Api routers middleware */
-app.use("/api", ApiRouters);
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  message: { message: "Maximum number of requests exceeded!" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+/** Rate limiter & Api routers middleware */
+app.use("/api", limiter, routers);
 
 app.all("*path", (_req: Request, res: Response) => {
   if (env.isDev) {

@@ -187,7 +187,7 @@ const Auth = () => {
               A realtime fast and secure with best user experience!</p>
             <h3 className="w-64 text-base text-center text-gray-700">
               Share you smile with this world find friends & enjoy!</h3>
-            <h6 className="text-sm font-semibold text-gray-500">
+            <h6 className="text-sm font-semibold text-gray-900">
               Created with ❤︎ by <Link to="https://www.github.com/shekharsikku" target="_blank" className="hover:underline">
                 Shekhar Sharma </Link>
             </h6>
