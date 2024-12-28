@@ -325,7 +325,7 @@ const Profile = () => {
       <Dialog open={openPasswordDialog} onOpenChange={setOpenPasswordDialog}>
         <DialogContent className="h-auto w-80 md:w-96 flex flex-col rounded-sm items-start">
           <DialogHeader>
-            <DialogTitle className="text-start font-bold">Change Your Password </DialogTitle>
+            <DialogTitle>Change Your Password </DialogTitle>
             <DialogDescription className="text-start">
               Update your password to improve account security and protect your information.
             </DialogDescription>
@@ -383,7 +383,7 @@ const Profile = () => {
       <Dialog open={openConfirmationModal} onOpenChange={setOpenConfirmationModal}>
         <DialogContent className="h-auto w-80 md:w-96 flex flex-col rounded-sm items-start">
           <DialogHeader>
-            <DialogTitle className="text-start font-bold">Update profile image?</DialogTitle>
+            <DialogTitle>Update profile image?</DialogTitle>
             <DialogDescription className="text-start">
               Update your profile image for better user interactions!
             </DialogDescription>
@@ -405,7 +405,7 @@ const Profile = () => {
       <Dialog open={openImageDeletionModal} onOpenChange={setOpenImageDeletionModal}>
         <DialogContent className="h-auto w-80 md:w-96 flex flex-col rounded-sm items-start">
           <DialogHeader>
-            <DialogTitle className="text-start font-bold">Delete profile image?</DialogTitle>
+            <DialogTitle>Delete profile image?</DialogTitle>
             <DialogDescription className="text-start">
               Are you sure to delete profile image?
             </DialogDescription>

@@ -1,44 +1,30 @@
-## Synchronous Chat - Realtime Chat Application
+## **Synchronous Chat - Realtime Chat Application**
 
-### Introduction
+Built with the `MERN Stack, Socket.IO, Tailwind CSS & ShadcnUI`. It enable the user for chat, share files with other user in realtime.
 
-Built with the MERN Stack, SocketIO, TailwindCSS, ShadcnUI.
-It enable the user for chat with other user in realtime.
+### **Key Features**
 
-### Tech Stack
+- **User Authentication:** Secure Authentication & Authorization with JWT.
 
-- React
-- Node.js
-- Express.js
-- MongoDB
-- TypeScript
-- Tailwind CSS
-- ShadcnUI
-- Socket.IO
+- **Realtime Messaging:** Instant chat updates powered by Socket.IO.
 
-### Features
+- **Typing Indicators:** Realtime feedback when a user is typing.
 
-**Authentication**: Authentication & Authorization with JWT.
+- **Search Contacts:** Find contacts with a user friendly search functionality.
 
-**Messaging**: Realtime messaging with SocketIO.
+- **Status Updates:** View online/offline status for contacts.
 
-**User Status**: Online user status (SocketIO and React Context).
+- **State Manage**: Global state management with React Context & Zustand.
 
-**State Manage**: Global state management with Zustand.
+- **Schema Validation:** Schema validation in both client & server side with Zod.
 
-**Error Handling**: Error handling both on the server and on the client.
+- **Error Handling**: Error handling both on the server and on the client.
 
-### Quick Start
+### **Quick Start**
 
-**Prerequisites**
+Make sure you have the following `Git, Node.js, npm` installed on your machine.
 
-Make sure you have the following installed on your machine:
-
-- [Git](https://git-scm.com/)
-- [Node.js](https://nodejs.org/en)
-- [npm](https://www.npmjs.com/) (Node Package Manager)
-
-### Setup Instructions
+### **Setup Instructions**
 
 **Clone This Repository**
 
@@ -48,17 +34,15 @@ git clone https://github.com/shekharsikku/synchronous-chat
 
 **Install Node Modules**
 
-_for both express server app and client side react app_
+Install for both server side express app and client side react app.
 
 ```bash
-npm install
-cd client
-npm install
+npm install && cd client && npm install
 ```
 
 **Environment Variables Setup**
 
-Rename, `.env.sample` filename in server dir to `.env` and add all required fields!
+Rename, `.env.sample` filename in server dir to `.env` and add all required fields.
 
 ```env
 CLOUDINARY_CLOUD_NAME=""
@@ -82,17 +66,16 @@ NODE_ENV=""
 
 **Start Development**
 
-_for run express development server_
+Run and start express development server
 
 ```bash
 npm run dev
 ```
 
-_for run react app development server_
+Run and start react app development server
 
 ```bash
-cd client
-npm run dev
+cd client && npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173) in your browser to view the project.
@@ -101,37 +84,36 @@ Open [http://localhost:5173](http://localhost:5173) in your browser to view the 
 http://localhost:5173
 ```
 
-**Build App**
+**Build React App**
 
-_build static file of react application_
+Build production static file of react application
 
 ```bash
-cd client
-npm run build
+cd client && npm run build
 ```
 
-**Start App**
+**Start Application**
 
-_make sure you are in the root dir of project_
+Make sure you are in the root dir of project
 
 ```bash
-npm run start
+npm run build && npm run start
 ```
 
 **Render Frontend**
 
-Open [http://localhost:4000](http://localhost:4000) or `PORT` you added `.env` variable in your browser to view the project.
+Open [http://localhost:4000](http://localhost:4000) or `PORT` you added in `.env` variable in your browser to view the project.
 
 ```bash
 http://localhost:4000
 ```
 
-**Live WebApp**
+**Check Live WebApp Deployed On Render**
 
 ```bash
 https://synchronouschat.onrender.com
 ```
 
-### Code by [**Shekhar Sharma**](https://github.com/shekharsikku)
+### **Code by [Shekhar Sharma](https://github.com/shekharsikku)**
 
 ---

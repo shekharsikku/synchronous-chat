@@ -221,8 +221,8 @@ const MessageBar = () => {
           autoComplete="off"
           value={message}
           onChange={handleChange}
-          className="flex-1 bg-transparent px-1 py-2 border-none outline-none 
-          text-sm tracking-wider disabled:text-blue-800 font-medium"
+          className="flex-1 px-1 py-2 bg-transparent border-none outline-none 
+          text-sm tracking-wider disabled:text-blue-800"
           disabled={selectedImage && message !== "" ? true : false}
           ref={inputRef}
           onKeyDown={handleEnterKeyDown}

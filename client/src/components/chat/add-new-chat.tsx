@@ -53,7 +53,7 @@ const AddNewChat = () => {
       </TooltipProvider>
       <DialogContent className="h-96 w-80 md:w-96 flex flex-col rounded-sm">
         <DialogHeader>
-          <DialogTitle className="font-bold">New Chat</DialogTitle>
+          <DialogTitle>New Chat</DialogTitle>
           <DialogDescription className="hidden"></DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-5 h-full w-full overflow-y-scroll scrollbar-hide">
@@ -84,8 +84,8 @@ const AddNewChat = () => {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <span className="text-sm font-bold text-neutral-700">{contact?.name}</span>
-                          <span className="text-xs font-semibold text-neutral-700">{contact?.username}</span>
+                          <span className="text-sm font-semibold text-neutral-700">{contact?.name}</span>
+                          <span className="text-xs font-medium text-neutral-700">{contact?.username}</span>
                         </div>
                       </div>
                     ))}

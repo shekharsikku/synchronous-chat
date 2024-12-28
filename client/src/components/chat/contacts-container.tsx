@@ -126,8 +126,8 @@ const ContactsContainer = () => {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex flex-col">
-                            <span className="text-sm font-bold text-neutral-700">{contact?.name}</span>
-                            <span className="text-xs font-semibold text-neutral-700">{contact?.username}</span>
+                            <span className="text-sm font-semibold text-neutral-700">{contact?.name}</span>
+                            <span className="text-xs font-medium text-neutral-700">{contact?.username}</span>
                           </div>
                         </div>
                         {onlineUsers.hasOwnProperty(contact?._id!)

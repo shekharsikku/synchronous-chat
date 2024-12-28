@@ -39,8 +39,8 @@ const ProfileInfo = () => {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col text-left">
-                  <span className="text-sm font-bold text-neutral-700">{userInfo?.name}</span>
-                  <span className="text-xs font-semibold text-neutral-700">{userInfo?.username}</span>
+                  <span className="text-sm font-semibold text-neutral-700">{userInfo?.name}</span>
+                  <span className="text-xs font-medium text-neutral-700">{userInfo?.username}</span>
                 </div>
               </div>
             </TooltipTrigger>

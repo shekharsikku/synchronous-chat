@@ -31,7 +31,7 @@ const ChatHeader = () => {
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <h3 className="font-bold">
+            <h3 className="font-semibold">
               {selectedChatData?.name || selectedChatData?.username || selectedChatData?.email}
             </h3>
             {isPartnerTyping && <span className="text-xs">typing...</span>}
