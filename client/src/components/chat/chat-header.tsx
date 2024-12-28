@@ -51,7 +51,7 @@ const ChatHeader = () => {
               </Tooltip>
             </TooltipProvider>
 
-            <DialogContent className="w-72 lg:w-96 rounded-sm shadow-lg transition-all hover:shadow-2xl bg-white p-8">
+            <DialogContent className="w-80 md:w-96 rounded-sm shadow-lg transition-all hover:shadow-2xl bg-white p-8">
               <DialogHeader className="hidden">
                 <DialogTitle></DialogTitle>
                 <DialogDescription></DialogDescription>
@@ -85,7 +85,7 @@ const ChatHeader = () => {
               </div>
               {/* Last Message Time */}
               <p className="text-center text-sm mt-4 text-gray-500">
-                {moment(selectedChatData?.interaction).format("MMMM Do YYYY, h:mm:ss a")}
+                {moment(selectedChatData?.interaction).format("MMMM Do YYYY, h:mm:ss A")}
               </p>
             </DialogContent>
           </Dialog>

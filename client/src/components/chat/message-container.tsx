@@ -52,7 +52,12 @@ const MessageContainer = () => {
         <div key={message._id} className="">
           {showDate && (
             <div className="text-center text-gray-500 my-2 md:my-4">
-              {moment(message.createdAt).format("LL")}
+              {moment(message.createdAt).isSame(moment(), "day") ? (
+                "Today"
+              ) : moment(message.createdAt).isSame(moment().subtract(1, 'day'), 'day') ? (
+                "Yesterday"
+              ) : (
+                moment(message.createdAt).format("LL"))}
             </div>
           )}
           {selectedChatType === "contact" && <RenderDMMessages
