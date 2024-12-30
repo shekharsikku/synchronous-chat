@@ -8,4 +8,5 @@ router.get("/:id", middlewares_1.authAccess, message_1.getMessages);
 router.post("/send/:id", middlewares_1.authAccess, message_1.sendMessage);
 router.delete("/delete/:id", middlewares_1.authAccess, message_1.deleteMessage);
 router.delete("/delete", middlewares_1.authAccess, message_1.deleteMessages);
+router.post("/translate", middlewares_1.authAccess, message_1.translateMessage);
 exports.default = router;

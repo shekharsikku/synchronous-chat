@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "bing-translate-api": "^4.0.2",
     "cloudinary": "^2.5.1",
     "compression": "^1.7.5",
     "cookie-parser": "^1.4.7",

@@ -29,7 +29,7 @@ const ProfileInfo = () => {
       <div className="bg-gray-100/80 rounded h-full w-full flex items-center justify-between px-4">
         <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger className="focus:outline-none">
               <div className="flex gap-4 items-center" onClick={() => navigate("/profile")}>
                 <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">
                   <AvatarImage src={avatar} alt="profile" className="object-fit h-full w-full" />
@@ -53,7 +53,7 @@ const ProfileInfo = () => {
         <div className="flex gap-4">
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger className="focus:outline-none">
                 {isSoundAllow ? (
                   <HiOutlineSpeakerWave size={20} onClick={() => setIsSoundAllow(false)}
                     className="text-neutral-600 border-none outline-none transition-all duration-300" />
@@ -70,7 +70,7 @@ const ProfileInfo = () => {
 
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger className="focus:outline-none">
                 <HiOutlineArrowRightOnRectangle size={20} onClick={handleSignOut}
                   className="text-neutral-600 border-none outline-none transition-all duration-300" />
               </TooltipTrigger>

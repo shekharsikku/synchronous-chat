@@ -169,3 +169,50 @@ export const validateDummyEmail = (email: string): boolean => {
   const emailLower = email.toLowerCase();
   return restrictedWords.some((word) => emailLower.includes(word));
 };
+
+export const languageOptions = [
+  {
+    name: "English",
+    code: "en",
+  },
+  {
+    name: "Hindi",
+    code: "hi",
+  },
+  {
+    name: "Punjabi",
+    code: "pa",
+  },
+  {
+    name: "Bengali",
+    code: "bn",
+  },
+  {
+    name: "Gujarati",
+    code: "gu",
+  },
+  {
+    name: "Marathi",
+    code: "mr",
+  },
+  {
+    name: "Arabic",
+    code: "ar",
+  },
+  {
+    name: "Kannada",
+    code: "kn",
+  },
+  {
+    name: "Malayalam",
+    code: "ml",
+  },
+  {
+    name: "Tamil",
+    code: "ta",
+  },
+  {
+    name: "Telugu",
+    code: "te",
+  },
+];

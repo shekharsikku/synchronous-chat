@@ -4,6 +4,7 @@ import { getSocketId, io } from "../socket";
 import { Types } from "mongoose";
 import Conversation from "../models/conversation";
 import Message from "../models/message";
+import { translate } from "bing-translate-api";
 
 const sendMessage = async (req: Request, res: Response) => {
   try {
@@ -182,4 +183,31 @@ const deleteMessages = async (req: Request, res: Response) => {
   }
 };
 
-export { sendMessage, getMessages, deleteMessage, deleteMessages };
+const translateMessage = async (req: Request, res: Response) => {
+  try {
+    const { message, language } = await req.body;
+
+    const result = await translate(message, null, language);
+
+    if (!result) {
+      throw new ApiError(500, "Error while translating text!");
+    }
+
+    return ApiResponse(
+      res,
+      200,
+      "Text translated successfully!",
+      result.translation
+    );
+  } catch (error: any) {
+    return ApiResponse(res, error.code, error.message);
+  }
+};
+
+export {
+  sendMessage,
+  getMessages,
+  deleteMessage,
+  deleteMessages,
+  translateMessage,
+};

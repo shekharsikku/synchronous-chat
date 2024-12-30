@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 import { useState, useEffect, useRef } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, } from "@/components/ui/tooltip";
-import { HiOutlineFaceSmile, HiMiniLink, HiOutlinePaperAirplane, HiOutlineBackspace } from "react-icons/hi2";
+import { HiOutlineFaceSmile, HiOutlineLink, HiOutlinePaperAirplane, HiOutlineBackspace } from "react-icons/hi2";
 import { useChatStore, useAuthStore } from "@/zustand";
 import { convertToBase64, encryptMessage } from "@/utils";
 import { useSocket } from "@/context/socket-context";
@@ -179,7 +179,7 @@ const MessageBar = () => {
         <div className="flex gap-4 relative">
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger className="focus:outline-none">
                 <HiOutlineFaceSmile size={20} onClick={() => setEmojiPicker((prev) => !prev)}
                   className="text-neutral-600 border-none outline-none transition-all duration-300" />
               </TooltipTrigger>
@@ -195,8 +195,8 @@ const MessageBar = () => {
 
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger>
-                <HiMiniLink size={20} onClick={handleAttachClick}
+              <TooltipTrigger className="focus:outline-none">
+                <HiOutlineLink size={20} onClick={handleAttachClick}
                   className="text-neutral-600 border-none outline-none transition-all duration-300" />
               </TooltipTrigger>
               <TooltipContent>
@@ -231,7 +231,7 @@ const MessageBar = () => {
         {message && <div className="flex gap-4">
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger className="focus:outline-none">
                 <HiOutlineBackspace size={20} onClick={() => {
                   setMessage("");
                   setSelectedImage(null);
@@ -245,7 +245,7 @@ const MessageBar = () => {
           </TooltipProvider>
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger className="focus:outline-none">
                 <HiOutlinePaperAirplane size={20} onClick={handleSendMessage}
                   className="text-neutral-600 border-none outline-none transition-all duration-300" />
               </TooltipTrigger>

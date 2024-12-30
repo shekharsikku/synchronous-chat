@@ -1,15 +1,46 @@
-import { HiOutlineEllipsisVertical, HiOutlineXMark } from "react-icons/hi2";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, } from "@/components/ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  HiOutlineXMark,
+  HiOutlineLanguage
+} from "react-icons/hi2";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage
+} from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "../ui/scroll-area";
+import {
+  countUserMessages,
+  languageOptions
+} from "@/utils";
+import { useEffect, useState } from "react";
 import { useChatStore } from "@/zustand";
 import { useAvatar } from "@/hooks";
-import { useEffect, useState } from "react";
-import { countUserMessages } from "@/utils";
 import moment from "moment";
 
 const ChatHeader = () => {
-  const { selectedChatData, closeChat, isPartnerTyping, messages } = useChatStore();
+  const { selectedChatData, closeChat, isPartnerTyping, messages, language, setLanguage } = useChatStore();
   const [openUserInfoModal, setOpenUserInfoModal] = useState(false);
   const [messageStats, setMessageStats] = useState({ sent: 0, received: 0 });
   const userAvatar = useAvatar(selectedChatData);
@@ -23,34 +54,25 @@ const ChatHeader = () => {
     <div className="h-bar border-b flex items-center justify-between p-2">
       <div className="h-full w-full rounded flex items-center justify-between px-4 bg-gray-100/80">
         <div className="flex gap-4 items-center justify-center">
-          <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">
-            <AvatarImage src={userAvatar} alt="profile" className="object-fit h-full w-full" />
-            <AvatarFallback className={`uppercase h-full w-full text-xl border text-center font-medium 
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger className="focus:outline-none">
+                <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer"
+                  onClick={() => setOpenUserInfoModal(true)}>
+                  <AvatarImage src={userAvatar} alt="profile" className="object-fit h-full w-full" />
+                  <AvatarFallback className={`uppercase h-full w-full text-xl border text-center font-medium 
                       transition-all duration-300 bg-[#06d6a02a] text-[#06d6a0] border-[#06d6a0bb`}>
-              {selectedChatData?.username?.split("").shift() || selectedChatData?.email?.split("").shift()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col">
-            <h3 className="font-semibold">
-              {selectedChatData?.name || selectedChatData?.username || selectedChatData?.email}
-            </h3>
-            {isPartnerTyping && <span className="text-xs">typing...</span>}
-          </div>
-        </div>
-        <div className="flex items-center justify-center gap-4">
+                    {selectedChatData?.username?.split("").shift() || selectedChatData?.email?.split("").shift()}
+                  </AvatarFallback>
+                </Avatar>
+              </TooltipTrigger>
+              <TooltipContent>
+                <span className="text-neutral-700 font-medium">Info</span>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          {/* Dialog for show user information */}
           <Dialog open={openUserInfoModal} onOpenChange={setOpenUserInfoModal}>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <HiOutlineEllipsisVertical size={20} onClick={() => setOpenUserInfoModal(true)}
-                    className="text-neutral-600 border-none outline-none transition-all duration-300" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span className="text-neutral-700 font-medium">Info</span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
             <DialogContent className="w-80 md:w-96 rounded-sm shadow-lg transition-all hover:shadow-2xl bg-white p-8">
               <DialogHeader className="hidden">
                 <DialogTitle></DialogTitle>
@@ -89,10 +111,51 @@ const ChatHeader = () => {
               </p>
             </DialogContent>
           </Dialog>
+          {/* Username and Typing Indicator */}
+          <div className="flex flex-col">
+            <h3 className="font-semibold">
+              {selectedChatData?.name || selectedChatData?.username || selectedChatData?.email}
+            </h3>
+            {isPartnerTyping && <span className="text-xs">typing...</span>}
+          </div>
+        </div>
 
+        <div className="flex items-center justify-center gap-4">
+          {/* Translate Language */}
+          <DropdownMenu>
+            <TooltipProvider>
+              <Tooltip>
+                <DropdownMenuTrigger asChild>
+                  <TooltipTrigger className="focus:outline-none">
+                    <HiOutlineLanguage size={18}
+                      className="text-neutral-600 border-none outline-none transition-all duration-300" />
+                  </TooltipTrigger>
+                </DropdownMenuTrigger>
+                <TooltipContent>
+                  <span className="text-neutral-700 font-medium">Translate</span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <DropdownMenuContent className="w-36 mt-4 mr-6">
+              <DropdownMenuLabel>Select Language</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <ScrollArea className="h-52 overflow-y-auto scrollbar-hide">
+                <DropdownMenuRadioGroup value={language} onValueChange={setLanguage} className="space-y-1">
+                  {languageOptions.map((option) => (
+                    <DropdownMenuRadioItem key={option.code} value={option.code}
+                      className={`flex items-center justify-start gap-2 text-sm capitalize cursor-pointer rounded-md 
+                    ${option.code === language && "bg-gray-100"}`}>
+                      {option.name}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </ScrollArea>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {/* Close Chat */}
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger className="focus:outline-none">
                 <HiOutlineXMark size={20} onClick={closeChat}
                   className="text-neutral-600 border-none outline-none transition-all duration-300" />
               </TooltipTrigger>

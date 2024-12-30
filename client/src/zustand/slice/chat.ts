@@ -30,6 +30,9 @@ const useChatStore = create<{
 
   isSoundAllow: boolean;
   setIsSoundAllow: (isSoundAllow: boolean) => void;
+
+  language: string;
+  setLanguage: (translateLanguage: string) => void;
 }>((set) => ({
   selectedChatType: "",
   setSelectedChatType: (selectedChatType: string) => set({ selectedChatType }),
@@ -53,6 +56,9 @@ const useChatStore = create<{
 
   isSoundAllow: true,
   setIsSoundAllow: (isSoundAllow: boolean) => set({ isSoundAllow }),
+
+  language: "en",
+  setLanguage: (language: string) => set({ language }),
 }));
 
 export default useChatStore;

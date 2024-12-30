@@ -1,5 +1,6 @@
 import { toast } from "sonner";
 import {
+  HiOutlineLanguage,
   HiOutlineNoSymbol,
   HiOutlineTrash,
   HiOutlineClipboardDocument,
@@ -31,7 +32,7 @@ import api from "@/lib/api";
 const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMessageId: string }) => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
-  const { selectedChatData, messages, setMessages } = useChatStore();
+  const { selectedChatData, messages, setMessages, language } = useChatStore();
 
   const shakeClass = message._id === lastMessageId ? "shake" : "";
   const deletedMessage = message.sender === selectedChatData?._id
@@ -103,6 +104,28 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
     }
   }
 
+  const [translated, setTranslated] = useState("");
+  const [translation, setTranslation] = useState({ message: "", language: "" });
+  const setTextAndLanguage = (message: string) => setTranslation({ message, language });
+
+  const translateMessage = async (message: string, language: string) => {
+    try {
+      const response = await api.post("/api/message/translate", { message, language });
+      setTranslated(response.data.data);
+    } catch (error: any) {
+      setTranslated("");
+      isDevelopment && console.error("Language translation error:", error);
+    }
+  }
+
+  useEffect(() => {
+    if (translation.message && translation.language) {
+      (async () => {
+        await translateMessage(translation.message, translation.language);
+      })();
+    }
+  }, [translation]);
+
   return (
     <div className={`${message.sender !== selectedChatData?._id ? "text-right" : "text-left"} w-full`}>
       {message && (
@@ -140,9 +163,16 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
             {message.type !== "deleted" && (
               <ContextMenuContent className="w-20 flex flex-col gap-2 p-2 transition-all duration-500">
                 {message.type === "text" && (
-                  <ContextMenuItem className="flex gap-2" onClick={() => copyToClipboard(plainText(message))}>
-                    <HiOutlineClipboardDocument size={16} /> Copy
-                  </ContextMenuItem>
+                  <>
+                    {language !== "en" && (
+                      <ContextMenuItem className="flex gap-2" onClick={() => setTextAndLanguage(plainText(message))}>
+                        <HiOutlineLanguage size={16} /> Translate
+                      </ContextMenuItem>
+                    )}
+                    <ContextMenuItem className="flex gap-2" onClick={() => copyToClipboard(plainText(message))}>
+                      <HiOutlineClipboardDocument size={16} /> Copy
+                    </ContextMenuItem>
+                  </>
                 )}
                 {message.type === "file" && (
                   <>
@@ -164,6 +194,10 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
               </ContextMenuContent>
             )}
           </ContextMenu>
+          {/* Translated Message */}
+          {translated !== "" && (
+            <div className="text-base p-2">{translated}</div>
+          )}
           <div className="text-xs text-gray-600 mb-2">
             {message.type === "deleted"
               ? `${moment(message.updatedAt).format("LT")}`
