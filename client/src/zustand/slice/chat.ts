@@ -33,6 +33,8 @@ const useChatStore = create<{
 
   language: string;
   setLanguage: (translateLanguage: string) => void;
+
+  updateMessage: (id: string, updated: any) => void;
 }>((set) => ({
   selectedChatType: "",
   setSelectedChatType: (selectedChatType: string) => set({ selectedChatType }),
@@ -59,6 +61,13 @@ const useChatStore = create<{
 
   language: "en",
   setLanguage: (language: string) => set({ language }),
+
+  updateMessage: (id: string, updated: any) =>
+    set((state) => ({
+      messages: state.messages.map((message) =>
+        message._id === id ? { ...message, ...updated } : message
+      ),
+    })),
 }));
 
 export default useChatStore;

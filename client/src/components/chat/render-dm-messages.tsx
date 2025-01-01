@@ -22,25 +22,27 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { Message } from "@/zustand/slice/chat";
-import { useSocket } from "@/context/socket-context";
-import { useChatStore, useAuthStore } from "@/zustand"
-import { useEffect, useState } from "react";
 import { checkImageType, decryptMessage } from "@/utils";
+import { useChatStore, useAuthStore } from "@/zustand";
+import { useDisableAnimations } from "@/hooks";
+import { useSocket } from "@/context/socket-context";
+import { useInView } from "react-intersection-observer";
+import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import moment from "moment";
 import api from "@/lib/api";
 
-const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMessageId: string }) => {
+const RenderDMMessages = ({
+  message, lastMessageId: lid
+}: {
+  message: Message, lastMessageId: string
+}) => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
-  const { selectedChatData, messages, setMessages, language } = useChatStore();
-
-  const shakeClass = message._id === lastMessageId ? "shake" : "";
-  const deletedMessage = message.sender === selectedChatData?._id
-    ? "This message was deleted" : "You deleted this message";
+  const { selectedChatData, updateMessage, language } = useChatStore();
 
   const copyToClipboard = (text: string) => {
     try {
-      // const stringifiedData = JSON.stringify(dataToCopy, null, 2);
       navigator.clipboard.writeText(text);
       toast.info("Message copied to clipboard!");
     } catch (error) {
@@ -49,9 +51,8 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
   };
 
   useEffect(() => {
-    const messageRemove = (current: any) => {
-      const updatedMessages = messages.map(message => message._id === current._id ? current : message);
-      setMessages(updatedMessages);
+    const messageRemove = (current: Message) => {
+      updateMessage(current._id, current);
     };
 
     socket?.on("message:remove", messageRemove);
@@ -59,14 +60,13 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
     return () => {
       socket?.off("message:remove", messageRemove);
     };
-  }, [socket, messages, setMessages]);
+  }, []);
 
   const deleteSelectedMessage = async (id: string) => {
     try {
       const response = await api.delete(`/api/message/delete/${id}`);
-      const deletedMessage = await response.data.data;
-      const updatedMessages = messages.map(message => message._id === deletedMessage._id ? deletedMessage : message);
-      setMessages([...updatedMessages]);
+      const deleted: Message = await response.data.data;
+      updateMessage(deleted._id, deleted);
       toast.info(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
@@ -126,97 +126,109 @@ const RenderDMMessages = ({ message, lastMessageId }: { message: Message, lastMe
     }
   }, [translation]);
 
+  const mergeRefs = (...refs: any[]) => (element: any) => {
+    refs.forEach((ref) => {
+      if (typeof ref === "function") {
+        ref(element);
+      } else {
+        ref.current = element;
+      }
+    });
+  };
+
+  const isSender = message.sender === selectedChatData?._id;
+
+  const { ref: inViewRef, inView } = useInView({
+    threshold: 0.3,
+  });
+
+  const elementRef = useRef<any>(null);
+  useDisableAnimations(socket!, elementRef);
+
   return (
-    <div className={`${message.sender !== selectedChatData?._id ? "text-right" : "text-left"} w-full`}>
-      {message && (
-        <>
-          <ContextMenu>
-            <ContextMenuTrigger className={`${message.sender !== selectedChatData?._id
-              ? "bg-gray-200 text-gray-950 border-white/20"
-              : "bg-gray-100 text-gray-900 border-white/10"} 
-                border inline-block p-3 rounded-sm my-1 break-words
-                md:max-w-[90%] lg:max-w-[80%] xl:max-w-[70%] ${shakeClass}
-                ${message.type === "deleted" ? "cursor-not-allowed" : "cursor-default"}`}>
-              {/* Right click here */}
-              {message.type === "deleted" ? (
-                <span className="flex items-center gap-1 italic text-base">
-                  <HiOutlineNoSymbol size={16} /> {deletedMessage}
-                </span>
-              ) : (
-                <>
-                  {/* For test message type */}
-                  {message.type === "text" && message.text !== "" && (
-                    <span className="text-base">{plainText(message)}</span>
-                  )}
-                  {/* For file message type */}
-                  {message.type === "file" && (
-                    checkImageType(message.file!) ? (
-                      <img src={message.file} alt="Image file" className="h-60 w-auto rounded" />
-                    ) : (
-                      <span className="flex items-center gap-1 text-base">
-                        <HiOutlineDocumentArrowDown size={16} /> Download for view this file
-                      </span>
-                    ))}
-                </>
+    <div className={`w-full flex flex-col gap-2 mb-4 ${isSender ? "items-start text-left" : "items-end text-right"}`}>
+      <ContextMenu>
+        <ContextMenuTrigger ref={mergeRefs(inViewRef, elementRef)} className={cn(`inline-block border rounded-sm break-words p-3 transition duration-300 ease-in-out transform md:max-w-[90%] lg:max-w-[80%] xl:max-w-[70%] text-gray-950 ${isSender ? "bg-gray-100 border-gray-200" : "bg-gray-200 border-gray-300"}
+         ${message.type === "deleted" ? "cursor-not-allowed" : "cursor-default"} ${message._id === lid && "shake"}
+         ${inView ? "opacity-100 translate-x-0" : `opacity-0 ${isSender ? "translate-x-16" : "-translate-x-16"}`}`)}>
+          {/* Right click here */}
+          {message.type === "deleted" ? (
+            <span className="flex items-center gap-1 italic text-base">
+              <HiOutlineNoSymbol size={16} /> {isSender ? "This message was deleted" : "You deleted this message"}
+            </span>
+          ) : (
+            <>
+              {/* For test message type */}
+              {message.type === "text" && message.text !== "" && (
+                <span className="text-base">{plainText(message)}</span>
               )}
-            </ContextMenuTrigger>
-            {message.type !== "deleted" && (
-              <ContextMenuContent className="w-20 flex flex-col gap-2 p-2 transition-all duration-500">
-                {message.type === "text" && (
-                  <>
-                    {language !== "en" && (
-                      <ContextMenuItem className="flex gap-2" onClick={() => setTextAndLanguage(plainText(message))}>
-                        <HiOutlineLanguage size={16} /> Translate
-                      </ContextMenuItem>
-                    )}
-                    <ContextMenuItem className="flex gap-2" onClick={() => copyToClipboard(plainText(message))}>
-                      <HiOutlineClipboardDocument size={16} /> Copy
-                    </ContextMenuItem>
-                  </>
-                )}
-                {message.type === "file" && (
-                  <>
-                    {checkImageType(message.file!) && (
-                      <ContextMenuItem className="flex gap-2" onClick={() => setImageViewExtend(true)}>
-                        <HiOutlineViewfinderCircle size={16} /> View
-                      </ContextMenuItem>
-                    )}
-                    <ContextMenuItem className="flex gap-2" onClick={() => handleDownload(message)}>
-                      <HiOutlineCloudArrowDown size={16} /> Download
-                    </ContextMenuItem>
-                  </>
-                )}
-                {message.recipient === selectedChatData?._id && (
-                  <ContextMenuItem className="flex gap-2" onClick={() => deleteSelectedMessage(message._id)}>
-                    <HiOutlineTrash size={16} /> Delete
+              {/* For file message type */}
+              {message.type === "file" && (
+                checkImageType(message.file!) ? (
+                  <img src={message.file} alt="Image file" className="h-60 w-auto rounded" />
+                ) : (
+                  <span className="flex items-center gap-1 text-base">
+                    <HiOutlineDocumentArrowDown size={16} /> Download for view this file
+                  </span>
+                ))}
+            </>
+          )}
+        </ContextMenuTrigger>
+        {message.type !== "deleted" && (
+          <ContextMenuContent className="w-20 flex flex-col gap-2 p-2 transition-all duration-500">
+            {message.type === "text" && (
+              <>
+                {language !== "en" && (
+                  <ContextMenuItem className="flex gap-2" onClick={() => setTextAndLanguage(plainText(message))}>
+                    <HiOutlineLanguage size={16} /> Translate
                   </ContextMenuItem>
                 )}
-              </ContextMenuContent>
+                <ContextMenuItem className="flex gap-2" onClick={() => copyToClipboard(plainText(message))}>
+                  <HiOutlineClipboardDocument size={16} /> Copy
+                </ContextMenuItem>
+              </>
             )}
-          </ContextMenu>
-          {/* Translated Message */}
-          {translated !== "" && (
-            <div className="text-base p-2">{translated}</div>
-          )}
-          <div className="text-xs text-gray-600 mb-2">
-            {message.type === "deleted"
-              ? `${moment(message.updatedAt).format("LT")}`
-              : `${moment(message.createdAt).format("LT")}`}
-          </div>
-          {/* Dialog for image extend view */}
-          <Dialog open={imageViewExtend} onOpenChange={setImageViewExtend}>
-            <DialogContent className="h-96 w-[90vw] lg:h-auto lg:w-auto bg-gray-50 rounded">
-              <DialogHeader>
-                <DialogTitle className="text-start">Extend View Mode</DialogTitle>
-                <DialogDescription className="hidden"></DialogDescription>
-              </DialogHeader>
-              <div className="min-h-max">
-                <img src={message?.file} alt="Extend view" className="size-fit rounded" />
-              </div>
-            </DialogContent>
-          </Dialog>
-        </>
+            {message.type === "file" && (
+              <>
+                {checkImageType(message.file!) && (
+                  <ContextMenuItem className="flex gap-2" onClick={() => setImageViewExtend(true)}>
+                    <HiOutlineViewfinderCircle size={16} /> View
+                  </ContextMenuItem>
+                )}
+                <ContextMenuItem className="flex gap-2" onClick={() => handleDownload(message)}>
+                  <HiOutlineCloudArrowDown size={16} /> Download
+                </ContextMenuItem>
+              </>
+            )}
+            {message.recipient === selectedChatData?._id && (
+              <ContextMenuItem className="flex gap-2" onClick={() => deleteSelectedMessage(message._id)}>
+                <HiOutlineTrash size={16} /> Delete
+              </ContextMenuItem>
+            )}
+          </ContextMenuContent>
+        )}
+      </ContextMenu>
+      {/* Translated Message */}
+      {translated !== "" && (
+        <span className="text-base">{translated}</span>
       )}
+      <span className="text-xs text-gray-600">
+        {message.type === "deleted"
+          ? `${moment(message.updatedAt).format("LT")}`
+          : `${moment(message.createdAt).format("LT")}`}
+      </span>
+      {/* Dialog for image extend view */}
+      <Dialog open={imageViewExtend} onOpenChange={setImageViewExtend}>
+        <DialogContent className="h-96 w-[90vw] lg:h-auto lg:w-auto bg-gray-50 rounded">
+          <DialogHeader>
+            <DialogTitle className="text-start">Extend View Mode</DialogTitle>
+            <DialogDescription className="hidden"></DialogDescription>
+          </DialogHeader>
+          <div className="min-h-max">
+            <img src={message?.file} alt="Extend view" className="size-fit rounded" />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

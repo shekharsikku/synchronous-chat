@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { Socket } from "socket.io-client";
 import { useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChangeEvent, ChangeEventHandler, useState } from "react";
@@ -71,7 +72,7 @@ export const useSignOutUser = () => {
       const response = await api.delete("/api/auth/sign-out");
       toast.success(response.data.message);
       setIsAuthenticated(false);
-      setUserInfo(null!);      
+      setUserInfo(null!);
       dispatch(logout());
       closeChat();
       navigate("/auth");
@@ -172,4 +173,34 @@ export const useAvatar = (userInformation: any) => {
     }
   }
   return avatar;
+};
+
+export const useDisableAnimations = (socket: Socket, ref: any) => {
+  useEffect(() => {
+    if (!socket || !ref?.current) return;
+
+    const disableAnimations = () => {
+      if (ref.current) {
+        ref.current.classList.add("transform-none");
+      }
+    };
+
+    const enableAnimations = () => {
+      if (ref.current) {
+        ref.current.classList.remove("transform-none");
+      }
+    };
+
+    socket.onAny(() => {
+      disableAnimations();
+
+      setTimeout(() => {
+        enableAnimations();
+      }, 5000);
+    });
+
+    return () => {
+      socket.offAny();
+    };
+  }, [socket, ref]);
 };
