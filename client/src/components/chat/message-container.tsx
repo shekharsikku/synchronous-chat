@@ -75,7 +75,6 @@ const MessageContainer = () => {
     }, 100);
   }, [messages, isLoading]);
 
-
   return (
     <div className="w-full flex-1 overflow-y-auto scrollbar-hide scroll-smooth px-4">
       {isLoading ? (

@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { Auth, Chat, Profile } from "@/pages";
 import { useAuthStore } from "@/zustand";
 import { useGetUserInfo, useAuthRefresh } from "@/hooks";
@@ -19,6 +19,7 @@ const AuthRoute = ({ children }: Readonly<{
 }
 
 const App = () => {
+  const navigate = useNavigate();
   const { getUserInfo } = useGetUserInfo();
   const { authRefresh } = useAuthRefresh();
   const { userInfo, isAuthenticated } = useAuthStore();
@@ -28,26 +29,56 @@ const App = () => {
   }, [userInfo, isAuthenticated]);
 
   useEffect(() => {
-    /** refresh token on app load */
-    const initialRefresh = async () => await authRefresh();
+    const initialRefresh = async () => {
+      const success = await authRefresh();
+      if (success) {
+        navigate("/chat");
+      } else {
+        navigate("/auth");
+      }
+    };
+
     initialRefresh();
 
-    /** regular refresh every 50 minutes */
     const intervalRefresh = setInterval(async () => {
-      await authRefresh();
+      const success = await authRefresh();
+      if (!success && import.meta.env.DEV) {
+        console.warn("Auth refresh failed during interval!");
+      }
     }, 50 * 60 * 1000);
 
-    /** cleanup function for next app mount/unmount */
-    return () => clearInterval(intervalRefresh);
+    return () => {
+      clearInterval(intervalRefresh);
+    }
   }, []);
 
   useEffect(() => {
-    /** refresh token when the user comes online */
-    const onlineRefresh = async () => await authRefresh();
+    const onlineRefresh = async () => {
+      const success = await authRefresh();
+      if (success) {
+        navigate("/chat");
+      }
+    };
+
     window.addEventListener("online", onlineRefresh);
 
-    /** cleanup function for next app mount/unmount */
-    return () => window.removeEventListener("online", onlineRefresh);
+    return () => {
+      window.removeEventListener("online", onlineRefresh);
+    }
+  }, []);
+
+  useEffect(() => {
+    const disableRightClick = (event: MouseEvent) => {
+      if (import.meta.env.PROD) {
+        event.preventDefault();
+      }
+    }
+
+    document.addEventListener("contextmenu", disableRightClick);
+
+    return () => {
+      document.removeEventListener("contextmenu", disableRightClick);
+    }
   }, []);
 
   return (

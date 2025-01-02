@@ -202,7 +202,7 @@ const Profile = () => {
     <main className="h-screen w-screen grid place-content-center">
       <div className="bg-white border-2 border-white text-opacity-90 shadow-2xl rounded-md grid lg:grid-cols-2 
       h-max w-[90vw] sm:w-[70vw] md:w-[50vw] lg:w-[70vw] xl:w-[60vw] px-8 sm:px-12 py-16 lg:p-20 lg:gap-16">
-        <div className="w-full flex flex-col gap-3 items-center justify-end lg:justify-center">
+        <div className="w-full flex flex-col gap-2 xl:gap-3 items-center justify-end lg:justify-center">
           <div className="w-full flex flex-col gap-2 items-center justify-center">
             <h2 className="text-3xl font-extrabold xl:text-4xl">Welcome User!</h2>
             <p className="text-sm sm:text-base text-center text-gray-700">
@@ -238,10 +238,10 @@ const Profile = () => {
             />
           </div>
           <div className="flex flex-col gap-3 w-full mb-3 lg:mb-1">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="profile-email">Email</Label>
             <Input
               type="email"
-              id="email"
+              id="profile-email"
               name="email"
               placeholder="Email"
               readOnly
@@ -262,11 +262,11 @@ const Profile = () => {
         </div>
 
         <div className="flex-1 flex flex-col gap-3 lg:gap-4 items-center justify-start lg:justify-center">
-          <div className="flex flex-col gap-3 w-full">
-            <Label htmlFor="fullName">Name</Label>
+          <div className="flex flex-col gap-2 xl:gap-3 w-full">
+            <Label htmlFor="full-name">Name</Label>
             <Input
               type="text"
-              id="name"
+              id="full-name"
               name="name"
               placeholder="Name"
               autoComplete="off"

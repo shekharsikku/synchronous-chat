@@ -86,10 +86,10 @@ export const useSignOutUser = () => {
 export const useAuthRefresh = () => {
   const authRefresh = async () => {
     try {
-      const response = await api.get("/api/auth/auth-refresh");
-      return response.data;
+      await api.get("/api/auth/auth-refresh");
+      return true;
     } catch (error: any) {
-      return error.response.data;
+      return false;
     }
   };
   return { authRefresh };

@@ -28,5 +28,4 @@ const ContactListSkeleton = ({
   );
 };
 
-
 export { ContactListSkeleton };

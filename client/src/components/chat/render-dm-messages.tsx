@@ -154,7 +154,7 @@ const RenderDMMessages = ({
           {/* Right click here */}
           {message.type === "deleted" ? (
             <span className="flex items-center gap-1 italic text-base">
-              <HiOutlineNoSymbol size={16} /> {isSender ? "This message was deleted" : "You deleted this message"}
+              <HiOutlineNoSymbol size={16} /> {isSender ? "This message was deleted." : "You deleted this message."}
             </span>
           ) : (
             <>
@@ -167,8 +167,8 @@ const RenderDMMessages = ({
                 checkImageType(message.file!) ? (
                   <img src={message.file} alt="Image file" className="h-60 w-auto rounded" />
                 ) : (
-                  <span className="flex items-center gap-1 text-base">
-                    <HiOutlineDocumentArrowDown size={16} /> Download for view this file
+                  <span className="flex items-center gap-1 italic text-base">
+                    <HiOutlineDocumentArrowDown size={16} /> Download this file to view it.
                   </span>
                 ))}
             </>
