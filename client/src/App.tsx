@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import { Auth, Chat, Profile } from "@/pages";
 import { useAuthStore } from "@/zustand";
 import { useGetUserInfo, useAuthRefresh } from "@/hooks";
@@ -20,6 +20,8 @@ const AuthRoute = ({ children }: Readonly<{
 
 const App = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  
   const { getUserInfo } = useGetUserInfo();
   const { authRefresh } = useAuthRefresh();
   const { userInfo, isAuthenticated } = useAuthStore();
@@ -56,7 +58,10 @@ const App = () => {
     const onlineRefresh = async () => {
       const success = await authRefresh();
       if (success) {
-        navigate("/chat");
+        getUserInfo();
+        if (location.pathname === "/auth") {
+          navigate("/chat");
+        }
       }
     };
 
