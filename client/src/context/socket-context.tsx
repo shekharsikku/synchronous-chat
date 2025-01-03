@@ -25,7 +25,7 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [onlineUsers, setOnlineUsers] = useState({});
 
   useEffect(() => {
-    if (userInfo) {
+    if (userInfo?.setup) {
       const socket = io(serverApiUrl, {
         withCredentials: true,
         query: { userId: userInfo._id }

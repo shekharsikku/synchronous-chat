@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 import { signUpSchema, signInSchema, validateEmail, removeSpaces, validateDummyEmail } from "@/utils";
-import { InitialValuesProps, useHandleForm } from "@/hooks";
+import { InitialValuesProps, useGetUserInfo, useHandleForm } from "@/hooks";
 import { useAuthStore } from "@/zustand";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -17,6 +17,7 @@ import api from "@/lib/api";
 const Auth = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { getUserInfo } = useGetUserInfo();
   const { setIsAuthenticated } = useAuthStore();
 
   /** Handlers for sign-in */
@@ -48,6 +49,10 @@ const Auth = () => {
         setIsAuthenticated(true);
         setSignInValue(initialSignInValues);
         dispatch(login(result));
+
+        if (response.data.success) {
+          getUserInfo();
+        }
 
         if (result.setup) {
           toast.success(response.data.message);
@@ -95,7 +100,7 @@ const Auth = () => {
   }
 
   return (
-    <main className="h-screen w-screen grid place-content-center">
+    <div className="h-screen w-screen grid place-content-center">
       <div className="shadow-2xl rounded-md grid lg:grid-cols-2 transition-all duration-0 
       h-max w-[90vw] sm:w-[70vw] md:w-[50vw] lg:w-max px-8 sm:px-12 py-16 lg:p-20 lg:gap-16">
         <div className="flex flex-col gap-2 items-center justify-center">
@@ -194,7 +199,7 @@ const Auth = () => {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   )
 }
 

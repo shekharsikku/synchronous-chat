@@ -199,7 +199,7 @@ const Profile = () => {
   }, [socket]);
 
   return (
-    <main className="h-screen w-screen grid place-content-center">
+    <div className="h-screen w-screen grid place-content-center">
       <div className="bg-white border-2 border-white text-opacity-90 shadow-2xl rounded-md grid lg:grid-cols-2 
       h-max w-[90vw] sm:w-[70vw] md:w-[50vw] lg:w-[70vw] xl:w-[60vw] px-8 sm:px-12 py-16 lg:p-20 lg:gap-16">
         <div className="w-full flex flex-col gap-2 xl:gap-3 items-center justify-end lg:justify-center">
@@ -420,7 +420,7 @@ const Profile = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </main>
+    </div>
   )
 }
 

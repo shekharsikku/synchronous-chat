@@ -32,11 +32,11 @@ const ContactsContainer = () => {
   }
 
   useEffect(() => {
-    fetchAllContacts();
-  }, []);
+    if (!contacts) fetchAllContacts();
+  }, [contacts]);
 
   useEffect(() => {
-    socket?.on("conversation:updated", (data) => {
+    const handleConversationUpdate = (data: any) => {
       setContacts((previous: any) => {
         const updatedContacts = previous?.map((current: any) =>
           current._id === data._id
@@ -53,10 +53,16 @@ const ContactsContainer = () => {
       });
 
       if (selectedChatData?._id === data._id) {
-        setSelectedChatData({ ...selectedChatData, interaction: data.interaction })
+        setSelectedChatData({ ...selectedChatData, interaction: data.interaction });
       }
-    });
-  }, [socket]);
+    };
+
+    socket?.on("conversation:updated", handleConversationUpdate);
+
+    return () => {
+      socket?.off("conversation:updated", handleConversationUpdate);
+    };
+  }, [socket, selectedChatData]);
 
   useEffect(() => {
     if (contacts && selectedChatData) {
@@ -115,7 +121,7 @@ const ContactsContainer = () => {
               ) : (
                 <ScrollArea className="h-full overflow-y-auto scrollbar-hide">
                   <div className="flex flex-col gap-4">
-                    {contacts?.map((contact) => (
+                    {contacts?.map((contact: any) => (
                       <div key={contact?._id} className={`w-full flex items-center justify-between cursor-pointer transition-all duration-300 rounded border py-2 px-4 xl:px-6 text-gray-600 hover:bg-gray-100 
                         ${selectedChatData && selectedChatData._id === contact._id && "bg-gray-100/80 text-gray-700 border-gray-300/50"} ${contact?.setup === false && "disabled"} `} onClick={() => selectNewContact(contact)}>
                         <div className="flex items-center gap-4">

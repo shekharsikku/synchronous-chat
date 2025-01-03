@@ -14,8 +14,8 @@ const ProtectedRoute = ({ children }: Readonly<{
 const AuthRoute = ({ children }: Readonly<{
   children: React.ReactNode;
 }>) => {
-  const { isAuthenticated } = useAuthStore();
-  return isAuthenticated ? <Navigate to="/chat" /> : children;
+  const { isAuthenticated, userInfo } = useAuthStore();
+  return isAuthenticated && userInfo?.setup ? <Navigate to="/chat" /> : children;
 }
 
 const App = () => {
@@ -27,7 +27,7 @@ const App = () => {
   const { userInfo, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    if (!userInfo || !isAuthenticated) getUserInfo();
+    if (!userInfo && !isAuthenticated) getUserInfo();
   }, [userInfo, isAuthenticated]);
 
   useEffect(() => {
