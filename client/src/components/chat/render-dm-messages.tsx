@@ -25,7 +25,7 @@ import { Message } from "@/zustand/slice/chat";
 import { checkImageType, decryptMessage } from "@/utils";
 import { useChatStore, useAuthStore } from "@/zustand";
 import { useDisableAnimations } from "@/hooks";
-import { useSocket } from "@/context/socket-context";
+import { useSocket } from "@/context";
 import { useInView } from "react-intersection-observer";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -33,7 +33,7 @@ import moment from "moment";
 import api from "@/lib/api";
 
 const RenderDMMessages = ({
-  message, lastMessageId: lid
+  message, lastMessageId: lastId
 }: {
   message: Message, lastMessageId: string
 }) => {
@@ -148,9 +148,12 @@ const RenderDMMessages = ({
   return (
     <div className={`w-full flex flex-col gap-2 mb-4 ${isSender ? "items-start text-left" : "items-end text-right"}`}>
       <ContextMenu>
-        <ContextMenuTrigger ref={mergeRefs(inViewRef, elementRef)} className={cn(`inline-block border rounded-sm break-words p-3 transition duration-300 ease-in-out transform md:max-w-[90%] lg:max-w-[80%] xl:max-w-[70%] text-gray-950 ${isSender ? "bg-gray-100 border-gray-200" : "bg-gray-200 border-gray-300"}
-         ${message.type === "deleted" ? "cursor-not-allowed" : "cursor-default"} ${message._id === lid && "shake"}
-         ${inView ? "opacity-100 translate-x-0" : `opacity-0 ${isSender ? "translate-x-16" : "-translate-x-16"}`}`)}>
+        <ContextMenuTrigger ref={mergeRefs(inViewRef, elementRef)}
+          className={cn("inline-block border rounded-sm p-3 break-words transition duration-300 ease-in-out transform text-start text-gray-950 max-w-[90%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[75%] xl:max-w-[70%]",
+            isSender ? "bg-gray-100 border-gray-200" : "bg-gray-200 border-gray-300",
+            message.type === "deleted" ? "cursor-not-allowed" : "cursor-default", message._id === lastId && "shake",
+            inView ? "opacity-100 translate-x-0" : `opacity-0 ${isSender ? "translate-x-16" : "-translate-x-16"}`
+          )}>
           {/* Right click here */}
           {message.type === "deleted" ? (
             <span className="flex items-center gap-1 italic text-base">

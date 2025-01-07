@@ -76,7 +76,7 @@ const AddNewChat = () => {
                       <div key={contact._id} className={`flex gap-4 border border-gray-200 w-full p-2 lg:px-3 xl:px-6 rounded
                     items-center hover:bg-gray-100/80 transition-all duration-300 cursor-pointer 
                     ${contact.name === "" ? "disabled" : ""}`} onClick={() => selectNewContact(contact)}>
-                        <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">
+                        <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
                           <AvatarImage src={useAvatar(contact)} alt="profile" className="object-fit h-full w-full" />
                           <AvatarFallback className={`uppercase h-full w-full text-xl border text-center font-medium 
                       transition-all duration-300`}>

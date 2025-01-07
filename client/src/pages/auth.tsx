@@ -1,89 +1,74 @@
+import { z } from "zod";
 import { toast } from "sonner";
-import { FormEvent } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from "@/components/ui/tabs";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
-import { signUpSchema, signInSchema, validateEmail, removeSpaces, validateDummyEmail } from "@/utils";
-import { InitialValuesProps, useGetUserInfo, useHandleForm } from "@/hooks";
+import { validateEmail, removeSpaces, validateDummyEmail } from "@/utils";
+import { useGetUserInfo } from "@/hooks";
 import { useAuthStore } from "@/zustand";
-import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
 import { login } from "@/redux/reducer/auth";
 import api from "@/lib/api";
+
+interface SignInInterface {
+  email?: string;
+  username?: string;
+  password: string;
+}
 
 const Auth = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { getUserInfo } = useGetUserInfo();
   const { setIsAuthenticated } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
 
-  /** Handlers for sign-in */
+  /** Hookform Zod Resolver - SignUp */
 
-  const initialSignInValues = { credentials: "", password: "" };
-  const [signInValue, setSignInValue, signInHandleChange] = useHandleForm(initialSignInValues);
+  const signUpSchema = z.object({
+    email: z.string().email({ message: "Invalid email address!" }),
+    password: z.string()
+      .min(8, { message: "Password must be at least 8 characters long!" })
+      .regex(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/, {
+        message: "Must have an uppercase, a lowercase letter, and a number!",
+      }),
+    confirm: z.string(),
+  })
+    .refine((data) => data.password === data.confirm, {
+      message: "Confirm password not matching!",
+      path: ["confirm"],
+    });
 
-  const handleSignInSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const signInData: InitialValuesProps = {
-      password: signInValue.password,
-    }
+  const signUpForm = useForm<z.infer<typeof signUpSchema>>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      confirm: "",
+    },
+  });
 
-    const isEmail = validateEmail(removeSpaces(signInValue.credentials!));
-
-    if (isEmail) {
-      signInData.email = removeSpaces(signInValue.credentials!);
-    } else {
-      signInData.username = removeSpaces(signInValue.credentials!);
-    }
-
-    const validatedField = signInSchema.safeParse(signInData);
-
-    if (validatedField.success) {
-      try {
-        const response = await api.post("/api/auth/sign-in", validatedField.data);
-        const result = await response.data.data;
-
-        setIsAuthenticated(true);
-        setSignInValue(initialSignInValues);
-        dispatch(login(result));
-
-        if (response.data.success) {
-          getUserInfo();
-        }
-
-        if (result.setup) {
-          toast.success(response.data.message);
-          navigate("/chat");
-        } else {
-          toast.info(response.data.message);
-          navigate("/profile");
-        }
-      } catch (error: any) {
-        toast.error(error.response.data.message);
-      }
-    } else {
-      toast.error(validatedField.error?.issues[0].message);
-    }
-  }
-
-  /** Handlers for sign-up */
-
-  const initialSignUpValue = { email: "", password: "", confirm: "" };
-  const [signUpValue, setSignUpValue, signUpHandleChange] = useHandleForm(initialSignUpValue);
-
-  const handleSignUpSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const validatedField = signUpSchema.safeParse(signUpValue);
-
-    if (validatedField.error) {
-      toast.error(validatedField.error?.issues[0].message);
-      return;
-    }
-
-    const isDummy = validateDummyEmail(validatedField.data.email);
+  const signUpSubmit = async (values: z.infer<typeof signUpSchema>) => {
+    const isDummy = validateDummyEmail(values.email);
 
     if (isDummy) {
       toast.info("Email not allowed choose a different one!");
@@ -91,13 +76,72 @@ const Auth = () => {
     }
 
     try {
-      const response = await api.post("/api/auth/sign-up", validatedField.data);
-      setSignUpValue(initialSignUpValue);
+      setIsLoading(true);
+      const response = await api.post("/api/auth/sign-up", values);
       toast.success(response.data.message);
+      signUpForm.reset();
     } catch (error: any) {
       toast.error(error.response.data.message);
+    } finally {
+      setIsLoading(false);
     }
   }
+
+  /** Hookform Zod Resolver - SignIn */
+
+  const signInSchema = z.object({
+    credential: z.string().min(1, { message: "Email or Username is required!" }),
+    password: z.string().min(1, { message: "Password is required!" }),
+  });
+
+  const signInForm = useForm<z.infer<typeof signInSchema>>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      credential: "",
+      password: "",
+    },
+  });
+
+  const signInSubmit = async (values: z.infer<typeof signInSchema>) => {
+    try {
+      setIsLoading(true);
+
+      const details: SignInInterface = {
+        password: values.password,
+      }
+
+      const isEmail = validateEmail(removeSpaces(values.credential));
+
+      if (isEmail) {
+        details.email = values.credential;
+      } else {
+        details.username = values.credential;
+      }
+
+      const response = await api.post("/api/auth/sign-in", details);
+      const result = await response.data.data;
+
+      if (response.data.success) {
+        getUserInfo();
+        setIsAuthenticated(true);
+        dispatch(login(result));
+      }
+
+      if (result.setup) {
+        toast.success(response.data.message);
+        navigate("/chat");
+      } else {
+        toast.info(response.data.message);
+        navigate("/profile");
+      }
+
+      signInForm.reset();
+    } catch (error: any) {
+      toast.error(error.response.data.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="h-screen w-screen grid place-content-center">
@@ -116,70 +160,125 @@ const Auth = () => {
                 <TabsTrigger value="sign-up" className="data-[state=active]:bg-transparent text-black text-opacity-90 border-b-2 rounded-none w-full data-[state=active]:text-black data-[state=active]:font-semibold data-[state=active]:border-b-gray-700 p-3 transition-all duration-300">Sign Up</TabsTrigger>
               </TabsList>
               <TabsContent value="sign-in">
-                <form onSubmit={handleSignInSubmit} className="flex flex-col gap-3 mt-6">
-                  <Label htmlFor="credentials">Email or Username</Label>
-                  <Input
-                    id="credentials"
-                    name="credentials"
-                    type="text"
-                    placeholder="Email or Username"
-                    autoComplete="off"
-                    onChange={signInHandleChange}
-                    value={signInValue.credentials || ""}
-                  />
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    placeholder="Password"
-                    autoComplete="off"
-                    onChange={signInHandleChange}
-                    value={signInValue.password || ""}
-                  />
-                  <Button size="lg" type="submit" className="w-full cursor-pointer 
-                  transition-all duration-300 font-semibold mt-1">
-                    Sign In
-                  </Button>
-                </form>
+                <Form {...signInForm}>
+                  <form onSubmit={signInForm.handleSubmit(signInSubmit)} className="flex flex-col gap-3 mt-6">
+                    <FormField
+                      control={signInForm.control}
+                      name="credential"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="grid gap-2">
+                            <FormLabel htmlFor="credential">Email or Username</FormLabel>
+                            <FormControl>
+                              <Input
+                                id="credential"
+                                type="text"
+                                placeholder="Email or Username"
+                                autoComplete="off"
+                                {...field}
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={signInForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="grid gap-2">
+                            <FormLabel htmlFor="password">Password</FormLabel>
+                            <FormControl>
+                              <Input
+                                id="password"
+                                type="password"
+                                autoComplete="off"
+                                placeholder="Password"
+                                {...field}
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
+                    <Button className="w-full cursor-pointer transition-all duration-300 font-semibold mt-1"
+                      size="lg" type="submit" disabled={isLoading}>Sign In</Button>
+                  </form>
+                </Form>
               </TabsContent>
               <TabsContent value="sign-up">
-                <form onSubmit={handleSignUpSubmit} className="flex flex-col gap-3 mt-6">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="example@mail.ai"
-                    autoComplete="off"
-                    onChange={signUpHandleChange}
-                    value={signUpValue.email || ""}
-                  />
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    placeholder="••••••••"
-                    autoComplete="off"
-                    onChange={signUpHandleChange}
-                    value={signUpValue.password || ""}
-                  />
-                  <Label htmlFor="confirm">Confirm Password</Label>
-                  <Input
-                    id="confirm"
-                    name="confirm"
-                    type="password"
-                    placeholder="••••••••"
-                    autoComplete="off"
-                    onChange={signUpHandleChange}
-                    value={signUpValue.confirm || ""}
-                  />
-                  <Button size="lg" type="submit" className="w-full cursor-pointer 
-                  transition-all duration-300 font-semibold mt-1">
-                    Sign Up
-                  </Button>
-                </form>
+                <Form {...signUpForm}>
+                  <form onSubmit={signUpForm.handleSubmit(signUpSubmit)} className="flex flex-col gap-3 mt-6">
+                    <FormField
+                      control={signUpForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="grid gap-2">
+                            <FormLabel htmlFor="email">Email</FormLabel>
+                            <FormControl>
+                              <Input
+                                id="email"
+                                type="email"
+                                placeholder="example@mail.ai"
+                                autoComplete="off"
+                                {...field}
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={signUpForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="grid gap-2">
+                            <FormLabel htmlFor="password">Password</FormLabel>
+                            <FormControl>
+                              <Input
+                                id="password"
+                                type="password"
+                                autoComplete="off"
+                                placeholder="••••••••"
+                                {...field}
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={signUpForm.control}
+                      name="confirm"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="grid gap-2">
+                            <FormLabel htmlFor="confirm">Confirm Password</FormLabel>
+                            <FormControl>
+                              <Input
+                                id="confirm"
+                                type="password"
+                                autoComplete="off"
+                                placeholder="••••••••"
+                                {...field}
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
+                    <Button className="w-full cursor-pointer transition-all duration-300 font-semibold mt-1"
+                      size="lg" type="submit" disabled={isLoading}>Sign Up</Button>
+                  </form>
+                </Form>
               </TabsContent>
             </Tabs>
           </div>

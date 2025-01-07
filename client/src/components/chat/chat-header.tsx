@@ -29,11 +29,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "../ui/scroll-area";
-import {
-  countUserMessages,
-  languageOptions
-} from "@/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { countUserMessages, languageOptions } from "@/utils";
 import { useEffect, useState } from "react";
 import { useChatStore } from "@/zustand";
 import { useAvatar } from "@/hooks";
@@ -57,7 +54,7 @@ const ChatHeader = () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger className="focus:outline-none">
-                <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer"
+                <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2"
                   onClick={() => setOpenUserInfoModal(true)}>
                   <AvatarImage src={userAvatar} alt="profile" className="object-fit h-full w-full" />
                   <AvatarFallback className={`uppercase h-full w-full text-xl border text-center font-medium 

@@ -1,11 +1,21 @@
-import { toast } from "sonner";
-import { useState, useEffect, useRef } from "react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, } from "@/components/ui/tooltip";
-import { HiOutlineFaceSmile, HiOutlineLink, HiOutlinePaperAirplane, HiOutlineBackspace } from "react-icons/hi2";
-import { useChatStore, useAuthStore } from "@/zustand";
-import { convertToBase64, encryptMessage } from "@/utils";
-import { useSocket } from "@/context/socket-context";
 import EmojiPicker from "emoji-picker-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  HiOutlineFaceSmile,
+  HiOutlineLink,
+  HiOutlinePaperAirplane,
+  HiOutlineBackspace
+} from "react-icons/hi2";
+import { convertToBase64, encryptMessage } from "@/utils";
+import { useChatStore, useAuthStore } from "@/zustand";
+import { useState, useEffect, useRef } from "react";
+import { useSocket } from "@/context";
+import { toast } from "sonner";
 import api from "@/lib/api";
 
 const MessageBar = () => {

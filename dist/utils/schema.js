@@ -39,7 +39,7 @@ exports.signInSchema = signInSchema;
 const profileSchema = zod_1.z.object({
     name: zod_1.z.string().min(3).max(30),
     username: zod_1.z.string().min(3).max(15),
-    gender: zod_1.z.enum(["Male", "Female"]),
+    gender: zod_1.z.enum(["Male", "Female", "Other"]),
     bio: zod_1.z.string(),
 });
 exports.profileSchema = profileSchema;

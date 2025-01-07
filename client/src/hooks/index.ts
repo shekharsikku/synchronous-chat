@@ -1,46 +1,17 @@
 import { toast } from "sonner";
 import { Socket } from "socket.io-client";
-import { useEffect, useCallback, useRef } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { ChangeEvent, ChangeEventHandler, useState } from "react";
-import { Message } from "@/zustand/slice/chat";
-import { useSocket } from "@/context/socket-context";
+import { useEffect, useCallback, useRef } from "react";
+import { useSocket } from "@/context";
 import { useAuthStore, useChatStore } from "@/zustand";
+import { logout, currentUser } from "@/redux/reducer/auth";
+import { Message } from "@/zustand/slice/chat";
 import notificationSound from "@/assets/sound/message-alert.mp3";
 import maleAvatar from "@/assets/male-avatar.jpg";
 import femaleAvatar from "@/assets/female-avatar.jpg";
 import noAvatar from "@/assets/no-avatar.png";
 import api from "@/lib/api";
-
-import { useDispatch } from "react-redux";
-import { logout, currentUser } from "@/redux/reducer/auth";
-
-export interface InitialValuesProps {
-  email?: string;
-  username?: string;
-  password?: string;
-  confirm?: string;
-  credentials?: string;
-  old_password?: string;
-  new_password?: string;
-  confirm_password?: string;
-}
-
-export const useHandleForm = (
-  initialValues: InitialValuesProps
-): [
-  values: InitialValuesProps,
-  setValues: CallableFunction,
-  handleChange: ChangeEventHandler
-] => {
-  const [values, setValues] = useState<InitialValuesProps>(initialValues);
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    setValues({ ...values, [e.target.name]: e.target.value });
-  };
-  return [values, setValues, handleChange];
-};
 
 export const useGetUserInfo = () => {
   const dispatch = useDispatch();

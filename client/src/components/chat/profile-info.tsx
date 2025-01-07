@@ -1,11 +1,24 @@
-import { useNavigate } from "react-router-dom";
+import {
+  HiOutlineBellAlert,
+  HiOutlineBellSlash,
+  HiOutlineArrowRightOnRectangle,
+} from "react-icons/hi2";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage
+} from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useAuthStore, useChatStore } from "@/zustand";
 import { useSignOutUser, useAvatar } from "@/hooks";
-import { HiOutlineArrowRightOnRectangle, HiOutlineSpeakerWave, HiOutlineSpeakerXMark } from "react-icons/hi2";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, } from "@/components/ui/tooltip";
-import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
 const ProfileInfo = () => {
   /** This state have authenticated and userData */
@@ -31,7 +44,7 @@ const ProfileInfo = () => {
           <Tooltip>
             <TooltipTrigger className="focus:outline-none">
               <div className="flex gap-4 items-center" onClick={() => navigate("/profile")}>
-                <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">
+                <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
                   <AvatarImage src={avatar} alt="profile" className="object-fit h-full w-full" />
                   <AvatarFallback className={`uppercase h-full w-full text-xl border text-center font-medium 
                       transition-all duration-300 bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]`}>
@@ -55,15 +68,15 @@ const ProfileInfo = () => {
             <Tooltip>
               <TooltipTrigger className="focus:outline-none">
                 {isSoundAllow ? (
-                  <HiOutlineSpeakerWave size={20} onClick={() => setIsSoundAllow(false)}
+                  <HiOutlineBellAlert size={20} onClick={() => setIsSoundAllow(false)}
                     className="text-neutral-600 border-none outline-none transition-all duration-300" />
                 ) : (
-                  <HiOutlineSpeakerXMark size={20} onClick={() => setIsSoundAllow(true)}
+                  <HiOutlineBellSlash size={20} onClick={() => setIsSoundAllow(true)}
                     className="text-neutral-600 border-none outline-none transition-all duration-300" />
                 )}
               </TooltipTrigger>
               <TooltipContent>
-                <span className="text-neutral-700 font-medium">Sound</span>
+                <span className="text-neutral-700 font-medium">Message Alert</span>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

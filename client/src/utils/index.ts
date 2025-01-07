@@ -1,40 +1,4 @@
-import { z } from "zod";
 import CryptoJS from "crypto-js";
-
-export const signUpSchema = z
-  .object({
-    email: z.string().email({ message: "Invalid email address!" }),
-    password: z.string().min(6, { message: "Password is too short!" }),
-    confirm: z.string(),
-  })
-  .refine((data) => data.password === data.confirm, {
-    message: "Confirm password not matching!",
-  });
-
-export const signInSchema = z
-  .object({
-    email: z.string().email({ message: "Invalid email address!" }).optional(),
-    username: z.string().optional(),
-    password: z.string().min(1, { message: "Password is required!" }),
-    device_information: z.string().optional(),
-  })
-  .refine((data) => data.email || data.username, {
-    message: "Email or Username required!",
-    path: ["email", "username"],
-  });
-
-export const changePasswordSchema = z
-  .object({
-    old_password: z.string(),
-    new_password: z.string().min(6, { message: "New password is too short!" }),
-    confirm_password: z
-      .string()
-      .min(6, { message: "Confirm password too short!" }),
-  })
-  .refine((data) => data.new_password === data.confirm_password, {
-    message: "Confirm password not matching!",
-    path: ["new_password", "confirm_password"],
-  });
 
 export const validateUsername = (username: string) => {
   const re = /^(?![_-])[a-z0-9_-]{3,15}(?<![_-])$/;
@@ -108,10 +72,7 @@ export const countUserMessages = (messages: any, selectedChat: any) => {
     }
   });
 
-  return {
-    sent: sentCount,
-    received: receivedCount,
-  };
+  return { sent: sentCount, received: receivedCount };
 };
 
 export const encryptMessage = (messageText: string, userId: string) => {

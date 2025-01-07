@@ -1,14 +1,21 @@
-import { Logo, Title } from "@/components";
-import { ProfileInfo } from "./profile-info";
-import { AddNewChat } from "./add-new-chat";
+import {
+  HiMiniSignal,
+  HiMiniSignalSlash
+} from "react-icons/hi2";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage
+} from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ContactListSkeleton } from "./contact-list-skeleton";
-import { useSocket } from "@/context/socket-context";
-import { useEffect, useState } from "react";
+import { Logo, Title } from "./logo-title";
+import { AddNewChat } from "./add-new-chat";
+import { ProfileInfo } from "./profile-info";
 import { UserInfo } from "@/zustand/slice/auth";
-import { ScrollArea } from "../ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { HiMiniSignal, HiMiniSignalSlash } from "react-icons/hi2";
+import { useEffect, useState } from "react";
 import { useChatStore } from "@/zustand";
+import { useSocket } from "@/context";
 import { useAvatar } from "@/hooks";
 import api from "@/lib/api";
 
@@ -100,7 +107,7 @@ const ContactsContainer = () => {
   }
 
   return (
-    <div className="relative md:w-[35vw] lg:w-[30vw] xl:w-[25vw] border-r w-full h-full">
+    <div className="h-full w-full md:w-1/3 xl:w-1/4 border-r relative">
       <div className="h-bar border-b p-2">
         <Logo />
       </div>
@@ -125,7 +132,7 @@ const ContactsContainer = () => {
                       <div key={contact?._id} className={`w-full flex items-center justify-between cursor-pointer transition-all duration-300 rounded border py-2 px-4 xl:px-6 text-gray-600 hover:bg-gray-100 
                         ${selectedChatData && selectedChatData._id === contact._id && "bg-gray-100/80 text-gray-700 border-gray-300/50"} ${contact?.setup === false && "disabled"} `} onClick={() => selectNewContact(contact)}>
                         <div className="flex items-center gap-4">
-                          <Avatar className="h-8 w-8 rounded-full overflow-hidden cursor-pointer">
+                          <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
                             <AvatarImage src={useAvatar(contact)} alt="profile" className="object-fit h-full w-full" />
                             <AvatarFallback className={`uppercase h-full w-full text-xl border text-center font-medium transition-all duration-300`}>
                               {contact?.username?.split("").shift() || contact?.email?.split("").shift()}

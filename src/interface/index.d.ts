@@ -6,7 +6,7 @@ interface UserInterface extends Document {
   email: string;
   username?: string;
   password?: string;
-  gender?: "Male" | "Female";
+  gender?: "Male" | "Female" | "Other";
   image?: string;
   bio?: string;
   setup?: boolean;
@@ -25,7 +25,7 @@ interface TokenInterface {
 interface DetailInterface {
   name: string;
   username: string;
-  gender: "Male" | "Female";
+  gender: "Male" | "Female" | "Other";
   bio: string;
   setup?: boolean;
 }

@@ -1,10 +1,36 @@
+import { z } from "zod";
 import { toast } from "sonner";
-import { useState, useRef, useEffect, FormEvent } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage
+} from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -33,10 +59,9 @@ import {
   HiOutlineArrowRightOnRectangle,
   HiOutlineChatBubbleLeftRight,
 } from "react-icons/hi2";
-import { changePasswordSchema, validateUsername } from "@/utils";
-import { useHandleForm, useSignOutUser } from "@/hooks";
+import { useSignOutUser } from "@/hooks";
 import { useAuthStore } from "@/zustand";
-import { useSocket } from "@/context/socket-context";
+import { useSocket } from "@/context";
 import api from "@/lib/api";
 
 const Profile = () => {
@@ -125,65 +150,86 @@ const Profile = () => {
     }
   }
 
-  /** Handlers for password change */
+  /**  Hookform Zod Resolver - Change Password */
 
-  const initialFieldsValue = { old_password: "", new_password: "", confirm_password: "" };
-  const [passwordValue, setPasswordValue, passwordHandleChange] = useHandleForm(initialFieldsValue);
+  const changePasswordSchema = z.object({
+    old_password: z.string().min(1, { message: "Old password is required!" }),
+    new_password: z.string()
+      .min(8, { message: "New password must be at least 8 characters long!" })
+      .regex(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/, {
+        message: "Must have an uppercase, a lowercase letter, and a number!",
+      }),
+    confirm_password: z
+      .string()
+      .min(8, { message: "Confirm password must be at least 8 characters long!" }),
+  })
+    .refine((data) => data.new_password === data.confirm_password, {
+      message: "Confirm password is not matching with new password!",
+      path: ["confirm_password"],
+    });
 
-  const handlePasswordChangeSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const validatedField = changePasswordSchema.safeParse(passwordValue);
+  const changePasswordForm = useForm<z.infer<typeof changePasswordSchema>>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: {
+      old_password: "",
+      new_password: "",
+      confirm_password: "",
+    },
+  });
 
-    if (validatedField.success) {
-      try {
-        setIsLoading(true);
-        const response = await api.patch("/api/user/change-password", validatedField.data);
-        setUserInfo(response.data.data);
-        setOpenPasswordDialog(false);
-        setPasswordValue(initialFieldsValue);
-        toast.success(response.data.message);
-      } catch (error: any) {
-        toast.error(error.response.data.message);
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
-      openPasswordDialog && toast.error(validatedField.error?.issues[0].message);
+  const changePasswordSubmit = async (values: z.infer<typeof changePasswordSchema>) => {
+    try {
+      setIsLoading(true);
+      const response = await api.patch("/api/user/change-password", values);
+      setUserInfo(response.data.data);
+      setOpenPasswordDialog(false);
+      changePasswordForm.reset();
+      toast.success(response.data.message);
+    } catch (error: any) {
+      toast.error(error.response.data.message);
+    } finally {
+      setIsLoading(false);
     }
   }
 
-  /** States and handler function for change user details */
-  const [userName, setUserName] = useState(userInfo?.name);
-  const [userUsername, setUserUsername] = useState(userInfo?.username);
-  const [userBio, setUserBio] = useState(userInfo?.bio);
-  const [userGender, setUserGender] = useState(userInfo?.gender);
+  /**  Hookform Zod Resolver - Profile Update */
 
-  const handleGenderChange = (value: string) => {
-    setUserGender(value);
-  };
+  const genders = ["Male", "Female", "Other"] as const;
 
-  const saveDetailsChanges = async (e: any) => {
-    e.preventDefault();
+  const profileUpdateSchema = z.object({
+    name: z.string()
+      .min(3, { message: "Name must be at least 3 characters long!" })
+      .max(30, { message: "Name can be maximum 30 characters long!" }),
+    username: z.string()
+      .min(3, { message: "Username must be at least 3 characters long!" })
+      .max(15, { message: "Username can be maximum 15 characters long!" })
+      .regex(/^(?![_-])[a-z0-9_-]{3,15}(?<![_-])$/, {
+        message: "Only letters, numbers, hyphen, underscores is allow with no space!",
+      }),
+    gender: z.enum(genders),
+    bio: z.string(),
+  });
+
+  const profileUpdateForm = useForm<z.infer<typeof profileUpdateSchema>>({
+    resolver: zodResolver(profileUpdateSchema),
+    defaultValues: {
+      name: userInfo?.name || "",
+      username: userInfo?.username || "",
+      gender: (userInfo?.gender as typeof genders[number]) || "Other",
+      bio: userInfo?.bio || ""
+    },
+  });
+
+  const profileUpdateSubmit = async (values: z.infer<typeof profileUpdateSchema>) => {
     try {
       setIsLoading(true);
-      const isValid = validateUsername(userUsername!);
-
-      if (isValid) {
-        const profileDetails = {
-          name: userName,
-          username: userUsername,
-          bio: userBio,
-          gender: userGender,
-        };
-        const response = await api.patch("/api/user/user-profile-setup", profileDetails);
-        setUserInfo(response.data.data);
-        toast.success(response.data.message);
-
-        /** Emitting event for update details to active clients of current user */
-        socket?.emit("before:profileupdate", { updatedDetails: response.data.data });
-      } else {
-        toast.info("Invalid username!");
-      }
+      const response = await api.patch("/api/user/user-profile-setup", values);
+      const result = await response.data.data;
+      setUserInfo(result);
+      profileUpdateForm.reset({ ...result });
+      toast.success(response.data.message);
+      /** Emitting event for update details to active clients of current user */
+      socket?.emit("before:profileupdate", { updatedDetails: result });
     } catch (error: any) {
       toast.error(error.response.data.message);
     } finally {
@@ -194,15 +240,18 @@ const Profile = () => {
   useEffect(() => {
     socket?.on("after:profileupdate", ({ updatedDetails }) => {
       setUserInfo(updatedDetails);
+      profileUpdateForm.reset({ ...updatedDetails });
       toast.info("Your details has been updated!");
     });
   }, [socket]);
+
+  const fallbackAvatar = userInfo?.name || userInfo?.username || userInfo?.email;
 
   return (
     <div className="h-screen w-screen grid place-content-center">
       <div className="bg-white border-2 border-white text-opacity-90 shadow-2xl rounded-md grid lg:grid-cols-2 
       h-max w-[90vw] sm:w-[70vw] md:w-[50vw] lg:w-[70vw] xl:w-[60vw] px-8 sm:px-12 py-16 lg:p-20 lg:gap-16">
-        <div className="w-full flex flex-col gap-2 xl:gap-3 items-center justify-end lg:justify-center">
+        <div className="w-full flex flex-col gap-2 items-center justify-end lg:justify-center">
           <div className="w-full flex flex-col gap-2 items-center justify-center">
             <h2 className="text-3xl font-extrabold xl:text-4xl">Welcome User!</h2>
             <p className="text-sm sm:text-base text-center text-gray-700">
@@ -215,7 +264,7 @@ const Profile = () => {
                 <Avatar className="h-full w-full rounded-full overflow-hidden">
                   <AvatarImage src={selectedImage} alt="profile" className="object-fit size-full" />
                   <AvatarFallback className={`uppercase size-full text-5xl border text-center font-bold transition-all hover:bg-black/90 bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]`}>
-                    {userUsername?.split("").shift() || userInfo?.email?.split("").shift()}
+                    {fallbackAvatar?.split("").shift()}
                   </AvatarFallback>
                 </Avatar>
               </ContextMenuTrigger>
@@ -237,7 +286,7 @@ const Profile = () => {
               className="hidden"
             />
           </div>
-          <div className="flex flex-col gap-3 w-full mb-3 lg:mb-1">
+          <div className="flex flex-col gap-2 w-full mb-3 lg:mb-1">
             <Label htmlFor="profile-email">Email</Label>
             <Input
               type="email"
@@ -246,7 +295,6 @@ const Profile = () => {
               placeholder="Email"
               readOnly
               defaultValue={userInfo?.email || ""}
-              className="rounded px-3 py-5"
               autoComplete="off"
             />
           </div>
@@ -261,54 +309,102 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col gap-3 lg:gap-4 items-center justify-start lg:justify-center">
-          <div className="flex flex-col gap-2 xl:gap-3 w-full">
-            <Label htmlFor="full-name">Name</Label>
-            <Input
-              type="text"
-              id="full-name"
-              name="name"
-              placeholder="Name"
-              autoComplete="off"
-              className="rounded px-3 py-5"
-              value={userName || ""}
-              onChange={(e: any) => setUserName(e.target.value)}
-            />
-            <Label htmlFor="username">Username</Label>
-            <Input
-              type="text"
-              id="username"
-              name="username"
-              placeholder="Username"
-              autoComplete="off"
-              className="rounded px-3 py-5"
-              value={userUsername || ""}
-              onChange={(e: any) => setUserUsername(e.target.value)}
-            />
-            <Label htmlFor="bio">Bio</Label>
-            <Input
-              type="text"
-              id="bio"
-              name="bio"
-              placeholder="Bio"
-              autoComplete="off"
-              className="rounded px-3 py-5"
-              value={userBio || ""}
-              onChange={(e: any) => setUserBio(e.target.value)}
-            />
-            <Label htmlFor="gender">Gender</Label>
-            <Select onValueChange={handleGenderChange} defaultValue={userGender}>
-              <SelectTrigger className="w-full" id="gender">
-                <SelectValue placeholder="Gender" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Male">Male</SelectItem>
-                <SelectItem value="Female">Female</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button type="submit" size="lg" className="w-full cursor-pointer transition-all duration-300 mt-2"
-              onClick={saveDetailsChanges} disabled={isLoading}>Save Changes</Button>
-          </div>
+        <div className="flex-1 flex flex-col gap-2 lg:gap-4 items-center justify-start lg:justify-center">
+          <Form {...profileUpdateForm}>
+            <form onSubmit={profileUpdateForm.handleSubmit(profileUpdateSubmit)} className="flex flex-col gap-2 xl:gap-3 w-full">
+              <FormField
+                control={profileUpdateForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="grid gap-2">
+                      <FormLabel htmlFor="fullname">Name*</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="fullname"
+                          type="text"
+                          placeholder="Name"
+                          autoComplete="off"
+                          {...field}
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={profileUpdateForm.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="grid gap-2">
+                      <FormLabel htmlFor="username">Username*</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="username"
+                          type="text"
+                          placeholder="Username"
+                          autoComplete="off"
+                          {...field}
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={profileUpdateForm.control}
+                name="bio"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="grid gap-2">
+                      <FormLabel htmlFor="bio">Bio*</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="bio"
+                          type="text"
+                          placeholder="Bio"
+                          autoComplete="off"
+                          {...field}
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={profileUpdateForm.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="grid gap-2">
+                      <FormLabel htmlFor="gender">Gender*</FormLabel>
+                      <FormControl>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <SelectTrigger className="w-full py-5" id="gender">
+                            <SelectValue>{field.value || "Gender"}</SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {genders.map((gender) => (
+                              <SelectItem key={gender} value={gender}>
+                                {gender}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                    </div>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" size="lg" className="w-full cursor-pointer transition-all duration-300 mt-2 lg:mt-1"
+                disabled={isLoading}>Save Changes</Button>
+            </form>
+          </Form>
           <div className="lg:hidden flex gap-4 md:gap-6 w-full items-center justify-center mt-2">
             <Button size="sm" className="w-full" onClick={() => navigate("/chat")}
               disabled={isLoading || !userInfo?.setup}>
@@ -330,96 +426,128 @@ const Profile = () => {
               Update your password to improve account security and protect your information.
             </DialogDescription>
           </DialogHeader>
-          <form className="flex flex-col gap-4 w-full" onSubmit={handlePasswordChangeSubmit}>
-            <Label htmlFor="old_password">Old Password</Label>
-            <Input
-              id="old_password"
-              name="old_password"
-              type="password"
-              placeholder="••••••••"
-              autoComplete="off"
-              className="rounded px-3 py-5"
-              onChange={passwordHandleChange}
-              value={passwordValue.old_password || ""}
-              required
-            />
-            <Label htmlFor="new_password">New Password</Label>
-            <Input
-              id="new_password"
-              name="new_password"
-              type="password"
-              placeholder="••••••••"
-              autoComplete="off"
-              className="rounded px-3 py-5"
-              onChange={passwordHandleChange}
-              value={passwordValue.new_password || ""}
-              required
-            />
-            <Label htmlFor="confirm_password">Confirm Password</Label>
-            <Input
-              id="confirm_password"
-              name="confirm_password"
-              type="password"
-              placeholder="••••••••"
-              autoComplete="off"
-              className="rounded px-3 py-5"
-              onChange={passwordHandleChange}
-              value={passwordValue.confirm_password || ""}
-              required
-            />
-            <DialogFooter className="gap-4 sm:gap-2">
-              <Button variant="outline" className="w-full" disabled={isLoading}
-                onClick={() => {
-                  setPasswordValue(initialFieldsValue);
-                  setOpenPasswordDialog(false);
-                }}>Cancel</Button>
-              <Button type="submit" className="w-full" disabled={isLoading}>Confirm</Button>
-            </DialogFooter>
-          </form>
+          <Form {...changePasswordForm}>
+            <form className="flex flex-col gap-4 w-full"
+              onSubmit={changePasswordForm.handleSubmit(changePasswordSubmit)}>
+              <FormField
+                control={changePasswordForm.control}
+                name="old_password"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="grid gap-2">
+                      <FormLabel htmlFor="old_password">Old Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="old_password"
+                          type="password"
+                          autoComplete="off"
+                          placeholder="••••••••"
+                          {...field}
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={changePasswordForm.control}
+                name="new_password"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="grid gap-2">
+                      <FormLabel htmlFor="new_password">New Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="new_password"
+                          type="password"
+                          autoComplete="off"
+                          placeholder="••••••••"
+                          {...field}
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={changePasswordForm.control}
+                name="confirm_password"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="grid gap-2">
+                      <FormLabel htmlFor="confirm_password">Confirm Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="confirm_password"
+                          type="password"
+                          autoComplete="off"
+                          placeholder="••••••••"
+                          {...field}
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter className="gap-4 sm:gap-2">
+                <Button variant="outline" className="w-full" disabled={isLoading}
+                  onClick={() => {
+                    changePasswordForm.reset();
+                    setOpenPasswordDialog(false);
+                  }}>Cancel</Button>
+                <Button type="submit" className="w-full" disabled={isLoading}>Confirm</Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 
       {/* Dialog for image update confirmation */}
-      <Dialog open={openConfirmationModal} onOpenChange={setOpenConfirmationModal}>
-        <DialogContent className="h-auto w-80 md:w-96 flex flex-col rounded-sm items-start">
-          <DialogHeader>
-            <DialogTitle className="text-start">Update profile image?</DialogTitle>
-            <DialogDescription className="text-start">
+      <AlertDialog open={openConfirmationModal} onOpenChange={setOpenConfirmationModal}>
+        <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
+        <AlertDialogContent
+          className="w-80 md:w-96 rounded-sm shadow-lg transition-all hover:shadow-2xl bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-start">Update profile image?</AlertDialogTitle>
+            <AlertDialogDescription className="text-start">
               Update your profile image for better user interactions!
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center space-x-2">
-            <Button size="lg" variant="outline" className="p-2 px-5" onClick={() => {
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isLoading} onClick={() => {
               setImageUpdateFormData(null);
               setOpenConfirmationModal(false);
               setSelectedImage(userInfo?.image);
-            }} disabled={isLoading}>Cancel</Button>
-            <Button size="lg" variant="default" className="p-2 px-5"
-              onClick={() => updateProfileImage(imageUpdateFormData)} disabled={isLoading}>
-              Update</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+            }}>
+              Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={isLoading} onClick={() => updateProfileImage(imageUpdateFormData)}>
+              Update</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Dialog for image delete confirmation */}
-      <Dialog open={openImageDeletionModal} onOpenChange={setOpenImageDeletionModal}>
-        <DialogContent className="h-auto w-80 md:w-96 flex flex-col rounded-sm items-start">
-          <DialogHeader>
-            <DialogTitle className="text-start">Delete profile image?</DialogTitle>
-            <DialogDescription className="text-start">
+      <AlertDialog open={openImageDeletionModal} onOpenChange={setOpenImageDeletionModal}>
+        <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
+        <AlertDialogContent
+          className="w-80 md:w-96 rounded-sm shadow-lg transition-all hover:shadow-2xl bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-start">Delete profile image?</AlertDialogTitle>
+            <AlertDialogDescription className="text-start">
               Are you sure to delete profile image?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center space-x-2">
-            <Button size="lg" variant="outline" className="p-2 px-5" onClick={() => {
-              setOpenImageDeletionModal(false);
-            }} disabled={isLoading}>Cancel</Button>
-            <Button size="lg" className="p-2 px-5"
-              onClick={() => handleImageDeleteClick()} disabled={isLoading}>
-              Delete</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isLoading} onClick={() => setOpenImageDeletionModal(false)}>
+              Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={isLoading} onClick={() => handleImageDeleteClick()}>
+              Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

@@ -61,6 +61,24 @@ io.on("connection", (socket) => {
             updatedDetails,
         });
     });
+    socket.on("before:callrequest", ({ callingDetails }) => {
+        const socketId = getSocketId(callingDetails.to);
+        socket.to(Array.from(socketId)).emit("after:callrequest", {
+            callingDetails,
+        });
+    });
+    socket.on("before:callconnect", ({ callingActions }) => {
+        const socketId = getSocketId(callingActions.to);
+        socket.to(Array.from(socketId)).emit("after:callconnect", {
+            callingActions,
+        });
+    });
+    socket.on("before:calldisconnect", ({ callingActions }) => {
+        const socketId = getSocketId(callingActions.to);
+        socket.to(Array.from(socketId)).emit("after:calldisconnect", {
+            callingActions,
+        });
+    });
     socket.on("disconnect", () => {
         console.log(`User disconnected: ${socket.id}`);
         for (const [userId, sockets] of userSocketMap.entries()) {
