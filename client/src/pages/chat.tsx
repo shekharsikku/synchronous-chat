@@ -6,10 +6,7 @@ const Chat = () => {
 
   return (
     <div className="h-screen w-screen flex overflow-hidden">
-      <div className="h-full w-full md:hidden">
-        {selectedChatData ? <ChatContainer /> : <ContactsContainer />}
-      </div>
-      <div className="h-full w-full hidden md:flex">
+      <div className="h-full w-full flex">
         <ContactsContainer />
         {selectedChatData ? <ChatContainer /> : <EmptyChatContainer />}
       </div>

@@ -12,14 +12,17 @@ import { ContactListSkeleton } from "./contact-list-skeleton";
 import { Logo, Title } from "./logo-title";
 import { AddNewChat } from "./add-new-chat";
 import { ProfileInfo } from "./profile-info";
+import { StreamInfo } from "./stream-info";
 import { UserInfo } from "@/zustand/slice/auth";
 import { useEffect, useState } from "react";
 import { useChatStore } from "@/zustand";
-import { useSocket } from "@/context";
+import { useSocket, usePeer } from "@/context";
 import { useAvatar } from "@/hooks";
+import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 
 const ContactsContainer = () => {
+  const { isStreamActive } = usePeer();
   const { socket, onlineUsers } = useSocket();
   const { setSelectedChatType, setSelectedChatData, selectedChatData, messages } = useChatStore();
 
@@ -107,11 +110,12 @@ const ContactsContainer = () => {
   }
 
   return (
-    <div className="h-full w-full md:w-1/3 xl:w-1/4 border-r relative">
+    <div className={cn(selectedChatData && "hidden md:flex flex-col",
+      "h-full w-full md:w-1/3 xl:w-1/4 border-r relative")}>
       <div className="h-bar border-b p-2">
         <Logo />
       </div>
-      <div className="h-clh w-full overflow-hidden">
+      <div className={cn(isStreamActive ? "h-cda" : "h-clh", "w-full overflow-hidden")}>
         <div className="h-full w-full flex flex-col gap-6 p-6">
           <div className="flex items-center justify-between">
             <Title title="Chat Messages" />
@@ -155,6 +159,9 @@ const ContactsContainer = () => {
           )}
         </div>
       </div>
+      {isStreamActive && (
+        <StreamInfo />
+      )}
       <ProfileInfo />
     </div>
   )

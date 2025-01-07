@@ -75,6 +75,7 @@ module.exports = {
       height: {
         bar: "4.5rem",
         clh: "calc(100vh - 9rem)",
+        cda: "calc(100vh - 13.5rem)",
       },
       fontFamily: {
         inter: ["Inter", "sans-serif"],

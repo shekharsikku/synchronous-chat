@@ -3,7 +3,7 @@ import { Socket } from "socket.io-client";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useCallback, useRef } from "react";
-import { useSocket } from "@/context";
+import { useSocket, usePeer } from "@/context";
 import { useAuthStore, useChatStore } from "@/zustand";
 import { logout, currentUser } from "@/redux/reducer/auth";
 import { Message } from "@/zustand/slice/chat";
@@ -36,17 +36,21 @@ export const useSignOutUser = () => {
   const dispatch = useDispatch();
   const { setUserInfo, setIsAuthenticated } = useAuthStore();
   const { closeChat } = useChatStore();
+  const { disconnectStream, isStreamActive } = usePeer();
 
   const handleSignOut = async (e: any) => {
     e.preventDefault();
     try {
       const response = await api.delete("/api/auth/sign-out");
-      toast.success(response.data.message);
+      if (isStreamActive) {
+        disconnectStream();
+      }
       setIsAuthenticated(false);
       setUserInfo(null!);
       dispatch(logout());
       closeChat();
       navigate("/auth");
+      toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
     }

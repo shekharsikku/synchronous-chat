@@ -9,7 +9,7 @@ const port = env.PORT;
 (async () => {
   try {
     const state = await mongodb(uri);
-    if (state == 1) {
+    if (state === 1) {
       console.log("Database connection success!");
       job.start();
       server.listen(port, () => {

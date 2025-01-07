@@ -44,6 +44,7 @@ app.use((0, helmet_1.default)({
                 "https://cdn.jsdelivr.net",
             ],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            connectSrc: ["'self'", "wss://0.peerjs.com", "https://0.peerjs.com"],
         },
     },
 }));
@@ -58,8 +59,8 @@ else {
     app.use(express_1.default.static(path_1.default.join(__dirname, "../client/dist")));
 }
 const limiter = (0, express_rate_limit_1.rateLimit)({
-    windowMs: 60 * 1000,
-    max: 100,
+    windowMs: 5 * 60 * 1000,
+    limit: 200,
     message: { message: "Maximum number of requests exceeded!" },
     standardHeaders: true,
     legacyHeaders: false,

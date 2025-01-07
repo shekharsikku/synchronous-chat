@@ -1,4 +1,5 @@
 import {
+  HiOutlineRss,
   HiOutlineXMark,
   HiOutlineLanguage
 } from "react-icons/hi2";
@@ -31,9 +32,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { countUserMessages, languageOptions } from "@/utils";
+import { useSocket, usePeer } from "@/context";
 import { useEffect, useState } from "react";
 import { useChatStore } from "@/zustand";
 import { useAvatar } from "@/hooks";
+import { toast } from "sonner";
 import moment from "moment";
 
 const ChatHeader = () => {
@@ -46,6 +49,28 @@ const ChatHeader = () => {
     const { sent, received } = countUserMessages(messages, selectedChatData);
     setMessageStats({ sent, received });
   }, [selectedChatData?._id, messages.length]);
+
+  const { localInfo, isStreamActive } = usePeer();
+  const { socket, onlineUsers } = useSocket();
+
+  const isCurrentlyOnline = onlineUsers.hasOwnProperty(selectedChatData?._id!);
+
+  const requestVoiceStream = (userId: string) => {
+    /** Streaming details for signaling */
+    const callingDetails = {
+      from: localInfo?.uid,
+      name: localInfo?.name,
+      to: userId,
+      pid: localInfo?.pid,
+    }
+
+    if (isStreamActive) {
+      toast.info("Can't connect another stream!");
+      return;
+    }
+
+    socket?.emit("before:callrequest", { callingDetails });
+  }
 
   return (
     <div className="h-bar border-b flex items-center justify-between p-2">
@@ -118,6 +143,20 @@ const ChatHeader = () => {
         </div>
 
         <div className="flex items-center justify-center gap-4">
+          {/* Voice Stream */}
+          {isCurrentlyOnline && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="focus:outline-none">
+                  <HiOutlineRss size={18} onClick={() => requestVoiceStream(selectedChatData?._id!)}
+                    className="text-neutral-600 border-none outline-none transition-all duration-300" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span className="text-neutral-700 font-medium">Voice Stream</span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           {/* Translate Language */}
           <DropdownMenu>
             <TooltipProvider>

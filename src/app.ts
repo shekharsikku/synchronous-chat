@@ -56,6 +56,7 @@ app.use(
           "https://cdn.jsdelivr.net",
         ],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        connectSrc: ["'self'", "wss://0.peerjs.com", "https://0.peerjs.com"],
       },
     },
   })
@@ -73,8 +74,8 @@ if (env.isDev) {
 }
 
 const limiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 100,
+  windowMs: 5 * 60 * 1000,
+  limit: 200,
   message: { message: "Maximum number of requests exceeded!" },
   standardHeaders: true,
   legacyHeaders: false,

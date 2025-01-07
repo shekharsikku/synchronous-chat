@@ -19,6 +19,8 @@ import { useSignOutUser, useAvatar } from "@/hooks";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { usePeer } from "@/context";
+import { toast } from "sonner";
 
 const ProfileInfo = () => {
   /** This state have authenticated and userData */
@@ -37,13 +39,23 @@ const ProfileInfo = () => {
     }
   }, [userInfo]);
 
+  const { isStreamActive } = usePeer();
+
+  const handleProfileNavigate = () => {
+    if (isStreamActive) {
+      toast.info("Can't navigate to profile page!");
+      return;
+    }
+    navigate("/profile");
+  }
+
   return (
     <div className="absolute bottom-0 w-full h-bar border-t p-2">
       <div className="bg-gray-100/80 rounded h-full w-full flex items-center justify-between px-4">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger className="focus:outline-none">
-              <div className="flex gap-4 items-center" onClick={() => navigate("/profile")}>
+              <div className="flex gap-4 items-center" onClick={() => handleProfileNavigate()}>
                 <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
                   <AvatarImage src={avatar} alt="profile" className="object-fit h-full w-full" />
                   <AvatarFallback className={`uppercase h-full w-full text-xl border text-center font-medium 
