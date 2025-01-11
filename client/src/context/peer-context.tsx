@@ -28,13 +28,16 @@ interface PeerContextType {
   callingResponse: ResponseActions;
   setCallingResponse: React.Dispatch<React.SetStateAction<ResponseActions>>;
 
-  openStreamDialog: boolean;
-  setOpenStreamDialog: React.Dispatch<React.SetStateAction<boolean>>;
+  callingDialog: boolean;
+  setCallingDialog: React.Dispatch<React.SetStateAction<boolean>>;
 
-  isStreamActive: boolean;
-  setIsStreamActive: React.Dispatch<React.SetStateAction<boolean>>;
+  callingActive: boolean;
+  setCallingActive: React.Dispatch<React.SetStateAction<boolean>>;
 
-  disconnectStream: () => void;
+  pendingRequest: boolean;
+  setPendingRequest: React.Dispatch<React.SetStateAction<boolean>>;
+
+  disconnectCalling: () => void;
 }
 
 const PeerContext = createContext<PeerContextType | undefined>(undefined);
@@ -65,8 +68,9 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [callingResponse, setCallingResponse] = useState<ResponseActions>(null);
 
-  const [openStreamDialog, setOpenStreamDialog] = useState(false);
-  const [isStreamActive, setIsStreamActive] = useState(false);
+  const [callingDialog, setCallingDialog] = useState(false);
+  const [callingActive, setCallingActive] = useState(false);
+  const [pendingRequest, setPendingRequest] = useState(false);
 
   useEffect(() => {
     if (userInfo?.setup) {
@@ -122,8 +126,8 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
   const responseCallingRequest = (action: ResponseActions) => {
     if (!remoteInfo?.pid) return;
 
-    if (isStreamActive) {
-      toast.info("Can't connect another stream!");
+    if (callingActive) {
+      toast.info("Can't connect with another call currently!");
       return;
     }
 
@@ -132,8 +136,8 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
         navigate("/chat");
       }
 
-      setIsStreamActive(true);
-      setOpenStreamDialog(true);
+      setCallingActive(true);
+      setCallingDialog(true);
 
       /** Streaming Local/Remote Audio */
       navigator.mediaDevices.getUserMedia({ audio: true }).then((localStream) => {
@@ -157,8 +161,8 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
         socket?.emit("before:callconnect", { callingActions });
       });
     } else {
-      setIsStreamActive(false);
-      setOpenStreamDialog(false);
+      setCallingActive(false);
+      setCallingDialog(false);
 
       /** Notify the remote user when missed */
       const callingActions = {
@@ -180,14 +184,14 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
         clearTimeout(callTimeoutRef.current);
       }
 
-      if (callingResponse !== "accept" && !isStreamActive) {
+      if (callingResponse !== "accept" && !callingActive) {
         callTimeoutRef.current = setTimeout(() => {
-          setOpenStreamDialog(false);
-          setIsStreamActive(false);
+          setCallingDialog(false);
+          setCallingActive(false);
           setCallingResponse(null);
           setRemoteInfo(null);
           callTimeoutRef.current = null;
-        }, 10000);
+        }, 2000);
       }
     }
   }, [callingResponse]);
@@ -201,12 +205,14 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
     }) => {
       if (response.action === "accept") {
         setRemoteInfo({ uid: response.from, name: response.name, pid: response.pid });
-        setIsStreamActive(true);
-        setOpenStreamDialog(true);
+        setCallingActive(true);
+        setCallingDialog(true);
+        setPendingRequest(false);
         toast.success(`Call request ${response.action} by ${response.name}!`);
       } else {
-        setOpenStreamDialog(false);
-        setIsStreamActive(false);
+        setPendingRequest(false);
+        setCallingDialog(false);
+        setCallingActive(false);
         setCallingResponse(null);
         setRemoteInfo(null);
         toast.info(`Call request ${response.action} by ${response.name}!`);
@@ -235,14 +241,14 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const disconnectStream = () => {
+  const disconnectCalling = () => {
     /** Stop local/remote audio tracks */
     stopMediaTracks(localAudioRef);
     stopMediaTracks(remoteAudioRef);
 
     /** Reset remote info state */
-    setOpenStreamDialog(false);
-    setIsStreamActive(false);
+    setCallingDialog(false);
+    setCallingActive(false);
     setCallingResponse(null);
     setRemoteInfo(null);
 
@@ -267,8 +273,8 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
       stopMediaTracks(remoteAudioRef);
 
       /** Reset remote info state */
-      setOpenStreamDialog(false);
-      setIsStreamActive(false);
+      setCallingDialog(false);
+      setCallingActive(false);
       setCallingResponse(null);
       setRemoteInfo(null);
 
@@ -293,11 +299,13 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
       remoteAudioRef,
       callingResponse,
       setCallingResponse,
-      openStreamDialog,
-      setOpenStreamDialog,
-      isStreamActive,
-      setIsStreamActive,
-      disconnectStream,
+      callingDialog,
+      setCallingDialog,
+      callingActive,
+      setCallingActive,
+      pendingRequest,
+      setPendingRequest,
+      disconnectCalling,
     }}>
       {children}
     </PeerContext.Provider>

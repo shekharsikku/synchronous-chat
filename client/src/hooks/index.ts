@@ -36,14 +36,14 @@ export const useSignOutUser = () => {
   const dispatch = useDispatch();
   const { setUserInfo, setIsAuthenticated } = useAuthStore();
   const { closeChat } = useChatStore();
-  const { disconnectStream, isStreamActive } = usePeer();
+  const { disconnectCalling, callingActive } = usePeer();
 
   const handleSignOut = async (e: any) => {
     e.preventDefault();
     try {
       const response = await api.delete("/api/auth/sign-out");
-      if (isStreamActive) {
-        disconnectStream();
+      if (callingActive) {
+        disconnectCalling();
       }
       setIsAuthenticated(false);
       setUserInfo(null!);

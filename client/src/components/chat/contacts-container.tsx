@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 
 const ContactsContainer = () => {
-  const { isStreamActive } = usePeer();
+  const { callingActive } = usePeer();
   const { socket, onlineUsers } = useSocket();
   const { setSelectedChatType, setSelectedChatData, selectedChatData, messages } = useChatStore();
 
@@ -115,7 +115,7 @@ const ContactsContainer = () => {
       <div className="h-bar border-b p-2">
         <Logo />
       </div>
-      <div className={cn(isStreamActive ? "h-cda" : "h-clh", "w-full overflow-hidden")}>
+      <div className={cn(callingActive ? "h-cda" : "h-clh", "w-full overflow-hidden")}>
         <div className="h-full w-full flex flex-col gap-6 p-6">
           <div className="flex items-center justify-between">
             <Title title="Chat Messages" />
@@ -159,9 +159,7 @@ const ContactsContainer = () => {
           )}
         </div>
       </div>
-      {isStreamActive && (
-        <StreamInfo />
-      )}
+      {callingActive && <StreamInfo />}
       <ProfileInfo />
     </div>
   )

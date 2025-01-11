@@ -114,6 +114,6 @@ http://localhost:4000
 https://synchronouschat.onrender.com
 ```
 
-### **Code by [Shekhar Sharma](https://github.com/shekharsikku)**
+### **Code by [Shekhar Vishwakarma](https://github.com/shekharsikku)**
 
 ---

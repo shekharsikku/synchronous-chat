@@ -39,11 +39,11 @@ const ProfileInfo = () => {
     }
   }, [userInfo]);
 
-  const { isStreamActive } = usePeer();
+  const { callingActive } = usePeer();
 
   const handleProfileNavigate = () => {
-    if (isStreamActive) {
-      toast.info("Can't navigate to profile page!");
+    if (callingActive) {
+      toast.info("Can't access profile page while calling!");
       return;
     }
     navigate("/profile");

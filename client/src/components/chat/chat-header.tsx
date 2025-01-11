@@ -1,5 +1,5 @@
 import {
-  HiOutlineRss,
+  HiOutlinePhone,
   HiOutlineXMark,
   HiOutlineLanguage
 } from "react-icons/hi2";
@@ -50,12 +50,12 @@ const ChatHeader = () => {
     setMessageStats({ sent, received });
   }, [selectedChatData?._id, messages.length]);
 
-  const { localInfo, isStreamActive } = usePeer();
+  const { localInfo, callingActive, pendingRequest, setPendingRequest } = usePeer();
   const { socket, onlineUsers } = useSocket();
 
   const isCurrentlyOnline = onlineUsers.hasOwnProperty(selectedChatData?._id!);
 
-  const requestVoiceStream = (userId: string) => {
+  const requestVoiceCalling = (userId: string) => {
     /** Streaming details for signaling */
     const callingDetails = {
       from: localInfo?.uid,
@@ -64,11 +64,12 @@ const ChatHeader = () => {
       pid: localInfo?.pid,
     }
 
-    if (isStreamActive) {
-      toast.info("Can't connect another stream!");
+    if (callingActive || pendingRequest) {
+      toast.info("Can't request for another call currently!");
       return;
     }
 
+    setPendingRequest(true);
     socket?.emit("before:callrequest", { callingDetails });
   }
 
@@ -148,11 +149,11 @@ const ChatHeader = () => {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger className="focus:outline-none">
-                  <HiOutlineRss size={18} onClick={() => requestVoiceStream(selectedChatData?._id!)}
+                  <HiOutlinePhone size={18} onClick={() => requestVoiceCalling(selectedChatData?._id!)}
                     className="text-neutral-600 border-none outline-none transition-all duration-300" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <span className="text-neutral-700 font-medium">Voice Stream</span>
+                  <span className="text-neutral-700 font-medium">Voice Call</span>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
