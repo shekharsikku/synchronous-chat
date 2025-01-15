@@ -69,6 +69,7 @@ app.use("/public/temp", express.static(path.join(__dirname, "../public/temp")));
 if (env.isDev) {
   app.use(morgan("dev"));
 } else {
+  app.set("trust proxy", true);
   app.use(morgan("tiny"));
   app.use(express.static(path.join(__dirname, "../client/dist")));
 }
