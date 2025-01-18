@@ -1,4 +1,5 @@
 import {
+  HiOutlineRss,
   HiOutlinePhone,
   HiOutlineXMark,
   HiOutlineLanguage
@@ -50,7 +51,7 @@ const ChatHeader = () => {
     setMessageStats({ sent, received });
   }, [selectedChatData?._id, messages.length]);
 
-  const { localInfo, callingActive, pendingRequest, setPendingRequest } = usePeer();
+  const { localInfo, callingActive, pendingRequest, setPendingRequest, setCallingDialog } = usePeer();
   const { socket, onlineUsers } = useSocket();
 
   const isCurrentlyOnline = onlineUsers.hasOwnProperty(selectedChatData?._id!);
@@ -96,7 +97,7 @@ const ChatHeader = () => {
           </TooltipProvider>
           {/* Dialog for show user information */}
           <Dialog open={openUserInfoModal} onOpenChange={setOpenUserInfoModal}>
-            <DialogContent className="w-80 md:w-96 rounded-sm shadow-lg transition-all hover:shadow-2xl bg-white p-8">
+            <DialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl bg-white p-8">
               <DialogHeader className="hidden">
                 <DialogTitle></DialogTitle>
                 <DialogDescription></DialogDescription>
@@ -146,17 +147,33 @@ const ChatHeader = () => {
         <div className="flex items-center justify-center gap-4">
           {/* Voice Stream */}
           {isCurrentlyOnline && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger className="focus:outline-none">
-                  <HiOutlinePhone size={18} onClick={() => requestVoiceCalling(selectedChatData?._id!)}
-                    className="text-neutral-600 border-none outline-none transition-all duration-300" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span className="text-neutral-700 font-medium">Voice Call</span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <>
+              {callingActive ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger className="focus:outline-none">
+                      <HiOutlineRss size={18} onClick={() => setCallingDialog(true)}
+                        className="text-neutral-600 border-none outline-none transition-all duration-300" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span className="text-neutral-700 font-medium">Call Info</span>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger className="focus:outline-none">
+                      <HiOutlinePhone size={18} onClick={() => requestVoiceCalling(selectedChatData?._id!)}
+                        className="text-neutral-600 border-none outline-none transition-all duration-300" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span className="text-neutral-700 font-medium">Voice Call</span>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </>
           )}
           {/* Translate Language */}
           <DropdownMenu>

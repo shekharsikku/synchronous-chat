@@ -419,7 +419,7 @@ const Profile = () => {
 
       {/* Dialog for changing password */}
       <Dialog open={openPasswordDialog} onOpenChange={setOpenPasswordDialog}>
-        <DialogContent className="h-auto w-80 md:w-96 flex flex-col rounded-sm items-start">
+        <DialogContent className="h-auto w-80 md:w-96 flex flex-col rounded-md items-start">
           <DialogHeader>
             <DialogTitle className="text-start">Change Your Password </DialogTitle>
             <DialogDescription className="text-start">
@@ -509,7 +509,7 @@ const Profile = () => {
       <AlertDialog open={openConfirmationModal} onOpenChange={setOpenConfirmationModal}>
         <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
         <AlertDialogContent
-          className="w-80 md:w-96 rounded-sm shadow-lg transition-all hover:shadow-2xl bg-white">
+          className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl bg-white">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-start">Update profile image?</AlertDialogTitle>
             <AlertDialogDescription className="text-start">
@@ -533,7 +533,7 @@ const Profile = () => {
       <AlertDialog open={openImageDeletionModal} onOpenChange={setOpenImageDeletionModal}>
         <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
         <AlertDialogContent
-          className="w-80 md:w-96 rounded-sm shadow-lg transition-all hover:shadow-2xl bg-white">
+          className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl bg-white">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-start">Delete profile image?</AlertDialogTitle>
             <AlertDialogDescription className="text-start">

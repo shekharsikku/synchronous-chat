@@ -134,7 +134,7 @@ const ContactsContainer = () => {
                   <div className="flex flex-col gap-4">
                     {contacts?.map((contact: any) => (
                       <div key={contact?._id} className={`w-full flex items-center justify-between cursor-pointer transition-all duration-300 rounded border py-2 px-4 xl:px-6 text-gray-600 hover:bg-gray-100 
-                        ${selectedChatData && selectedChatData._id === contact._id && "bg-gray-100/80 text-gray-700 border-gray-300/50"} ${contact?.setup === false && "disabled"} `} onClick={() => selectNewContact(contact)}>
+                        ${selectedChatData && selectedChatData._id === contact._id && "bg-gray-100/80 text-gray-700 border-gray-300/50"} ${contact?.setup === false && "disabled"} `} onClick={() => selectNewContact(contact)} role="button">
                         <div className="flex items-center gap-4">
                           <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
                             <AvatarImage src={useAvatar(contact)} alt="profile" className="object-fit h-full w-full" />

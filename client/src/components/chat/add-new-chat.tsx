@@ -51,7 +51,7 @@ const AddNewChat = () => {
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <DialogContent className="h-96 w-80 md:w-96 flex flex-col rounded-sm">
+      <DialogContent className="h-96 w-80 md:w-96 flex flex-col rounded-md">
         <DialogHeader>
           <DialogTitle className="text-start">New Chat</DialogTitle>
           <DialogDescription className="hidden"></DialogDescription>
@@ -73,9 +73,8 @@ const AddNewChat = () => {
                 <ScrollArea className="h-60 overflow-y-auto scrollbar-hide">
                   <div className="flex flex-col gap-4 py-[2px]">
                     {searchedContacts.map((contact) => (
-                      <div key={contact._id} className={`flex gap-4 border border-gray-200 w-full p-2 lg:px-3 xl:px-6 rounded
-                    items-center hover:bg-gray-100/80 transition-all duration-300 cursor-pointer 
-                    ${contact.name === "" ? "disabled" : ""}`} onClick={() => selectNewContact(contact)}>
+                      <div key={contact._id} className={`flex gap-4 border border-gray-200 w-full p-2 lg:px-3 xl:px-6 rounded items-center hover:bg-gray-100/80 transition-all duration-300 cursor-pointer 
+                    ${contact.name === "" ? "disabled" : ""}`} onClick={() => selectNewContact(contact)} role="button">
                         <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
                           <AvatarImage src={useAvatar(contact)} alt="profile" className="object-fit h-full w-full" />
                           <AvatarFallback className={`uppercase h-full w-full text-xl border text-center font-medium 

@@ -222,7 +222,7 @@ const RenderDMMessages = ({
       </span>
       {/* Dialog for image extend view */}
       <Dialog open={imageViewExtend} onOpenChange={setImageViewExtend}>
-        <DialogContent className="h-96 w-[90vw] lg:h-auto lg:w-auto bg-gray-50 rounded">
+        <DialogContent className="h-96 w-[90vw] lg:h-auto lg:w-auto bg-gray-50 rounded-md">
           <DialogHeader>
             <DialogTitle className="text-start">Extend View Mode</DialogTitle>
             <DialogDescription className="hidden"></DialogDescription>

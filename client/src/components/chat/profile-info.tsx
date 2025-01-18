@@ -55,7 +55,7 @@ const ProfileInfo = () => {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger className="focus:outline-none">
-              <div className="flex gap-4 items-center" onClick={() => handleProfileNavigate()}>
+              <div className="flex gap-4 items-center" onClick={() => handleProfileNavigate()} role="button">
                 <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
                   <AvatarImage src={avatar} alt="profile" className="object-fit h-full w-full" />
                   <AvatarFallback className={`uppercase h-full w-full text-xl border text-center font-medium 

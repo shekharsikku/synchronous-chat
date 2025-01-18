@@ -1,7 +1,7 @@
 {
   "name": "client",
   "private": true,
-  "version": "1.6.3",
+  "version": "1.6.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -49,6 +49,7 @@
     "react-router-dom": "^7.1.1",
     "socket.io-client": "^4.8.1",
     "sonner": "^1.7.1",
+    "sound-visualizer": "^1.4.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^11.0.4",

@@ -38,6 +38,9 @@ interface PeerContextType {
   setPendingRequest: React.Dispatch<React.SetStateAction<boolean>>;
 
   disconnectCalling: () => void;
+
+  mediaStream: MediaStream | undefined;
+  setMediaStream: React.Dispatch<React.SetStateAction<MediaStream | undefined>>;
 }
 
 const PeerContext = createContext<PeerContextType | undefined>(undefined);
@@ -67,6 +70,7 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
   const callTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [callingResponse, setCallingResponse] = useState<ResponseActions>(null);
+  const [mediaStream, setMediaStream] = useState<MediaStream | undefined>(undefined);
 
   const [callingDialog, setCallingDialog] = useState(false);
   const [callingActive, setCallingActive] = useState(false);
@@ -89,6 +93,7 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
           localAudioRef.current!.srcObject = localStream;
 
           call.on("stream", (remoteStream) => {
+            setMediaStream(remoteStream);
             remoteAudioRef.current!.srcObject = remoteStream;
           });
         });
@@ -147,6 +152,7 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
         const call = peer?.call(remoteInfo?.pid!, localStream);
 
         call?.on("stream", (remoteStream) => {
+          setMediaStream(remoteStream);
           remoteAudioRef.current!.srcObject = remoteStream;
         });
 
@@ -306,6 +312,8 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
       pendingRequest,
       setPendingRequest,
       disconnectCalling,
+      mediaStream,
+      setMediaStream,
     }}>
       {children}
     </PeerContext.Provider>
