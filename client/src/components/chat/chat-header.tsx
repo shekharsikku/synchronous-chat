@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { countUserMessages, languageOptions } from "@/utils";
-import { useSocket, usePeer } from "@/context";
+import { useSocket, usePeer } from "@/hooks/context";
 import { useEffect, useState } from "react";
 import { useChatStore } from "@/zustand";
 import { useAvatar } from "@/hooks";

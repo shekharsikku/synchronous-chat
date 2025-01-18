@@ -1,21 +1,7 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import io, { Socket } from "socket.io-client";
+import { useEffect, useState } from "react";
 import { useAuthStore } from "@/zustand";
-
-interface SocketContextType {
-  socket: Socket | null;
-  onlineUsers: object;
-}
-
-const SocketContext = createContext<SocketContextType | undefined>(undefined);
-
-const useSocket = (): SocketContextType => {
-  const context = useContext(SocketContext);
-  if (!context) {
-    throw new Error("useSocket must be used within a SocketProvider");
-  }
-  return context;
-}
+import { SocketContext } from "@/hooks/context";
+import io, { Socket } from "socket.io-client";
 
 const serverApiUrl = import.meta.env.DEV ? "http://localhost:4000" : "/";
 
@@ -55,4 +41,4 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   )
 }
 
-export { useSocket, SocketProvider };
+export default SocketProvider;

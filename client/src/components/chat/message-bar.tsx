@@ -14,7 +14,7 @@ import {
 import { convertToBase64, encryptMessage } from "@/utils";
 import { useChatStore, useAuthStore } from "@/zustand";
 import { useState, useEffect, useRef } from "react";
-import { useSocket } from "@/context";
+import { useSocket } from "@/hooks/context";
 import { toast } from "sonner";
 import api from "@/lib/api";
 

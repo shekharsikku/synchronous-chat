@@ -16,7 +16,7 @@ import { StreamInfo } from "./stream-info";
 import { UserInfo } from "@/zustand/slice/auth";
 import { useEffect, useState } from "react";
 import { useChatStore } from "@/zustand";
-import { useSocket, usePeer } from "@/context";
+import { usePeer, useSocket } from "@/hooks/context";
 import { useAvatar } from "@/hooks";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";

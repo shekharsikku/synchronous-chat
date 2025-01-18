@@ -21,7 +21,7 @@ const AuthRoute = ({ children }: Readonly<{
 const App = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const { getUserInfo } = useGetUserInfo();
   const { authRefresh } = useAuthRefresh();
   const { userInfo, isAuthenticated } = useAuthStore();

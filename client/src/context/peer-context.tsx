@@ -1,57 +1,10 @@
-import { createContext, useContext, useEffect, useState, useRef } from "react";
+import type { PeerInformation, ResponseActions } from "@/hooks/context";
+import { useSocket, PeerContext } from "@/hooks/context";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
 import { useAuthStore } from "@/zustand";
-import { useSocket } from "@/context";
 import { toast } from "sonner";
 import Peer from "peerjs";
-
-type PeerInformation = {
-  uid: string;
-  name: string;
-  pid: string;
-} | null;
-
-type ResponseActions = "accept" | "reject" | "missed" | null;
-
-interface PeerContextType {
-  peer: Peer | null;
-
-  localInfo: PeerInformation;
-  setLocalInfo: React.Dispatch<React.SetStateAction<PeerInformation>>;
-
-  remoteInfo: PeerInformation;
-  setRemoteInfo: React.Dispatch<React.SetStateAction<PeerInformation>>;
-
-  localAudioRef: React.RefObject<HTMLAudioElement | null>;
-  remoteAudioRef: React.RefObject<HTMLAudioElement | null>;
-
-  callingResponse: ResponseActions;
-  setCallingResponse: React.Dispatch<React.SetStateAction<ResponseActions>>;
-
-  callingDialog: boolean;
-  setCallingDialog: React.Dispatch<React.SetStateAction<boolean>>;
-
-  callingActive: boolean;
-  setCallingActive: React.Dispatch<React.SetStateAction<boolean>>;
-
-  pendingRequest: boolean;
-  setPendingRequest: React.Dispatch<React.SetStateAction<boolean>>;
-
-  disconnectCalling: () => void;
-
-  mediaStream: MediaStream | undefined;
-  setMediaStream: React.Dispatch<React.SetStateAction<MediaStream | undefined>>;
-}
-
-const PeerContext = createContext<PeerContextType | undefined>(undefined);
-
-const usePeer = (): PeerContextType => {
-  const context = useContext(PeerContext);
-  if (!context) {
-    throw new Error("usePeer must be used within a PeerProvider");
-  }
-  return context;
-}
 
 const PeerProvider = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -320,4 +273,4 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
   )
 }
 
-export { usePeer, PeerProvider };
+export default PeerProvider;

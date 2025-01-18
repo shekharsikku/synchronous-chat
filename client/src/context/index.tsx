@@ -1,4 +1,4 @@
-import { useSocket, SocketProvider } from "./socket-context";
-import { usePeer, PeerProvider } from "./peer-context";
+import SocketProvider from "./socket-context";
+import PeerProvider from "./peer-context";
 
-export { useSocket, SocketProvider, usePeer, PeerProvider };
+export { SocketProvider, PeerProvider };

@@ -25,7 +25,7 @@ import { Message } from "@/zustand/slice/chat";
 import { checkImageType, decryptMessage } from "@/utils";
 import { useChatStore, useAuthStore } from "@/zustand";
 import { useDisableAnimations } from "@/hooks";
-import { useSocket } from "@/context";
+import { useSocket } from "@/hooks/context";
 import { useInView } from "react-intersection-observer";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";

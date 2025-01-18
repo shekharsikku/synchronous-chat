@@ -61,7 +61,7 @@ import {
 } from "react-icons/hi2";
 import { useSignOutUser } from "@/hooks";
 import { useAuthStore } from "@/zustand";
-import { useSocket } from "@/context";
+import { useSocket } from "@/hooks/context";
 import api from "@/lib/api";
 
 const Profile = () => {

@@ -3,7 +3,7 @@ import { Socket } from "socket.io-client";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useCallback, useRef } from "react";
-import { useSocket, usePeer } from "@/context";
+import { usePeer, useSocket } from "@/hooks/context";
 import { useAuthStore, useChatStore } from "@/zustand";
 import { logout, currentUser } from "@/redux/reducer/auth";
 import { Message } from "@/zustand/slice/chat";

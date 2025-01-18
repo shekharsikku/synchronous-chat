@@ -19,7 +19,7 @@ import { useSignOutUser, useAvatar } from "@/hooks";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { usePeer } from "@/context";
+import { usePeer } from "@/hooks/context";
 import { toast } from "sonner";
 
 const ProfileInfo = () => {
