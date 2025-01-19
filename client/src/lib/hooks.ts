@@ -43,7 +43,7 @@ export const useSignOutUser = () => {
       setIsAuthenticated(false);
       setUserInfo(null!);
       closeChat();
-      navigate("/auth");
+      navigate("/auth", { replace: true });
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);

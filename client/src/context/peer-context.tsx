@@ -89,13 +89,13 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
     if (!remoteInfo?.pid) return;
 
     if (callingActive) {
-      toast.info("Can't connect with another call currently!");
+      toast.info("Can't response on another call currently!");
       return;
     }
 
     if (action === "accept") {
       if (location.pathname !== "/chat") {
-        navigate("/chat");
+        navigate("/chat", { replace: true });
       }
 
       setCallingActive(true);

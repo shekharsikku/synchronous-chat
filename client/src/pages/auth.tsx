@@ -133,10 +133,10 @@ const Auth = () => {
 
       if (result.setup) {
         toast.success(response.data.message);
-        navigate("/chat");
+        navigate("/chat", { replace: true });
       } else {
         toast.info(response.data.message);
-        navigate("/profile");
+        navigate("/profile", { replace: true });
       }
 
       signInForm.reset();
