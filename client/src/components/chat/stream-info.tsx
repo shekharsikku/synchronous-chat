@@ -30,7 +30,7 @@ const StreamInfo = () => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const { localInfo, remoteInfo, callingDialog, setCallingDialog, mediaStream,
+  const { localInfo, callingInfo, callingDialog, setCallingDialog, mediaStream,
     localAudioRef, remoteAudioRef, disconnectCalling, callingActive } = usePeer();
 
   const maskedPeerId = (uuid: string) => {
@@ -136,7 +136,7 @@ const StreamInfo = () => {
                     ) : (
                       <HiOutlineArrowsRightLeft size={16} className="mt-[2px]" />
                     )}
-                    <span>{displayName(remoteInfo?.name!)}</span>
+                    <span>{displayName(callingInfo?.name!)}</span>
                   </h5>
                   <p className="flex gap-1 text-xs font-medium text-neutral-700">
                     <span>Voice Connected</span>
@@ -192,7 +192,7 @@ const StreamInfo = () => {
       <Dialog open={callingDialog} onOpenChange={setCallingDialog}>
         <DialogContent className="h-auto w-80 md:w-96 flex flex-col rounded-md items-start">
           <DialogHeader>
-            <DialogTitle className="text-start">Call with {remoteInfo?.name}</DialogTitle>
+            <DialogTitle className="text-start">Call with {callingInfo?.name}</DialogTitle>
             <DialogDescription className="text-start text-xs sm:text-sm">
               Connected with another user via WebRTC
             </DialogDescription>
@@ -207,7 +207,7 @@ const StreamInfo = () => {
             <h2 className="text-base font-medium flex justify-between">
               <span>{localInfo?.name}</span>
               <HiOutlineArrowsRightLeft size={16} className="mt-1" />
-              <span>{remoteInfo?.name}</span>
+              <span>{callingInfo?.name}</span>
             </h2>
 
             <div className={`${import.meta.env.PROD ? "hidden" : "w-full flex flex-col gap-2"}`}>
@@ -217,9 +217,9 @@ const StreamInfo = () => {
                 Local pid: <span className="text-xs text-gray-500 font-normal">{maskedPeerId(localInfo?.pid!)}</span>
               </p>
               <p className="text-sm font-medium">
-                Remote uid: <span className="text-xs text-gray-500 font-normal">{remoteInfo?.uid}</span>
+                Remote uid: <span className="text-xs text-gray-500 font-normal">{callingInfo?.uid}</span>
                 <br />
-                Remote pid: <span className="text-xs text-gray-500 font-normal">{maskedPeerId(remoteInfo?.pid!)}</span>
+                Remote pid: <span className="text-xs text-gray-500 font-normal">{maskedPeerId(callingInfo?.pid!)}</span>
               </p>
             </div>
 

@@ -38,6 +38,9 @@ interface PeerInterface {
   remoteInfo: PeerInformation;
   setRemoteInfo: React.Dispatch<React.SetStateAction<PeerInformation>>;
 
+  callingInfo: PeerInformation;
+  setCallingInfo: React.Dispatch<React.SetStateAction<PeerInformation>>;
+
   localAudioRef: React.RefObject<HTMLAudioElement | null>;
   remoteAudioRef: React.RefObject<HTMLAudioElement | null>;
 
