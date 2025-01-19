@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState, Fragment } from "react";
 import { useChatStore } from "@/zustand";
-import { useListenMessages } from "@/hooks";
+import { useListenMessages } from "@/lib/hooks";
 import { RenderDMMessages } from "./render-dm-messages";
 import { MessageSkeleton } from "./message-skeleton";
-import { Message } from "@/zustand/slice/chat";
+import { Message } from "@/zustand/chat";
 import { toast } from "sonner";
 import moment from "moment";
 import api from "@/lib/api";

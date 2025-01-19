@@ -19,7 +19,7 @@ const useSocket = (): SocketInterface => {
   return context;
 };
 
-/** */
+/** PeerInformation for connect user via peer-to-peer */
 
 type PeerInformation = {
   uid: string;

@@ -26,16 +26,16 @@ const Logo = () => {
           fill="#f5f5f5"
         ></path>{" "}
       </svg>
-      <span className="text-2xl md:text-3xl font-extrabold text-gray-800">Synchronous</span>
+      <h1 className="text-2xl md:text-3xl font-extrabold text-gray-800">Synchronous</h1>
     </div>
   );
 };
 
 const Title = ({ title }: { title: string }) => {
   return (
-    <h6 className="uppercase tracking-widest text-neutral-500 font-light text-opacity-90 text-xs lg:text-sm">
+    <h5 className="uppercase tracking-widest text-neutral-500 font-light text-opacity-90 text-xs lg:text-sm">
       {title}
-    </h6>
+    </h5>
   )
 }
 

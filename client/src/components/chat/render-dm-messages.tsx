@@ -21,14 +21,13 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Message } from "@/zustand/slice/chat";
-import { checkImageType, decryptMessage } from "@/utils";
+import { Message } from "@/zustand/chat";
+import { checkImageType, decryptMessage, cn } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/zustand";
-import { useDisableAnimations } from "@/hooks";
-import { useSocket } from "@/hooks/context";
+import { useDisableAnimations } from "@/lib/hooks";
+import { useSocket } from "@/lib/context";
 import { useInView } from "react-intersection-observer";
 import { useEffect, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
 import moment from "moment";
 import api from "@/lib/api";
 

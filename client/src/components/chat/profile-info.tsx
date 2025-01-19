@@ -15,17 +15,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useAuthStore, useChatStore } from "@/zustand";
-import { useSignOutUser, useAvatar } from "@/hooks";
+import { useSignOutUser, useAvatar } from "@/lib/hooks";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { usePeer } from "@/hooks/context";
+import { usePeer } from "@/lib/context";
 import { toast } from "sonner";
 
 const ProfileInfo = () => {
-  /** This state have authenticated and userData */
-  const { } = useSelector((state: any) => state.auth);
-
   const navigate = useNavigate();
   const { userInfo } = useAuthStore();
   const { handleSignOut } = useSignOutUser();
@@ -64,8 +60,8 @@ const ProfileInfo = () => {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col text-left">
-                  <span className="text-sm font-semibold text-neutral-700">{userInfo?.name}</span>
-                  <span className="text-xs font-medium text-neutral-700">{userInfo?.username}</span>
+                  <h5 className="text-sm font-semibold text-neutral-700">{userInfo?.name}</h5>
+                  <h6 className="text-xs font-medium text-neutral-700">{userInfo?.username}</h6>
                 </div>
               </div>
             </TooltipTrigger>

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/zustand";
-import { SocketContext } from "@/hooks/context";
+import { SocketContext } from "@/lib/context";
 import io, { Socket } from "socket.io-client";
 
-const serverApiUrl = import.meta.env.DEV ? "http://localhost:4000" : "/";
+const serverUrl = import.meta.env.DEV ? import.meta.env.VITE_SERVER_URL : "/";
 
 const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const { userInfo } = useAuthStore();
@@ -12,7 +12,7 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (userInfo?.setup) {
-      const socket = io(serverApiUrl, {
+      const socket = io(serverUrl, {
         withCredentials: true,
         query: { userId: userInfo._id }
       });

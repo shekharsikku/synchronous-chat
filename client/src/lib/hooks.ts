@@ -1,20 +1,17 @@
 import { toast } from "sonner";
 import { Socket } from "socket.io-client";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useEffect, useCallback, useRef } from "react";
-import { usePeer, useSocket } from "@/hooks/context";
+import { usePeer, useSocket } from "@/lib/context";
 import { useAuthStore, useChatStore } from "@/zustand";
-import { logout, currentUser } from "@/redux/reducer/auth";
-import { Message } from "@/zustand/slice/chat";
+import { Message } from "@/zustand/chat";
 import notificationSound from "@/assets/sound/message-alert.mp3";
-import maleAvatar from "@/assets/male-avatar.jpg";
-import femaleAvatar from "@/assets/female-avatar.jpg";
-import noAvatar from "@/assets/no-avatar.png";
+import maleAvatar from "@/assets/male-avatar.webp";
+import femaleAvatar from "@/assets/female-avatar.webp";
+import noAvatar from "@/assets/no-avatar.webp";
 import api from "@/lib/api";
 
 export const useGetUserInfo = () => {
-  const dispatch = useDispatch();
   const { setUserInfo, setIsAuthenticated } = useAuthStore();
 
   const getUserInfo = async () => {
@@ -23,7 +20,6 @@ export const useGetUserInfo = () => {
       const data = await response.data.data;
       setUserInfo(data);
       setIsAuthenticated(true);
-      dispatch(currentUser(data));
     } catch (error: any) {
       return null;
     }
@@ -33,7 +29,6 @@ export const useGetUserInfo = () => {
 
 export const useSignOutUser = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { setUserInfo, setIsAuthenticated } = useAuthStore();
   const { closeChat } = useChatStore();
   const { disconnectCalling, callingActive } = usePeer();
@@ -47,7 +42,6 @@ export const useSignOutUser = () => {
       }
       setIsAuthenticated(false);
       setUserInfo(null!);
-      dispatch(logout());
       closeChat();
       navigate("/auth");
       toast.success(response.data.message);
@@ -82,7 +76,11 @@ export const useListenMessages = () => {
     if (socket && !listenersAttached.current) {
       socket.on("message:receive", (message: Message) => {
         /** Play notification sound only if the message is for the current user */
-        if (message.recipient === userInfo?._id && isSoundAllow) {
+        if (
+          message.recipient === userInfo?._id &&
+          message.sender !== selectedChatData?._id &&
+          isSoundAllow
+        ) {
           const sound = new Audio(notificationSound);
           sound.play();
         }

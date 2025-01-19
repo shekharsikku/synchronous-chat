@@ -32,11 +32,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { countUserMessages, languageOptions } from "@/utils";
-import { useSocket, usePeer } from "@/hooks/context";
+import { countMessages, languageOptions } from "@/lib/utils";
+import { useSocket, usePeer } from "@/lib/context";
 import { useEffect, useState } from "react";
 import { useChatStore } from "@/zustand";
-import { useAvatar } from "@/hooks";
+import { useAvatar } from "@/lib/hooks";
 import { toast } from "sonner";
 import moment from "moment";
 
@@ -47,7 +47,7 @@ const ChatHeader = () => {
   const userAvatar = useAvatar(selectedChatData);
 
   useEffect(() => {
-    const { sent, received } = countUserMessages(messages, selectedChatData);
+    const { sent, received } = countMessages(messages, selectedChatData);
     setMessageStats({ sent, received });
   }, [selectedChatData?._id, messages.length]);
 

@@ -13,11 +13,11 @@ import { Logo, Title } from "./logo-title";
 import { AddNewChat } from "./add-new-chat";
 import { ProfileInfo } from "./profile-info";
 import { StreamInfo } from "./stream-info";
-import { UserInfo } from "@/zustand/slice/auth";
+import { UserInfo } from "@/zustand/auth";
 import { useEffect, useState } from "react";
 import { useChatStore } from "@/zustand";
-import { usePeer, useSocket } from "@/hooks/context";
-import { useAvatar } from "@/hooks";
+import { usePeer, useSocket } from "@/lib/context";
+import { useAvatar } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 
@@ -143,8 +143,8 @@ const ContactsContainer = () => {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex flex-col">
-                            <span className="text-sm font-semibold text-neutral-700">{contact?.name}</span>
-                            <span className="text-xs font-medium text-neutral-700">{contact?.username}</span>
+                            <h5 className="text-sm font-semibold text-neutral-700">{contact?.name}</h5>
+                            <h6 className="text-xs font-medium text-neutral-700">{contact?.username}</h6>
                           </div>
                         </div>
                         {onlineUsers.hasOwnProperty(contact?._id!)

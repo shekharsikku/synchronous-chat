@@ -21,7 +21,7 @@ import {
 } from "react-icons/hi2";
 import { continuousVisualizer } from "sound-visualizer";
 import { useState, useRef, useEffect } from "react";
-import { usePeer } from "@/hooks/context";
+import { usePeer } from "@/lib/context";
 
 const StreamInfo = () => {
   const [isMute, setIsMute] = useState(false);

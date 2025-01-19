@@ -1,5 +1,5 @@
-import type { PeerInformation, ResponseActions } from "@/hooks/context";
-import { useSocket, PeerContext } from "@/hooks/context";
+import type { PeerInformation, ResponseActions } from "@/lib/context";
+import { useSocket, PeerContext } from "@/lib/context";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { useAuthStore } from "@/zustand";
@@ -63,13 +63,17 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
         toast(`Request form ${details?.name}?`, {
           description: "Accept to connect via WebRTC?",
           action: {
-            label: <span className="bg-gray-900 text-white rounded px-3 py-2">Accept</span>,
+            label: "Accept",
             onClick: () => setCallingResponse("accept"),
           },
           duration: 30000,
           onDismiss: () => setCallingResponse("reject"),
           onAutoClose: () => setCallingResponse("missed"),
-        })
+          unstyled: false,
+          classNames: {
+            actionButton: "h-8 w-16 justify-center hover:opacity-80",
+          },
+        });
       }
 
       /** Handling signaling for call request */

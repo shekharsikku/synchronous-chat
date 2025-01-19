@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import { Auth, Chat, Profile } from "@/pages";
 import { useAuthStore } from "@/zustand";
-import { useGetUserInfo, useAuthRefresh } from "@/hooks";
+import { useGetUserInfo, useAuthRefresh } from "@/lib/hooks";
 import { useEffect } from "react";
 
 const ProtectedRoute = ({ children }: Readonly<{

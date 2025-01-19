@@ -11,10 +11,10 @@ import {
   HiOutlinePaperAirplane,
   HiOutlineBackspace
 } from "react-icons/hi2";
-import { convertToBase64, encryptMessage } from "@/utils";
+import { convertToBase64, encryptMessage } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/zustand";
 import { useState, useEffect, useRef } from "react";
-import { useSocket } from "@/hooks/context";
+import { useSocket } from "@/lib/context";
 import { toast } from "sonner";
 import api from "@/lib/api";
 

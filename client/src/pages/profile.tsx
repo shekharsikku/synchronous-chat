@@ -59,9 +59,9 @@ import {
   HiOutlineArrowRightOnRectangle,
   HiOutlineChatBubbleLeftRight,
 } from "react-icons/hi2";
-import { useSignOutUser } from "@/hooks";
+import { useSignOutUser } from "@/lib/hooks";
 import { useAuthStore } from "@/zustand";
-import { useSocket } from "@/hooks/context";
+import { useSocket } from "@/lib/context";
 import api from "@/lib/api";
 
 const Profile = () => {

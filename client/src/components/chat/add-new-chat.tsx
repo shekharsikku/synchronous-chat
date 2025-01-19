@@ -6,9 +6,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { UserInfo } from "@/zustand/slice/auth";
+import { UserInfo } from "@/zustand/auth";
 import { useChatStore } from "@/zustand";
-import { useDebounce, useAvatar } from "@/hooks";
+import { useDebounce, useAvatar } from "@/lib/hooks";
 import api from "@/lib/api";
 
 const AddNewChat = () => {
@@ -83,8 +83,8 @@ const AddNewChat = () => {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <span className="text-sm font-semibold text-neutral-700">{contact?.name}</span>
-                          <span className="text-xs font-medium text-neutral-700">{contact?.username}</span>
+                          <h5 className="text-sm font-semibold text-neutral-700">{contact?.name}</h5>
+                          <h6 className="text-xs font-medium text-neutral-700">{contact?.username}</h6>
                         </div>
                       </div>
                     ))}

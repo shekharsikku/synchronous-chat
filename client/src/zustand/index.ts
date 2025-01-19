@@ -1,4 +1,4 @@
-import useAuthStore from "./slice/auth";
-import useChatStore from "./slice/chat";
+import useAuthStore from "./auth";
+import useChatStore from "./chat";
 
 export { useAuthStore, useChatStore };

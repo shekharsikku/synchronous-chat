@@ -2,10 +2,8 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,10 +21,13 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
-import { validateEmail, removeSpaces, validateDummyEmail } from "@/utils";
-import { useGetUserInfo } from "@/hooks";
+import {
+  validateEmail,
+  removeSpaces,
+  validateDummyEmail
+} from "@/lib/utils";
+import { useGetUserInfo } from "@/lib/hooks";
 import { useAuthStore } from "@/zustand";
-import { login } from "@/redux/reducer/auth";
 import api from "@/lib/api";
 
 interface SignInInterface {
@@ -37,7 +38,6 @@ interface SignInInterface {
 
 const Auth = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { getUserInfo } = useGetUserInfo();
   const { setIsAuthenticated } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
@@ -124,7 +124,11 @@ const Auth = () => {
       if (response.data.success) {
         getUserInfo();
         setIsAuthenticated(true);
-        dispatch(login(result));
+
+        if (import.meta.env.DEV) {
+          const deleteResult = await api.delete("/api/message/delete");
+          console.log({ result: deleteResult.data });
+        }
       }
 
       if (result.setup) {
