@@ -31,15 +31,14 @@ export const useSignOutUser = () => {
   const navigate = useNavigate();
   const { setUserInfo, setIsAuthenticated } = useAuthStore();
   const { closeChat } = useChatStore();
-  const { disconnectCalling, callingActive } = usePeer();
+  const { disconnectCalling, callingActive, setPendingRequest } = usePeer();
 
   const handleSignOut = async (e: any) => {
     e.preventDefault();
     try {
       const response = await api.delete("/api/auth/sign-out");
-      if (callingActive) {
-        disconnectCalling();
-      }
+      if (callingActive) disconnectCalling();
+      setPendingRequest(false);
       setIsAuthenticated(false);
       setUserInfo(null!);
       closeChat();

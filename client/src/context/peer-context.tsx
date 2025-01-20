@@ -90,8 +90,6 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
     if (!remoteInfo?.pid) return;
 
     if (callingActive) {
-      setRemoteInfo(callingInfo);
-
       /** Notify the remote user when you busy */
       const callingActions = {
         from: localInfo?.uid,
@@ -105,6 +103,7 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
       if (action === "accept") {
         toast.info("Can't response on another call currently!");
       }
+      setRemoteInfo(callingInfo);
       return;
     }
 
@@ -189,20 +188,18 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
         setCallingDialog(true);
         setPendingRequest(false);
         toast.success(`Call request ${response.action} by ${response.name}!`);
-      } else if (response.action === "busy") {
-        setPendingRequest(false);
-        setCallingDialog(false);
-        setCallingActive(false);
-        setCallingResponse(null);
-        setRemoteInfo(null);
-        toast.info(`${response.name} is currently ${response.action} on another call!`);
       } else {
         setPendingRequest(false);
         setCallingDialog(false);
         setCallingActive(false);
         setCallingResponse(null);
         setRemoteInfo(null);
-        toast.info(`Call request ${response.action} by ${response.name}!`);
+
+        if (response.action === "busy") {
+          toast.info(`${response.name} is currently ${response.action} on another call!`);
+        } else {
+          toast.info(`Call request ${response.action} by ${response.name}!`);
+        }
       }
     }
 
@@ -237,14 +234,14 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
     setCallingDialog(false);
     setCallingActive(false);
     setCallingResponse(null);
-    setRemoteInfo(null);
+    setPendingRequest(false);
     setCallingInfo(null);
 
     /** Notify the remote user */
     const callingActions = {
       from: localInfo?.uid,
       name: localInfo?.name,
-      to: remoteInfo?.uid,
+      to: callingInfo?.uid,
       pid: localInfo?.pid,
     }
     socket?.emit("before:calldisconnect", { callingActions });
@@ -264,7 +261,7 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
       setCallingDialog(false);
       setCallingActive(false);
       setCallingResponse(null);
-      setRemoteInfo(null);
+      setPendingRequest(false);
       setCallingInfo(null);
 
       toast.info(`Call disconnected from ${response.name}!`);

@@ -51,23 +51,23 @@ const ChatHeader = () => {
     setMessageStats({ sent, received });
   }, [selectedChatData?._id, messages.length]);
 
-  const { localInfo, callingActive, pendingRequest, setPendingRequest, setCallingDialog } = usePeer();
+  const { localInfo, callingActive, pendingRequest, setPendingRequest, setCallingDialog, callingInfo } = usePeer();
   const { socket, onlineUsers } = useSocket();
 
   const isCurrentlyOnline = onlineUsers.hasOwnProperty(selectedChatData?._id!);
 
   const requestVoiceCalling = (userId: string) => {
-    /** Streaming details for signaling */
+    if (callingActive || pendingRequest) {
+      toast.info("Can't request for another call currently!");
+      return;
+    }
+
+    /** Local user details for call request */
     const callingDetails = {
       from: localInfo?.uid,
       name: localInfo?.name,
       to: userId,
       pid: localInfo?.pid,
-    }
-
-    if (callingActive || pendingRequest) {
-      toast.info("Can't request for another call currently!");
-      return;
     }
 
     setPendingRequest(true);
@@ -148,7 +148,7 @@ const ChatHeader = () => {
           {/* Voice Stream */}
           {isCurrentlyOnline && (
             <>
-              {callingActive ? (
+              {callingActive && callingInfo?.uid === selectedChatData?._id ? (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger className="focus:outline-none">
