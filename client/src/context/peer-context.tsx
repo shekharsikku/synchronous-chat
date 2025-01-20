@@ -240,15 +240,11 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
     socket?.emit("before:calldisconnect", { callingActions });
 
     /** Reset remote info state */
-    setTimeout(() => {
-      setCallingDialog(false);
-      setCallingActive(false);
-      setCallingResponse(null);
-      setPendingRequest(false);
-      setCallingInfo(null);
-    }, 2000);
-
-    toast.info(`Call disconnected to ${callingInfo?.name}!`);
+    setCallingDialog(false);
+    setCallingActive(false);
+    setCallingResponse(null);
+    setPendingRequest(false);
+    setCallingInfo(null);
   }
 
   useEffect(() => {
