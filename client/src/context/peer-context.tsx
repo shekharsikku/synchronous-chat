@@ -230,13 +230,6 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
     stopMediaTracks(localAudioRef);
     stopMediaTracks(remoteAudioRef);
 
-    /** Reset remote info state */
-    setCallingDialog(false);
-    setCallingActive(false);
-    setCallingResponse(null);
-    setPendingRequest(false);
-    setCallingInfo(null);
-
     /** Notify the remote user */
     const callingActions = {
       from: localInfo?.uid,
@@ -245,6 +238,17 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
       pid: localInfo?.pid,
     }
     socket?.emit("before:calldisconnect", { callingActions });
+
+    /** Reset remote info state */
+    setTimeout(() => {
+      setCallingDialog(false);
+      setCallingActive(false);
+      setCallingResponse(null);
+      setPendingRequest(false);
+      setCallingInfo(null);
+    }, 2000);
+
+    toast.info(`Call disconnected to ${callingInfo?.name}!`);
   }
 
   useEffect(() => {
