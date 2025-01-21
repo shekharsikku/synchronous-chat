@@ -176,7 +176,7 @@ const StreamInfo = () => {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger className="focus:outline-none">
-                  <HiOutlinePhoneXMark size={18} onClick={() => disconnectCalling()}
+                  <HiOutlinePhoneXMark size={18} onClick={disconnectCalling}
                     className="text-neutral-600 border-none outline-none transition-all duration-300" />
                 </TooltipTrigger>
                 <TooltipContent>
@@ -232,7 +232,7 @@ const StreamInfo = () => {
           <div className="w-full flex items-center gap-4">
             <Button size="lg" variant="outline" className="w-full p-2" onClick={() => setIsMute(prev => !prev)}>
               {isMute ? "Unmute" : "Mute"}</Button>
-            <Button size="lg" className="w-full p-2" onClick={() => disconnectCalling()}>
+            <Button size="lg" className="w-full p-2" onClick={disconnectCalling}>
               Disconnect</Button>
           </div>
         </DialogContent>

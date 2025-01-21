@@ -45,7 +45,7 @@ const App = () => {
     const intervalRefresh = setInterval(async () => {
       const success = await authRefresh();
       if (!success && import.meta.env.DEV) {
-        console.warn("Auth refresh failed during interval!");
+        console.log("Auth refresh failed during interval!");
       }
     }, 50 * 60 * 1000);
 

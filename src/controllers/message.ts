@@ -4,7 +4,6 @@ import { getSocketId, io } from "../socket";
 import { Types } from "mongoose";
 import Conversation from "../models/conversation";
 import Message from "../models/message";
-import { translate } from "bing-translate-api";
 
 const sendMessage = async (req: Request, res: Response) => {
   try {
@@ -65,7 +64,7 @@ const sendMessage = async (req: Request, res: Response) => {
 
     return ApiResponse(res, 201, "Message sent successfully!", message);
   } catch (error: any) {
-    return ApiResponse(res, 500, "Something Went Wrong!");
+    return ApiResponse(res, 500, "Error while sending message!");
   }
 };
 
@@ -128,7 +127,7 @@ const getMessages = async (req: Request, res: Response) => {
 
     return ApiResponse(res, 200, "Messages fetched successfully!", messages);
   } catch (error: any) {
-    return ApiResponse(res, 500, "Something Went Wrong!");
+    return ApiResponse(res, 500, "Error while fetching messages!");
   }
 };
 
@@ -179,35 +178,8 @@ const deleteMessages = async (req: Request, res: Response) => {
 
     return ApiResponse(res, 200, "Older messages deleted!", result);
   } catch (error: any) {
-    console.log(`Error: ${error.message}`);
+    return ApiResponse(res, 500, "Error while deleting messages!");
   }
 };
 
-const translateMessage = async (req: Request, res: Response) => {
-  try {
-    const { message, language } = await req.body;
-
-    const result = await translate(message, null, language);
-
-    if (!result) {
-      throw new ApiError(500, "Error while translating text!");
-    }
-
-    return ApiResponse(
-      res,
-      200,
-      "Text translated successfully!",
-      result.translation
-    );
-  } catch (error: any) {
-    return ApiResponse(res, error.code, error.message);
-  }
-};
-
-export {
-  sendMessage,
-  getMessages,
-  deleteMessage,
-  deleteMessages,
-  translateMessage,
-};
+export { sendMessage, getMessages, deleteMessage, deleteMessages };

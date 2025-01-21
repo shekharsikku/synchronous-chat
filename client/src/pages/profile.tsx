@@ -543,7 +543,7 @@ const Profile = () => {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isLoading} onClick={() => setOpenImageDeletionModal(false)}>
               Cancel</AlertDialogCancel>
-            <AlertDialogAction disabled={isLoading} onClick={() => handleImageDeleteClick()}>
+            <AlertDialogAction disabled={isLoading} onClick={handleImageDeleteClick}>
               Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -35,7 +35,7 @@ const ContactsContainer = () => {
       const response = await api.get("/api/contact/fetch");
       setContacts(response.data.data);
     } catch (error: any) {
-      console.log(`Error: ${error.message}`);
+      console.log(`Error while fetching contacts!`);
     } finally {
       setFetching(false);
     }

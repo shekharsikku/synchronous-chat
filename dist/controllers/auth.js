@@ -20,11 +20,13 @@ const env_1 = __importDefault(require("../utils/env"));
 const signUpUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, password } = yield req.body;
-        const existsEmail = yield user_1.default.findOne({ email });
+        const [existsEmail, hashedPassword] = yield Promise.all([
+            user_1.default.findOne({ email }),
+            (0, helpers_1.generateHash)(password),
+        ]);
         if (existsEmail) {
             throw new utils_1.ApiError(409, "Email already exists!");
         }
-        const hashedPassword = yield (0, helpers_1.generateHash)(password);
         const newUser = yield user_1.default.create({
             email,
             password: hashedPassword,

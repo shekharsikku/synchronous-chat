@@ -35,9 +35,9 @@ export const useSignOutUser = () => {
 
   const handleSignOut = async (e: any) => {
     e.preventDefault();
+    if (callingActive) disconnectCalling();
     try {
       const response = await api.delete("/api/auth/sign-out");
-      if (callingActive) disconnectCalling();
       setPendingRequest(false);
       setIsAuthenticated(false);
       setUserInfo(null!);

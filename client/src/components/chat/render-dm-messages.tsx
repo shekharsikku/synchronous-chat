@@ -98,7 +98,7 @@ const RenderDMMessages = ({
 
       return decryptMessage(message.text!, messageKey);
     } catch (error) {
-      isDevelopment && console.error("Plain text decryption failed:", error);
+      isDevelopment && console.log("Plain text decryption failed!");
       return "Decryption Error!";
     }
   }
@@ -109,11 +109,11 @@ const RenderDMMessages = ({
 
   const translateMessage = async (message: string, language: string) => {
     try {
-      const response = await api.post("/api/message/translate", { message, language });
+      const response = await api.post("/api/translate", { message, language });
       setTranslated(response.data.data);
     } catch (error: any) {
       setTranslated("");
-      isDevelopment && console.error("Language translation error:", error);
+      isDevelopment && console.log("Language translation error!");
     }
   }
 

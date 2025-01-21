@@ -68,11 +68,13 @@ const updateImage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!imagePath) {
             throw new utils_1.ApiError(400, "Profile image file required!");
         }
-        const uploadImage = yield (0, cloudinary_1.uploadOnCloudinary)(imagePath);
+        const [uploadImage, userProfile] = yield Promise.all([
+            (0, cloudinary_1.uploadOnCloudinary)(imagePath),
+            user_1.default.findById(requestUser === null || requestUser === void 0 ? void 0 : requestUser._id),
+        ]);
         if (!uploadImage || !uploadImage.url) {
             throw new utils_1.ApiError(500, "Error while uploading profile image!");
         }
-        const userProfile = yield user_1.default.findById(requestUser === null || requestUser === void 0 ? void 0 : requestUser._id);
         if (userProfile && userProfile.image !== "") {
             yield (0, cloudinary_1.deleteImageByUrl)(userProfile.image);
         }
@@ -114,7 +116,10 @@ const changePassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
     var _a;
     try {
         const { old_password, new_password } = yield req.body;
-        const requestUser = yield user_1.default.findById((_a = req.user) === null || _a === void 0 ? void 0 : _a._id).select("+password");
+        const [requestUser, hashedPassword] = yield Promise.all([
+            user_1.default.findById((_a = req.user) === null || _a === void 0 ? void 0 : _a._id).select("+password"),
+            (0, helpers_1.generateHash)(new_password),
+        ]);
         if (!requestUser) {
             throw new utils_1.ApiError(403, "Invalid authorization!");
         }
@@ -125,7 +130,6 @@ const changePassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
         if (!validatePassword) {
             throw new utils_1.ApiError(403, "Incorrect old password!");
         }
-        const hashedPassword = yield (0, helpers_1.generateHash)(new_password);
         requestUser.password = hashedPassword;
         yield requestUser.save({ validateBeforeSave: true });
         const accessData = (0, helpers_1.createAccessData)(requestUser);

@@ -12,12 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.translateMessage = exports.deleteMessages = exports.deleteMessage = exports.getMessages = exports.sendMessage = void 0;
+exports.deleteMessages = exports.deleteMessage = exports.getMessages = exports.sendMessage = void 0;
 const utils_1 = require("../utils");
 const socket_1 = require("../socket");
 const conversation_1 = __importDefault(require("../models/conversation"));
 const message_1 = __importDefault(require("../models/message"));
-const bing_translate_api_1 = require("bing-translate-api");
 const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
@@ -63,7 +62,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         return (0, utils_1.ApiResponse)(res, 201, "Message sent successfully!", message);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, 500, "Something Went Wrong!");
+        return (0, utils_1.ApiResponse)(res, 500, "Error while sending message!");
     }
 });
 exports.sendMessage = sendMessage;
@@ -96,7 +95,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         return (0, utils_1.ApiResponse)(res, 200, "Messages fetched successfully!", messages);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, 500, "Something Went Wrong!");
+        return (0, utils_1.ApiResponse)(res, 500, "Error while fetching messages!");
     }
 });
 exports.getMessages = getMessages;
@@ -143,21 +142,7 @@ const deleteMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
         return (0, utils_1.ApiResponse)(res, 200, "Older messages deleted!", result);
     }
     catch (error) {
-        console.log(`Error: ${error.message}`);
+        return (0, utils_1.ApiResponse)(res, 500, "Error while deleting messages!");
     }
 });
 exports.deleteMessages = deleteMessages;
-const translateMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { message, language } = yield req.body;
-        const result = yield (0, bing_translate_api_1.translate)(message, null, language);
-        if (!result) {
-            throw new utils_1.ApiError(500, "Error while translating text!");
-        }
-        return (0, utils_1.ApiResponse)(res, 200, "Text translated successfully!", result.translation);
-    }
-    catch (error) {
-        return (0, utils_1.ApiResponse)(res, error.code, error.message);
-    }
-});
-exports.translateMessage = translateMessage;

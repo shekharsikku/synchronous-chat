@@ -14,6 +14,7 @@ import {
 import { convertToBase64, encryptMessage } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/zustand";
 import { useState, useEffect, useRef } from "react";
+import { isMobile } from "react-device-detect";
 import { useSocket } from "@/lib/context";
 import { toast } from "sonner";
 import api from "@/lib/api";
@@ -34,7 +35,7 @@ const MessageBar = () => {
   const [emojiPicker, setEmojiPicker] = useState(false);
 
   useEffect(() => {
-    if (selectedChatData && inputRef.current) {
+    if (selectedChatData && inputRef.current && !isMobile) {
       inputRef.current.focus();
     }
   }, [selectedChatData]);
@@ -84,7 +85,7 @@ const MessageBar = () => {
         setSelectedImage(base64);
       }
     } catch (error: any) {
-      console.log(`Error: ${error.message}`);
+      console.log(`Error while attaching file!`);
     }
   }
 

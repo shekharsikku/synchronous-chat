@@ -16,13 +16,14 @@ const signUpUser = async (req: Request, res: Response) => {
   try {
     const { email, password } = await req.body;
 
-    const existsEmail = await User.findOne({ email });
+    const [existsEmail, hashedPassword] = await Promise.all([
+      User.findOne({ email }),
+      generateHash(password),
+    ]);
 
     if (existsEmail) {
       throw new ApiError(409, "Email already exists!");
     }
-
-    const hashedPassword = await generateHash(password);
 
     const newUser = await User.create({
       email,

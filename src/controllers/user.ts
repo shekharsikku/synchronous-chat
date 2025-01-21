@@ -80,13 +80,14 @@ const updateImage = async (req: Request, res: Response) => {
       throw new ApiError(400, "Profile image file required!");
     }
 
-    const uploadImage = await uploadOnCloudinary(imagePath);
+    const [uploadImage, userProfile] = await Promise.all([
+      uploadOnCloudinary(imagePath),
+      User.findById(requestUser?._id),
+    ]);
 
     if (!uploadImage || !uploadImage.url) {
       throw new ApiError(500, "Error while uploading profile image!");
     }
-
-    const userProfile = await User.findById(requestUser?._id);
 
     if (userProfile && userProfile.image !== "") {
       await deleteImageByUrl(userProfile.image!);
@@ -143,7 +144,10 @@ const changePassword = async (req: Request, res: Response) => {
   try {
     const { old_password, new_password } = await req.body;
 
-    const requestUser = await User.findById(req.user?._id).select("+password");
+    const [requestUser, hashedPassword] = await Promise.all([
+      User.findById(req.user?._id).select("+password"),
+      generateHash(new_password),
+    ]);
 
     if (!requestUser) {
       throw new ApiError(403, "Invalid authorization!");
@@ -161,8 +165,6 @@ const changePassword = async (req: Request, res: Response) => {
     if (!validatePassword) {
       throw new ApiError(403, "Incorrect old password!");
     }
-
-    const hashedPassword = await generateHash(new_password);
 
     requestUser.password = hashedPassword;
     await requestUser.save({ validateBeforeSave: true });
