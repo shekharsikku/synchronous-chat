@@ -163,7 +163,7 @@ const ChatHeader = () => {
               ) : (
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger className="focus:outline-none">
+                    <TooltipTrigger className="focus:outline-none" disabled={pendingRequest}>
                       <HiOutlinePhone size={18} onClick={() => requestVoiceCalling(selectedChatData?._id!)}
                         className="text-neutral-600 border-none outline-none transition-all duration-300" />
                     </TooltipTrigger>

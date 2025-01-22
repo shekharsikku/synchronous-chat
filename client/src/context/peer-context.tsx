@@ -1,7 +1,7 @@
 import type { PeerInformation, ResponseActions } from "@/lib/context";
 import { useSocket, PeerContext } from "@/lib/context";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useId } from "react";
 import { useAuthStore } from "@/zustand";
 import { toast } from "sonner";
 import Peer from "peerjs";
@@ -29,6 +29,8 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
   const [callingDialog, setCallingDialog] = useState(false);
   const [callingActive, setCallingActive] = useState(false);
   const [pendingRequest, setPendingRequest] = useState(false);
+
+  const callingToastId = useId();
 
   useEffect(() => {
     if (userInfo?.setup) {
@@ -85,6 +87,17 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
       }
     }
   }, [userInfo, socket]);
+
+  useEffect(() => {
+    if (pendingRequest) {
+      toast.info("Waiting for pending call response!", {
+        id: callingToastId,
+        duration: 30000,
+      });
+    } else {
+      toast.dismiss(callingToastId);
+    }
+  }, [pendingRequest, callingToastId]);
 
   const responseCallingRequest = (action: ResponseActions) => {
     if (!remoteInfo?.pid) return;
