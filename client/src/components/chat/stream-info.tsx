@@ -19,13 +19,19 @@ import {
   HiOutlineSpeakerXMark,
   HiOutlineArrowsRightLeft,
 } from "react-icons/hi2";
+import { LuMic, LuMicOff } from "react-icons/lu";
 import { continuousVisualizer } from "sound-visualizer";
 import { useState, useRef, useEffect } from "react";
-import { usePeer } from "@/lib/context";
+import { usePeer, useSocket } from "@/lib/context";
 
 const StreamInfo = () => {
-  const [isMute, setIsMute] = useState(false);
+  const { socket } = useSocket();
+
   const [callTimer, setCallTimer] = useState(0);
+  const [muteUser, setMuteUser] = useState(false);
+  const [hoverInfo, setHoverInfo] = useState(false);
+  const [remoteMute, setRemoteMute] = useState(false);
+  const [remoteMicOff, setRemoteMicOff] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -100,7 +106,7 @@ const StreamInfo = () => {
 
         const audioTracks = mediaStream.getAudioTracks();
 
-        if (audioTracks.length > 0 && remoteAudioRef) {
+        if (audioTracks.length > 0 && remoteAudioRef && !remoteMute) {
           ({ start: startVisualizer, stop: stopVisualizer } =
             continuousVisualizer(mediaStream, canvas, options));
           startVisualizer();
@@ -116,9 +122,31 @@ const StreamInfo = () => {
         if (stopVisualizer) stopVisualizer();
       };
     }
-  }, [mediaStream, callingActive, remoteAudioRef, callingDialog]);
+  }, [mediaStream, callingActive, remoteAudioRef, callingDialog, remoteMute]);
 
-  const [hoverTest, setHoverTest] = useState(false);
+  useEffect(() => {
+    const microphoneAction = {
+      to: callingInfo?.uid,
+      mute: remoteMicOff,
+    }
+    socket?.emit("before:micaction", { microphoneAction });
+  }, [remoteMicOff]);
+
+  useEffect(() => {
+    const handleMicAction = ({
+      microphoneAction: action
+    }: {
+      microphoneAction: any
+    }) => {
+      setRemoteMute(action.mute);
+    }
+
+    socket?.on("after:micaction", handleMicAction);
+
+    return () => {
+      socket?.off("after:micaction", handleMicAction);
+    }
+  }, [socket]);
 
   return (
     <>
@@ -128,10 +156,10 @@ const StreamInfo = () => {
             <Tooltip>
               <TooltipTrigger className="focus:outline-none">
                 <div className="flex flex-col justify-center" onClick={() => setCallingDialog(true)}
-                  onMouseOver={() => setHoverTest(true)} onMouseLeave={() => setHoverTest(false)} role="button">
+                  onMouseOver={() => setHoverInfo(true)} onMouseLeave={() => setHoverInfo(false)} role="button">
                   <h5 className="flex gap-2 text-sm font-semibold text-neutral-700">
                     <span>{displayName(localInfo?.name!)}</span>
-                    {hoverTest ? (
+                    {hoverInfo ? (
                       <HiOutlineRss size={16} className="mt-[2px]" />
                     ) : (
                       <HiOutlineArrowsRightLeft size={16} className="mt-[2px]" />
@@ -151,24 +179,41 @@ const StreamInfo = () => {
           </TooltipProvider>
 
           <div className="hidden">
-            <audio ref={localAudioRef} autoPlay controls muted />
-            <audio ref={remoteAudioRef} autoPlay controls muted={isMute} />
+            <audio ref={localAudioRef} autoPlay muted />
+            <audio ref={remoteAudioRef} autoPlay muted={muteUser || remoteMute} />
           </div>
 
           <div className="flex gap-4 justify-end">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger className="focus:outline-none">
-                  {isMute ? (
-                    <HiOutlineSpeakerXMark size={20} onClick={() => setIsMute(false)}
+                  {remoteMicOff ? (
+                    <LuMicOff size={20} strokeWidth={1.5} onClick={() => setRemoteMicOff(false)}
                       className="text-neutral-600 border-none outline-none transition-all duration-300" />
                   ) : (
-                    <HiOutlineSpeakerWave size={20} onClick={() => setIsMute(true)}
+                    <LuMic size={20} strokeWidth={1.5} onClick={() => setRemoteMicOff(true)}
                       className="text-neutral-600 border-none outline-none transition-all duration-300" />
                   )}
                 </TooltipTrigger>
                 <TooltipContent>
-                  <span className="text-neutral-700 font-medium">{isMute ? "Unmute" : "Mute"}</span>
+                  <span className="text-neutral-700 font-medium">{remoteMicOff ? "Mic On" : "Mic Off"}</span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="focus:outline-none">
+                  {muteUser ? (
+                    <HiOutlineSpeakerXMark size={20} onClick={() => setMuteUser(false)}
+                      className="text-neutral-600 border-none outline-none transition-all duration-300" />
+                  ) : (
+                    <HiOutlineSpeakerWave size={20} onClick={() => setMuteUser(true)}
+                      className="text-neutral-600 border-none outline-none transition-all duration-300" />
+                  )}
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span className="text-neutral-700 font-medium">{muteUser ? "Voice On" : "Voice Off"}</span>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -230,8 +275,8 @@ const StreamInfo = () => {
           </div>
 
           <div className="w-full flex items-center gap-4">
-            <Button size="lg" variant="outline" className="w-full p-2" onClick={() => setIsMute(prev => !prev)}>
-              {isMute ? "Unmute" : "Mute"}</Button>
+            <Button size="lg" variant="outline" className="w-full p-2" onClick={() => setRemoteMicOff(prev => !prev)}>
+              {remoteMicOff ? "Unmute" : "Mute"}</Button>
             <Button size="lg" className="w-full p-2" onClick={disconnectCalling}>
               Disconnect</Button>
           </div>

@@ -79,6 +79,12 @@ io.on("connection", (socket) => {
             callingActions,
         });
     });
+    socket.on("before:micaction", ({ microphoneAction }) => {
+        const socketId = getSocketId(microphoneAction.to);
+        socket.to(Array.from(socketId)).emit("after:micaction", {
+            microphoneAction,
+        });
+    });
     socket.on("disconnect", () => {
         console.log(`User disconnected: ${socket.id}`);
         for (const [userId, sockets] of userSocketMap.entries()) {

@@ -2,16 +2,18 @@ import { createContext, useContext } from "react";
 import { Socket } from "socket.io-client";
 import Peer from "peerjs";
 
-interface SocketInterface {
+export interface SocketInterface {
   socket: Socket | null;
   onlineUsers: object;
 }
 
-const SocketContext = createContext<SocketInterface | undefined>(undefined);
+export const SocketContext = createContext<SocketInterface | undefined>(
+  undefined
+);
 
 /** Custom hook for use socket.io context in app */
 
-const useSocket = (): SocketInterface => {
+export const useSocket = (): SocketInterface => {
   const context = useContext(SocketContext);
   if (!context) {
     throw new Error("useSocket must be used within a SocketProvider");
@@ -21,15 +23,15 @@ const useSocket = (): SocketInterface => {
 
 /** PeerInformation for connect user via peer-to-peer */
 
-type PeerInformation = {
+export type PeerInformation = {
   uid: string;
   name: string;
   pid: string;
 } | null;
 
-type ResponseActions = "accept" | "reject" | "missed" | null;
+export type ResponseActions = "accept" | "reject" | "missed" | null;
 
-interface PeerInterface {
+export interface PeerInterface {
   peer: Peer | null;
 
   localInfo: PeerInformation;
@@ -62,23 +64,14 @@ interface PeerInterface {
   setMediaStream: React.Dispatch<React.SetStateAction<MediaStream | undefined>>;
 }
 
-const PeerContext = createContext<PeerInterface | undefined>(undefined);
+export const PeerContext = createContext<PeerInterface | undefined>(undefined);
 
 /** Custom hook for use peerjs webrtc context in app */
 
-const usePeer = (): PeerInterface => {
+export const usePeer = (): PeerInterface => {
   const context = useContext(PeerContext);
   if (!context) {
     throw new Error("usePeer must be used within a PeerProvider");
   }
   return context;
-};
-
-export { SocketContext, useSocket, PeerContext, usePeer };
-
-export type {
-  SocketInterface,
-  PeerInterface,
-  PeerInformation,
-  ResponseActions,
 };

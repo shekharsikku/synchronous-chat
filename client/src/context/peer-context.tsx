@@ -1,5 +1,4 @@
-import type { PeerInformation, ResponseActions } from "@/lib/context";
-import { useSocket, PeerContext } from "@/lib/context";
+import { useSocket, PeerContext, PeerInformation, ResponseActions } from "@/lib/context";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef, useId } from "react";
 import { useAuthStore } from "@/zustand";
