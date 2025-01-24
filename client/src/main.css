@@ -151,3 +151,26 @@
     background-position: 200% 0;
   }
 }
+
+.typing {
+  animation: typing 1.2s infinite ease-in-out;
+}
+
+@keyframes typing {
+  0%,
+  80%,
+  100% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+.typing:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typing:nth-child(2) {
+  animation-delay: -0.16s;
+}

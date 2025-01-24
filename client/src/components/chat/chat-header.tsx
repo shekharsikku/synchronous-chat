@@ -140,7 +140,9 @@ const ChatHeader = () => {
             <h3 className="font-semibold">
               {selectedChatData?.name || selectedChatData?.username || selectedChatData?.email}
             </h3>
-            {isPartnerTyping && <span className="text-xs">typing...</span>}
+            {isPartnerTyping && <p className="text-xs">
+              typing<span className="typing">.</span><span className="typing">.</span><span className="typing">.</span>
+            </p>}
           </div>
         </div>
 
