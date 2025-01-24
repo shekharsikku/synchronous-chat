@@ -14,8 +14,9 @@ const io = new Server(server, {
 
 const userSocketMap = new Map<string, Set<string>>();
 
-const getSocketId = (socketUserId: string) => {
-  return userSocketMap.get(socketUserId) || new Set<string>();
+const getSocketId = (userId: string) => {
+  const userSockets = userSocketMap.get(userId) || new Set<string>();
+  return Array.from(userSockets);
 };
 
 io.on("connection", (socket: Socket) => {
@@ -42,7 +43,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("typing:start", ({ selectedUser, currentUser }) => {
     const socketId = getSocketId(selectedUser);
 
-    socket.to(Array.from(socketId)).emit("typing:display", {
+    socket.to(socketId).emit("typing:display", {
       uid: selectedUser,
       cid: currentUser,
       typing: true,
@@ -52,7 +53,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("typing:stop", ({ selectedUser, currentUser }) => {
     const socketId = getSocketId(selectedUser);
 
-    socket.to(Array.from(socketId)).emit("typing:hide", {
+    socket.to(socketId).emit("typing:hide", {
       uid: selectedUser,
       cid: currentUser,
       typing: false,
@@ -62,19 +63,15 @@ io.on("connection", (socket: Socket) => {
   socket.on("before:profileupdate", ({ updatedDetails }) => {
     const socketId = getSocketId(updatedDetails._id);
 
-    socket.to(Array.from(socketId)).emit("after:profileupdate", {
+    socket.to(socketId).emit("after:profileupdate", {
       updatedDetails,
     });
-
-    // socketId.forEach((id) => {
-    //   io.to(id).emit("after:profileupdate", { updatedDetails });
-    // });
   });
 
   socket.on("before:callrequest", ({ callingDetails }) => {
     const socketId = getSocketId(callingDetails.to);
 
-    socket.to(Array.from(socketId)).emit("after:callrequest", {
+    socket.to(socketId).emit("after:callrequest", {
       callingDetails,
     });
   });
@@ -82,7 +79,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("before:callconnect", ({ callingActions }) => {
     const socketId = getSocketId(callingActions.to);
 
-    socket.to(Array.from(socketId)).emit("after:callconnect", {
+    socket.to(socketId).emit("after:callconnect", {
       callingActions,
     });
   });
@@ -90,15 +87,15 @@ io.on("connection", (socket: Socket) => {
   socket.on("before:calldisconnect", ({ callingActions }) => {
     const socketId = getSocketId(callingActions.to);
 
-    socket.to(Array.from(socketId)).emit("after:calldisconnect", {
+    socket.to(socketId).emit("after:calldisconnect", {
       callingActions,
     });
   });
 
-  socket.on("before:micaction", ({ microphoneAction }) => {
+  socket.on("before:muteaction", ({ microphoneAction }) => {
     const socketId = getSocketId(microphoneAction.to);
 
-    socket.to(Array.from(socketId)).emit("after:micaction", {
+    socket.to(socketId).emit("after:muteaction", {
       microphoneAction,
     });
   });

@@ -129,7 +129,7 @@ const StreamInfo = () => {
       to: callingInfo?.uid,
       mute: remoteMicOff,
     }
-    socket?.emit("before:micaction", { microphoneAction });
+    socket?.emit("before:muteaction", { microphoneAction });
   }, [remoteMicOff]);
 
   useEffect(() => {
@@ -141,10 +141,10 @@ const StreamInfo = () => {
       setRemoteMute(action.mute);
     }
 
-    socket?.on("after:micaction", handleMicAction);
+    socket?.on("after:muteaction", handleMicAction);
 
     return () => {
-      socket?.off("after:micaction", handleMicAction);
+      socket?.off("after:muteaction", handleMicAction);
     }
   }, [socket]);
 

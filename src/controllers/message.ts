@@ -38,26 +38,22 @@ const sendMessage = async (req: Request, res: Response) => {
     const senderSocketId = getSocketId(String(sender));
     const receiverSocketId = getSocketId(receiver);
 
-    if (receiverSocketId.size > 0) {
-      const receiverSockets = Array.from(receiverSocketId);
-
+    if (receiverSocketId.length > 0) {
       /** for update new message */
-      io.to(receiverSockets).emit("message:receive", message);
+      io.to(receiverSocketId).emit("message:receive", message);
 
       /** for update last chat contact */
-      io.to(receiverSockets).emit("conversation:updated", {
+      io.to(receiverSocketId).emit("conversation:updated", {
         _id: sender,
         interaction: conversation.interaction,
       });
     }
 
-    const senderSockets = Array.from(senderSocketId);
-
     /** for update new message */
-    io.to(senderSockets).emit("message:receive", message);
+    io.to(senderSocketId).emit("message:receive", message);
 
     /** for update last chat contact */
-    io.to(senderSockets).emit("conversation:updated", {
+    io.to(senderSocketId).emit("conversation:updated", {
       _id: receiver,
       interaction: conversation.interaction,
     });
@@ -150,10 +146,10 @@ const deleteMessage = async (req: Request, res: Response) => {
       message.type = "deleted";
       await message.save({ validateBeforeSave: false });
 
-      if (receiverSocketId.size > 0) {
-        io.to(Array.from(receiverSocketId)).emit("message:remove", message);
+      if (receiverSocketId.length > 0) {
+        io.to(receiverSocketId).emit("message:remove", message);
       }
-      io.to(Array.from(senderSocketId)).emit("message:remove", message);
+      io.to(senderSocketId).emit("message:remove", message);
 
       return ApiResponse(res, 200, "Message deleted successfully!", message);
     } else {
