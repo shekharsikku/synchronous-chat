@@ -1,5 +1,5 @@
+import { LuAudioLines } from "react-icons/lu";
 import {
-  HiOutlineRss,
   HiOutlinePhone,
   HiOutlineXMark,
   HiOutlineLanguage
@@ -140,9 +140,18 @@ const ChatHeader = () => {
             <h3 className="font-semibold">
               {selectedChatData?.name || selectedChatData?.username || selectedChatData?.email}
             </h3>
-            {isPartnerTyping && <p className="text-xs">
-              typing<span className="typing">.</span><span className="typing">.</span><span className="typing">.</span>
-            </p>}
+            {isCurrentlyOnline && (
+              <p className="text-xs">
+                {isPartnerTyping ? (
+                  <>
+                    <span>typing</span><span className="typing">.</span>
+                    <span className="typing">.</span><span className="typing">.</span>
+                  </>
+                ) : (
+                  <span>online</span>
+                )}
+              </p>
+            )}
           </div>
         </div>
 
@@ -154,7 +163,7 @@ const ChatHeader = () => {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger className="focus:outline-none">
-                      <HiOutlineRss size={18} onClick={() => setCallingDialog(true)}
+                      <LuAudioLines size={20} strokeWidth={1.5} onClick={() => setCallingDialog(true)}
                         className="text-neutral-600 border-none outline-none transition-all duration-300" />
                     </TooltipTrigger>
                     <TooltipContent>

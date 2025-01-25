@@ -13,13 +13,11 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  HiOutlineRss,
   HiOutlinePhoneXMark,
   HiOutlineSpeakerWave,
   HiOutlineSpeakerXMark,
-  HiOutlineArrowsRightLeft,
 } from "react-icons/hi2";
-import { LuMic, LuMicOff } from "react-icons/lu";
+import { LuMic, LuMicOff, LuAudioLines, LuAudioWaveform } from "react-icons/lu";
 import { continuousVisualizer } from "sound-visualizer";
 import { useState, useRef, useEffect } from "react";
 import { usePeer, useSocket } from "@/lib/context";
@@ -155,14 +153,14 @@ const StreamInfo = () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger className="focus:outline-none">
-                <div className="flex flex-col justify-center" onClick={() => setCallingDialog(true)}
+                <div className="flex flex-col justify-center px-1" onClick={() => setCallingDialog(true)}
                   onMouseOver={() => setHoverInfo(true)} onMouseLeave={() => setHoverInfo(false)} role="button">
                   <h5 className="flex gap-2 text-sm font-semibold text-neutral-700">
                     <span>{displayName(localInfo?.name!)}</span>
                     {hoverInfo ? (
-                      <HiOutlineRss size={16} className="mt-[2px]" />
+                      <LuAudioLines size={16} strokeWidth={1.5} className="mt-[2px]" />
                     ) : (
-                      <HiOutlineArrowsRightLeft size={16} className="mt-[2px]" />
+                      <LuAudioWaveform size={16} strokeWidth={1.5} className="mt-[2px]" />
                     )}
                     <span>{displayName(callingInfo?.name!)}</span>
                   </h5>
@@ -251,7 +249,7 @@ const StreamInfo = () => {
 
             <h2 className="text-base font-medium flex justify-between">
               <span>{localInfo?.name}</span>
-              <HiOutlineArrowsRightLeft size={16} className="mt-1" />
+              <LuAudioWaveform size={16} strokeWidth={1.5} className="mt-1" />
               <span>{callingInfo?.name}</span>
             </h2>
 
