@@ -26,7 +26,6 @@ import {
   removeSpaces,
   validateDummyEmail
 } from "@/lib/utils";
-import { useGetUserInfo } from "@/lib/hooks";
 import { useAuthStore } from "@/zustand";
 import api from "@/lib/api";
 
@@ -38,8 +37,7 @@ interface SignInInterface {
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { getUserInfo } = useGetUserInfo();
-  const { setIsAuthenticated } = useAuthStore();
+  const { setIsAuthenticated, setUserInfo } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
 
   /** Hookform Zod Resolver - SignUp */
@@ -119,23 +117,23 @@ const Auth = () => {
       }
 
       const response = await api.post("/api/auth/sign-in", details);
-      const result = await response.data.data;
+      const result = await response.data;
 
-      if (response.data.success) {
-        getUserInfo();
+      if (result.success) {
+        setUserInfo(result.data);
         setIsAuthenticated(true);
 
-        if (import.meta.env.DEV) {
-          const deleteResult = await api.delete("/api/message/delete");
-          console.log({ result: deleteResult.data });
+        if (result.data.setup && import.meta.env.DEV) {
+          const deleted = await api.delete("/api/message/delete");
+          console.log({ result: deleted.data });
         }
       }
 
-      if (result.setup) {
-        toast.success(response.data.message);
+      if (result.data.setup) {
+        toast.success(result.message);
         navigate("/chat", { replace: true });
       } else {
-        toast.info(response.data.message);
+        toast.info(result.message);
         navigate("/profile", { replace: true });
       }
 

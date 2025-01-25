@@ -6,8 +6,7 @@ import {
   generateAccess,
   generateRefresh,
   authorizeCookie,
-  maskedDetails,
-  createAccessData,
+  createUserInfo,
 } from "../helpers";
 import User from "../models/user";
 import env from "../utils/env";
@@ -16,22 +15,17 @@ const signUpUser = async (req: Request, res: Response) => {
   try {
     const { email, password } = await req.body;
 
-    const [existsEmail, hashedPassword] = await Promise.all([
-      User.findOne({ email }),
-      generateHash(password),
-    ]);
+    const existsEmail = await User.exists({ email });
 
     if (existsEmail) {
       throw new ApiError(409, "Email already exists!");
     }
 
-    const newUser = await User.create({
-      email,
-      password: hashedPassword,
-    });
+    const hashedPassword = await generateHash(password);
 
-    const userData = maskedDetails(newUser);
-    return ApiResponse(res, 201, "Signed up successfully!", userData);
+    await User.create({ email, password: hashedPassword });
+
+    return ApiResponse(res, 201, "Signed up successfully!");
   } catch (error: any) {
     return ApiResponse(res, error.code, error.message);
   }
@@ -58,21 +52,20 @@ const signInUser = async (req: Request, res: Response) => {
       throw new ApiError(404, "User not exists!");
     }
 
-    const validatePassword = await compareHash(password, existsUser.password!);
+    const isCorrect = await compareHash(password, existsUser.password!);
 
-    if (!validatePassword) {
+    if (!isCorrect) {
       throw new ApiError(403, "Incorrect password!");
     }
 
-    const accessData = createAccessData(existsUser);
-    const accessToken = generateAccess(res, accessData);
+    const userInfo = createUserInfo(existsUser);
+    const accessToken = generateAccess(res, userInfo);
 
-    if (!accessData.setup) {
-      const userData = maskedDetails(accessData);
-      return ApiResponse(res, 200, "Please, complete your profile!", userData);
+    if (!userInfo.setup) {
+      return ApiResponse(res, 200, "Please, complete your profile!", userInfo);
     }
 
-    const refreshToken = generateRefresh(res, accessData._id!);
+    const refreshToken = generateRefresh(res, userInfo._id!);
     const refreshExpiry = env.REFRESH_EXPIRY;
 
     existsUser.authentication?.push({
@@ -87,11 +80,7 @@ const signInUser = async (req: Request, res: Response) => {
 
     authorizeCookie(res, authorizeId.toString());
 
-    return ApiResponse(res, 200, "Signed in successfully!", {
-      _id: accessData._id,
-      email: accessData.email,
-      setup: accessData.setup,
-    });
+    return ApiResponse(res, 200, "Signed in successfully!", userInfo);
   } catch (error: any) {
     return ApiResponse(res, error.code, error.message);
   }
@@ -117,8 +106,7 @@ const signOutUser = async (req: Request, res: Response) => {
   res.clearCookie("refresh");
   res.clearCookie("current");
 
-  const userData = maskedDetails(requestUser);
-  return ApiResponse(res, 200, "Signed out successfully!", userData);
+  return ApiResponse(res, 200, "Signed out successfully!");
 };
 
 const refreshAuth = async (req: Request, res: Response) => {

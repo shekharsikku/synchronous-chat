@@ -20,40 +20,30 @@ const helpers_1 = require("../helpers");
 const user_1 = __importDefault(require("../models/user"));
 const profileSetup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const details = yield req.body;
-        const username = (0, helpers_1.removeSpaces)(details === null || details === void 0 ? void 0 : details.username);
+        const { name, username: uname, gender, bio } = yield req.body;
+        const username = (0, helpers_1.removeSpaces)(uname);
         const requestUser = req.user;
         if (username !== (requestUser === null || requestUser === void 0 ? void 0 : requestUser.username)) {
-            const existsUsername = yield user_1.default.findOne({ username });
+            const existsUsername = yield user_1.default.exists({ username });
             if (existsUsername) {
                 throw new utils_1.ApiError(409, "Username already exists!");
             }
         }
-        const updateDetails = {
-            name: details.name,
-            username,
-            gender: details.gender,
-            bio: details.bio,
-        };
-        const isEmpty = (0, helpers_1.hasEmptyField)({
-            name: details.name,
-            username,
-            gender: details.gender,
-        });
-        if (!isEmpty) {
-            updateDetails.setup = true;
+        const userDetails = { name, username, gender, bio, setup: false };
+        const isCompleted = !(0, helpers_1.hasEmptyField)({ name, username, gender });
+        if (isCompleted) {
+            userDetails.setup = true;
         }
-        const updatedProfile = yield user_1.default.findByIdAndUpdate(requestUser === null || requestUser === void 0 ? void 0 : requestUser._id, Object.assign({}, updateDetails), { new: true });
+        const updatedProfile = yield user_1.default.findByIdAndUpdate(requestUser === null || requestUser === void 0 ? void 0 : requestUser._id, userDetails, { new: true });
         if (!updatedProfile) {
             throw new utils_1.ApiError(400, "Profile setup not completed!");
         }
-        else if (!updatedProfile.setup) {
-            const userData = (0, helpers_1.maskedDetails)(updatedProfile);
-            return (0, utils_1.ApiResponse)(res, 200, "Please, complete your profile!", userData);
+        const userInfo = (0, helpers_1.createUserInfo)(updatedProfile);
+        if (!userInfo.setup) {
+            return (0, utils_1.ApiResponse)(res, 200, "Please, complete your profile!", userInfo);
         }
-        const accessData = (0, helpers_1.createAccessData)(updatedProfile);
-        const accessToken = (0, helpers_1.generateAccess)(res, accessData);
-        return (0, utils_1.ApiResponse)(res, 200, "Profile updated successfully!", accessData);
+        const accessToken = (0, helpers_1.generateAccess)(res, userInfo);
+        return (0, utils_1.ApiResponse)(res, 200, "Profile updated successfully!", userInfo);
     }
     catch (error) {
         return (0, utils_1.ApiResponse)(res, error.code, error.message);
@@ -81,9 +71,9 @@ const updateImage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (userProfile && uploadImage.url) {
             userProfile.image = uploadImage.url;
             yield userProfile.save({ validateBeforeSave: true });
-            const accessData = (0, helpers_1.createAccessData)(userProfile);
-            const accessToken = (0, helpers_1.generateAccess)(res, accessData);
-            return (0, utils_1.ApiResponse)(res, 200, "Profile image updated successfully!", accessData);
+            const userInfo = (0, helpers_1.createUserInfo)(userProfile);
+            const accessToken = (0, helpers_1.generateAccess)(res, userInfo);
+            return (0, utils_1.ApiResponse)(res, 200, "Profile image updated successfully!", userInfo);
         }
         throw new utils_1.ApiError(500, "Profile image not updated!");
     }
@@ -101,9 +91,9 @@ const deleteImage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             yield (0, cloudinary_1.deleteImageByUrl)(requestUser.image);
             requestUser.image = "";
             yield requestUser.save({ validateBeforeSave: true });
-            const accessData = (0, helpers_1.createAccessData)(requestUser);
-            const accessToken = (0, helpers_1.generateAccess)(res, accessData);
-            return (0, utils_1.ApiResponse)(res, 200, "Profile image deleted successfully!", accessData);
+            const userInfo = (0, helpers_1.createUserInfo)(requestUser);
+            const accessToken = (0, helpers_1.generateAccess)(res, userInfo);
+            return (0, utils_1.ApiResponse)(res, 200, "Profile image deleted successfully!", userInfo);
         }
         throw new utils_1.ApiError(400, "Profile image not available!");
     }
@@ -132,9 +122,9 @@ const changePassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         requestUser.password = hashedPassword;
         yield requestUser.save({ validateBeforeSave: true });
-        const accessData = (0, helpers_1.createAccessData)(requestUser);
-        const accessToken = (0, helpers_1.generateAccess)(res, accessData);
-        return (0, utils_1.ApiResponse)(res, 200, "Password changed successfully!", accessData);
+        const userInfo = (0, helpers_1.createUserInfo)(requestUser);
+        const accessToken = (0, helpers_1.generateAccess)(res, userInfo);
+        return (0, utils_1.ApiResponse)(res, 200, "Password changed successfully!", userInfo);
     }
     catch (error) {
         return (0, utils_1.ApiResponse)(res, error.code, error.message);
@@ -143,12 +133,11 @@ const changePassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.changePassword = changePassword;
 const userInformation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const requestUser = req.user;
-        if (requestUser === null || requestUser === void 0 ? void 0 : requestUser.setup) {
-            return (0, utils_1.ApiResponse)(res, 200, "User profile information!", requestUser);
-        }
-        const userData = (0, helpers_1.maskedDetails)(requestUser);
-        return (0, utils_1.ApiResponse)(res, 200, "Please, complete your profile!", userData);
+        const user = req.user;
+        let message = (user === null || user === void 0 ? void 0 : user.setup)
+            ? "User profile information!"
+            : "Please, complete your profile!";
+        return (0, utils_1.ApiResponse)(res, 200, message, user);
     }
     catch (error) {
         return (0, utils_1.ApiResponse)(res, error.code, error.message);

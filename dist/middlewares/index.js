@@ -76,7 +76,7 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             throw new utils_1.ApiError(403, "Invalid user request!");
         }
         let authTokens = {};
-        const accessData = (0, helpers_1.createAccessData)(requestUser);
+        const userInfo = (0, helpers_1.createUserInfo)(requestUser);
         if (currentTime >= beforeExpires && currentTime < decodedPayload.exp) {
             const newRefreshToken = (0, helpers_1.generateRefresh)(res, userId);
             const refreshExpiry = env_1.default.REFRESH_EXPIRY;
@@ -93,7 +93,7 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             });
             if (updatedAuth.modifiedCount > 0) {
                 (0, helpers_1.authorizeCookie)(res, authorizeId);
-                const accessToken = (0, helpers_1.generateAccess)(res, accessData);
+                const accessToken = (0, helpers_1.generateAccess)(res, userInfo);
                 authTokens.access = accessToken;
                 authTokens.refresh = newRefreshToken;
             }
@@ -113,10 +113,10 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             throw new utils_1.ApiError(401, "Please, login again to continue!");
         }
         else {
-            const accessToken = (0, helpers_1.generateAccess)(res, accessData);
+            const accessToken = (0, helpers_1.generateAccess)(res, userInfo);
             authTokens.access = accessToken;
         }
-        req.user = accessData;
+        req.user = userInfo;
         req.token = authTokens;
         next();
     }

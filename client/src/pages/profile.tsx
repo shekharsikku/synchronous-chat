@@ -204,7 +204,7 @@ const Profile = () => {
       .min(3, { message: "Username must be at least 3 characters long!" })
       .max(15, { message: "Username can be maximum 15 characters long!" })
       .regex(/^(?![_-])[a-z0-9_-]{3,15}(?<![_-])$/, {
-        message: "Only letters, numbers, hyphen, underscores is allow with no space!",
+        message: "Only small letters, numbers, hyphen and underscores is allow with no space!",
       }),
     gender: z.enum(genders),
     bio: z.string(),

@@ -20,19 +20,13 @@ const env_1 = __importDefault(require("../utils/env"));
 const signUpUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, password } = yield req.body;
-        const [existsEmail, hashedPassword] = yield Promise.all([
-            user_1.default.findOne({ email }),
-            (0, helpers_1.generateHash)(password),
-        ]);
+        const existsEmail = yield user_1.default.exists({ email });
         if (existsEmail) {
             throw new utils_1.ApiError(409, "Email already exists!");
         }
-        const newUser = yield user_1.default.create({
-            email,
-            password: hashedPassword,
-        });
-        const userData = (0, helpers_1.maskedDetails)(newUser);
-        return (0, utils_1.ApiResponse)(res, 201, "Signed up successfully!", userData);
+        const hashedPassword = yield (0, helpers_1.generateHash)(password);
+        yield user_1.default.create({ email, password: hashedPassword });
+        return (0, utils_1.ApiResponse)(res, 201, "Signed up successfully!");
     }
     catch (error) {
         return (0, utils_1.ApiResponse)(res, error.code, error.message);
@@ -59,17 +53,16 @@ const signInUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (!existsUser) {
             throw new utils_1.ApiError(404, "User not exists!");
         }
-        const validatePassword = yield (0, helpers_1.compareHash)(password, existsUser.password);
-        if (!validatePassword) {
+        const isCorrect = yield (0, helpers_1.compareHash)(password, existsUser.password);
+        if (!isCorrect) {
             throw new utils_1.ApiError(403, "Incorrect password!");
         }
-        const accessData = (0, helpers_1.createAccessData)(existsUser);
-        const accessToken = (0, helpers_1.generateAccess)(res, accessData);
-        if (!accessData.setup) {
-            const userData = (0, helpers_1.maskedDetails)(accessData);
-            return (0, utils_1.ApiResponse)(res, 200, "Please, complete your profile!", userData);
+        const userInfo = (0, helpers_1.createUserInfo)(existsUser);
+        const accessToken = (0, helpers_1.generateAccess)(res, userInfo);
+        if (!userInfo.setup) {
+            return (0, utils_1.ApiResponse)(res, 200, "Please, complete your profile!", userInfo);
         }
-        const refreshToken = (0, helpers_1.generateRefresh)(res, accessData._id);
+        const refreshToken = (0, helpers_1.generateRefresh)(res, userInfo._id);
         const refreshExpiry = env_1.default.REFRESH_EXPIRY;
         (_a = existsUser.authentication) === null || _a === void 0 ? void 0 : _a.push({
             token: refreshToken,
@@ -78,11 +71,7 @@ const signInUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const authorizeUser = yield existsUser.save();
         const authorizeId = (_b = authorizeUser.authentication) === null || _b === void 0 ? void 0 : _b.filter((auth) => auth.token === refreshToken)[0]._id;
         (0, helpers_1.authorizeCookie)(res, authorizeId.toString());
-        return (0, utils_1.ApiResponse)(res, 200, "Signed in successfully!", {
-            _id: accessData._id,
-            email: accessData.email,
-            setup: accessData.setup,
-        });
+        return (0, utils_1.ApiResponse)(res, 200, "Signed in successfully!", userInfo);
     }
     catch (error) {
         return (0, utils_1.ApiResponse)(res, error.code, error.message);
@@ -103,8 +92,7 @@ const signOutUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     res.clearCookie("access");
     res.clearCookie("refresh");
     res.clearCookie("current");
-    const userData = (0, helpers_1.maskedDetails)(requestUser);
-    return (0, utils_1.ApiResponse)(res, 200, "Signed out successfully!", userData);
+    return (0, utils_1.ApiResponse)(res, 200, "Signed out successfully!");
 });
 exports.signOutUser = signOutUser;
 const refreshAuth = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

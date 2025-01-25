@@ -5,8 +5,8 @@ import { Types } from "mongoose";
 import {
   generateAccess,
   generateRefresh,
-  createAccessData,
   authorizeCookie,
+  createUserInfo,
 } from "../helpers";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import User from "../models/user";
@@ -86,7 +86,7 @@ const authRefresh = async (
     }
 
     let authTokens: TokenInterface = {};
-    const accessData = createAccessData(requestUser);
+    const userInfo = createUserInfo(requestUser);
 
     if (currentTime >= beforeExpires && currentTime < decodedPayload.exp!) {
       const newRefreshToken = generateRefresh(res, userId);
@@ -111,7 +111,7 @@ const authRefresh = async (
 
       if (updatedAuth.modifiedCount > 0) {
         authorizeCookie(res, authorizeId);
-        const accessToken = generateAccess(res, accessData);
+        const accessToken = generateAccess(res, userInfo);
         authTokens.access = accessToken;
         authTokens.refresh = newRefreshToken;
       } else {
@@ -133,11 +133,11 @@ const authRefresh = async (
 
       throw new ApiError(401, "Please, login again to continue!");
     } else {
-      const accessToken = generateAccess(res, accessData);
+      const accessToken = generateAccess(res, userInfo);
       authTokens.access = accessToken;
     }
 
-    req.user = accessData;
+    req.user = userInfo;
     req.token = authTokens;
     next();
   } catch (error: any) {

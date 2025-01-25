@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createAccessData = exports.maskedDetails = exports.removeSpaces = exports.hasEmptyField = exports.authorizeCookie = exports.generateRefresh = exports.generateAccess = exports.compareHash = exports.generateHash = void 0;
+exports.createUserInfo = exports.removeSpaces = exports.hasEmptyField = exports.authorizeCookie = exports.generateRefresh = exports.generateAccess = exports.compareHash = exports.generateHash = void 0;
 const bcryptjs_1 = require("bcryptjs");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const env_1 = __importDefault(require("../utils/env"));
@@ -103,9 +103,18 @@ const maskedDetails = (details) => {
         setup: details.setup,
     };
 };
-exports.maskedDetails = maskedDetails;
-const createAccessData = (user) => {
-    const accessData = Object.assign(Object.assign({}, user.toObject()), { password: undefined, authentication: undefined });
-    return accessData;
+const createUserInfo = (user) => {
+    let userInfo = {};
+    if (user.setup) {
+        userInfo = Object.assign(Object.assign({}, user.toObject()), { password: undefined, authentication: undefined });
+    }
+    else {
+        userInfo = {
+            _id: user._id,
+            email: user.email,
+            setup: user.setup,
+        };
+    }
+    return userInfo;
 };
-exports.createAccessData = createAccessData;
+exports.createUserInfo = createUserInfo;

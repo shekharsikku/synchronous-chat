@@ -16,7 +16,7 @@ const validateSchema = (schema) => (req, res, next) => {
     }
     catch (error) {
         const errors = ValidationError(error);
-        return (0, utils_1.ApiResponse)(res, 400, "Validation error!", null, errors);
+        return (0, utils_1.ApiResponse)(res, 400, "Validation Error!", null, errors);
     }
 };
 exports.validateSchema = validateSchema;

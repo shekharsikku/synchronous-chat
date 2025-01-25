@@ -106,13 +106,24 @@ const maskedDetails = (details: UserInterface) => {
   };
 };
 
-const createAccessData = (user: UserInterface) => {
-  const accessData = {
-    ...user.toObject(),
-    password: undefined,
-    authentication: undefined,
-  };
-  return accessData as UserInterface;
+const createUserInfo = (user: UserInterface) => {
+  let userInfo = {};
+
+  if (user.setup) {
+    userInfo = {
+      ...user.toObject(),
+      password: undefined,
+      authentication: undefined,
+    };
+  } else {
+    userInfo = {
+      _id: user._id,
+      email: user.email,
+      setup: user.setup,
+    };
+  }
+
+  return userInfo as UserInterface;
 };
 
 export {
@@ -123,6 +134,5 @@ export {
   authorizeCookie,
   hasEmptyField,
   removeSpaces,
-  maskedDetails,
-  createAccessData,
+  createUserInfo,
 };

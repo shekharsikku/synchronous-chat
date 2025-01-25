@@ -18,7 +18,7 @@ const validateSchema =
       next();
     } catch (error: any) {
       const errors = ValidationError(error);
-      return ApiResponse(res, 400, "Validation error!", null, errors);
+      return ApiResponse(res, 400, "Validation Error!", null, errors);
     }
   };
 
