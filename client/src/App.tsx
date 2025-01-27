@@ -86,6 +86,17 @@ const App = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const titles: Record<string, string> = {
+      "/auth": "Auth",
+      "/chat": "Chat",
+      "/profile": "Profile",
+    };
+
+    const title = titles[location.pathname] || "Synchronous Chat";
+    document.title = `${title} - Synchronous Chat`;
+  }, [location]);
+
   return (
     <Routes>
       <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
