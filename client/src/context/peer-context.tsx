@@ -289,6 +289,7 @@ const PeerProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <PeerContext.Provider value={{
       peer,
+      setPeer,
       localInfo,
       setLocalInfo,
       remoteInfo,

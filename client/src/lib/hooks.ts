@@ -29,9 +29,10 @@ export const useGetUserInfo = () => {
 
 export const useSignOutUser = () => {
   const navigate = useNavigate();
-  const { setUserInfo, setIsAuthenticated } = useAuthStore();
   const { closeChat } = useChatStore();
-  const { disconnectCalling, callingActive, setPendingRequest } = usePeer();
+  const { setUserInfo, setIsAuthenticated } = useAuthStore();
+  const { disconnectCalling, callingActive, setPendingRequest, setPeer } =
+    usePeer();
 
   const handleSignOut = async (e: any) => {
     e.preventDefault();
@@ -41,6 +42,7 @@ export const useSignOutUser = () => {
       setPendingRequest(false);
       setIsAuthenticated(false);
       setUserInfo(null!);
+      setPeer(null);
       closeChat();
       navigate("/auth", { replace: true });
       toast.success(response.data.message);
