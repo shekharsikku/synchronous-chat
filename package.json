@@ -1,13 +1,14 @@
 {
   "name": "server",
-  "version": "1.6.9",
+  "version": "1.7.0",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon",
     "build": "tsc --build",
     "start": "node dist/index.js",
-    "dev:dev": "concurrently \"npm run dev\" \"npm run dev --prefix client\""
+    "dev:dev": "concurrently \"npm run dev\" \"npm run dev --prefix client\"",
+    "build:build": "npm run build && npm run build --prefix client"
   },
   "keywords": [],
   "author": "",
