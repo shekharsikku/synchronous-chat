@@ -21,6 +21,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Message } from "@/zustand/chat";
 import { checkImageType, decryptMessage, cn } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/zustand";
@@ -221,14 +222,14 @@ const RenderDMMessages = ({
       </span>
       {/* Dialog for image extend view */}
       <Dialog open={imageViewExtend} onOpenChange={setImageViewExtend}>
-        <DialogContent className="h-96 w-[90vw] lg:h-auto lg:w-auto bg-gray-50 rounded-md">
+        <DialogContent className="h-auto w-[90vw] lg:w-auto bg-gray-50 rounded-md">
           <DialogHeader>
-            <DialogTitle className="text-start">Extend View Mode</DialogTitle>
+            <DialogTitle className="text-start">Image Extend View Mode</DialogTitle>
             <DialogDescription className="hidden"></DialogDescription>
           </DialogHeader>
-          <div className="min-h-max">
-            <img src={message?.file} alt="Extend view" className="size-fit rounded" />
-          </div>
+          <ScrollArea className="max-h-[80vh] overflow-y-auto scrollbar-hide">
+            <img src={message?.file} alt="Extend view" className="object-contain size-full rounded" />
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </div>

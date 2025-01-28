@@ -1,4 +1,4 @@
-import EmojiPicker from "emoji-picker-react";
+import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import {
   Tooltip,
   TooltipContent,
@@ -13,7 +13,7 @@ import {
 } from "react-icons/hi2";
 import { convertToBase64, encryptMessage } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/zustand";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, ChangeEvent, KeyboardEventHandler } from "react";
 import { isMobile } from "react-device-detect";
 import { useSocket } from "@/lib/context";
 import { toast } from "sonner";
@@ -41,8 +41,21 @@ const MessageBar = () => {
   }, [selectedChatData]);
 
   useEffect(() => {
-    const handleClickOutside = (e: any) => {
-      if (emojiRef.current && !emojiRef.current.contains(e.target)) {
+    const handleSpaceKeyDown = (event: KeyboardEvent) => {
+      if (event.code === "Space" && document.activeElement !== inputRef.current) {
+        event.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleSpaceKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleSpaceKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiRef.current && !emojiRef.current.contains(event.target as Node)) {
         setEmojiPicker((prev) => !prev);
       }
     }
@@ -50,9 +63,9 @@ const MessageBar = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [emojiRef])
+  }, [emojiRef]);
 
-  const handleAddEmoji = (emoji: any) => {
+  const handleAddEmoji = (emoji: EmojiClickData) => {
     setMessage((msg) => msg + emoji.emoji);
   }
 
@@ -64,14 +77,14 @@ const MessageBar = () => {
 
   const [selectedImage, setSelectedImage] = useState<any | null>(null);
 
-  const handleAttachChange = async (e: any) => {
-    e.preventDefault();
+  const handleAttachChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    event.preventDefault();
 
-    const maxSizeAllow = 9; // Size in MB
-    const maxBytesAllow = maxSizeAllow * 1024 * 1024;
+    /** Size is 9 MB and converted into Bytes */
+    const maxBytesAllow = 9 * 1024 * 1024;
 
     try {
-      const imageFile = e.target.files[0];
+      const imageFile = event.target.files?.[0];
       setMessage(`${imageFile?.name}`);
 
       if (imageFile) {
@@ -130,7 +143,7 @@ const MessageBar = () => {
     }
   }
 
-  const handleEnterKeyDown = (e: any) => {
+  const handleEnterKeyDown: KeyboardEventHandler<HTMLInputElement> = (e) => {
     if (e.key === "Enter" && message !== "" && !isSending) {
       handleSendMessage();
     }
@@ -179,8 +192,8 @@ const MessageBar = () => {
     };
   }, []);
 
-  const handleChange = (e: any) => {
-    setMessage(e.target.value);
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setMessage(event.target.value);
     handleTyping();
   };
 
