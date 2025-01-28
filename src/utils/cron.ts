@@ -17,7 +17,7 @@ const job = new CronJob(
       const currentDate = new Date();
       const threeDaysAgo = calculatePastDate(3);
       const sevenDaysAgo = calculatePastDate(7);
-      const thirtyDaysAgo = calculatePastDate(30);
+      const fourteenDaysAgo = calculatePastDate(14);
 
       const [authentication, profiles, messages, conversations] =
         await Promise.all([
@@ -27,7 +27,7 @@ const job = new CronJob(
           ),
           User.deleteMany({ setup: false, createdAt: { $lt: threeDaysAgo } }),
           Message.deleteMany({ createdAt: { $lt: sevenDaysAgo } }),
-          Conversation.deleteMany({ interaction: { $lt: thirtyDaysAgo } }),
+          Conversation.deleteMany({ interaction: { $lt: fourteenDaysAgo } }),
         ]);
 
       if (env.isDev) {

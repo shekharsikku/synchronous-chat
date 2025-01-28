@@ -27,12 +27,12 @@ const job = new cron_1.CronJob("0 0 0 * * *", () => __awaiter(void 0, void 0, vo
         const currentDate = new Date();
         const threeDaysAgo = calculatePastDate(3);
         const sevenDaysAgo = calculatePastDate(7);
-        const thirtyDaysAgo = calculatePastDate(30);
+        const fourteenDaysAgo = calculatePastDate(14);
         const [authentication, profiles, messages, conversations] = yield Promise.all([
             user_1.default.updateMany({ "authentication.expiry": { $lt: currentDate } }, { $pull: { authentication: { expiry: { $lt: currentDate } } } }),
             user_1.default.deleteMany({ setup: false, createdAt: { $lt: threeDaysAgo } }),
             message_1.default.deleteMany({ createdAt: { $lt: sevenDaysAgo } }),
-            conversation_1.default.deleteMany({ interaction: { $lt: thirtyDaysAgo } }),
+            conversation_1.default.deleteMany({ interaction: { $lt: fourteenDaysAgo } }),
         ]);
         if (env_1.default.isDev) {
             console.log("Result:", {
