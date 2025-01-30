@@ -1,6 +1,6 @@
 ## **Synchronous Chat - Realtime Chat Application**
 
-Built with the `MERN Stack, Socket.IO, Tailwind CSS & ShadcnUI`. It enable the user for chat, share files with other user in realtime.
+Built with the `MERN Stack, Socket.IO, Tailwind CSS & ShadcnUI`. It enables the user for chat, share files with other user in realtime.
 
 ### **Key Features**
 
@@ -10,7 +10,7 @@ Built with the `MERN Stack, Socket.IO, Tailwind CSS & ShadcnUI`. It enable the u
 
 - **Typing Indicators:** Realtime feedback when a user is typing.
 
-- **Search Contacts:** Find contacts with a user friendly search functionality.
+- **Search Contacts:** Find contacts with a user-friendly search functionality.
 
 - **Status Updates:** View online/offline status for contacts.
 
@@ -66,13 +66,13 @@ NODE_ENV=""
 
 **Start Development**
 
-Run and start express development server
+Run and start Express application development server
 
 ```bash
 npm run dev
 ```
 
-Run and start react app development server
+Run and start React application development server
 
 ```bash
 cd client && npm run dev
@@ -86,7 +86,7 @@ http://localhost:5173
 
 **Build React App**
 
-Build production static file of react application
+Build production static file of React application
 
 ```bash
 cd client && npm run build

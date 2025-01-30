@@ -11,7 +11,7 @@ class ApiError extends Error {
 }
 exports.ApiError = ApiError;
 const ApiResponse = (res, code, message, data = null, error = null) => {
-    const success = code < 400 ? true : false;
+    const success = code < 400;
     const response = { success, message };
     if (data)
         response.data = data;
