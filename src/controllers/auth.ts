@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
+import { genSalt, hash, compare } from "bcryptjs";
 import { ApiError, ApiResponse } from "../utils";
 import {
-  compareHash,
-  generateHash,
   generateAccess,
   generateRefresh,
   authorizeCookie,
@@ -21,7 +20,8 @@ const signUpUser = async (req: Request, res: Response) => {
       throw new ApiError(409, "Email already exists!");
     }
 
-    const hashedPassword = await generateHash(password);
+    const hashSalt = await genSalt(12);
+    const hashedPassword = await hash(password, hashSalt);
 
     await User.create({ email, password: hashedPassword });
 
@@ -52,7 +52,7 @@ const signInUser = async (req: Request, res: Response) => {
       throw new ApiError(404, "User not exists!");
     }
 
-    const isCorrect = await compareHash(password, existsUser.password!);
+    const isCorrect = await compare(password, existsUser.password!);
 
     if (!isCorrect) {
       throw new ApiError(403, "Incorrect password!");

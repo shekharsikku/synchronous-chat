@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { genSalt, hash, compare } from "bcryptjs";
 import { ApiError, ApiResponse } from "../utils";
 import { deleteImageByUrl, uploadOnCloudinary } from "../utils/cloudinary";
 import {
@@ -6,20 +7,12 @@ import {
   extensionsToDelete,
   folderPath,
 } from "../utils/unlink";
-import {
-  hasEmptyField,
-  removeSpaces,
-  generateHash,
-  compareHash,
-  createUserInfo,
-  generateAccess,
-} from "../helpers";
+import { hasEmptyField, createUserInfo, generateAccess } from "../helpers";
 import User from "../models/user";
 
 const profileSetup = async (req: Request, res: Response) => {
   try {
-    const { name, username: uname, gender, bio } = await req.body;
-    const username = removeSpaces(uname);
+    const { name, username, gender, bio } = await req.body;
     const requestUser = req.user!;
 
     if (username !== requestUser?.username) {
@@ -134,27 +127,24 @@ const changePassword = async (req: Request, res: Response) => {
   try {
     const { old_password, new_password } = await req.body;
 
-    const [requestUser, hashedPassword] = await Promise.all([
-      User.findById(req.user?._id).select("+password"),
-      generateHash(new_password),
-    ]);
+    if (old_password === new_password) {
+      throw new ApiError(400, "Please, choose a different password!");
+    }
+
+    const requestUser = await User.findById(req.user?._id).select("+password");
 
     if (!requestUser) {
       throw new ApiError(403, "Invalid authorization!");
     }
 
-    if (old_password === new_password) {
-      throw new ApiError(400, "Please, choose a different password!");
-    }
+    const isCorrect = await compare(old_password, requestUser.password!);
 
-    const validatePassword = await compareHash(
-      old_password,
-      requestUser.password!
-    );
-
-    if (!validatePassword) {
+    if (!isCorrect) {
       throw new ApiError(403, "Incorrect old password!");
     }
+
+    const hashSalt = await genSalt(12);
+    const hashedPassword = await hash(new_password, hashSalt);
 
     requestUser.password = hashedPassword;
     await requestUser.save({ validateBeforeSave: true });
