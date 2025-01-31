@@ -54,9 +54,14 @@ export const useSignOutUser = () => {
 };
 
 export const useAuthRefresh = () => {
+  const { setUserInfo, setIsAuthenticated } = useAuthStore();
+
   const authRefresh = async () => {
     try {
-      await api.get("/api/auth/auth-refresh");
+      const response = await api.get("/api/auth/auth-refresh");
+      const data = await response.data.data;
+      setUserInfo(data);
+      setIsAuthenticated(true);
       return true;
     } catch (error: any) {
       return false;

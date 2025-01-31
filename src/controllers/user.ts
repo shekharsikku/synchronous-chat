@@ -46,7 +46,7 @@ const profileSetup = async (req: Request, res: Response) => {
       return ApiResponse(res, 200, "Please, complete your profile!", userInfo);
     }
 
-    const accessToken = generateAccess(res, userInfo);
+    generateAccess(res, userInfo);
 
     return ApiResponse(res, 200, "Profile updated successfully!", userInfo);
   } catch (error: any) {
@@ -81,7 +81,7 @@ const updateImage = async (req: Request, res: Response) => {
       await userProfile.save({ validateBeforeSave: true });
 
       const userInfo = createUserInfo(userProfile);
-      const accessToken = generateAccess(res, userInfo);
+      generateAccess(res, userInfo);
 
       return ApiResponse(
         res,
@@ -108,7 +108,7 @@ const deleteImage = async (req: Request, res: Response) => {
       await requestUser.save({ validateBeforeSave: true });
 
       const userInfo = createUserInfo(requestUser);
-      const accessToken = generateAccess(res, userInfo);
+      generateAccess(res, userInfo);
 
       return ApiResponse(
         res,
@@ -144,13 +144,11 @@ const changePassword = async (req: Request, res: Response) => {
     }
 
     const hashSalt = await genSalt(12);
-    const hashedPassword = await hash(new_password, hashSalt);
-
-    requestUser.password = hashedPassword;
+    requestUser.password = await hash(new_password, hashSalt);
     await requestUser.save({ validateBeforeSave: true });
 
     const userInfo = createUserInfo(requestUser);
-    const accessToken = generateAccess(res, userInfo);
+    generateAccess(res, userInfo);
 
     return ApiResponse(res, 200, "Password changed successfully!", userInfo);
   } catch (error: any) {

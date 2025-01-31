@@ -60,7 +60,7 @@ const signInUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             throw new utils_1.ApiError(403, "Incorrect password!");
         }
         const userInfo = (0, helpers_1.createUserInfo)(existsUser);
-        const accessToken = (0, helpers_1.generateAccess)(res, userInfo);
+        (0, helpers_1.generateAccess)(res, userInfo);
         if (!userInfo.setup) {
             return (0, utils_1.ApiResponse)(res, 200, "Please, complete your profile!", userInfo);
         }
@@ -98,7 +98,6 @@ const signOutUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.signOutUser = signOutUser;
 const refreshAuth = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const refreshData = { user: req.user, token: req.token };
-    return (0, utils_1.ApiResponse)(res, 200, "Authentication refreshed!");
+    return (0, utils_1.ApiResponse)(res, 200, "Authentication refreshed!", req.user);
 });
 exports.refreshAuth = refreshAuth;

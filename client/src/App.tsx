@@ -57,16 +57,11 @@ const App = () => {
   useEffect(() => {
     const onlineRefresh = async () => {
       const success = await authRefresh();
-      if (success) {
-        getUserInfo();
-        if (location.pathname === "/auth") {
-          navigate("/chat");
-        }
+      if (success && location.pathname === "/auth") {
+        navigate("/chat");
       }
     };
-
     window.addEventListener("online", onlineRefresh);
-
     return () => {
       window.removeEventListener("online", onlineRefresh);
     }
@@ -78,9 +73,7 @@ const App = () => {
         event.preventDefault();
       }
     }
-
     document.addEventListener("contextmenu", disableRightClick);
-
     return () => {
       document.removeEventListener("contextmenu", disableRightClick);
     }

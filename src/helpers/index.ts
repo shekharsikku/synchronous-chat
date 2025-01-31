@@ -58,7 +58,7 @@ const hasEmptyField = (fields: object) => {
 };
 
 const createUserInfo = (user: UserInterface) => {
-  let userInfo = {};
+  let userInfo;
 
   if (user.setup) {
     userInfo = {

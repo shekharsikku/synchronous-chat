@@ -111,8 +111,7 @@ const authRefresh = async (
 
       if (updatedAuth.modifiedCount > 0) {
         authorizeCookie(res, authorizeId);
-        const accessToken = generateAccess(res, userInfo);
-        authTokens.access = accessToken;
+        authTokens.access = generateAccess(res, userInfo);
         authTokens.refresh = newRefreshToken;
       } else {
         throw new ApiError(403, "Invalid refresh request!");
@@ -133,8 +132,7 @@ const authRefresh = async (
 
       throw new ApiError(401, "Please, login again to continue!");
     } else {
-      const accessToken = generateAccess(res, userInfo);
-      authTokens.access = accessToken;
+      authTokens.access = generateAccess(res, userInfo);
     }
 
     req.user = userInfo;

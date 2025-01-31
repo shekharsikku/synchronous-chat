@@ -22,14 +22,6 @@ interface TokenInterface {
   refresh?: string;
 }
 
-interface DetailInterface {
-  name: string;
-  username: string;
-  gender: "Male" | "Female" | "Other";
-  bio: string;
-  setup?: boolean;
-}
-
 interface ConversationInterface extends Document {
   _id?: Types.ObjectId;
   participants: Types.ObjectId[];

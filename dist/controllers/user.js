@@ -42,7 +42,7 @@ const profileSetup = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         if (!userInfo.setup) {
             return (0, utils_1.ApiResponse)(res, 200, "Please, complete your profile!", userInfo);
         }
-        const accessToken = (0, helpers_1.generateAccess)(res, userInfo);
+        (0, helpers_1.generateAccess)(res, userInfo);
         return (0, utils_1.ApiResponse)(res, 200, "Profile updated successfully!", userInfo);
     }
     catch (error) {
@@ -72,7 +72,7 @@ const updateImage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             userProfile.image = uploadImage.url;
             yield userProfile.save({ validateBeforeSave: true });
             const userInfo = (0, helpers_1.createUserInfo)(userProfile);
-            const accessToken = (0, helpers_1.generateAccess)(res, userInfo);
+            (0, helpers_1.generateAccess)(res, userInfo);
             return (0, utils_1.ApiResponse)(res, 200, "Profile image updated successfully!", userInfo);
         }
         throw new utils_1.ApiError(500, "Profile image not updated!");
@@ -92,7 +92,7 @@ const deleteImage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             requestUser.image = "";
             yield requestUser.save({ validateBeforeSave: true });
             const userInfo = (0, helpers_1.createUserInfo)(requestUser);
-            const accessToken = (0, helpers_1.generateAccess)(res, userInfo);
+            (0, helpers_1.generateAccess)(res, userInfo);
             return (0, utils_1.ApiResponse)(res, 200, "Profile image deleted successfully!", userInfo);
         }
         throw new utils_1.ApiError(400, "Profile image not available!");
@@ -118,11 +118,10 @@ const changePassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
             throw new utils_1.ApiError(403, "Incorrect old password!");
         }
         const hashSalt = yield (0, bcryptjs_1.genSalt)(12);
-        const hashedPassword = yield (0, bcryptjs_1.hash)(new_password, hashSalt);
-        requestUser.password = hashedPassword;
+        requestUser.password = yield (0, bcryptjs_1.hash)(new_password, hashSalt);
         yield requestUser.save({ validateBeforeSave: true });
         const userInfo = (0, helpers_1.createUserInfo)(requestUser);
-        const accessToken = (0, helpers_1.generateAccess)(res, userInfo);
+        (0, helpers_1.generateAccess)(res, userInfo);
         return (0, utils_1.ApiResponse)(res, 200, "Password changed successfully!", userInfo);
     }
     catch (error) {

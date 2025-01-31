@@ -59,7 +59,7 @@ const signInUser = async (req: Request, res: Response) => {
     }
 
     const userInfo = createUserInfo(existsUser);
-    const accessToken = generateAccess(res, userInfo);
+    generateAccess(res, userInfo);
 
     if (!userInfo.setup) {
       return ApiResponse(res, 200, "Please, complete your profile!", userInfo);
@@ -110,8 +110,7 @@ const signOutUser = async (req: Request, res: Response) => {
 };
 
 const refreshAuth = async (req: Request, res: Response) => {
-  const refreshData = { user: req.user, token: req.token };
-  return ApiResponse(res, 200, "Authentication refreshed!");
+  return ApiResponse(res, 200, "Authentication refreshed!", req.user);
 };
 
 export { signUpUser, signInUser, signOutUser, refreshAuth };
