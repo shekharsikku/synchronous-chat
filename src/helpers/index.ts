@@ -1,20 +1,8 @@
-import { genSalt, hash, compare } from "bcryptjs";
 import { UserInterface } from "../interface";
 import { Response } from "express";
 import { Types } from "mongoose";
 import jwt from "jsonwebtoken";
 import env from "../utils/env";
-
-const generateHash = async (plain: string): Promise<string> => {
-  const salt = await genSalt(12);
-  const hashed = await hash(plain, salt);
-  return hashed;
-};
-
-const compareHash = async (plain: string, hashed: string): Promise<boolean> => {
-  const checked = await compare(plain, hashed);
-  return checked;
-};
 
 const generateAccess = (res: Response, user?: UserInterface) => {
   const accessExpiry = env.ACCESS_EXPIRY;
@@ -69,43 +57,6 @@ const hasEmptyField = (fields: object) => {
   );
 };
 
-const removeSpaces = (str: string) => {
-  return str.replace(/\s+/g, "");
-};
-
-const capitalizeWord = (str: string) => {
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-};
-
-const capitalizeWords = (str: string) => {
-  return str
-    .split(" ")
-    .map((word) => capitalizeWord(word))
-    .join(" ");
-};
-
-const maskedObjectId = (objectId: Types.ObjectId) => {
-  const idStr = objectId.toString();
-  const maskedId = idStr.slice(0, 4) + "****" + idStr.slice(-4);
-  return maskedId;
-};
-
-const maskedEmail = (email: string) => {
-  const [localPart, domain] = email.split("@");
-  const maskedLocalPart = localPart.slice(0, 4) + "***";
-  return `${maskedLocalPart}@${domain}`;
-};
-
-const maskedDetails = (details: UserInterface) => {
-  const maskId = maskedObjectId(details._id!);
-  const maskEmail = maskedEmail(details.email);
-  return {
-    _id: maskId,
-    email: maskEmail,
-    setup: details.setup!,
-  };
-};
-
 const createUserInfo = (user: UserInterface) => {
   let userInfo = {};
 
@@ -127,12 +78,9 @@ const createUserInfo = (user: UserInterface) => {
 };
 
 export {
-  generateHash,
-  compareHash,
   generateAccess,
   generateRefresh,
   authorizeCookie,
   hasEmptyField,
-  removeSpaces,
   createUserInfo,
 };
