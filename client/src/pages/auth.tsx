@@ -21,11 +21,7 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
-import {
-  validateEmail,
-  removeSpaces,
-  validateDummyEmail
-} from "@/lib/utils";
+import { validateEmail, validateDummyEmail } from "@/lib/utils";
 import { useAuthStore } from "@/zustand";
 import api from "@/lib/api";
 
@@ -47,7 +43,10 @@ const Auth = () => {
     password: z.string()
       .min(8, { message: "Password must be at least 8 characters long!" })
       .regex(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/, {
-        message: "Must have an uppercase, a lowercase letter, and a number!",
+        message: "Password ust have an uppercase, a lowercase letter, and a number!",
+      })
+      .refine((val) => !/\s/.test(val), {
+        message: "Password cannot contain spaces!",
       }),
     confirm: z.string(),
   })
@@ -88,7 +87,10 @@ const Auth = () => {
   /** Hookform Zod Resolver - SignIn */
 
   const signInSchema = z.object({
-    credential: z.string().min(1, { message: "Email or Username is required!" }),
+    credential: z
+      .string()
+      .min(1, { message: "Email or Username is required!" })
+      .transform((val) => val.replace(/\s+/g, "")),
     password: z.string().min(1, { message: "Password is required!" }),
   });
 
@@ -108,7 +110,7 @@ const Auth = () => {
         password: values.password,
       }
 
-      const isEmail = validateEmail(removeSpaces(values.credential));
+      const isEmail = validateEmail(values.credential);
 
       if (isEmail) {
         details.email = values.credential;

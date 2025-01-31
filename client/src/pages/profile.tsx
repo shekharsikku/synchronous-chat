@@ -158,6 +158,9 @@ const Profile = () => {
       .min(8, { message: "New password must be at least 8 characters long!" })
       .regex(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/, {
         message: "Must have an uppercase, a lowercase letter, and a number!",
+      })
+      .refine((val) => !/\s/.test(val), {
+        message: "Password cannot contain spaces!",
       }),
     confirm_password: z
       .string()
@@ -203,8 +206,8 @@ const Profile = () => {
     username: z.string()
       .min(3, { message: "Username must be at least 3 characters long!" })
       .max(15, { message: "Username can be maximum 15 characters long!" })
-      .regex(/^(?![_-])[a-z0-9_-]{3,15}(?<![_-])$/, {
-        message: "Only small letters, numbers, hyphen and underscores is allow with no space!",
+      .regex(/^[a-z0-9_-]{3,15}$/, {
+        message: "Only lowercase letters, numbers, hyphens, and underscores are allowed, with no spaces or special characters at the start/end!",
       }),
     gender: z.enum(genders),
     bio: z.string(),

@@ -76,6 +76,17 @@ export const removeSpaces = (str: string) => {
   return str.replace(/\s+/g, "");
 };
 
+export const capitalizeWord = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
+export const capitalizeWords = (str: string) => {
+  return str
+    .split(" ")
+    .map((word) => capitalizeWord(word))
+    .join(" ");
+};
+
 export const validateDummyEmail = (email: string): boolean => {
   const restrictedWords = [
     "example",
