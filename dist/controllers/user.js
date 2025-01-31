@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userInformation = exports.changePassword = exports.deleteImage = exports.updateImage = exports.profileSetup = void 0;
+const bcryptjs_1 = require("bcryptjs");
 const utils_1 = require("../utils");
 const cloudinary_1 = require("../utils/cloudinary");
 const unlink_1 = require("../utils/unlink");
@@ -20,8 +21,7 @@ const helpers_1 = require("../helpers");
 const user_1 = __importDefault(require("../models/user"));
 const profileSetup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { name, username: uname, gender, bio } = yield req.body;
-        const username = (0, helpers_1.removeSpaces)(uname);
+        const { name, username, gender, bio } = yield req.body;
         const requestUser = req.user;
         if (username !== (requestUser === null || requestUser === void 0 ? void 0 : requestUser.username)) {
             const existsUsername = yield user_1.default.exists({ username });
@@ -106,20 +106,19 @@ const changePassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
     var _a;
     try {
         const { old_password, new_password } = yield req.body;
-        const [requestUser, hashedPassword] = yield Promise.all([
-            user_1.default.findById((_a = req.user) === null || _a === void 0 ? void 0 : _a._id).select("+password"),
-            (0, helpers_1.generateHash)(new_password),
-        ]);
-        if (!requestUser) {
-            throw new utils_1.ApiError(403, "Invalid authorization!");
-        }
         if (old_password === new_password) {
             throw new utils_1.ApiError(400, "Please, choose a different password!");
         }
-        const validatePassword = yield (0, helpers_1.compareHash)(old_password, requestUser.password);
-        if (!validatePassword) {
+        const requestUser = yield user_1.default.findById((_a = req.user) === null || _a === void 0 ? void 0 : _a._id).select("+password");
+        if (!requestUser) {
+            throw new utils_1.ApiError(403, "Invalid authorization!");
+        }
+        const isCorrect = yield (0, bcryptjs_1.compare)(old_password, requestUser.password);
+        if (!isCorrect) {
             throw new utils_1.ApiError(403, "Incorrect old password!");
         }
+        const hashSalt = yield (0, bcryptjs_1.genSalt)(12);
+        const hashedPassword = yield (0, bcryptjs_1.hash)(new_password, hashSalt);
         requestUser.password = hashedPassword;
         yield requestUser.save({ validateBeforeSave: true });
         const userInfo = (0, helpers_1.createUserInfo)(requestUser);

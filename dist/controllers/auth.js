@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.refreshAuth = exports.signOutUser = exports.signInUser = exports.signUpUser = void 0;
+const bcryptjs_1 = require("bcryptjs");
 const utils_1 = require("../utils");
 const helpers_1 = require("../helpers");
 const user_1 = __importDefault(require("../models/user"));
@@ -24,7 +25,8 @@ const signUpUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (existsEmail) {
             throw new utils_1.ApiError(409, "Email already exists!");
         }
-        const hashedPassword = yield (0, helpers_1.generateHash)(password);
+        const hashSalt = yield (0, bcryptjs_1.genSalt)(12);
+        const hashedPassword = yield (0, bcryptjs_1.hash)(password, hashSalt);
         yield user_1.default.create({ email, password: hashedPassword });
         return (0, utils_1.ApiResponse)(res, 201, "Signed up successfully!");
     }
@@ -53,7 +55,7 @@ const signInUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (!existsUser) {
             throw new utils_1.ApiError(404, "User not exists!");
         }
-        const isCorrect = yield (0, helpers_1.compareHash)(password, existsUser.password);
+        const isCorrect = yield (0, bcryptjs_1.compare)(password, existsUser.password);
         if (!isCorrect) {
             throw new utils_1.ApiError(403, "Incorrect password!");
         }
