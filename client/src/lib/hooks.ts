@@ -9,7 +9,7 @@ import notificationSound from "@/assets/sound/message-alert.mp3";
 import maleAvatar from "@/assets/male-avatar.webp";
 import femaleAvatar from "@/assets/female-avatar.webp";
 import noAvatar from "@/assets/no-avatar.webp";
-import api from "@/lib/api";
+import api, { auth } from "@/lib/api";
 
 export const useGetUserInfo = () => {
   const { setUserInfo, setIsAuthenticated } = useAuthStore();
@@ -17,11 +17,11 @@ export const useGetUserInfo = () => {
   const getUserInfo = async () => {
     try {
       const response = await api.get("/api/user/user-information");
-      const data = await response.data.data;
-      setUserInfo(data);
+      setUserInfo(response.data.data);
       setIsAuthenticated(true);
     } catch (error: any) {
-      return null;
+      setUserInfo(null!);
+      setIsAuthenticated(false);
     }
   };
   return { getUserInfo };
@@ -58,12 +58,13 @@ export const useAuthRefresh = () => {
 
   const authRefresh = async () => {
     try {
-      const response = await api.get("/api/auth/auth-refresh");
-      const data = await response.data.data;
-      setUserInfo(data);
+      const response = await auth.get("/api/auth/auth-refresh");
+      setUserInfo(response.data.data);
       setIsAuthenticated(true);
       return true;
     } catch (error: any) {
+      setUserInfo(null!);
+      setIsAuthenticated(false);
       return false;
     }
   };

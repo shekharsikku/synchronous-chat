@@ -7,8 +7,8 @@ import { useEffect } from "react";
 const ProtectedRoute = ({ children }: Readonly<{
   children: React.ReactNode;
 }>) => {
-  const { isAuthenticated } = useAuthStore();
-  return isAuthenticated ? children : <Navigate to="/auth" />;
+  const { isAuthenticated, userInfo } = useAuthStore();
+  return isAuthenticated && userInfo ? children : <Navigate to="/auth" />;
 }
 
 const AuthRoute = ({ children }: Readonly<{
@@ -27,7 +27,7 @@ const App = () => {
   const { userInfo, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    if (!userInfo && !isAuthenticated) getUserInfo();
+    if (!userInfo && !isAuthenticated && location.pathname !== "/auth") getUserInfo();
   }, [userInfo, isAuthenticated]);
 
   useEffect(() => {
