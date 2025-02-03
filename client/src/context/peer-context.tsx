@@ -1,11 +1,11 @@
 import { useSocket, PeerContext, PeerInformation, ResponseActions } from "@/lib/context";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef, useId } from "react";
+import { useEffect, useState, useRef, useId, ReactNode } from "react";
 import { useAuthStore } from "@/zustand";
 import { toast } from "sonner";
 import Peer from "peerjs";
 
-const PeerProvider = ({ children }: { children: React.ReactNode }) => {
+const PeerProvider = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
 

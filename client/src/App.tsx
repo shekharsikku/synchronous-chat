@@ -2,17 +2,17 @@ import { Navigate, Route, Routes, useNavigate, useLocation } from "react-router-
 import { Auth, Chat, Profile } from "@/pages";
 import { useAuthStore } from "@/zustand";
 import { useGetUserInfo, useAuthRefresh } from "@/lib/hooks";
-import { useEffect } from "react";
+import { useEffect, ReactNode } from "react";
 
 const ProtectedRoute = ({ children }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) => {
   const { isAuthenticated, userInfo } = useAuthStore();
   return isAuthenticated && userInfo ? children : <Navigate to="/auth" />;
 }
 
 const AuthRoute = ({ children }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) => {
   const { isAuthenticated, userInfo } = useAuthStore();
   return isAuthenticated && userInfo?.setup ? <Navigate to="/chat" /> : children;
@@ -27,7 +27,9 @@ const App = () => {
   const { userInfo, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    if (!userInfo && !isAuthenticated && location.pathname !== "/auth") getUserInfo();
+    if (!userInfo && !isAuthenticated && location.pathname !== "/auth") {
+      void getUserInfo();
+    }
   }, [userInfo, isAuthenticated]);
 
   useEffect(() => {
@@ -40,7 +42,7 @@ const App = () => {
       }
     };
 
-    initialRefresh();
+    void initialRefresh();
 
     const intervalRefresh = setInterval(async () => {
       const success = await authRefresh();

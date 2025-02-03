@@ -42,7 +42,7 @@ const ContactsContainer = () => {
   }
 
   useEffect(() => {
-    if (!contacts) fetchAllContacts();
+    if (!contacts) void fetchAllContacts();
   }, [contacts]);
 
   useEffect(() => {
@@ -100,7 +100,7 @@ const ContactsContainer = () => {
       if (!atFirst) {
         const updated = { ...selectedChatData, interaction: new Date().toISOString() } as UserInfo;
         setSelectedChatData(updated);
-      };
+      }
     }
   }, [contacts, messages.length]);
 

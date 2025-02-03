@@ -1,40 +1,42 @@
 ## **Synchronous Chat - Realtime Chat Application**
 
-Built with the `MERN Stack, Socket.IO, Tailwind CSS & ShadcnUI`. It enables the user for chat, share files with other user in realtime.
+A real-time chat application built with the `MERN Stack, Socket.IO, Tailwind CSS & ShadcnUI`. It enables the user for chat, share files with other user in realtime.
 
 ### **Key Features**
 
-- **User Authentication:** Secure Authentication & Authorization with JWT.
+- **Authentication & Authorization** - Secure login and token-based authentication with JWT.
 
-- **Realtime Messaging:** Instant chat updates powered by Socket.IO.
+- **Real-time Messaging** – Instant chat updates powered by Socket.IO.
 
-- **Typing Indicators:** Realtime feedback when a user is typing.
+- **Typing Indicators** – See when a user is typing in real time.
 
-- **Search Contacts:** Find contacts with a user-friendly search functionality.
+- **Contacts Search** – Quickly find contacts with an intuitive search.
 
-- **Status Updates:** View online/offline status for contacts.
+- **Status Updates** – View online/offline status of contacts.
 
-- **State Manage**: Global state management with React Context & Zustand.
+- **State Manage** – Managed globally with React Context & Zustand.
 
-- **Schema Validation:** Schema validation in both client & server side with Zod.
+- **Schema Validation** – Ensures data integrity with Zod on both client and server.
 
-- **Error Handling**: Error handling both on the server and on the client.
+- **Error Handling** – Robust error handling on both frontend and backend.
 
 ### **Quick Start**
 
-Make sure you have the following `Git, Node.js, npm` installed on your machine.
+Ensure you have `Git, Node.js and npm` installed on your machine.
 
 ### **Setup Instructions**
 
-**Clone This Repository**
+**Clone the Repository**
 
 ```bash
 git clone https://github.com/shekharsikku/synchronous-chat
+
+cd synchronous-chat
 ```
 
-**Install Node Modules**
+**Install Dependencies**
 
-Install for both server side express app and client side react app.
+Install packages for both the server and client:
 
 ```bash
 npm install && cd client && npm install
@@ -42,7 +44,7 @@ npm install && cd client && npm install
 
 **Environment Variables Setup**
 
-Rename, `.env.sample` filename in server dir to `.env` and add all required fields.
+Rename, `.env.sample` to `.env` in the root directory and add the required values:
 
 ```env
 CLOUDINARY_CLOUD_NAME=""
@@ -56,7 +58,7 @@ REFRESH_SECRET=""
 REFRESH_EXPIRY=""
 
 COOKIES_SECRET=""
-PAYLOAD_LIMIT_ALLOWED=""
+PAYLOAD_LIMIT=""
 PORT=""
 
 CORS_ORIGIN=""
@@ -64,56 +66,42 @@ MONGODB_URI=""
 NODE_ENV=""
 ```
 
-**Start Development**
+**Run in Development Mode**
 
-Run and start Express application development server
+Start the server:
 
 ```bash
 npm run dev
 ```
 
-Run and start React application development server
+Start the client:
 
 ```bash
 cd client && npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser to view the project.
+Then, open http://localhost:5173 in your browser.
 
-```bash
-http://localhost:5173
-```
+**Building for Production**
 
-**Build React App**
-
-Build production static file of React application
+Build React App
 
 ```bash
 cd client && npm run build
 ```
 
-**Start Application**
+**Start the Application**
 
-Make sure you are in the root dir of project
+Ensure you're in the root directory:
 
 ```bash
 npm run build && npm run start
 ```
 
-**Render Frontend**
+Your app will be available at http://localhost:4000 or the port specified in .env.
 
-Open [http://localhost:4000](http://localhost:4000) or `PORT` you added in `.env` variable in your browser to view the project.
+**Live Demo - [Synchronous Chat](https://synchronouschat.onrender.com)**
 
-```bash
-http://localhost:4000
-```
-
-**Check Live WebApp Deployed On Render**
-
-```bash
-https://synchronouschat.onrender.com
-```
-
-### **Code by [Shekhar Vishwakarma](https://github.com/shekharsikku)**
+### **Developed by [Shekhar Vishwakarma](https://linkedin.com/in/shekharsikku)**
 
 ---

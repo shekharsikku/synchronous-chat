@@ -14,3 +14,6 @@ vite-env.d.ts
 *.log
 *.local
 *.tsbuildinfo
+
+# test code dir
+test

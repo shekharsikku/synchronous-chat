@@ -89,7 +89,7 @@ export const useListenMessages = () => {
           isSoundAllow
         ) {
           const sound = new Audio(notificationSound);
-          sound.play();
+          void sound.play();
         }
         /** Add the message to the chat if it's part of the selected chat */
         if (

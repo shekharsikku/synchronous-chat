@@ -43,7 +43,7 @@ const RenderDMMessages = ({
 
   const copyToClipboard = (text: string) => {
     try {
-      navigator.clipboard.writeText(text);
+      void navigator.clipboard.writeText(text);
       toast.info("Message copied to clipboard!");
     } catch (error) {
       toast.error("Failed to copy message!");

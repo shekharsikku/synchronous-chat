@@ -145,7 +145,7 @@ const MessageBar = () => {
 
   const handleEnterKeyDown: KeyboardEventHandler<HTMLInputElement> = (e) => {
     if (e.key === "Enter" && message !== "" && !isSending) {
-      handleSendMessage();
+      void handleSendMessage();
     }
   };
 
