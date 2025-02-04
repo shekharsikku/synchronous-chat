@@ -4,8 +4,8 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "nodemon",
-    "build": "tsc --build",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc --build --clean && tsc --build",
     "start": "node dist/index.js",
     "dev:dev": "concurrently \"npm run dev\" \"npm run dev --prefix client\"",
     "build:build": "npm run build && npm run build --prefix client"
@@ -25,6 +25,7 @@
     "@types/node": "^22.10.7",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   },
   "dependencies": {
