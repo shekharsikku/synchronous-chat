@@ -77,9 +77,9 @@ const RenderDMMessages = ({
     const link = document.createElement('a');
     link.href = messageFile.file!;
     link.download = messageFile._id;
-    document.body.appendChild(link);
+    window.document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    window.document.body.removeChild(link);
   };
 
   const [imageViewExtend, setImageViewExtend] = useState(false);

@@ -58,7 +58,7 @@ const MessageContainer = () => {
 
   useEffect(() => {
     if (selectedChatData?._id) {
-      getMessages(selectedChatData._id);
+      void getMessages(selectedChatData._id);
     }
   }, [selectedChatData?._id]);
 

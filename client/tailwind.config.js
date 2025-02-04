@@ -80,8 +80,6 @@ module.exports = {
       },
       fontFamily: {
         inter: ["Inter", "sans-serif"],
-        nunito: ["Nunito", "sans-serif"],
-        poppins: ["Poppins", "sans-serif"],
       },
     },
   },
