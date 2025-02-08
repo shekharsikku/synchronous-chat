@@ -1,37 +1,34 @@
 import { createHash, createCipheriv, createDecipheriv } from "crypto";
 
-const generateIv = (recipientId: string) => {
-  return createHash("md5").update(recipientId).digest();
-};
-
-export const encryptMessage = (plainText: string, userId: string) => {
+const generateKeyIv = (secret: string) => {
   const key = createHash("sha256")
-    .update(userId)
+    .update(secret)
     .digest("base64")
     .substring(0, 32);
 
-  const iv = generateIv(userId);
+  const iv = createHash("md5").update(secret).digest();
+
+  return { key, iv };
+};
+
+export const encryptToken = (plain: string, secret: string) => {
+  const { key, iv } = generateKeyIv(secret);
 
   const cipher = createCipheriv("aes-256-cbc", Buffer.from(key), iv);
 
-  let encrypted = cipher.update(plainText, "utf8", "base64");
+  let encrypted = cipher.update(plain, "utf8", "base64");
   encrypted += cipher.final("base64");
 
-  return { encrypted, iv: iv.toString("base64") };
+  return iv.toString("base64") + "@" + encrypted;
 };
 
-export const decryptMessage = (encryptText: string, userId: string) => {
-  const key = createHash("sha256")
-    .update(userId)
-    .digest("base64")
-    .substring(0, 32);
-
-  const iv = generateIv(userId);
+export const decryptToken = (hashed: string, secret: string) => {
+  const { key, iv } = generateKeyIv(secret);
 
   const decipher = createDecipheriv("aes-256-cbc", Buffer.from(key), iv);
 
-  let decrypted = decipher.update(encryptText, "base64", "utf8");
+  let decrypted = decipher.update(hashed, "base64", "utf8");
   decrypted += decipher.final("utf8");
 
-  return { decrypted, iv: iv.toString("base64") };
+  return iv.toString("base64") + "@" + decrypted;
 };
