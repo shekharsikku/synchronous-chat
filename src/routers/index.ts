@@ -13,31 +13,6 @@ router.use("/user", UserRouter);
 router.use("/contact", ContactRouter);
 router.use("/message", MessageRouter);
 
-/** Just for testing encryption api endpoint */
-import { encryptMessage, decryptMessage } from "../utils/encryption";
-
-router.all("/encryption", async (req: Request, res: Response) => {
-  try {
-    const { text, uid } = await req.body;
-
-    if (!text || !uid) {
-      throw new ApiError(400, "Required text and uid!");
-    }
-
-    const { encrypted, iv: eiv } = encryptMessage(text, uid);
-    const { decrypted, iv: div } = decryptMessage(encrypted, uid);
-
-    if (eiv === div) {
-      const data = { encrypted, decrypted };
-      return ApiResponse(res, 200, "Text encrypt decrypt success!", data);
-    }
-
-    throw new ApiError(400, "Something went wrong!");
-  } catch (error: any) {
-    return ApiResponse(res, error.code, error.message);
-  }
-});
-
 /** Just for server wake up from third party services */
 router.get("/wakeup", (req: Request, res: Response) => {
   const from = req.query.from;

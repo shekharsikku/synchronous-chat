@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.upload = exports.authRefresh = exports.authAccess = void 0;
 const utils_1 = require("../utils");
 const helpers_1 = require("../helpers");
+const encryption_1 = require("../utils/encryption");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const user_1 = __importDefault(require("../models/user"));
 const env_1 = __importDefault(require("../utils/env"));
@@ -25,9 +26,15 @@ const authAccess = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         if (!accessToken) {
             throw new utils_1.ApiError(401, "Unauthorized access request!");
         }
+        const [encryptedIv, encryptedToken] = accessToken.split("@");
+        const decryptAccess = (0, encryption_1.decryptToken)(encryptedToken, env_1.default.CRYPTO_SECRET);
+        const [decryptedIv, decryptedToken] = decryptAccess.split("@");
+        if (encryptedIv !== decryptedIv) {
+            throw new utils_1.ApiError(403, "Invalid access token!");
+        }
         let decodedPayload;
         try {
-            decodedPayload = jsonwebtoken_1.default.verify(accessToken, env_1.default.ACCESS_SECRET, {
+            decodedPayload = jsonwebtoken_1.default.verify(decryptedToken, env_1.default.ACCESS_SECRET, {
                 algorithms: ["HS256"],
             });
         }
@@ -75,7 +82,6 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         if (!requestUser) {
             throw new utils_1.ApiError(403, "Invalid user request!");
         }
-        let authTokens = {};
         const userInfo = (0, helpers_1.createUserInfo)(requestUser);
         if (currentTime >= beforeExpires && currentTime < decodedPayload.exp) {
             const newRefreshToken = (0, helpers_1.generateRefresh)(res, userId);
@@ -93,8 +99,7 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             });
             if (updatedAuth.modifiedCount > 0) {
                 (0, helpers_1.authorizeCookie)(res, authorizeId);
-                authTokens.access = (0, helpers_1.generateAccess)(res, userInfo);
-                authTokens.refresh = newRefreshToken;
+                (0, helpers_1.generateAccess)(res, userInfo);
             }
             else {
                 throw new utils_1.ApiError(403, "Invalid refresh request!");
@@ -112,10 +117,9 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             throw new utils_1.ApiError(401, "Please, login again to continue!");
         }
         else {
-            authTokens.access = (0, helpers_1.generateAccess)(res, userInfo);
+            (0, helpers_1.generateAccess)(res, userInfo);
         }
         req.user = userInfo;
-        req.token = authTokens;
         next();
     }
     catch (error) {

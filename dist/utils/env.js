@@ -15,6 +15,7 @@ const env = (0, envalid_1.cleanEnv)(process.env, {
     REFRESH_SECRET: (0, envalid_1.str)(),
     REFRESH_EXPIRY: (0, envalid_1.num)(),
     COOKIES_SECRET: (0, envalid_1.str)(),
+    CRYPTO_SECRET: (0, envalid_1.str)(),
     PAYLOAD_LIMIT: (0, envalid_1.str)(),
     PORT: (0, envalid_1.port)(),
     MONGODB_URI: (0, envalid_1.url)(),

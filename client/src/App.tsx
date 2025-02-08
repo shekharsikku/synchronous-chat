@@ -59,8 +59,10 @@ const App = () => {
   useEffect(() => {
     const onlineRefresh = async () => {
       const success = await authRefresh();
-      if (success && location.pathname === "/auth") {
+      if (success) {
         navigate("/chat");
+      } else {
+        navigate("/auth");
       }
     };
     window.addEventListener("online", onlineRefresh);
@@ -80,17 +82,6 @@ const App = () => {
       document.removeEventListener("contextmenu", disableRightClick);
     }
   }, []);
-
-  useEffect(() => {
-    const titles: Record<string, string> = {
-      "/auth": "Auth",
-      "/chat": "Chat",
-      "/profile": "Profile",
-    };
-
-    const title = titles[location.pathname] || "Synchronous Chat";
-    document.title = `${title} - Synchronous Chat`;
-  }, [location]);
 
   return (
     <Routes>

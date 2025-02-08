@@ -24,25 +24,6 @@ router.use("/auth", auth_1.default);
 router.use("/user", user_1.default);
 router.use("/contact", contact_1.default);
 router.use("/message", message_1.default);
-const encryption_1 = require("../utils/encryption");
-router.all("/encryption", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { text, uid } = yield req.body;
-        if (!text || !uid) {
-            throw new utils_1.ApiError(400, "Required text and uid!");
-        }
-        const { encrypted, iv: eiv } = (0, encryption_1.encryptMessage)(text, uid);
-        const { decrypted, iv: div } = (0, encryption_1.decryptMessage)(encrypted, uid);
-        if (eiv === div) {
-            const data = { encrypted, decrypted };
-            return (0, utils_1.ApiResponse)(res, 200, "Text encrypt decrypt success!", data);
-        }
-        throw new utils_1.ApiError(400, "Something went wrong!");
-    }
-    catch (error) {
-        return (0, utils_1.ApiResponse)(res, error.code, error.message);
-    }
-}));
 router.get("/wakeup", (req, res) => {
     const from = req.query.from;
     res.status(200).json({ message: `Wake up server from ${from}!` });

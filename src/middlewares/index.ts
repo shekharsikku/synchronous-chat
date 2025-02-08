@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { ApiError, ApiResponse } from "../utils";
-import { UserInterface, TokenInterface } from "../interface";
+import { UserInterface } from "../interface";
 import { Types } from "mongoose";
 import {
   generateAccess,
@@ -8,6 +8,7 @@ import {
   authorizeCookie,
   createUserInfo,
 } from "../helpers";
+import { decryptToken } from "../utils/encryption";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import User from "../models/user";
 import env from "../utils/env";
@@ -25,10 +26,18 @@ const authAccess = async (
       throw new ApiError(401, "Unauthorized access request!");
     }
 
+    const [encryptedIv, encryptedToken] = accessToken.split("@");
+    const decryptAccess = decryptToken(encryptedToken, env.CRYPTO_SECRET);
+    const [decryptedIv, decryptedToken] = decryptAccess.split("@");
+
+    if (encryptedIv !== decryptedIv) {
+      throw new ApiError(403, "Invalid access token!");
+    }
+
     let decodedPayload;
 
     try {
-      decodedPayload = jwt.verify(accessToken, env.ACCESS_SECRET, {
+      decodedPayload = jwt.verify(decryptedToken, env.ACCESS_SECRET, {
         algorithms: ["HS256"],
       }) as JwtPayload;
     } catch (error: any) {
@@ -85,7 +94,6 @@ const authRefresh = async (
       throw new ApiError(403, "Invalid user request!");
     }
 
-    let authTokens: TokenInterface = {};
     const userInfo = createUserInfo(requestUser);
 
     if (currentTime >= beforeExpires && currentTime < decodedPayload.exp!) {
@@ -111,8 +119,7 @@ const authRefresh = async (
 
       if (updatedAuth.modifiedCount > 0) {
         authorizeCookie(res, authorizeId);
-        authTokens.access = generateAccess(res, userInfo);
-        authTokens.refresh = newRefreshToken;
+        generateAccess(res, userInfo);
       } else {
         throw new ApiError(403, "Invalid refresh request!");
       }
@@ -132,11 +139,10 @@ const authRefresh = async (
 
       throw new ApiError(401, "Please, login again to continue!");
     } else {
-      authTokens.access = generateAccess(res, userInfo);
+      generateAccess(res, userInfo);
     }
 
     req.user = userInfo;
-    req.token = authTokens;
     next();
   } catch (error: any) {
     return ApiResponse(res, error.code, error.message);

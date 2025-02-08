@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createUserInfo = exports.hasEmptyField = exports.authorizeCookie = exports.generateRefresh = exports.generateAccess = void 0;
+const encryption_1 = require("../utils/encryption");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const env_1 = __importDefault(require("../utils/env"));
 const generateAccess = (res, user) => {
@@ -12,7 +13,8 @@ const generateAccess = (res, user) => {
         algorithm: "HS256",
         expiresIn: accessExpiry,
     });
-    res.cookie("access", accessToken, {
+    const encryptAccess = (0, encryption_1.encryptToken)(accessToken, env_1.default.CRYPTO_SECRET);
+    res.cookie("access", encryptAccess, {
         maxAge: accessExpiry * 1000,
         httpOnly: true,
         sameSite: "strict",

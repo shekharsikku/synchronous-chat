@@ -1,3 +1,4 @@
+import { encryptToken } from "../utils/encryption";
 import { UserInterface } from "../interface";
 import { Response } from "express";
 import { Types } from "mongoose";
@@ -12,7 +13,9 @@ const generateAccess = (res: Response, user?: UserInterface) => {
     expiresIn: accessExpiry,
   });
 
-  res.cookie("access", accessToken, {
+  const encryptAccess = encryptToken(accessToken, env.CRYPTO_SECRET);
+
+  res.cookie("access", encryptAccess, {
     maxAge: accessExpiry * 1000,
     httpOnly: true,
     sameSite: "strict",
