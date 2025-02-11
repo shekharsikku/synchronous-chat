@@ -24,13 +24,12 @@ const getSocketId = (userId) => {
 };
 exports.getSocketId = getSocketId;
 io.on("connection", (socket) => {
-    var _a;
     const userId = socket.handshake.query.userId;
     if (userId) {
         if (!userSocketMap.has(userId)) {
             userSocketMap.set(userId, new Set());
         }
-        (_a = userSocketMap.get(userId)) === null || _a === void 0 ? void 0 : _a.add(socket.id);
+        userSocketMap.get(userId)?.add(socket.id);
         console.log(`UserId ${userId} connected with socketId ${socket.id}`);
     }
     else {

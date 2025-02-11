@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -17,8 +8,7 @@ const utils_1 = require("../utils");
 const mongoose_1 = require("mongoose");
 const user_1 = __importDefault(require("../models/user"));
 const conversation_1 = __importDefault(require("../models/conversation"));
-const searchContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+const searchContact = async (req, res) => {
     try {
         const search = req.query.search;
         if (!search) {
@@ -26,9 +16,9 @@ const searchContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }
         const terms = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const regex = new RegExp(terms, "i");
-        const contacts = yield user_1.default.find({
+        const contacts = await user_1.default.find({
             $and: [
-                { _id: { $ne: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id } },
+                { _id: { $ne: req.user?._id } },
                 { setup: true },
                 { $or: [{ name: regex }, { username: regex }, { email: regex }] },
             ],
@@ -41,13 +31,12 @@ const searchContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     catch (error) {
         return (0, utils_1.ApiResponse)(res, error.code, error.message);
     }
-});
+};
 exports.searchContact = searchContact;
-const availableContact = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+const availableContact = async (req, res) => {
     try {
-        const users = yield user_1.default.find({
-            _id: { $ne: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id },
+        const users = await user_1.default.find({
+            _id: { $ne: req.user?._id },
             setup: true,
         }).lean();
         if (users.length == 0) {
@@ -62,13 +51,12 @@ const availableContact = (req, res) => __awaiter(void 0, void 0, void 0, functio
     catch (error) {
         return (0, utils_1.ApiResponse)(res, error.code, error.message);
     }
-});
+};
 exports.availableContact = availableContact;
-const fetchContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+const fetchContacts = async (req, res) => {
     try {
-        const uid = new mongoose_1.Types.ObjectId((_a = req.user) === null || _a === void 0 ? void 0 : _a._id);
-        const conversations = yield conversation_1.default.find({
+        const uid = new mongoose_1.Types.ObjectId(req.user?._id);
+        const conversations = await conversation_1.default.find({
             participants: uid,
         })
             .sort({ interaction: -1 })
@@ -78,7 +66,8 @@ const fetchContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             .map((conversation) => {
             const contact = conversation.participants.find((participant) => !participant._id.equals(uid));
             return contact
-                ? Object.assign(Object.assign({}, contact), { interaction: conversation.interaction }) : null;
+                ? { ...contact, interaction: conversation.interaction }
+                : null;
         })
             .filter(Boolean);
         return (0, utils_1.ApiResponse)(res, 200, "Contacts fetched successfully!", contacts);
@@ -86,5 +75,5 @@ const fetchContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     catch (error) {
         return (0, utils_1.ApiResponse)(res, 500, "An error occurred while fetching contacts!");
     }
-});
+};
 exports.fetchContacts = fetchContacts;

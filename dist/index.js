@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -18,9 +9,9 @@ const cron_1 = __importDefault(require("./utils/cron"));
 const env_1 = __importDefault(require("./utils/env"));
 const uri = env_1.default.MONGODB_URI;
 const port = env_1.default.PORT;
-(() => __awaiter(void 0, void 0, void 0, function* () {
+(async () => {
     try {
-        const state = yield (0, mongodb_1.default)(uri);
+        const state = await (0, mongodb_1.default)(uri);
         if (state === 1) {
             console.log("Database connection success!");
             cron_1.default.start();
@@ -36,4 +27,4 @@ const port = env_1.default.PORT;
         console.error(`Error: ${error.message}\n`);
         process.exit(1);
     }
-}))();
+})();

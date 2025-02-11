@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -20,7 +11,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const user_1 = __importDefault(require("../models/user"));
 const env_1 = __importDefault(require("../utils/env"));
 const multer_1 = __importDefault(require("multer"));
-const authAccess = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+const authAccess = async (req, res, next) => {
     try {
         const accessToken = req.cookies.access;
         if (!accessToken) {
@@ -47,9 +38,9 @@ const authAccess = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     catch (error) {
         return (0, utils_1.ApiResponse)(res, error.code, error.message);
     }
-});
+};
 exports.authAccess = authAccess;
-const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+const authRefresh = async (req, res, next) => {
     try {
         const refreshToken = req.cookies.refresh;
         const authorizeId = req.cookies.current;
@@ -70,7 +61,7 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         const userId = decodedPayload.uid;
         const currentTime = Math.floor(Date.now() / 1000);
         const beforeExpires = decodedPayload.exp - env_1.default.ACCESS_EXPIRY;
-        const requestUser = yield user_1.default.findOne({
+        const requestUser = await user_1.default.findOne({
             _id: userId,
             authentication: {
                 $elemMatch: {
@@ -86,7 +77,7 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         if (currentTime >= beforeExpires && currentTime < decodedPayload.exp) {
             const newRefreshToken = (0, helpers_1.generateRefresh)(res, userId);
             const refreshExpiry = env_1.default.REFRESH_EXPIRY;
-            const updatedAuth = yield user_1.default.updateOne({
+            const updatedAuth = await user_1.default.updateOne({
                 _id: userId,
                 authentication: {
                     $elemMatch: { _id: authorizeId, token: refreshToken },
@@ -106,7 +97,7 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             }
         }
         else if (currentTime >= decodedPayload.exp) {
-            yield user_1.default.updateOne({ _id: userId }, {
+            await user_1.default.updateOne({ _id: userId }, {
                 $pull: {
                     authentication: { _id: authorizeId, token: refreshToken },
                 },
@@ -125,7 +116,7 @@ const authRefresh = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     catch (error) {
         return (0, utils_1.ApiResponse)(res, error.code, error.message);
     }
-});
+};
 exports.authRefresh = authRefresh;
 const storage = multer_1.default.diskStorage({
     destination: function (_req, _file, cb) {

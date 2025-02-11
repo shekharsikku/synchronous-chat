@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -21,11 +12,11 @@ cloudinary_1.v2.config({
     api_key: env_1.default.CLOUDINARY_API_KEY,
     api_secret: env_1.default.CLOUDINARY_API_SECRET,
 });
-const uploadOnCloudinary = (localFilePath) => __awaiter(void 0, void 0, void 0, function* () {
+const uploadOnCloudinary = async (localFilePath) => {
     try {
         if (!localFilePath)
             return null;
-        const response = yield cloudinary_1.v2.uploader.upload(localFilePath, {
+        const response = await cloudinary_1.v2.uploader.upload(localFilePath, {
             resource_type: "auto",
         });
         console.log(`File uploaded successfully: ${response.url}`);
@@ -36,17 +27,16 @@ const uploadOnCloudinary = (localFilePath) => __awaiter(void 0, void 0, void 0, 
         fs_1.default.unlinkSync(localFilePath);
         return null;
     }
-});
+};
 exports.uploadOnCloudinary = uploadOnCloudinary;
-const deleteImageByUrl = (imageUrl) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+const deleteImageByUrl = async (imageUrl) => {
     try {
-        const publicId = (_a = imageUrl.split("/").pop()) === null || _a === void 0 ? void 0 : _a.split(".")[0];
-        const result = yield cloudinary_1.v2.uploader.destroy(publicId);
+        const publicId = imageUrl.split("/").pop()?.split(".")[0];
+        const result = await cloudinary_1.v2.uploader.destroy(publicId);
         console.log("Image deleted successfully:", result);
     }
     catch (error) {
         console.error("Error deleting image:", error.message);
     }
-});
+};
 exports.deleteImageByUrl = deleteImageByUrl;

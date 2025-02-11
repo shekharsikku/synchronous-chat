@@ -55,7 +55,11 @@ exports.hasEmptyField = hasEmptyField;
 const createUserInfo = (user) => {
     let userInfo;
     if (user.setup) {
-        userInfo = Object.assign(Object.assign({}, user.toObject()), { password: undefined, authentication: undefined });
+        userInfo = {
+            ...user.toObject(),
+            password: undefined,
+            authentication: undefined,
+        };
     }
     else {
         userInfo = {
