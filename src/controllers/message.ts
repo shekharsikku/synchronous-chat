@@ -1,7 +1,6 @@
 import { ApiResponse, ApiError } from "../utils";
 import { Request, Response } from "express";
 import { getSocketId, io } from "../socket";
-import { Types } from "mongoose";
 import Conversation from "../models/conversation";
 import Message from "../models/message";
 
@@ -24,9 +23,11 @@ const sendMessage = async (req: Request, res: Response) => {
     const message = new Message({
       sender: sender,
       recipient: receiver,
-      type: type,
-      text: text,
-      file: file,
+      content: {
+        type: type,
+        text: text,
+        file: file,
+      },
     });
 
     if (message) {
@@ -83,7 +84,6 @@ const cleanupConversation = async (conversationId: Types.ObjectId) => {
     await conversations.save();
   }
 }
-*/
 
 const cleanupConversation = async (conversationId: Types.ObjectId) => {
   const conversations = await Conversation.findById(conversationId).lean(); // Use lean() for faster retrieval
@@ -126,37 +126,130 @@ const getMessages = async (req: Request, res: Response) => {
     return ApiResponse(res, 500, "Error while fetching messages!");
   }
 };
+*/
+
+const getMessages = async (req: Request, res: Response) => {
+  try {
+    const sender = req.user?._id;
+    const receiver = req.params.id;
+
+    const messages = await Message.find({
+      $or: [
+        { sender: sender, recipient: receiver },
+        { sender: receiver, recipient: sender },
+      ],
+    }).distinct("_id");
+
+    const conversation = await Conversation.findOneAndUpdate(
+      {
+        participants: { $all: [sender, receiver] },
+      },
+      [
+        {
+          $set: {
+            messages: {
+              $filter: {
+                input: "$messages",
+                as: "message",
+                cond: { $in: ["$$message", messages] },
+              },
+            },
+          },
+        },
+      ],
+      { new: true }
+    )
+      .populate("messages")
+      .lean();
+
+    if (!conversation) {
+      return ApiResponse(res, 200, "No any message available!", []);
+    }
+
+    return ApiResponse(
+      res,
+      200,
+      "Messages fetched successfully!",
+      conversation?.messages
+    );
+  } catch (error: any) {
+    return ApiResponse(res, 500, "Error while fetching messages!");
+  }
+};
 
 const deleteMessage = async (req: Request, res: Response) => {
   try {
-    const uid = req.user?._id;
-    const mid = req.params.id;
+    const userId = req.user?._id;
+    const msgId = req.params.id;
 
-    const message = await Message.findById(mid);
+    const message = await Message.findOneAndUpdate(
+      { _id: msgId, sender: userId },
+      {
+        type: "deleted",
+        deletedAt: new Date(),
+        $unset: { content: 1 },
+      },
+      { new: true }
+    );
 
     if (!message) {
-      throw new ApiError(404, "Message not found");
+      throw new ApiError(
+        403,
+        "You can't delete this message or message not found!"
+      );
     }
 
     const senderSocketId = getSocketId(String(message?.sender))!;
     const receiverSocketId = getSocketId(String(message?.recipient))!;
 
-    if (message && message.sender?.equals(uid)) {
-      message.type === "text" ? (message.text = "") : (message.file = "");
-      message.type = "deleted";
-      await message.save({ validateBeforeSave: false });
-
-      if (receiverSocketId.length > 0) {
-        io.to(receiverSocketId).emit("message:remove", message);
-      }
-      io.to(senderSocketId).emit("message:remove", message);
-
-      return ApiResponse(res, 200, "Message deleted successfully!", message);
-    } else {
-      throw new ApiError(403, "You can't delete this message!");
+    if (receiverSocketId.length > 0) {
+      io.to(receiverSocketId).emit("message:remove", message);
     }
+    io.to(senderSocketId).emit("message:remove", message);
+
+    return ApiResponse(res, 200, "Message deleted successfully!", message);
   } catch (error: any) {
-    return ApiResponse(res, error.code, error.message);
+    return ApiResponse(
+      res,
+      error.code || 500,
+      error.message || "Error while deleting message!"
+    );
+  }
+};
+
+const editMessage = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?._id;
+    const msgId = req.params.id;
+    const { text } = await req.body;
+
+    if (!text) {
+      throw new ApiError(400, "Text content is required for editing!");
+    }
+
+    const message = await Message.findOneAndUpdate(
+      { _id: msgId, sender: userId, "content.type": "text" },
+      {
+        type: "edited",
+        "content.text": text,
+      },
+      { new: true }
+    );
+
+    if (!message) {
+      throw new ApiError(
+        403,
+        "You can't edit this message or message not found!"
+      );
+    }
+
+    return ApiResponse(res, 200, "Message edited successfully!", message);
+  } catch (error: any) {
+    return ApiResponse(
+      res,
+      error.code || 500,
+      error.message || "Error while editing message!"
+    );
   }
 };
 
@@ -178,4 +271,4 @@ const deleteMessages = async (req: Request, res: Response) => {
   }
 };
 
-export { sendMessage, getMessages, deleteMessage, deleteMessages };
+export { sendMessage, getMessages, editMessage, deleteMessage, deleteMessages };
