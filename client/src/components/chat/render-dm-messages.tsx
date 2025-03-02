@@ -75,7 +75,7 @@ const RenderDMMessages = ({
 
   const handleDownload = (messageFile: Message) => {
     const link = document.createElement('a');
-    link.href = messageFile.file!;
+    link.href = messageFile?.content?.file!;
     link.download = messageFile._id;
     window.document.body.appendChild(link);
     link.click();
@@ -97,7 +97,7 @@ const RenderDMMessages = ({
         messageKey = selectedChatData?._id!;
       }
 
-      return decryptMessage(message.text!, messageKey);
+      return decryptMessage(message?.content?.text!, messageKey);
     } catch (error) {
       isDevelopment && console.log("Plain text decryption failed!");
       return "Decryption Error!";
@@ -162,13 +162,13 @@ const RenderDMMessages = ({
           ) : (
             <>
               {/* For test message type */}
-              {message.type === "text" && message.text !== "" && (
+              {message?.content?.type === "text" && message?.content?.text !== "" && (
                 <span className="text-base">{plainText(message)}</span>
               )}
               {/* For file message type */}
-              {message.type === "file" && (
-                checkImageType(message.file!) ? (
-                  <img src={message.file} alt="Image file" className="h-60 w-auto rounded" />
+              {message?.content?.type === "file" && (
+                checkImageType(message?.content?.file!) ? (
+                  <img src={message?.content?.file} alt="Image file" className="h-60 w-auto rounded" />
                 ) : (
                   <span className="flex items-center gap-1 italic text-base">
                     <HiOutlineDocumentArrowDown size={16} /> Download this file to view it.
@@ -179,7 +179,7 @@ const RenderDMMessages = ({
         </ContextMenuTrigger>
         {message.type !== "deleted" && (
           <ContextMenuContent className="w-20 flex flex-col gap-2 p-2 transition-all duration-500">
-            {message.type === "text" && (
+            {message?.content?.type === "text" && (
               <>
                 {language !== "en" && (
                   <ContextMenuItem className="flex gap-2" onClick={() => setTextAndLanguage(plainText(message))}>
@@ -191,9 +191,9 @@ const RenderDMMessages = ({
                 </ContextMenuItem>
               </>
             )}
-            {message.type === "file" && (
+            {message?.content?.type === "file" && (
               <>
-                {checkImageType(message.file!) && (
+                {checkImageType(message?.content?.file!) && (
                   <ContextMenuItem className="flex gap-2" onClick={() => setImageViewExtend(true)}>
                     <HiOutlineViewfinderCircle size={16} /> View
                   </ContextMenuItem>
@@ -216,9 +216,11 @@ const RenderDMMessages = ({
         <span className="text-base">{translated}</span>
       )}
       <span className="text-xs text-gray-600">
-        {message.type === "deleted"
-          ? `${moment(message.updatedAt).format("LT")}`
-          : `${moment(message.createdAt).format("LT")}`}
+        {message.type === "deleted" ? (
+          <span>{`${moment(message.deletedAt).format("LT")}`}</span>
+        ) : (
+          <span>{message.type === "edited" && "Edited"} {`${moment(message.updatedAt).format("LT")}`}</span>
+        )}
       </span>
       {/* Dialog for image extend view */}
       <Dialog open={imageViewExtend} onOpenChange={setImageViewExtend}>
@@ -228,11 +230,12 @@ const RenderDMMessages = ({
             <DialogDescription className="hidden"></DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[80vh] overflow-y-auto scrollbar-hide">
-            <img src={message?.file} alt="Extend view" className="object-contain size-full rounded" />
+            <img src={message?.content?.file} alt="Extend view" className="object-contain size-full rounded" />
           </ScrollArea>
         </DialogContent>
       </Dialog>
     </div>
+
   )
 }
 

@@ -5,9 +5,13 @@ export interface Message {
   _id: string;
   sender: string;
   recipient: string;
-  type: "text" | "file" | "deleted";
-  text?: string;
-  file?: string;
+  type: "default" | "edited" | "deleted";
+  content?: {
+    type: "text" | "file";
+    text?: string;
+    file?: string;
+  };
+  deletedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
   __v?: any;
