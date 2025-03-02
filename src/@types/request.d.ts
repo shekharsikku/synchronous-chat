@@ -1,4 +1,3 @@
-import "express";
 import { UserInterface, TokenInterface } from "../interface";
 
 declare module "express" {
