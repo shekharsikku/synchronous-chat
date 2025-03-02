@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteMessages = exports.deleteMessage = exports.getMessages = exports.sendMessage = void 0;
+exports.deleteMessages = exports.deleteMessage = exports.editMessage = exports.getMessages = exports.sendMessage = void 0;
 const utils_1 = require("../utils");
 const socket_1 = require("../socket");
 const conversation_1 = __importDefault(require("../models/conversation"));
@@ -24,9 +24,11 @@ const sendMessage = async (req, res) => {
         const message = new message_1.default({
             sender: sender,
             recipient: receiver,
-            type: type,
-            text: text,
-            file: file,
+            content: {
+                type: type,
+                text: text,
+                file: file,
+            },
         });
         if (message) {
             conversation.messages.push(message._id);
@@ -54,32 +56,37 @@ const sendMessage = async (req, res) => {
     }
 };
 exports.sendMessage = sendMessage;
-const cleanupConversation = async (conversationId) => {
-    const conversations = await conversation_1.default.findById(conversationId).lean();
-    if (conversations && conversations.messages.length > 0) {
-        const validMessages = await message_1.default.find({
-            _id: { $in: conversations.messages },
-        }).distinct("_id");
-        if (validMessages.length !== conversations.messages.length) {
-            await conversation_1.default.updateOne({ _id: conversationId }, { $set: { messages: validMessages } });
-        }
-    }
-};
 const getMessages = async (req, res) => {
     try {
         const sender = req.user?._id;
         const receiver = req.params.id;
-        const conversation = await conversation_1.default.findOne({
+        const messages = await message_1.default.find({
+            $or: [
+                { sender: sender, recipient: receiver },
+                { sender: receiver, recipient: sender },
+            ],
+        }).distinct("_id");
+        const conversation = await conversation_1.default.findOneAndUpdate({
             participants: { $all: [sender, receiver] },
-        })
+        }, [
+            {
+                $set: {
+                    messages: {
+                        $filter: {
+                            input: "$messages",
+                            as: "message",
+                            cond: { $in: ["$$message", messages] },
+                        },
+                    },
+                },
+            },
+        ], { new: true })
             .populate("messages")
             .lean();
         if (!conversation) {
             return (0, utils_1.ApiResponse)(res, 200, "No any message available!", []);
         }
-        await cleanupConversation(conversation._id);
-        const messages = conversation.messages;
-        return (0, utils_1.ApiResponse)(res, 200, "Messages fetched successfully!", messages);
+        return (0, utils_1.ApiResponse)(res, 200, "Messages fetched successfully!", conversation?.messages);
     }
     catch (error) {
         return (0, utils_1.ApiResponse)(res, 500, "Error while fetching messages!");
@@ -88,33 +95,51 @@ const getMessages = async (req, res) => {
 exports.getMessages = getMessages;
 const deleteMessage = async (req, res) => {
     try {
-        const uid = req.user?._id;
-        const mid = req.params.id;
-        const message = await message_1.default.findById(mid);
+        const userId = req.user?._id;
+        const msgId = req.params.id;
+        const message = await message_1.default.findOneAndUpdate({ _id: msgId, sender: userId }, {
+            type: "deleted",
+            deletedAt: new Date(),
+            $unset: { content: 1 },
+        }, { new: true });
         if (!message) {
-            throw new utils_1.ApiError(404, "Message not found");
+            throw new utils_1.ApiError(403, "You can't delete this message or message not found!");
         }
         const senderSocketId = (0, socket_1.getSocketId)(String(message?.sender));
         const receiverSocketId = (0, socket_1.getSocketId)(String(message?.recipient));
-        if (message && message.sender?.equals(uid)) {
-            message.type === "text" ? (message.text = "") : (message.file = "");
-            message.type = "deleted";
-            await message.save({ validateBeforeSave: false });
-            if (receiverSocketId.length > 0) {
-                socket_1.io.to(receiverSocketId).emit("message:remove", message);
-            }
-            socket_1.io.to(senderSocketId).emit("message:remove", message);
-            return (0, utils_1.ApiResponse)(res, 200, "Message deleted successfully!", message);
+        if (receiverSocketId.length > 0) {
+            socket_1.io.to(receiverSocketId).emit("message:remove", message);
         }
-        else {
-            throw new utils_1.ApiError(403, "You can't delete this message!");
-        }
+        socket_1.io.to(senderSocketId).emit("message:remove", message);
+        return (0, utils_1.ApiResponse)(res, 200, "Message deleted successfully!", message);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, error.code, error.message);
+        return (0, utils_1.ApiResponse)(res, error.code || 500, error.message || "Error while deleting message!");
     }
 };
 exports.deleteMessage = deleteMessage;
+const editMessage = async (req, res) => {
+    try {
+        const userId = req.user?._id;
+        const msgId = req.params.id;
+        const { text } = await req.body;
+        if (!text) {
+            throw new utils_1.ApiError(400, "Text content is required for editing!");
+        }
+        const message = await message_1.default.findOneAndUpdate({ _id: msgId, sender: userId, "content.type": "text" }, {
+            type: "edited",
+            "content.text": text,
+        }, { new: true });
+        if (!message) {
+            throw new utils_1.ApiError(403, "You can't edit this message or message not found!");
+        }
+        return (0, utils_1.ApiResponse)(res, 200, "Message edited successfully!", message);
+    }
+    catch (error) {
+        return (0, utils_1.ApiResponse)(res, error.code || 500, error.message || "Error while editing message!");
+    }
+};
+exports.editMessage = editMessage;
 const deleteMessages = async (req, res) => {
     try {
         const uid = req.user?._id;
