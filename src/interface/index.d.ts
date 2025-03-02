@@ -33,7 +33,11 @@ interface MessageInterface extends Document {
   _id?: Types.ObjectId;
   sender: Types.ObjectId;
   recipient: Types.ObjectId;
-  type: string;
-  text: string;
-  file: string;
+  type: "default" | "edited" | "deleted";
+  content: {
+    type: "text" | "file";
+    text?: string;
+    file?: string;
+  };
+  deletedAt: Date;
 }
