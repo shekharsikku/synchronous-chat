@@ -39,6 +39,9 @@ const useChatStore = create<{
   setLanguage: (translateLanguage: string) => void;
 
   updateMessage: (id: string, updated: any) => void;
+
+  editDialog: boolean;
+  setEditDialog: (editMessageDialog: boolean) => void;
 }>((set) => ({
   selectedChatType: "",
   setSelectedChatType: (selectedChatType: string) => set({ selectedChatType }),
@@ -72,6 +75,9 @@ const useChatStore = create<{
         message._id === id ? { ...message, ...updated } : message
       ),
     })),
+
+  editDialog: false,
+  setEditDialog: (editDialog: boolean) => set({ editDialog }),
 }));
 
 export default useChatStore;

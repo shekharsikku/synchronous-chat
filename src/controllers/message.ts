@@ -243,6 +243,14 @@ const editMessage = async (req: Request, res: Response) => {
       );
     }
 
+    const senderSocketId = getSocketId(String(message?.sender))!;
+    const receiverSocketId = getSocketId(String(message?.recipient))!;
+
+    if (receiverSocketId.length > 0) {
+      io.to(receiverSocketId).emit("message:edited", message);
+    }
+    io.to(senderSocketId).emit("message:edited", message);
+
     return ApiResponse(res, 200, "Message edited successfully!", message);
   } catch (error: any) {
     return ApiResponse(

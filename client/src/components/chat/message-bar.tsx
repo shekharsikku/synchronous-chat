@@ -22,7 +22,7 @@ import api from "@/lib/api";
 const MessageBar = () => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
-  const { selectedChatData, setIsPartnerTyping, messages } = useChatStore();
+  const { selectedChatData, setIsPartnerTyping, messages, editDialog } = useChatStore();
 
   const emojiRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,6 +42,12 @@ const MessageBar = () => {
 
   useEffect(() => {
     const handleSpaceKeyDown = (event: KeyboardEvent) => {
+      const activeElement = document.activeElement as HTMLElement;
+
+      if (editDialog && (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA")) {
+        return;
+      }
+
       if (event.code === "Space" && document.activeElement !== inputRef.current) {
         event.preventDefault();
         inputRef.current?.focus();
@@ -51,7 +57,7 @@ const MessageBar = () => {
     return () => {
       document.removeEventListener("keydown", handleSpaceKeyDown);
     };
-  }, []);
+  }, [editDialog]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -247,7 +253,7 @@ const MessageBar = () => {
           onChange={handleChange}
           className="flex-1 px-1 py-2 bg-transparent border-none outline-none 
           text-sm tracking-wider disabled:text-blue-800"
-          disabled={!!(selectedImage && message !== "")}
+          disabled={!!(selectedImage && message !== "") || editDialog}
           ref={inputRef}
           onKeyDown={handleEnterKeyDown}
         />

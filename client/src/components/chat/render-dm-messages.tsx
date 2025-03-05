@@ -6,7 +6,8 @@ import {
   HiOutlineClipboardDocument,
   HiOutlineCloudArrowDown,
   HiOutlineDocumentArrowDown,
-  HiOutlineViewfinderCircle
+  HiOutlineViewfinderCircle,
+  HiOutlinePencilSquare
 } from "react-icons/hi2";
 import {
   Dialog,
@@ -22,6 +23,7 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { EditMessage } from "@/components/chat/edit-message";
 import { Message } from "@/zustand/chat";
 import { checkImageType, decryptMessage, cn } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/zustand";
@@ -39,7 +41,7 @@ const RenderDMMessages = ({
 }) => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
-  const { selectedChatData, updateMessage, language } = useChatStore();
+  const { selectedChatData, updateMessage, language, setEditDialog } = useChatStore();
 
   const copyToClipboard = (text: string) => {
     try {
@@ -54,9 +56,7 @@ const RenderDMMessages = ({
     const messageRemove = (current: Message) => {
       updateMessage(current._id, current);
     };
-
     socket?.on("message:remove", messageRemove);
-
     return () => {
       socket?.off("message:remove", messageRemove);
     };
@@ -145,6 +145,31 @@ const RenderDMMessages = ({
   const elementRef = useRef<any>(null);
   useDisableAnimations(socket!, elementRef);
 
+  const [openEditMessageDialog, setOpenEditMessageDialog] = useState(false);
+  const [currentMessageForEdit, setCurrentMessageForEdit] = useState({ id: "", text: "" });
+
+  const handleEditMessageClick = (message: Message) => {
+    setOpenEditMessageDialog(true);
+    setCurrentMessageForEdit({
+      id: message._id,
+      text: plainText(message)
+    });
+  }
+
+  useEffect(() => {
+    const messageEdited = (current: Message) => {
+      updateMessage(current._id, current);
+    };
+    socket?.on("message:edited", messageEdited);
+    return () => {
+      socket?.off("message:edited", messageEdited);
+    };
+  }, []);
+
+  useEffect(() => {
+    setEditDialog(openEditMessageDialog);
+  }, [openEditMessageDialog])
+
   return (
     <div className={`w-full flex flex-col gap-2 mb-4 ${isSender ? "items-start text-left" : "items-end text-right"}`}>
       <ContextMenu>
@@ -189,6 +214,11 @@ const RenderDMMessages = ({
                 <ContextMenuItem className="flex gap-2" onClick={() => copyToClipboard(plainText(message))}>
                   <HiOutlineClipboardDocument size={16} /> Copy
                 </ContextMenuItem>
+                {message.sender === userInfo?._id && message.type === "default" && (
+                  <ContextMenuItem className="flex gap-2" onClick={() => handleEditMessageClick(message)}>
+                    <HiOutlinePencilSquare size={16} /> Edit
+                  </ContextMenuItem>
+                )}
               </>
             )}
             {message?.content?.type === "file" && (
@@ -234,8 +264,13 @@ const RenderDMMessages = ({
           </ScrollArea>
         </DialogContent>
       </Dialog>
+      {/* for edit message */}
+      <EditMessage
+        openEditMessageDialog={openEditMessageDialog}
+        setOpenEditMessageDialog={setOpenEditMessageDialog}
+        currentMessage={currentMessageForEdit}
+      />
     </div>
-
   )
 }
 
