@@ -133,6 +133,12 @@ const editMessage = async (req, res) => {
         if (!message) {
             throw new utils_1.ApiError(403, "You can't edit this message or message not found!");
         }
+        const senderSocketId = (0, socket_1.getSocketId)(String(message?.sender));
+        const receiverSocketId = (0, socket_1.getSocketId)(String(message?.recipient));
+        if (receiverSocketId.length > 0) {
+            socket_1.io.to(receiverSocketId).emit("message:edited", message);
+        }
+        socket_1.io.to(senderSocketId).emit("message:edited", message);
         return (0, utils_1.ApiResponse)(res, 200, "Message edited successfully!", message);
     }
     catch (error) {

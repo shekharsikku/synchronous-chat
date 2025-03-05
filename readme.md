@@ -81,7 +81,11 @@ Start the client:
 cd client && npm run dev
 ```
 
-Then, open http://localhost:5173 in your browser.
+Then, open below link in your browser.
+
+```bash
+http://localhost:5173
+```
 
 **Building for Production**
 
@@ -99,9 +103,11 @@ Ensure you're in the root directory:
 npm run build && npm run start
 ```
 
-Your app will be available at http://localhost:4000 or the port specified in .env.
+Your app will be available at the port specified in .env.
 
-**Live Demo - [Synchronous Chat](https://synchronouschat.onrender.com)**
+```bash
+http://localhost:<PORT>
+```
 
 ### **Developed by [Shekhar Vishwakarma](https://linkedin.com/in/shekharsikku)**
 
