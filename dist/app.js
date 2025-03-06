@@ -57,7 +57,10 @@ if (env_1.default.isDev) {
 else {
     app.set("trust proxy", 1);
     app.use((0, morgan_1.default)("tiny"));
-    app.use(express_1.default.static(path_1.default.join(__dirname, "../client/dist")));
+    app.use(express_1.default.static(path_1.default.join(__dirname, "../client/dist"), {
+        maxAge: "30d",
+        immutable: true,
+    }));
 }
 const limiter = (0, express_rate_limit_1.rateLimit)({
     windowMs: 5 * 60 * 1000,
@@ -72,7 +75,11 @@ app.all("*path", (_req, res) => {
         res.status(200).json({ message: "Welcome to Synchronous Chat!" });
     }
     else {
-        res.sendFile(path_1.default.join(__dirname, "../client/dist", "index.html"));
+        res.sendFile(path_1.default.join(__dirname, "../client/dist", "index.html"), {
+            headers: {
+                "Cache-Control": "no-store, must-revalidate",
+            },
+        });
     }
 });
 app.use(((err, _req, res, _next) => {
