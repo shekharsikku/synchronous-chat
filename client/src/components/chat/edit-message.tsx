@@ -12,7 +12,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Message } from "@/zustand/chat";
 import { useChatStore } from "@/zustand";
 import { encryptMessage } from "@/lib/utils";
 import api from "@/lib/api";
@@ -31,7 +30,7 @@ const EditMessage = ({
   setOpenEditMessageDialog,
   currentMessage,
 }: EditMessageProps) => {
-  const { selectedChatData, updateMessage } = useChatStore();
+  const { selectedChatData } = useChatStore();
 
   const [isLoading, setIsLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
@@ -48,8 +47,6 @@ const EditMessage = ({
       const response = await api.patch(`/api/message/edit/${currentMessage.id}`, {
         text: encryptMessage(newMessage, selectedChatData?._id!)
       });
-      const edited: Message = await response.data.data;
-      updateMessage(edited._id, edited);
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);

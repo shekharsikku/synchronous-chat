@@ -1,12 +1,10 @@
 import React, { useEffect, useRef, useState, Fragment } from "react";
 import { useChatStore } from "@/zustand";
-import { useListenMessages } from "@/lib/hooks";
+import { useMessages } from "@/hooks/use-messages";
 import { RenderDMMessages } from "./render-dm-messages";
 import { MessageSkeleton } from "./message-skeleton";
 import { Message } from "@/zustand/chat";
-import { toast } from "sonner";
 import moment from "moment";
-import api from "@/lib/api";
 
 const RenderMessages = React.memo(({
   messages, lastMessageId, selectedChatType
@@ -40,53 +38,34 @@ const RenderMessages = React.memo(({
 });
 
 const MessageContainer = () => {
-  useListenMessages();
-  const { selectedChatType, selectedChatData, messages, setMessages } = useChatStore();
-  const [isLoading, setIsLoading] = useState(true);
-
-  const getMessages = async (userId: string) => {
-    try {
-      setIsLoading(true);
-      const response = await api.get(`/api/message/${userId}`);
-      setMessages(response.data.data);
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (selectedChatData?._id) {
-      void getMessages(selectedChatData._id);
-    }
-  }, [selectedChatData?._id]);
+  const { messages, fetching } = useMessages();
+  const { selectedChatType } = useChatStore();
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const [lastMessageId, setLastMessageId] = useState("");
 
   useEffect(() => {
-    if (messages.length > 0) {
+    if (messages && messages.length > 0) {
       setLastMessageId(messages[messages.length - 1]._id);
     }
 
     setTimeout(() => {
       lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
-  }, [messages, isLoading]);
+  }, [messages, fetching]);
 
   return (
     <div className="w-full flex-1 overflow-y-auto scrollbar-hide scroll-smooth px-4">
-      {isLoading ? (
+      {fetching ? (
         <MessageSkeleton />
       ) : (
         <RenderMessages
-          messages={messages}
+          messages={messages!}
           lastMessageId={lastMessageId}
           selectedChatType={selectedChatType}
         />
       )}
-      {!isLoading && <div ref={lastMessageRef} />}
+      {!fetching && <div ref={lastMessageRef} />}
     </div>
   )
 }

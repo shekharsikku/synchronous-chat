@@ -22,7 +22,7 @@ import api from "@/lib/api";
 const MessageBar = () => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
-  const { selectedChatData, setIsPartnerTyping, messages, editDialog } = useChatStore();
+  const { selectedChatData, setIsPartnerTyping, editDialog } = useChatStore();
 
   const emojiRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -133,12 +133,7 @@ const MessageBar = () => {
         setMessage("Sending...");
       }
 
-      const response = await api.post(`/api/message/send/${selectedChatData?._id}`, messageData);
-      const data = await response.data;
-
-      if (data?.success && messages.length <= 0) {
-        toast.success(data?.message);
-      }
+      await api.post(`/api/message/send/${selectedChatData?._id}`, messageData);
 
       setMessage("");
       setSelectedImage(null);

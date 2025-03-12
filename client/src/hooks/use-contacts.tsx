@@ -21,7 +21,8 @@ export const useContacts = () => {
   const { data: contacts, isFetching: fetching } = useQuery({
     queryKey: ["contacts", userInfo?._id],
     queryFn: fetchContacts,
-    staleTime: 4 * 15 * 60 * 1000,
+    staleTime: 60 * 60 * 1000,
+    gcTime: 2 * 60 * 60 * 1000,
     enabled: !!userInfo?._id,
   });
 

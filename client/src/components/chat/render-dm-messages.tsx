@@ -41,7 +41,7 @@ const RenderDMMessages = ({
 }) => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
-  const { selectedChatData, updateMessage, language, setEditDialog } = useChatStore();
+  const { selectedChatData, language, setEditDialog } = useChatStore();
 
   const copyToClipboard = (text: string) => {
     try {
@@ -52,21 +52,9 @@ const RenderDMMessages = ({
     }
   };
 
-  useEffect(() => {
-    const messageRemove = (current: Message) => {
-      updateMessage(current._id, current);
-    };
-    socket?.on("message:remove", messageRemove);
-    return () => {
-      socket?.off("message:remove", messageRemove);
-    };
-  }, []);
-
   const deleteSelectedMessage = async (id: string) => {
     try {
       const response = await api.delete(`/api/message/delete/${id}`);
-      const deleted: Message = await response.data.data;
-      updateMessage(deleted._id, deleted);
       toast.info(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
@@ -155,16 +143,6 @@ const RenderDMMessages = ({
       text: plainText(message)
     });
   }
-
-  useEffect(() => {
-    const messageEdited = (current: Message) => {
-      updateMessage(current._id, current);
-    };
-    socket?.on("message:edited", messageEdited);
-    return () => {
-      socket?.off("message:edited", messageEdited);
-    };
-  }, []);
 
   useEffect(() => {
     setEditDialog(openEditMessageDialog);
