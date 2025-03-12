@@ -13,101 +13,20 @@ import { Logo, Title } from "./logo-title";
 import { AddNewChat } from "./add-new-chat";
 import { ProfileInfo } from "./profile-info";
 import { StreamInfo } from "./stream-info";
-import { UserInfo } from "@/zustand/auth";
-import { useEffect, useState } from "react";
+import { useContacts } from "@/hooks/use-contacts";
+import { useSelectedChat } from "@/hooks/use-selected-chat";
 import { useChatStore } from "@/zustand";
 import { usePeer, useSocket } from "@/lib/context";
 import { useAvatar } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
-import api from "@/lib/api";
 
 const ContactsContainer = () => {
   const { callingActive } = usePeer();
-  const { socket, onlineUsers } = useSocket();
-  const { setSelectedChatType, setSelectedChatData, selectedChatData, messages } = useChatStore();
+  const { onlineUsers } = useSocket();
+  const { setSelectedChatType, setSelectedChatData } = useChatStore();
 
-  const [fetching, setFetching] = useState(false);
-  const [contacts, setContacts] = useState<UserInfo[] | null>(null);
-
-  const fetchAllContacts = async () => {
-    try {
-      setFetching(true);
-      const response = await api.get("/api/contact/fetch");
-      setContacts(response.data.data);
-    } catch (error: any) {
-      console.log(`Error while fetching contacts!`);
-    } finally {
-      setFetching(false);
-    }
-  }
-
-  useEffect(() => {
-    if (!contacts) void fetchAllContacts();
-  }, [contacts]);
-
-  useEffect(() => {
-    const handleConversationUpdate = (data: any) => {
-      setContacts((previous: any) => {
-        const updatedContacts = previous?.map((current: any) =>
-          current._id === data._id
-            ? { ...current, interaction: data.interaction }
-            : current
-        );
-
-        const sortedContacts = updatedContacts?.sort(
-          (a: any, b: any) =>
-            new Date(b.interaction).getTime() - new Date(a.interaction).getTime()
-        );
-
-        return sortedContacts;
-      });
-
-      if (selectedChatData?._id === data._id) {
-        setSelectedChatData({ ...selectedChatData, interaction: data.interaction });
-      }
-    };
-
-    socket?.on("conversation:updated", handleConversationUpdate);
-
-    return () => {
-      socket?.off("conversation:updated", handleConversationUpdate);
-    };
-  }, [socket, selectedChatData]);
-
-  useEffect(() => {
-    if (contacts && selectedChatData) {
-      const isExist = contacts?.some(obj => obj._id === selectedChatData?._id);
-
-      if (!isExist) {
-        const selected = { ...selectedChatData, interaction: new Date().toISOString() } as UserInfo;
-
-        const cleaned = Object.fromEntries(
-          Object.entries(selected).filter(([key]) => !["setup", "createdAt", "updatedAt", "__v"].includes(key))
-        );
-
-        setContacts((current: any) => [
-          ...current,
-          { ...cleaned },
-        ]);
-      }
-    }
-  }, [selectedChatData]);
-
-  useEffect(() => {
-    if (contacts && selectedChatData) {
-      const atFirst = contacts[0]?._id === selectedChatData?._id;
-
-      if (!atFirst) {
-        const updated = { ...selectedChatData, interaction: new Date().toISOString() } as UserInfo;
-        setSelectedChatData(updated);
-      }
-    }
-  }, [contacts, messages.length]);
-
-  const selectNewContact = (contact: object) => {
-    setSelectedChatType("contact");
-    setSelectedChatData(contact);
-  }
+  const { contacts, fetching } = useContacts();
+  const { selectedChatData } = useSelectedChat();
 
   return (
     <div className={cn(selectedChatData && "hidden md:flex flex-col",
@@ -134,7 +53,10 @@ const ContactsContainer = () => {
                   <div className="flex flex-col gap-4">
                     {contacts?.map((contact: any) => (
                       <div key={contact?._id} className={`w-full flex items-center justify-between cursor-pointer transition-all duration-300 rounded border py-2 px-4 xl:px-6 text-gray-600 hover:bg-gray-100 
-                        ${selectedChatData && selectedChatData._id === contact._id && "bg-gray-100/80 text-gray-700 border-gray-300/50"} ${contact?.setup === false && "disabled"} `} onClick={() => selectNewContact(contact)} role="button">
+                        ${selectedChatData && selectedChatData._id === contact._id && "bg-gray-100/80 text-gray-700 border-gray-300/50"} ${contact?.setup === false && "disabled"} `} onClick={() => {
+                          setSelectedChatType("contact");
+                          setSelectedChatData(contact);
+                        }} role="button">
                         <div className="flex items-center gap-4">
                           <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
                             <AvatarImage src={useAvatar(contact)} alt="profile" className="object-fit h-full w-full" />

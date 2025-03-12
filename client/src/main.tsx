@@ -1,13 +1,15 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { SocketProvider, PeerProvider } from "@/context";
 import App from "@/App.tsx";
 import "@/main.css";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.Fragment>
+const queryClient = new QueryClient();
+
+createRoot(document.getElementById("root")!).render(
+  <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <SocketProvider>
         <PeerProvider>
@@ -16,5 +18,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         </PeerProvider>
       </SocketProvider>
     </BrowserRouter>
-  </React.Fragment>
+  </QueryClientProvider>
 );
