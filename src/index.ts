@@ -10,7 +10,7 @@ const port = env.PORT;
   try {
     const state = await mongodb(uri);
     if (state === 1) {
-      console.log("Database connection success!");
+      console.log("\nDatabase connection success!");
       job.start();
       server.listen(port, () => {
         console.log(`Server running on port: ${port}\n`);

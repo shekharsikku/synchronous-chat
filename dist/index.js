@@ -13,7 +13,7 @@ const port = env_1.default.PORT;
     try {
         const state = await (0, mongodb_1.default)(uri);
         if (state === 1) {
-            console.log("Database connection success!");
+            console.log("\nDatabase connection success!");
             cron_1.default.start();
             socket_1.server.listen(port, () => {
                 console.log(`Server running on port: ${port}\n`);

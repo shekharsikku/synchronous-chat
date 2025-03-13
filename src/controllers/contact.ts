@@ -201,4 +201,22 @@ const fetchContacts = async (req: Request, res: Response) => {
   }
 };
 
-export { searchContact, availableContact, fetchContacts };
+const fetchContact = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id;
+
+    const userContact = await User.findById(userId).select(
+      "-setup -createdAt -updatedAt -__v"
+    );
+
+    if (!userContact) {
+      throw new ApiError(404, "Contact not found!");
+    }
+
+    return ApiResponse(res, 200, "Contact fetched successfully!", userContact);
+  } catch (error: any) {
+    return ApiResponse(res, 500, "An error occurred while fetching contact!");
+  }
+};
+
+export { searchContact, availableContact, fetchContacts, fetchContact };

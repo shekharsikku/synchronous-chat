@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchContacts = exports.availableContact = exports.searchContact = void 0;
+exports.fetchContact = exports.fetchContacts = exports.availableContact = exports.searchContact = void 0;
 const utils_1 = require("../utils");
 const mongoose_1 = require("mongoose");
 const user_1 = __importDefault(require("../models/user"));
@@ -77,3 +77,17 @@ const fetchContacts = async (req, res) => {
     }
 };
 exports.fetchContacts = fetchContacts;
+const fetchContact = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const userContact = await user_1.default.findById(userId).select("-setup -createdAt -updatedAt -__v");
+        if (!userContact) {
+            throw new utils_1.ApiError(404, "Contact not found!");
+        }
+        return (0, utils_1.ApiResponse)(res, 200, "Contact fetched successfully!", userContact);
+    }
+    catch (error) {
+        return (0, utils_1.ApiResponse)(res, 500, "An error occurred while fetching contact!");
+    }
+};
+exports.fetchContact = fetchContact;

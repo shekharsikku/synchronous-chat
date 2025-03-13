@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useChatStore, useAuthStore } from "@/zustand";
 import { useSocket } from "@/lib/context";
 import { UserInfo } from "@/zustand/auth";
+import { Message } from "@/zustand/chat";
 import api from "@/lib/api";
 
 const fetchContacts = async (): Promise<UserInfo[]> => {
@@ -50,10 +51,52 @@ export const useContacts = () => {
     };
 
     socket?.on("conversation:updated", handleConversationUpdate);
+
     return () => {
       socket?.off("conversation:updated", handleConversationUpdate);
     };
   }, [socket, userInfo?._id, selectedChatData, queryClient]);
+
+  useEffect(() => {
+    const handleMessagesContact = async (message: Message) => {
+      const chatKey = userInfo?._id === message.sender ? message.recipient : message.sender;
+
+      /** Get the latest contacts from the cache */
+      const cachedContacts = queryClient.getQueryData<UserInfo[]>(["contacts", userInfo?._id]) || [];
+
+      /** If the user is already in the contact list, don't fetch */
+      if (cachedContacts.some(contact => contact._id === chatKey)) {
+        return;
+      }
+
+      try {
+        /** Use queryClient.fetchQuery to avoid duplicate API requests */
+        const newContact = await queryClient.fetchQuery({
+          queryKey: ["contact", chatKey], /** Unique query key per user */
+          queryFn: async () => {
+            const response = await api.get(`/api/contact/fetch/${chatKey}`);
+            return response.data.data;
+          },
+          staleTime: 30 * 60 * 1000, /** Cache for 1/2 hour */
+          gcTime: 60 * 60 * 1000,
+        });
+
+        /** Update the contacts list with the new contact & Ensure no duplicates before updating the cache */
+        queryClient.setQueryData<UserInfo[]>(["contacts", userInfo?._id], (contacts = []) => {
+          const uniqueContacts = contacts.filter(details => details._id !== newContact._id);
+          return [{ ...newContact, interaction: new Date().toISOString() }, ...uniqueContacts];
+        });
+      } catch (error: any) {
+        import.meta.env.DEV && console.error("Failed to fetch contact:", error.message);
+      }
+    }
+
+    socket?.on("message:receive", handleMessagesContact);
+
+    return () => {
+      socket?.off("message:receive", handleMessagesContact);
+    };
+  }, [socket, userInfo?._id, queryClient]);
 
   return { contacts, fetching };
 };
