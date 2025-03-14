@@ -74,9 +74,9 @@ const signInUser = async (req: Request, res: Response) => {
     });
 
     const authorizeUser = await existsUser.save();
-    const authorizeId = authorizeUser.authentication?.filter(
+    const authorizeId = authorizeUser.authentication?.find(
       (auth) => auth.token === refreshToken
-    )[0]._id!;
+    )?._id!;
 
     authorizeCookie(res, authorizeId.toString());
 

@@ -6,7 +6,7 @@ import Message from "../models/message";
 
 const sendMessage = async (req: Request, res: Response) => {
   try {
-    const sender = req.user?._id;
+    const sender = req.user?._id!;
     const receiver = req.params.id;
     const { type, text, file } = await req.body;
 
@@ -36,7 +36,7 @@ const sendMessage = async (req: Request, res: Response) => {
     }
 
     await Promise.all([conversation.save(), message.save()]);
-    const senderSocketId = getSocketId(String(sender));
+    const senderSocketId = getSocketId(sender.toString());
     const receiverSocketId = getSocketId(receiver);
 
     if (receiverSocketId.length > 0) {
@@ -179,11 +179,11 @@ const getMessages = async (req: Request, res: Response) => {
 
 const deleteMessage = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?._id;
-    const msgId = req.params.id;
+    const uid = req.user?._id;
+    const mid = req.params.id;
 
     const message = await Message.findOneAndUpdate(
-      { _id: msgId, sender: userId },
+      { _id: mid, sender: uid },
       {
         type: "deleted",
         deletedAt: new Date(),
@@ -199,8 +199,8 @@ const deleteMessage = async (req: Request, res: Response) => {
       );
     }
 
-    const senderSocketId = getSocketId(String(message?.sender))!;
-    const receiverSocketId = getSocketId(String(message?.recipient))!;
+    const senderSocketId = getSocketId(message?.sender.toString());
+    const receiverSocketId = getSocketId(message?.recipient.toString());
 
     if (receiverSocketId.length > 0) {
       io.to(receiverSocketId).emit("message:remove", message);
@@ -219,8 +219,8 @@ const deleteMessage = async (req: Request, res: Response) => {
 
 const editMessage = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?._id;
-    const msgId = req.params.id;
+    const uid = req.user?._id;
+    const mid = req.params.id;
     const { text } = await req.body;
 
     if (!text) {
@@ -228,7 +228,7 @@ const editMessage = async (req: Request, res: Response) => {
     }
 
     const message = await Message.findOneAndUpdate(
-      { _id: msgId, sender: userId, "content.type": "text" },
+      { _id: mid, sender: uid, "content.type": "text" },
       {
         type: "edited",
         "content.text": text,
@@ -243,8 +243,8 @@ const editMessage = async (req: Request, res: Response) => {
       );
     }
 
-    const senderSocketId = getSocketId(String(message?.sender))!;
-    const receiverSocketId = getSocketId(String(message?.recipient))!;
+    const senderSocketId = getSocketId(message?.sender.toString());
+    const receiverSocketId = getSocketId(message?.recipient.toString());
 
     if (receiverSocketId.length > 0) {
       io.to(receiverSocketId).emit("message:edited", message);
