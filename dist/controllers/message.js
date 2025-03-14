@@ -35,7 +35,7 @@ const sendMessage = async (req, res) => {
             conversation.interaction = new Date(Date.now());
         }
         await Promise.all([conversation.save(), message.save()]);
-        const senderSocketId = (0, socket_1.getSocketId)(String(sender));
+        const senderSocketId = (0, socket_1.getSocketId)(sender.toString());
         const receiverSocketId = (0, socket_1.getSocketId)(receiver);
         if (receiverSocketId.length > 0) {
             socket_1.io.to(receiverSocketId).emit("message:receive", message);
@@ -95,9 +95,9 @@ const getMessages = async (req, res) => {
 exports.getMessages = getMessages;
 const deleteMessage = async (req, res) => {
     try {
-        const userId = req.user?._id;
-        const msgId = req.params.id;
-        const message = await message_1.default.findOneAndUpdate({ _id: msgId, sender: userId }, {
+        const uid = req.user?._id;
+        const mid = req.params.id;
+        const message = await message_1.default.findOneAndUpdate({ _id: mid, sender: uid }, {
             type: "deleted",
             deletedAt: new Date(),
             $unset: { content: 1 },
@@ -105,8 +105,8 @@ const deleteMessage = async (req, res) => {
         if (!message) {
             throw new utils_1.ApiError(403, "You can't delete this message or message not found!");
         }
-        const senderSocketId = (0, socket_1.getSocketId)(String(message?.sender));
-        const receiverSocketId = (0, socket_1.getSocketId)(String(message?.recipient));
+        const senderSocketId = (0, socket_1.getSocketId)(message?.sender.toString());
+        const receiverSocketId = (0, socket_1.getSocketId)(message?.recipient.toString());
         if (receiverSocketId.length > 0) {
             socket_1.io.to(receiverSocketId).emit("message:remove", message);
         }
@@ -120,21 +120,21 @@ const deleteMessage = async (req, res) => {
 exports.deleteMessage = deleteMessage;
 const editMessage = async (req, res) => {
     try {
-        const userId = req.user?._id;
-        const msgId = req.params.id;
+        const uid = req.user?._id;
+        const mid = req.params.id;
         const { text } = await req.body;
         if (!text) {
             throw new utils_1.ApiError(400, "Text content is required for editing!");
         }
-        const message = await message_1.default.findOneAndUpdate({ _id: msgId, sender: userId, "content.type": "text" }, {
+        const message = await message_1.default.findOneAndUpdate({ _id: mid, sender: uid, "content.type": "text" }, {
             type: "edited",
             "content.text": text,
         }, { new: true });
         if (!message) {
             throw new utils_1.ApiError(403, "You can't edit this message or message not found!");
         }
-        const senderSocketId = (0, socket_1.getSocketId)(String(message?.sender));
-        const receiverSocketId = (0, socket_1.getSocketId)(String(message?.recipient));
+        const senderSocketId = (0, socket_1.getSocketId)(message?.sender.toString());
+        const receiverSocketId = (0, socket_1.getSocketId)(message?.recipient.toString());
         if (receiverSocketId.length > 0) {
             socket_1.io.to(receiverSocketId).emit("message:edited", message);
         }

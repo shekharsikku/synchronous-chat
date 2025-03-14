@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.upload = exports.authRefresh = exports.authAccess = void 0;
 const utils_1 = require("../utils");
 const helpers_1 = require("../helpers");
-const encryption_1 = require("../utils/encryption");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const user_1 = __importDefault(require("../models/user"));
 const env_1 = __importDefault(require("../utils/env"));
@@ -17,15 +16,9 @@ const authAccess = async (req, res, next) => {
         if (!accessToken) {
             throw new utils_1.ApiError(401, "Unauthorized access request!");
         }
-        const [encryptedIv, encryptedToken] = accessToken.split("@");
-        const decryptAccess = (0, encryption_1.decryptToken)(encryptedToken, env_1.default.CRYPTO_SECRET);
-        const [decryptedIv, decryptedToken] = decryptAccess.split("@");
-        if (encryptedIv !== decryptedIv) {
-            throw new utils_1.ApiError(403, "Invalid access token!");
-        }
         let decodedPayload;
         try {
-            decodedPayload = jsonwebtoken_1.default.verify(decryptedToken, env_1.default.ACCESS_SECRET, {
+            decodedPayload = jsonwebtoken_1.default.verify(accessToken, env_1.default.ACCESS_SECRET, {
                 algorithms: ["HS256"],
             });
         }

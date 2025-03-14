@@ -61,7 +61,7 @@ const signInUser = async (req, res) => {
             expiry: new Date(Date.now() + refreshExpiry * 1000),
         });
         const authorizeUser = await existsUser.save();
-        const authorizeId = authorizeUser.authentication?.filter((auth) => auth.token === refreshToken)[0]._id;
+        const authorizeId = authorizeUser.authentication?.find((auth) => auth.token === refreshToken)?._id;
         (0, helpers_1.authorizeCookie)(res, authorizeId.toString());
         return (0, utils_1.ApiResponse)(res, 200, "Signed in successfully!", userInfo);
     }
