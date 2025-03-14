@@ -39,13 +39,14 @@ const RenderMessages = React.memo(({
 
 const MessageContainer = () => {
   const { messages, fetching } = useMessages();
-  const { selectedChatType } = useChatStore();
+  const { selectedChatType, setMessages } = useChatStore();
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const [lastMessageId, setLastMessageId] = useState("");
 
   useEffect(() => {
     if (messages && messages.length > 0) {
+      setMessages(messages);
       setLastMessageId(messages[messages.length - 1]._id);
     }
 

@@ -29,7 +29,7 @@ const AddNewChat = () => {
         setTimeout(() => setIsFetching(false), 500);
       }
     }
-  }, 500);
+  }, 1500);
 
   const selectNewContact = (contact: object) => {
     setOpenNewChatModal(false);
