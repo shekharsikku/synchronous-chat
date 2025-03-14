@@ -85,7 +85,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
         socket?.off("after:callrequest", handleCallingRequest);
       }
     }
-  }, [userInfo, socket]);
+  }, [userInfo?._id, socket]);
 
   useEffect(() => {
     if (pendingRequest) {

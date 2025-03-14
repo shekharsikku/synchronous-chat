@@ -32,7 +32,7 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
       socket?.close();
       setSocket(null);
     }
-  }, [userInfo]);
+  }, [userInfo?._id]);
 
   return (
     <SocketContext.Provider value={{ socket, onlineUsers }}>
