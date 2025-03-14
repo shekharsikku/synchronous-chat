@@ -8,7 +8,6 @@ import {
   authorizeCookie,
   createUserInfo,
 } from "../helpers";
-import { decryptToken } from "../utils/encryption";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import User from "../models/user";
 import env from "../utils/env";
@@ -26,18 +25,10 @@ const authAccess = async (
       throw new ApiError(401, "Unauthorized access request!");
     }
 
-    const [encryptedIv, encryptedToken] = accessToken.split("@");
-    const decryptAccess = decryptToken(encryptedToken, env.CRYPTO_SECRET);
-    const [decryptedIv, decryptedToken] = decryptAccess.split("@");
-
-    if (encryptedIv !== decryptedIv) {
-      throw new ApiError(403, "Invalid access token!");
-    }
-
     let decodedPayload;
 
     try {
-      decodedPayload = jwt.verify(decryptedToken, env.ACCESS_SECRET, {
+      decodedPayload = jwt.verify(accessToken, env.ACCESS_SECRET, {
         algorithms: ["HS256"],
       }) as JwtPayload;
     } catch (error: any) {
