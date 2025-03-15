@@ -22,8 +22,8 @@ export const useContacts = () => {
   const { data: contacts, isFetching: fetching } = useQuery({
     queryKey: ["contacts", userInfo?._id],
     queryFn: fetchContacts,
-    staleTime: 60 * 60 * 1000,
-    gcTime: 2 * 60 * 60 * 1000,
+    staleTime: 6 * 60 * 60 * 1000,
+    gcTime: 12 * 60 * 60 * 1000,
     enabled: !!userInfo?._id,
   });
 
@@ -77,8 +77,8 @@ export const useContacts = () => {
             const response = await api.get(`/api/contact/fetch/${chatKey}`);
             return response.data.data;
           },
-          staleTime: 30 * 60 * 1000, /** Cache for 1/2 hour */
-          gcTime: 60 * 60 * 1000,
+          staleTime: 60 * 60 * 1000, /** Cache for 1 hour */
+          gcTime: 2 * 60 * 60 * 1000,
         });
 
         /** Update the contacts list with the new contact & Ensure no duplicates before updating the cache */

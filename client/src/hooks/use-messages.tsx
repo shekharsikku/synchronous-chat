@@ -6,7 +6,7 @@ import { Message } from "@/zustand/chat";
 import notificationSound from "@/assets/sound/message-alert.mp3";
 import api from "@/lib/api";
 
-const fetchMessages = async (userId: string): Promise<Message[]> => {
+export const fetchMessages = async (userId: string): Promise<Message[]> => {
   const response = await api.get(`/api/message/${userId}`);
   return response.data.data;
 };
@@ -43,8 +43,8 @@ export const useMessages = () => {
   const { data: messages, isFetching: fetching } = useQuery({
     queryKey: queryKey,
     queryFn: () => fetchMessages(selectedChatData?._id!),
-    staleTime: 60 * 60 * 1000,
-    gcTime: 2 * 60 * 60 * 1000,
+    staleTime: 4 * 60 * 60 * 1000,
+    gcTime: 8 * 60 * 60 * 1000,
     enabled: !!selectedChatData?._id,
   });
 
@@ -71,8 +71,8 @@ export const useMessages = () => {
           cachedMessages = await queryClient.fetchQuery({
             queryKey: ["messages", userInfo?._id, chatKey],
             queryFn: () => fetchMessages(chatKey),
-            staleTime: 60 * 60 * 1000,
-            gcTime: 2 * 60 * 60 * 1000,
+            staleTime: 2 * 60 * 60 * 1000,
+            gcTime: 4 * 60 * 60 * 1000,
           });
         } catch (error: any) {
           import.meta.env.DEV && console.error("Failed to fetch messages:", error.message);
@@ -92,6 +92,7 @@ export const useMessages = () => {
         isSoundAllow
       ) {
         const sound = new Audio(notificationSound);
+        sound.volume = 0.25;
         void sound.play();
       }
     };
