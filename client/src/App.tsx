@@ -1,3 +1,4 @@
+import { useNotification } from "@/hooks/use-notification";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Auth, Chat, Profile } from "@/pages";
 import { useAuthStore } from "@/zustand";
@@ -19,6 +20,7 @@ const AuthRoute = ({ children }: Readonly<{
 }
 
 const App = () => {
+  useNotification();
   const { getUserInfo } = useGetUserInfo();
   const { userInfo, isAuthenticated } = useAuthStore();
 
@@ -29,6 +31,10 @@ const App = () => {
   }, [userInfo, isAuthenticated]);
 
   useEffect(() => {
+    if (Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
     const disableRightClick = (event: MouseEvent) => {
       if (import.meta.env.PROD) {
         event.preventDefault();
