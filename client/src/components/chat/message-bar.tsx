@@ -199,8 +199,8 @@ const MessageBar = () => {
   };
 
   return (
-    <div className="h-bar border-t flex items-center justify-center p-2">
-      <div className="flex-1 flex rounded items-center justify-center gap-4 bg-gray-100/80 px-4 h-full">
+    <div className="h-bar w-full border-t flex items-center justify-center p-2">
+      <div className="w-full flex rounded items-center justify-center gap-4 bg-gray-100/80 px-4 h-full">
         <div className="flex gap-4 relative">
           <TooltipProvider>
             <Tooltip>
@@ -214,8 +214,9 @@ const MessageBar = () => {
             </Tooltip>
           </TooltipProvider>
 
-          {emojiPicker && <div className="absolute bottom-20 left-[-5px] md:left-0" ref={emojiRef}>
-            <EmojiPicker open={emojiPicker} onEmojiClick={handleAddEmoji} autoFocusSearch={false} className="" />
+          {emojiPicker && <div className="absolute bottom-20 left-[-10px] sm:left-[-5px] md:left-0" ref={emojiRef}>
+            <EmojiPicker open={emojiPicker} onEmojiClick={handleAddEmoji} autoFocusSearch={false}
+              className="max-w-72 sm:max-w-80 md:max-w-96" />
           </div>}
 
           <TooltipProvider>
@@ -246,7 +247,7 @@ const MessageBar = () => {
           autoComplete="off"
           value={message}
           onChange={handleChange}
-          className="flex-1 px-1 py-2 bg-transparent border-none outline-none 
+          className="w-full px-1 py-2 bg-transparent border-none outline-none 
           text-sm tracking-wider disabled:text-blue-800"
           disabled={!!(selectedImage && message !== "") || editDialog}
           ref={inputRef}
