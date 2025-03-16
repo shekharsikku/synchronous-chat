@@ -41,7 +41,7 @@ const MessageBar = () => {
   }, [selectedChatData]);
 
   useEffect(() => {
-    const handleSpaceKeyDown = (event: KeyboardEvent) => {
+    const handleSpaceEscapeKeyDown = (event: KeyboardEvent) => {
       const activeElement = document.activeElement as HTMLElement;
 
       if (editDialog && (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA")) {
@@ -52,10 +52,17 @@ const MessageBar = () => {
         event.preventDefault();
         inputRef.current?.focus();
       }
+
+      if (event.code === "Escape" && document.activeElement === inputRef.current) {
+        event.preventDefault();
+        inputRef.current?.blur();
+      }
     };
-    document.addEventListener("keydown", handleSpaceKeyDown);
+
+    document.addEventListener("keydown", handleSpaceEscapeKeyDown);
+
     return () => {
-      document.removeEventListener("keydown", handleSpaceKeyDown);
+      document.removeEventListener("keydown", handleSpaceEscapeKeyDown);
     };
   }, [editDialog]);
 
@@ -65,7 +72,9 @@ const MessageBar = () => {
         setEmojiPicker((prev) => !prev);
       }
     }
+
     document.addEventListener("mousedown", handleClickOutside);
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
