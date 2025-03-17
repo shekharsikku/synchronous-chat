@@ -148,7 +148,7 @@ const RenderDMMessages = ({
     setEditDialog(openEditMessageDialog);
   }, [openEditMessageDialog])
 
-  const { isLastMinutes: isLastMinForEdit } = useLastMinutes(message?.createdAt!, 2);
+  const { isLastMinutes: isLastMinForEdit } = useLastMinutes(message?.createdAt!);
 
   return (
     <div className={`w-full flex flex-col gap-2 mb-4 ${isSender ? "items-start text-left" : "items-end text-right"}`}>
