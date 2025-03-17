@@ -44,6 +44,10 @@ npm install && cd client && npm install
 
 **Environment Variables Setup**
 
+```bash
+mv .env.sample .env
+```
+
 Rename, `.env.sample` to `.env` in the root directory and add the required values:
 
 ```env
@@ -58,7 +62,7 @@ REFRESH_SECRET=""
 REFRESH_EXPIRY=""
 
 COOKIES_SECRET=""
-CRYPTO_SECRET=""
+BEFORE_EXPIRES=""
 PAYLOAD_LIMIT=""
 PORT=""
 
@@ -109,6 +113,6 @@ Your app will be available at the port specified in .env.
 http://localhost:<PORT>
 ```
 
-### **Developed by [Shekhar Vishwakarma](https://linkedin.com/in/shekharsikku)**
+### **Developed by [Shekhar](https://linkedin.com/in/shekharsikku)**
 
 ---
