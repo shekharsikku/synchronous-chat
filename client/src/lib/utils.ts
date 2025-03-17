@@ -12,8 +12,8 @@ export const encryptMessage = (text: string, uid: string) => {
 };
 
 export const decryptMessage = (text: string, uid: string) => {
-  const secretKey = CryptoJS.SHA256(uid).toString(CryptoJS.enc.Base64);
-  return CryptoJS.AES.decrypt(text, secretKey).toString(CryptoJS.enc.Utf8);
+  const secret = CryptoJS.SHA256(uid).toString(CryptoJS.enc.Base64);
+  return CryptoJS.AES.decrypt(text, secret).toString(CryptoJS.enc.Utf8);
 };
 
 export const convertToBase64 = (file: File) => {

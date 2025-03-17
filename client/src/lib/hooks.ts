@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 import { Socket } from "socket.io-client";
 import { useNavigate } from "react-router";
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { usePeer, useSocket } from "@/lib/context";
 import { useAuthStore, useChatStore } from "@/zustand";
 import { Message } from "@/zustand/chat";
@@ -183,4 +183,27 @@ export const useDisableAnimations = (socket: Socket, ref: any) => {
       socket.offAny();
     };
   }, [socket, ref]);
+};
+
+export const useLastMinutes = (
+  timestamp: Date | string | number,
+  minutes = 10
+) => {
+  const [isLastMinutes, setIsLastMinutes] = useState(false);
+
+  useEffect(() => {
+    const checkTimestamp = () => {
+      const timestampDate = new Date(timestamp);
+      const currentData = new Date();
+      const timeDifference = currentData.getTime() - timestampDate.getTime();
+      setIsLastMinutes(timeDifference <= minutes * 60 * 1000);
+    };
+
+    checkTimestamp();
+    const interval = setInterval(checkTimestamp, 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [timestamp]);
+
+  return { isLastMinutes };
 };
