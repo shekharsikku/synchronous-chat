@@ -69,7 +69,7 @@ const authRefresh = async (
 
     const userId = decodedPayload.uid as Types.ObjectId;
     const currentTime = Math.floor(Date.now() / 1000);
-    const beforeExpires = decodedPayload.exp! - env.ACCESS_EXPIRY;
+    const beforeExpires = decodedPayload.exp! - env.BEFORE_EXPIRES;
 
     const requestUser = await User.findOne({
       _id: userId,
