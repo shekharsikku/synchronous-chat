@@ -8,6 +8,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/comp
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { UserInfo } from "@/zustand/auth";
 import { useChatStore } from "@/zustand";
+import { useHotkeys } from "react-hotkeys-hook";
 import { useDebounce, useAvatar } from "@/lib/hooks";
 import api from "@/lib/api";
 
@@ -16,6 +17,11 @@ const AddNewChat = () => {
   const [openNewChatModal, setOpenNewChatModal] = useState(false);
   const [searchedContacts, setSearchedContacts] = useState<UserInfo[]>([]);
   const [isFetching, setIsFetching] = useState(false);
+
+  useHotkeys("ctrl+i", () => setOpenNewChatModal((prev) => !prev), {
+    enabled: !isFetching,
+    enableOnFormTags: ["input"],
+  });
 
   const searchContacts = useDebounce(async (searchTerm: string) => {
     if (searchTerm.length > 0) {

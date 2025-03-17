@@ -27,7 +27,7 @@ import { EditMessage } from "@/components/chat/edit-message";
 import { Message } from "@/zustand/chat";
 import { checkImageType, decryptMessage, cn } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/zustand";
-import { useDisableAnimations } from "@/lib/hooks";
+import { useDisableAnimations, useLastMinutes } from "@/lib/hooks";
 import { useSocket } from "@/lib/context";
 import { useInView } from "react-intersection-observer";
 import { useEffect, useRef, useState } from "react";
@@ -148,6 +148,8 @@ const RenderDMMessages = ({
     setEditDialog(openEditMessageDialog);
   }, [openEditMessageDialog])
 
+  const { isLastMinutes: isLastMinForEdit } = useLastMinutes(message?.createdAt!, 2);
+
   return (
     <div className={`w-full flex flex-col gap-2 mb-4 ${isSender ? "items-start text-left" : "items-end text-right"}`}>
       <ContextMenu>
@@ -192,7 +194,7 @@ const RenderDMMessages = ({
                 <ContextMenuItem className="flex gap-2" onClick={() => copyToClipboard(plainText(message))}>
                   <HiOutlineClipboardDocument size={16} /> Copy
                 </ContextMenuItem>
-                {message.sender === userInfo?._id && message.type === "default" && (
+                {message.sender === userInfo?._id && message.type === "default" && isLastMinForEdit && (
                   <ContextMenuItem className="flex gap-2" onClick={() => handleEditMessageClick(message)}>
                     <HiOutlinePencilSquare size={16} /> Edit
                   </ContextMenuItem>
