@@ -23,6 +23,7 @@ import {
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 import { validateEmail, validateDummyEmail } from "@/lib/utils";
 import { useAuthStore } from "@/zustand";
+import { setAuthUser } from "@/lib/auth";
 import api from "@/lib/api";
 
 interface SignInInterface {
@@ -122,6 +123,7 @@ const Auth = () => {
       const result = await response.data;
 
       if (result.success) {
+        setAuthUser(result.data);
         setUserInfo(result.data);
         setIsAuthenticated(true);
 

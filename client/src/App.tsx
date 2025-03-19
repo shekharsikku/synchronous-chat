@@ -1,34 +1,30 @@
 import { useNotification } from "@/hooks/use-notification";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Auth, Chat, Profile } from "@/pages";
-import { useAuthStore } from "@/zustand";
-import { useGetUserInfo } from "@/lib/hooks";
 import { useEffect, ReactNode } from "react";
+import { useAuthUser } from "@/lib/auth";
+
+const RedirectRoute = () => {
+  const { isAuthenticated, userInfo } = useAuthUser();
+  return isAuthenticated && userInfo ? <Navigate to="/chat" /> : <Navigate to="/auth" />;
+};
 
 const ProtectedRoute = ({ children }: Readonly<{
   children: ReactNode;
 }>) => {
-  const { isAuthenticated, userInfo } = useAuthStore();
+  const { isAuthenticated, userInfo } = useAuthUser();
   return isAuthenticated && userInfo ? children : <Navigate to="/auth" />;
 }
 
 const AuthRoute = ({ children }: Readonly<{
   children: ReactNode;
 }>) => {
-  const { isAuthenticated, userInfo } = useAuthStore();
+  const { isAuthenticated, userInfo } = useAuthUser();
   return isAuthenticated && userInfo?.setup ? <Navigate to="/chat" /> : children;
 }
 
 const App = () => {
   useNotification();
-  const { getUserInfo } = useGetUserInfo();
-  const { userInfo, isAuthenticated } = useAuthStore();
-
-  useEffect(() => {
-    if (!userInfo && !isAuthenticated) {
-      void getUserInfo();
-    }
-  }, [userInfo, isAuthenticated]);
 
   useEffect(() => {
     if (Notification.permission === "default") {
@@ -51,7 +47,7 @@ const App = () => {
       <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
       <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-      <Route path="*" element={<Navigate to="/auth" />} />
+      <Route path="*" element={<RedirectRoute />} />
     </Routes>
   )
 }

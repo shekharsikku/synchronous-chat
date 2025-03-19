@@ -15,7 +15,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useAuthStore, useChatStore } from "@/zustand";
-import { useSignOutUser, useAvatar } from "@/lib/hooks";
+import { useAvatar } from "@/lib/hooks";
+import { useSignOut } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { usePeer } from "@/lib/context";
@@ -24,7 +25,7 @@ import { toast } from "sonner";
 const ProfileInfo = () => {
   const navigate = useNavigate();
   const { userInfo } = useAuthStore();
-  const { handleSignOut } = useSignOutUser();
+  const { handleSignOut } = useSignOut();
   const { isSoundAllow, setIsSoundAllow } = useChatStore();
   const [avatar, setAvatar] = useState<any>(null);
 

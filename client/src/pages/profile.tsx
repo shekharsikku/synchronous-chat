@@ -59,7 +59,7 @@ import {
   HiOutlineArrowRightOnRectangle,
   HiOutlineChatBubbleLeftRight,
 } from "react-icons/hi2";
-import { useSignOutUser } from "@/lib/hooks";
+import { setAuthUser, useSignOut } from "@/lib/auth";
 import { useAuthStore } from "@/zustand";
 import { useSocket } from "@/lib/context";
 import api from "@/lib/api";
@@ -69,7 +69,7 @@ const Profile = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const { socket } = useSocket();
-  const { handleSignOut } = useSignOutUser();
+  const { handleSignOut } = useSignOut();
   const { userInfo, setUserInfo } = useAuthStore();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -124,6 +124,7 @@ const Profile = () => {
           "Content-Type": "multipart/form-data"
         },
       });
+      setAuthUser(response.data.data);
       setUserInfo(response.data.data);
       toast.success(response.data.message);
     } catch (error: any) {
@@ -139,6 +140,7 @@ const Profile = () => {
     try {
       setIsLoading(true);
       const response = await api.delete("/api/user/delete-profile-image");
+      setAuthUser(response.data.data);
       setUserInfo(response.data.data);
       toast.success(response.data.message);
     } catch (error: any) {
@@ -184,6 +186,7 @@ const Profile = () => {
     try {
       setIsLoading(true);
       const response = await api.patch("/api/user/change-password", values);
+      setAuthUser(response.data.data);
       setUserInfo(response.data.data);
       setOpenPasswordDialog(false);
       changePasswordForm.reset();
@@ -228,6 +231,7 @@ const Profile = () => {
       setIsLoading(true);
       const response = await api.patch("/api/user/user-profile-setup", values);
       const result = await response.data.data;
+      setAuthUser(result);
       setUserInfo(result);
       profileUpdateForm.reset({ ...result });
       toast.success(response.data.message);

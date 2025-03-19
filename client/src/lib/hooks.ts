@@ -1,75 +1,12 @@
-import { toast } from "sonner";
 import { Socket } from "socket.io-client";
-import { useNavigate } from "react-router";
 import { useEffect, useCallback, useRef, useState } from "react";
-import { usePeer, useSocket } from "@/lib/context";
+import { useSocket } from "@/lib/context";
 import { useAuthStore, useChatStore } from "@/zustand";
 import { Message } from "@/zustand/chat";
 import notificationSound from "@/assets/sound/message-alert.mp3";
 import maleAvatar from "@/assets/male-avatar.webp";
 import femaleAvatar from "@/assets/female-avatar.webp";
 import noAvatar from "@/assets/no-avatar.webp";
-import api, { auth } from "@/lib/api";
-
-export const useGetUserInfo = () => {
-  const { setUserInfo, setIsAuthenticated } = useAuthStore();
-
-  const getUserInfo = async () => {
-    try {
-      const response = await api.get("/api/user/user-information");
-      setUserInfo(response.data.data);
-      setIsAuthenticated(true);
-    } catch (error: any) {
-      setUserInfo(null!);
-      setIsAuthenticated(false);
-    }
-  };
-  return { getUserInfo };
-};
-
-export const useSignOutUser = () => {
-  const navigate = useNavigate();
-  const { closeChat } = useChatStore();
-  const { setUserInfo, setIsAuthenticated } = useAuthStore();
-  const { disconnectCalling, callingActive, setPendingRequest, setPeer } =
-    usePeer();
-
-  const handleSignOut = async (e: any) => {
-    e.preventDefault();
-    if (callingActive) disconnectCalling();
-    try {
-      const response = await api.delete("/api/auth/sign-out");
-      setPendingRequest(false);
-      setIsAuthenticated(false);
-      setUserInfo(null!);
-      setPeer(null);
-      closeChat();
-      navigate("/auth", { replace: true });
-      toast.success(response.data.message);
-    } catch (error: any) {
-      toast.error(error.response.data.message);
-    }
-  };
-  return { handleSignOut };
-};
-
-export const useAuthRefresh = () => {
-  const { setUserInfo, setIsAuthenticated } = useAuthStore();
-
-  const authRefresh = async () => {
-    try {
-      const response = await auth.get("/api/auth/auth-refresh");
-      setUserInfo(response.data.data);
-      setIsAuthenticated(true);
-      return true;
-    } catch (error: any) {
-      setUserInfo(null!);
-      setIsAuthenticated(false);
-      return false;
-    }
-  };
-  return { authRefresh };
-};
 
 export const useListenMessages = () => {
   const { socket } = useSocket();

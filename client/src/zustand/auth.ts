@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import api from "@/lib/api";
 
 export interface UserInfo {
   _id?: string;
@@ -17,16 +18,36 @@ export interface UserInfo {
 
 const useAuthStore = create<{
   userInfo: UserInfo | null;
-  setUserInfo: (userInfo: UserInfo) => void;
+  setUserInfo: (userInfo: UserInfo | null) => void;
 
   isAuthenticated: boolean;
   setIsAuthenticated: (isAuthenticated: boolean) => void;
+
+  getUserInfo: () => Promise<UserInfo | null>;
 }>((set) => ({
   userInfo: null,
-  setUserInfo: (userInfo: UserInfo) => set({ userInfo }),
+  setUserInfo: (userInfo: UserInfo | null) => set({ userInfo }),
 
   isAuthenticated: false,
   setIsAuthenticated: (isAuthenticated: boolean) => set({ isAuthenticated }),
+
+  getUserInfo: async () => {
+    try {
+      const response = await api.get("/api/user/user-information");
+      const result = await response.data.data;
+      set({
+        userInfo: result,
+        isAuthenticated: true,
+      });
+      return result;
+    } catch (error: any) {
+      set({
+        userInfo: null,
+        isAuthenticated: false,
+      });
+      return null;
+    }
+  },
 }));
 
 export default useAuthStore;

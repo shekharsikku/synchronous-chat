@@ -1,3 +1,4 @@
+import { setAuthUser, delAuthUser } from "@/lib/auth";
 import axios from "axios";
 
 const serverUrl = import.meta.env.DEV ? import.meta.env.VITE_SERVER_URL : "/";
@@ -7,7 +8,7 @@ const api = axios.create({
   withCredentials: true,
 });
 
-export const auth = axios.create({
+const auth = axios.create({
   baseURL: serverUrl,
   withCredentials: true,
 });
@@ -23,9 +24,12 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        await auth.get("/api/auth/auth-refresh");
+        const response = await auth.get("/api/auth/auth-refresh");
+        const result = await response.data.data;
+        setAuthUser(result);
         return api(originalRequest);
       } catch (error: any) {
+        delAuthUser();
         return Promise.reject(error);
       }
     }
