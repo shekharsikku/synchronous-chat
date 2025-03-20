@@ -1,8 +1,7 @@
 import { useQuery, useQueryClient, QueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useMemo } from "react";
-import { useChatStore, useAuthStore } from "@/zustand";
 import { useSocket } from "@/lib/context";
-import { Message } from "@/zustand/chat";
+import { useEffect, useRef, useMemo } from "react";
+import { useChatStore, useAuthStore, Message } from "@/zustand";
 import notificationSound from "@/assets/sound/message-alert.mp3";
 import api from "@/lib/api";
 

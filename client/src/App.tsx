@@ -28,7 +28,7 @@ const App = () => {
 
   useEffect(() => {
     if (Notification.permission === "default") {
-      Notification.requestPermission();
+      void Notification.requestPermission();
     }
 
     const disableRightClick = (event: MouseEvent) => {

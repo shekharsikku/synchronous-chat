@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { HiOutlinePlus } from "react-icons/hi2";
-import { ContactListSkeleton } from "./contact-list-skeleton";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { UserInfo } from "@/zustand/auth";
-import { useChatStore } from "@/zustand";
+import { ContactListSkeleton } from "@/components/chat/contact-list-skeleton";
+import { useChatStore, UserInfo } from "@/zustand";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useDebounce, useAvatar } from "@/lib/hooks";
 import api from "@/lib/api";

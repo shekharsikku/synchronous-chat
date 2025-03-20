@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState, Fragment } from "react";
-import { useChatStore } from "@/zustand";
+import { Message, useChatStore } from "@/zustand";
 import { useMessages } from "@/hooks/use-messages";
-import { RenderDMMessages } from "./render-dm-messages";
-import { MessageSkeleton } from "./message-skeleton";
-import { Message } from "@/zustand/chat";
+import { RenderDMMessages } from "@/components/chat/render-dm-messages";
+import { MessageSkeleton } from "@/components/chat/message-skeleton";
 import moment from "moment";
 
 const RenderMessages = React.memo(({

@@ -1,9 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { useChatStore, useAuthStore } from "@/zustand";
+import { useChatStore, useAuthStore, UserInfo, Message } from "@/zustand";
 import { useSocket } from "@/lib/context";
-import { UserInfo } from "@/zustand/auth";
-import { Message } from "@/zustand/chat";
+import { useEffect } from "react";
 import api from "@/lib/api";
 
 const fetchContacts = async (): Promise<UserInfo[]> => {

@@ -24,9 +24,8 @@ import {
 } from "@/components/ui/context-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EditMessage } from "@/components/chat/edit-message";
-import { Message } from "@/zustand/chat";
 import { checkImageType, decryptMessage, cn } from "@/lib/utils";
-import { useChatStore, useAuthStore } from "@/zustand";
+import { useChatStore, useAuthStore, Message } from "@/zustand";
 import { useDisableAnimations, useLastMinutes } from "@/lib/hooks";
 import { useSocket } from "@/lib/context";
 import { useInView } from "react-intersection-observer";

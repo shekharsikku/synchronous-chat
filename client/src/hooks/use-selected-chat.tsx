@@ -1,8 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { useChatStore, useAuthStore } from "@/zustand";
+import { useChatStore, useAuthStore, UserInfo } from "@/zustand";
 import { useContacts } from "@/hooks/use-contacts";
-import { UserInfo } from "@/zustand/auth";
+import { useEffect } from "react";
 
 export const useSelectedChat = () => {
   const queryClient = useQueryClient();

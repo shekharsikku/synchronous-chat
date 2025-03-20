@@ -3,8 +3,7 @@ import { useEffect } from "react";
 import { useSocket } from "@/lib/context";
 import { useContacts } from "@/hooks/use-contacts";
 import { fetchMessages } from "@/hooks/use-messages";
-import { useAuthStore, useChatStore } from "@/zustand";
-import { Message } from "@/zustand/chat";
+import { useAuthStore, useChatStore, Message } from "@/zustand";
 import notificationIcon from "@/assets/favicon.ico";
 
 export const useNotification = () => {

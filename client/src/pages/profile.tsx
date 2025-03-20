@@ -246,6 +246,7 @@ const Profile = () => {
 
   useEffect(() => {
     socket?.on("after:profileupdate", ({ updatedDetails }) => {
+      setAuthUser(updatedDetails);
       setUserInfo(updatedDetails);
       profileUpdateForm.reset({ ...updatedDetails });
       toast.info("Your details has been updated!");
