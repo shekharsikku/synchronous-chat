@@ -15,7 +15,7 @@ const encryptToken = (plain, secret) => {
     const cipher = (0, crypto_1.createCipheriv)("aes-256-cbc", Buffer.from(key), iv);
     let encrypted = cipher.update(plain, "utf8", "base64");
     encrypted += cipher.final("base64");
-    return iv.toString("base64") + "@" + encrypted;
+    return { encrypted, iv: iv.toString("base64") };
 };
 exports.encryptToken = encryptToken;
 const decryptToken = (hashed, secret) => {
@@ -23,6 +23,6 @@ const decryptToken = (hashed, secret) => {
     const decipher = (0, crypto_1.createDecipheriv)("aes-256-cbc", Buffer.from(key), iv);
     let decrypted = decipher.update(hashed, "base64", "utf8");
     decrypted += decipher.final("utf8");
-    return iv.toString("base64") + "@" + decrypted;
+    return { decrypted, iv: iv.toString("base64") };
 };
 exports.decryptToken = decryptToken;

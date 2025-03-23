@@ -19,7 +19,7 @@ export const encryptToken = (plain: string, secret: string) => {
   let encrypted = cipher.update(plain, "utf8", "base64");
   encrypted += cipher.final("base64");
 
-  return iv.toString("base64") + "@" + encrypted;
+  return { encrypted, iv: iv.toString("base64") };
 };
 
 export const decryptToken = (hashed: string, secret: string) => {
@@ -30,5 +30,5 @@ export const decryptToken = (hashed: string, secret: string) => {
   let decrypted = decipher.update(hashed, "base64", "utf8");
   decrypted += decipher.final("utf8");
 
-  return iv.toString("base64") + "@" + decrypted;
+  return { decrypted, iv: iv.toString("base64") };
 };
