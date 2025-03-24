@@ -8,14 +8,11 @@ node_modules
 
 # environment variables
 .env
-.env.*
 
 # logs and other files
-vite-env.d.ts
 *.log
 *.local
 *.tsbuildinfo
 
 # other dir
-build
 test
