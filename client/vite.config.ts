@@ -7,12 +7,16 @@ dotenv.config();
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    "import.meta.env": process.env,
+  },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(__dirname, "src"),
     },
   },
   build: {
+    outDir: "build",
     chunkSizeWarningLimit: 2000,
   },
 });

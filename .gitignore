@@ -10,10 +10,10 @@ node_modules
 .env
 
 # logs and other files
-vite-env.d.ts
 *.log
 *.local
 *.tsbuildinfo
 
-# test code dir
+# other dir
+build
 test

@@ -3,7 +3,7 @@ import { useAuthStore } from "@/zustand";
 import { SocketContext } from "@/lib/context";
 import io, { Socket } from "socket.io-client";
 
-const serverUrl = import.meta.env.DEV ? import.meta.env.VITE_SERVER_URL : "/";
+const serverUrl = import.meta.env.VITE_SERVER_URL;
 
 const SocketProvider = ({ children }: { children: ReactNode }) => {
   const { userInfo } = useAuthStore();
