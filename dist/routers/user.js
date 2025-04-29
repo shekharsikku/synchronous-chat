@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const middlewares_1 = require("../middlewares");
+const schema_1 = require("../utils/schema");
+const user_1 = require("../controllers/user");
+const router = (0, express_1.Router)();
+router.patch("/user-profile-setup", middlewares_1.authAccess, (0, schema_1.validateSchema)(schema_1.profileSchema), user_1.profileSetup);
+router.patch("/update-profile-image", middlewares_1.authAccess, middlewares_1.upload.single("profile-image"), user_1.updateImage);
+router.patch("/change-password", middlewares_1.authAccess, (0, schema_1.validateSchema)(schema_1.passwordSchema), user_1.changePassword);
+router.delete("/delete-profile-image", middlewares_1.authAccess, user_1.deleteImage);
+router.get("/user-information", middlewares_1.authAccess, user_1.userInformation);
+exports.default = router;

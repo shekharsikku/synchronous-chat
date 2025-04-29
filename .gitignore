@@ -1,0 +1,21 @@
+# node_modules
+node_modules
+
+# editor directories
+.idea
+.vscode
+.vercel
+
+# environment variables
+.env
+
+# logs and other files
+*.log
+*.local
+*.development
+*.production
+*.tsbuildinfo
+vite-env.d.ts
+
+# other dir
+**/test
