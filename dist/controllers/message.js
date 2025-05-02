@@ -3,9 +3,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteMessages = exports.deleteMessage = exports.editMessage = exports.getMessages = exports.sendMessage = void 0;
+exports.translateMessage = exports.deleteMessages = exports.deleteMessage = exports.editMessage = exports.getMessages = exports.sendMessage = void 0;
 const utils_1 = require("../utils");
 const socket_1 = require("../socket");
+const bing_translate_api_1 = require("bing-translate-api");
 const conversation_1 = __importDefault(require("../models/conversation"));
 const message_1 = __importDefault(require("../models/message"));
 const sendMessage = async (req, res) => {
@@ -162,3 +163,20 @@ const deleteMessages = async (req, res) => {
     }
 };
 exports.deleteMessages = deleteMessages;
+const translateMessage = async (req, res) => {
+    try {
+        const { message, language } = await req.body;
+        if (!message || !language) {
+            throw new utils_1.ApiError(400, "Text message and language is required!");
+        }
+        const result = await (0, bing_translate_api_1.translate)(message, null, language);
+        if (!result) {
+            throw new utils_1.ApiError(500, "Error while translating message!");
+        }
+        return (0, utils_1.ApiResponse)(res, 200, "Text translated successfully!", result.translation);
+    }
+    catch (error) {
+        return (0, utils_1.ApiResponse)(res, error.code, error.message);
+    }
+};
+exports.translateMessage = translateMessage;

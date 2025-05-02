@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "1.8.5",
+  "version": "1.8.6",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -41,10 +41,9 @@
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.14.0",
+    "mongoose": "^8.14.1",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.2",
-    "peer": "^1.0.2",
     "socket.io": "^4.8.1",
     "zod": "^3.24.3"
   }

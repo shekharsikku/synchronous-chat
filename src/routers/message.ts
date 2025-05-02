@@ -6,6 +6,7 @@ import {
   editMessage,
   getMessages,
   sendMessage,
+  translateMessage,
 } from "../controllers/message";
 
 const router = Router();
@@ -15,5 +16,8 @@ router.post("/send/:id", authAccess, sendMessage);
 router.patch("/edit/:id", authAccess, editMessage);
 router.delete("/delete/:id", authAccess, deleteMessage);
 router.delete("/delete", authAccess, deleteMessages);
+
+/** For translate text message in prefer language */
+router.post("/translate", translateMessage);
 
 export default router;

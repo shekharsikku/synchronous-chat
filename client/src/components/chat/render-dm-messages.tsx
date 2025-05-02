@@ -98,7 +98,7 @@ const RenderDMMessages = ({
 
   const translateMessage = async (message: string, language: string) => {
     try {
-      const response = await api.post("/api/translate", { message, language });
+      const response = await api.post("/api/message/translate", { message, language });
       setTranslated(response.data.data);
     } catch (error: any) {
       setTranslated("");

@@ -1,6 +1,7 @@
 import { ApiResponse, ApiError } from "../utils";
 import { Request, Response } from "express";
 import { getSocketId, io } from "../socket";
+import { translate } from "bing-translate-api";
 import Conversation from "../models/conversation";
 import Message from "../models/message";
 
@@ -279,4 +280,36 @@ const deleteMessages = async (req: Request, res: Response) => {
   }
 };
 
-export { sendMessage, getMessages, editMessage, deleteMessage, deleteMessages };
+const translateMessage = async (req: Request, res: Response) => {
+  try {
+    const { message, language } = await req.body;
+
+    if (!message || !language) {
+      throw new ApiError(400, "Text message and language is required!");
+    }
+
+    const result = await translate(message, null, language);
+
+    if (!result) {
+      throw new ApiError(500, "Error while translating message!");
+    }
+
+    return ApiResponse(
+      res,
+      200,
+      "Text translated successfully!",
+      result.translation
+    );
+  } catch (error: any) {
+    return ApiResponse(res, error.code, error.message);
+  }
+};
+
+export {
+  sendMessage,
+  getMessages,
+  editMessage,
+  deleteMessage,
+  deleteMessages,
+  translateMessage,
+};
