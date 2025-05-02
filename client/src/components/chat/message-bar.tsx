@@ -11,9 +11,13 @@ import {
   HiOutlinePaperAirplane,
   HiOutlineBackspace
 } from "react-icons/hi2";
-import { convertToBase64, encryptMessage } from "@/lib/utils";
+import {
+  useState, useEffect, useRef,
+  ChangeEvent, KeyboardEventHandler
+} from "react";
+import { encryptMessage } from "@/lib/noble";
+import { convertToBase64 } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/zustand";
-import { useState, useEffect, useRef, ChangeEvent, KeyboardEventHandler } from "react";
 import { isMobile } from "react-device-detect";
 import { useSocket } from "@/lib/context";
 import { toast } from "sonner";

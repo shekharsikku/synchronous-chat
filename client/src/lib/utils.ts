@@ -1,20 +1,9 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import CryptoJS from "crypto-js";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
-
-export const encryptMessage = (text: string, uid: string) => {
-  const secret = CryptoJS.SHA256(uid).toString(CryptoJS.enc.Base64);
-  return CryptoJS.AES.encrypt(text, secret).toString();
-};
-
-export const decryptMessage = (text: string, uid: string) => {
-  const secret = CryptoJS.SHA256(uid).toString(CryptoJS.enc.Base64);
-  return CryptoJS.AES.decrypt(text, secret).toString(CryptoJS.enc.Utf8);
-};
 
 export const convertToBase64 = (file: File) => {
   return new Promise((resolve, reject) => {
@@ -199,3 +188,19 @@ export const isValidUrl = (url: string): boolean => {
     return false;
   }
 };
+
+/*
+
+import CryptoJS from "crypto-js";
+
+export const encryptMessage = (text: string, uid: string) => {
+  const secret = CryptoJS.SHA256(uid).toString(CryptoJS.enc.Base64);
+  return CryptoJS.AES.encrypt(text, secret).toString();
+};
+
+export const decryptMessage = (text: string, uid: string) => {
+  const secret = CryptoJS.SHA256(uid).toString(CryptoJS.enc.Base64);
+  return CryptoJS.AES.decrypt(text, secret).toString(CryptoJS.enc.Utf8);
+};
+
+*/

@@ -13,7 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useChatStore } from "@/zustand";
-import { encryptMessage } from "@/lib/utils";
+import { encryptMessage } from "@/lib/noble";
 import api from "@/lib/api";
 
 interface EditMessageProps {

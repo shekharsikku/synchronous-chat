@@ -1,4 +1,4 @@
-import { encryptMessage, decryptMessage } from "@/lib/utils";
+import { encryptInfo, decryptInfo } from "@/lib/noble";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore, useChatStore } from "@/zustand";
 import { usePeer } from "@/lib/context";
@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import api from "@/lib/api";
 
 export const setAuthUser = (user: UserInfo) => {
-  const data = encryptMessage(
+  const data = encryptInfo(
     JSON.stringify(user),
     import.meta.env.VITE_ENCRYPTION
   );
@@ -18,7 +18,7 @@ export const setAuthUser = (user: UserInfo) => {
 export const getAuthUser = (): UserInfo | null => {
   const data = localStorage.getItem("current");
   if (data) {
-    const user = decryptMessage(data, import.meta.env.VITE_ENCRYPTION);
+    const user = decryptInfo(data, import.meta.env.VITE_ENCRYPTION);
     return JSON.parse(user);
   }
   return null;

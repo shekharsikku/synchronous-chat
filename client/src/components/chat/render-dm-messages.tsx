@@ -25,12 +25,13 @@ import {
 } from "@/components/ui/context-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EditMessage } from "@/components/chat/edit-message";
-import { isValidUrl, checkImageType, decryptMessage, cn } from "@/lib/utils";
+import { isValidUrl, checkImageType, cn } from "@/lib/utils";
 import { useChatStore, useAuthStore, Message } from "@/zustand";
 import { useDisableAnimations, useLastMinutes } from "@/lib/hooks";
 import { useSocket } from "@/lib/context";
 import { useInView } from "react-intersection-observer";
 import { useEffect, useRef, useState } from "react";
+import { decryptMessage } from "@/lib/noble";
 import moment from "moment";
 import api from "@/lib/api";
 
