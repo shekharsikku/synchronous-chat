@@ -1,8 +1,8 @@
 const Logo = () => {
   return (
-    <div className="flex p-2 md:px-6 justify-start items-center gap-2 h-full">
+    <div className="flex py-2 px-4 justify-start items-center gap-2 h-full">
       <svg
-        id="logo-38"
+        id="synchronous-logo"
         width="78"
         height="32"
         viewBox="0 0 78 32"
@@ -26,7 +26,7 @@ const Logo = () => {
           fill="#f5f5f5"
         ></path>{" "}
       </svg>
-      <h1 className="text-2xl md:text-3xl font-extrabold text-gray-800">Synchronous</h1>
+      <h1 className="text-2xl lg:text-3xl font-extrabold text-gray-800">Synchronous</h1>
     </div>
   );
 };
