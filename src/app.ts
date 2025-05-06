@@ -13,6 +13,7 @@ import cors from "cors";
 import path from "path";
 import env from "./utils/env";
 import routers from "./routers";
+import { HttpError, ErrorResponse, SuccessResponse } from "./utils";
 
 const app = express();
 
@@ -92,7 +93,7 @@ app.use("/api", limiter, routers);
 
 app.all("*path", (_req: Request, res: Response) => {
   if (env.isDev) {
-    res.status(200).json({ message: "Welcome to Synchronous Chat!" });
+    return SuccessResponse(res, 200, "Welcome to Synchronous Chat!");
   } else {
     res.sendFile(path.join(__dirname, "../client/dist", "index.html"), {
       headers: {
@@ -102,9 +103,30 @@ app.all("*path", (_req: Request, res: Response) => {
   }
 });
 
-app.use(((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  console.error(`Error: ${err.message}`);
-  res.status(500).json({ message: "Internal Server Error!" });
+app.use(((err: any, _req: Request, res: Response, next: NextFunction) => {
+  if (res.headersSent) return next(err);
+
+  if (err instanceof HttpError) {
+    return ErrorResponse(
+      res,
+      err.code || 500,
+      err.message || "Internal server error!"
+    );
+  }
+
+  const fallback =
+    env.NODE_ENV === "production"
+      ? "Something went wrong!"
+      : "Unknown error occurred!";
+
+  const message =
+    typeof err?.message === "string" && err.message.trim() !== ""
+      ? err.message
+      : fallback;
+
+  console.error(`Error: ${message}`);
+
+  return ErrorResponse(res, 500, message);
 }) as ErrorRequestHandler);
 
 export default app;
