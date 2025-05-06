@@ -1,28 +1,6 @@
-import { NextFunction, Request, Response } from "express";
-import { z, ZodSchema, ZodError } from "zod";
-import { ApiResponse } from "../utils";
+import { z } from "zod";
 
-const ValidationError = (
-  error: ZodError
-): { path: string; message: string }[] => {
-  return error.errors.map((err) => ({
-    path: err.path.join(", "),
-    message: err.message,
-  }));
-};
-
-const validateSchema =
-  (schema: ZodSchema) => (req: Request, res: Response, next: NextFunction) => {
-    try {
-      req.body = schema.parse(req.body);
-      next();
-    } catch (error: any) {
-      const errors = ValidationError(error);
-      return ApiResponse(res, 400, "Validation Error!", null, errors);
-    }
-  };
-
-const signUpSchema = z.object({
+export const SignUpSchema = z.object({
   email: z.string().email({ message: "Invalid email address!" }),
   password: z
     .string()
@@ -36,7 +14,7 @@ const signUpSchema = z.object({
     }),
 });
 
-const signInSchema = z
+export const SignInSchema = z
   .object({
     email: z.string().email().optional(),
     username: z.string().optional(),
@@ -47,7 +25,7 @@ const signInSchema = z
     path: ["email", "username"],
   });
 
-const profileSchema = z.object({
+export const ProfileSchema = z.object({
   name: z.string().min(3).max(30),
   username: z
     .string()
@@ -61,7 +39,7 @@ const profileSchema = z.object({
   bio: z.string(),
 });
 
-const passwordSchema = z.object({
+export const PasswordSchema = z.object({
   old_password: z.string(),
   new_password: z
     .string()
@@ -75,10 +53,38 @@ const passwordSchema = z.object({
     }),
 });
 
-export {
-  validateSchema,
-  signUpSchema,
-  signInSchema,
-  profileSchema,
-  passwordSchema,
-};
+export const MessageSchema = z
+  .object({
+    type: z.enum(["text", "file"]),
+    text: z.string().optional(),
+    file: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === "text" && !data.text) {
+      ctx.addIssue({
+        path: ["text"],
+        code: z.ZodIssueCode.custom,
+        message: "Text is required when type is 'text'",
+      });
+    }
+
+    if (data.type === "file" && !data.file) {
+      ctx.addIssue({
+        path: ["file"],
+        code: z.ZodIssueCode.custom,
+        message: "File is required when type is 'file'",
+      });
+    }
+  });
+
+export const TranslateSchema = z.object({
+  message: z.string(),
+  language: z.string(),
+});
+
+export type SignUp = z.infer<typeof SignUpSchema>;
+export type SignIn = z.infer<typeof SignInSchema>;
+export type Profile = z.infer<typeof ProfileSchema>;
+export type Password = z.infer<typeof PasswordSchema>;
+export type Message = z.infer<typeof MessageSchema>;
+export type Translate = z.infer<typeof TranslateSchema>;
