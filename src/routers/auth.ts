@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { authAccess, authRefresh } from "../middlewares";
-import { validateSchema, signUpSchema, signInSchema } from "../utils/schema";
+import { SignUpSchema, SignInSchema } from "../utils/schema";
+import { authAccess, authRefresh, validate } from "../middlewares";
 import {
   signUpUser,
   signInUser,
@@ -10,8 +10,8 @@ import {
 
 const router = Router();
 
-router.post("/sign-up", validateSchema(signUpSchema), signUpUser);
-router.post("/sign-in", validateSchema(signInSchema), signInUser);
+router.post("/sign-up", validate(SignUpSchema), signUpUser);
+router.post("/sign-in", validate(SignInSchema), signInUser);
 router.delete("/sign-out", authAccess, signOutUser);
 router.get("/auth-refresh", authRefresh, refreshAuth);
 

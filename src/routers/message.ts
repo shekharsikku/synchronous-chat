@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { authAccess } from "../middlewares";
+import { authAccess, validate } from "../middlewares";
+import { MessageSchema, TranslateSchema } from "../utils/schema";
 import {
   deleteMessages,
   deleteMessage,
@@ -12,12 +13,12 @@ import {
 const router = Router();
 
 router.get("/:id", authAccess, getMessages);
-router.post("/send/:id", authAccess, sendMessage);
+router.post("/send/:id", authAccess, validate(MessageSchema), sendMessage);
 router.patch("/edit/:id", authAccess, editMessage);
 router.delete("/delete/:id", authAccess, deleteMessage);
 router.delete("/delete", authAccess, deleteMessages);
 
 /** For translate text message in prefer language */
-router.post("/translate", translateMessage);
+router.post("/translate", validate(TranslateSchema), translateMessage);
 
 export default router;

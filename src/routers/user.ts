@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { authAccess, upload } from "../middlewares";
-import { validateSchema, profileSchema, passwordSchema } from "../utils/schema";
+import { ProfileSchema, PasswordSchema } from "../utils/schema";
+import { authAccess, upload, validate } from "../middlewares";
 import {
   profileSetup,
   updateImage,
@@ -14,7 +14,7 @@ const router = Router();
 router.patch(
   "/user-profile-setup",
   authAccess,
-  validateSchema(profileSchema),
+  validate(ProfileSchema),
   profileSetup
 );
 
@@ -28,7 +28,7 @@ router.patch(
 router.patch(
   "/change-password",
   authAccess,
-  validateSchema(passwordSchema),
+  validate(PasswordSchema),
   changePassword
 );
 
