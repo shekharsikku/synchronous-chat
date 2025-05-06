@@ -1,38 +1,48 @@
 import { Response } from "express";
 
-class ApiError extends Error {
+class HttpError extends Error {
   public code: number;
   public message: string;
 
   constructor(code: number, message: string, stack: string = "") {
     super(message);
+
     this.code = code;
     this.message = message;
     this.stack = stack;
   }
 }
 
-type TypeResponse = {
-  code?: number;
+type TypeResponse<T = any, E = any> = {
   success: boolean;
   message: string;
-  data?: any;
-  error?: any;
+  code?: number;
+  data?: T;
+  error?: E;
 };
 
-const ApiResponse = (
+const ErrorResponse = (
   res: Response,
   code: number,
   message: string,
-  data: any = null,
   error: any = null
 ) => {
-  const success: boolean = code < 400;
-  const response: TypeResponse = { success, message };
+  const response: TypeResponse<null, any> = { success: false, message };
 
-  if (data) response.data = data;
   if (error) response.error = error;
   res.status(code).json(response);
 };
 
-export { ApiError, ApiResponse };
+const SuccessResponse = (
+  res: Response,
+  code: number,
+  message: string,
+  data: any = null
+) => {
+  const response: TypeResponse<any, null> = { success: true, message };
+
+  if (data) response.data = data;
+  res.status(code).json(response);
+};
+
+export { HttpError, ErrorResponse, SuccessResponse };
