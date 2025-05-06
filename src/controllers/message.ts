@@ -1,15 +1,16 @@
-import { ApiResponse, ApiError } from "../utils";
 import { Request, Response } from "express";
+import { HttpError, SuccessResponse, ErrorResponse } from "../utils";
+import { Message as MessageType, Translate } from "../utils/schema";
 import { getSocketId, io } from "../socket";
 import { translate } from "bing-translate-api";
 import Conversation from "../models/conversation";
 import Message from "../models/message";
 
-const sendMessage = async (req: Request, res: Response) => {
+const sendMessage = async (req: Request<{ id: string }>, res: Response) => {
   try {
     const sender = req.user?._id!;
     const receiver = req.params.id;
-    const { type, text, file } = await req.body;
+    const { type, text, file } = (await req.body) as MessageType;
 
     let conversation = await Conversation.findOne({
       participants: { $all: [sender, receiver] },
@@ -60,76 +61,17 @@ const sendMessage = async (req: Request, res: Response) => {
       interaction: conversation.interaction,
     });
 
-    return ApiResponse(res, 201, "Message sent successfully!", message);
+    return SuccessResponse(res, 201, "Message sent successfully!", message);
   } catch (error: any) {
-    return ApiResponse(res, 500, "Error while sending message!");
+    return ErrorResponse(
+      res,
+      error.code || 500,
+      error.message || "Error while sending message!"
+    );
   }
 };
 
-/*
-const cleanupConversation = async (conversationId: Types.ObjectId) => {
-  const conversations = await Conversation.findById(conversationId);
-
-  if (conversations) {
-    const validMessages = [];
-
-    for (const message of conversations.messages) {
-      const messageExists = await model("Message").exists({ _id: message });
-
-      if (messageExists) {
-        validMessages.push(message);
-      }
-    }
-
-    conversations.messages = validMessages;
-    await conversations.save();
-  }
-}
-
-const cleanupConversation = async (conversationId: Types.ObjectId) => {
-  const conversations = await Conversation.findById(conversationId).lean(); // Use lean() for faster retrieval
-
-  if (conversations && conversations.messages.length > 0) {
-    const validMessages = await Message.find({
-      _id: { $in: conversations.messages }, // Batch check existence of all messages using $in
-    }).distinct("_id"); // Only retrieve message IDs
-
-    // Only update if there are messages that were removed
-    if (validMessages.length !== conversations.messages.length) {
-      await Conversation.updateOne(
-        { _id: conversationId },
-        { $set: { messages: validMessages } }
-      );
-    }
-  }
-};
-
-const getMessages = async (req: Request, res: Response) => {
-  try {
-    const sender = req.user?._id;
-    const receiver = req.params.id;
-
-    const conversation = await Conversation.findOne({
-      participants: { $all: [sender, receiver] },
-    })
-      .populate("messages")
-      .lean();
-
-    if (!conversation) {
-      return ApiResponse(res, 200, "No any message available!", []);
-    }
-
-    await cleanupConversation(conversation._id);
-    const messages = conversation.messages;
-
-    return ApiResponse(res, 200, "Messages fetched successfully!", messages);
-  } catch (error: any) {
-    return ApiResponse(res, 500, "Error while fetching messages!");
-  }
-};
-*/
-
-const getMessages = async (req: Request, res: Response) => {
+const getMessages = async (req: Request<{ id: string }>, res: Response) => {
   try {
     const sender = req.user?._id;
     const receiver = req.params.id;
@@ -164,21 +106,25 @@ const getMessages = async (req: Request, res: Response) => {
       .lean();
 
     if (!conversation) {
-      return ApiResponse(res, 200, "No any message available!", []);
+      return SuccessResponse(res, 200, "No any message available!", []);
     }
 
-    return ApiResponse(
+    return SuccessResponse(
       res,
       200,
       "Messages fetched successfully!",
       conversation?.messages
     );
   } catch (error: any) {
-    return ApiResponse(res, 500, "Error while fetching messages!");
+    return ErrorResponse(
+      res,
+      error.code || 500,
+      error.message || "Error while fetching messages!"
+    );
   }
 };
 
-const deleteMessage = async (req: Request, res: Response) => {
+const deleteMessage = async (req: Request<{ id: string }>, res: Response) => {
   try {
     const uid = req.user?._id;
     const mid = req.params.id;
@@ -194,7 +140,7 @@ const deleteMessage = async (req: Request, res: Response) => {
     );
 
     if (!message) {
-      throw new ApiError(
+      throw new HttpError(
         403,
         "You can't delete this message or message not found!"
       );
@@ -208,9 +154,9 @@ const deleteMessage = async (req: Request, res: Response) => {
     }
     io.to(senderSocketId).emit("message:remove", message);
 
-    return ApiResponse(res, 200, "Message deleted successfully!", message);
+    return SuccessResponse(res, 200, "Message deleted successfully!", message);
   } catch (error: any) {
-    return ApiResponse(
+    return ErrorResponse(
       res,
       error.code || 500,
       error.message || "Error while deleting message!"
@@ -218,14 +164,14 @@ const deleteMessage = async (req: Request, res: Response) => {
   }
 };
 
-const editMessage = async (req: Request, res: Response) => {
+const editMessage = async (req: Request<{ id: string }>, res: Response) => {
   try {
     const uid = req.user?._id;
     const mid = req.params.id;
     const { text } = await req.body;
 
     if (!text) {
-      throw new ApiError(400, "Text content is required for editing!");
+      throw new HttpError(400, "Text content is required for editing!");
     }
 
     const message = await Message.findOneAndUpdate(
@@ -238,7 +184,7 @@ const editMessage = async (req: Request, res: Response) => {
     );
 
     if (!message) {
-      throw new ApiError(
+      throw new HttpError(
         403,
         "You can't edit this message or message not found!"
       );
@@ -252,9 +198,9 @@ const editMessage = async (req: Request, res: Response) => {
     }
     io.to(senderSocketId).emit("message:edited", message);
 
-    return ApiResponse(res, 200, "Message edited successfully!", message);
+    return SuccessResponse(res, 200, "Message edited successfully!", message);
   } catch (error: any) {
-    return ApiResponse(
+    return ErrorResponse(
       res,
       error.code || 500,
       error.message || "Error while editing message!"
@@ -274,34 +220,42 @@ const deleteMessages = async (req: Request, res: Response) => {
       createdAt: { $lt: hoursAgo },
     });
 
-    return ApiResponse(res, 200, "Older messages deleted!", result);
+    return SuccessResponse(res, 200, "Older messages deleted!", result);
   } catch (error: any) {
-    return ApiResponse(res, 500, "Error while deleting messages!");
+    return ErrorResponse(
+      res,
+      error.code || 500,
+      error.message || "Error while deleting messages!"
+    );
   }
 };
 
 const translateMessage = async (req: Request, res: Response) => {
   try {
-    const { message, language } = await req.body;
+    const { message, language} = (await req.body) as Translate;
 
     if (!message || !language) {
-      throw new ApiError(400, "Text message and language is required!");
+      throw new HttpError(400, "Text message and language is required!");
     }
 
     const result = await translate(message, null, language);
 
     if (!result) {
-      throw new ApiError(500, "Error while translating message!");
+      throw new HttpError(500, "Error while translating message!");
     }
 
-    return ApiResponse(
+    return SuccessResponse(
       res,
       200,
       "Text translated successfully!",
       result.translation
     );
   } catch (error: any) {
-    return ApiResponse(res, error.code, error.message);
+    return ErrorResponse(
+      res,
+      error.code || 500,
+      error.message || "Error while translating message!"
+    );
   }
 };
 

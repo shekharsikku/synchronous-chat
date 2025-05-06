@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { genSalt, hash, compare } from "bcryptjs";
-import { ApiError, ApiResponse } from "../utils";
+import { Profile, Password } from "../utils/schema";
+import { HttpError, ErrorResponse, SuccessResponse } from "../utils";
 import { deleteImageByUrl, uploadOnCloudinary } from "../utils/cloudinary";
 import {
   unlinkFilesWithExtensions,
@@ -12,14 +13,14 @@ import User from "../models/user";
 
 const profileSetup = async (req: Request, res: Response) => {
   try {
-    const { name, username, gender, bio } = await req.body;
+    const { name, username, gender, bio } = (await req.body) as Profile;
     const requestUser = req.user!;
 
     if (username !== requestUser?.username) {
       const existsUsername = await User.exists({ username });
 
       if (existsUsername) {
-        throw new ApiError(409, "Username already exists!");
+        throw new HttpError(409, "Username already exists!");
       }
     }
 
@@ -37,20 +38,29 @@ const profileSetup = async (req: Request, res: Response) => {
     );
 
     if (!updatedProfile) {
-      throw new ApiError(400, "Profile setup not completed!");
+      throw new HttpError(400, "Profile setup not completed!");
     }
 
     const userInfo = createUserInfo(updatedProfile);
 
     if (!userInfo.setup) {
-      return ApiResponse(res, 200, "Please, complete your profile!", userInfo);
+      return SuccessResponse(
+        res,
+        200,
+        "Please, complete your profile!",
+        userInfo
+      );
     }
 
     generateAccess(res, userInfo);
 
-    return ApiResponse(res, 200, "Profile updated successfully!", userInfo);
+    return SuccessResponse(res, 200, "Profile updated successfully!", userInfo);
   } catch (error: any) {
-    return ApiResponse(res, error.code, error.message);
+    return ErrorResponse(
+      res,
+      error.code || 500,
+      error.message || "Error while updating profile!"
+    );
   }
 };
 
@@ -60,7 +70,7 @@ const updateImage = async (req: Request, res: Response) => {
     const imagePath = req.file?.path;
 
     if (!imagePath) {
-      throw new ApiError(400, "Profile image file required!");
+      throw new HttpError(400, "Profile image file required!");
     }
 
     const [uploadImage, userProfile] = await Promise.all([
@@ -69,7 +79,7 @@ const updateImage = async (req: Request, res: Response) => {
     ]);
 
     if (!uploadImage || !uploadImage.url) {
-      throw new ApiError(500, "Error while uploading profile image!");
+      throw new HttpError(500, "Error while uploading profile image!");
     }
 
     if (userProfile && userProfile.image !== "") {
@@ -83,17 +93,21 @@ const updateImage = async (req: Request, res: Response) => {
       const userInfo = createUserInfo(userProfile);
       generateAccess(res, userInfo);
 
-      return ApiResponse(
+      return SuccessResponse(
         res,
         200,
         "Profile image updated successfully!",
         userInfo
       );
     }
-    throw new ApiError(500, "Profile image not updated!");
+    throw new HttpError(500, "Profile image not updated!");
   } catch (error: any) {
     unlinkFilesWithExtensions(folderPath, extensionsToDelete);
-    return ApiResponse(res, error.code, error.message);
+    return ErrorResponse(
+      res,
+      error.code || 500,
+      error.message || "Error while updating profile image!"
+    );
   }
 };
 
@@ -110,37 +124,41 @@ const deleteImage = async (req: Request, res: Response) => {
       const userInfo = createUserInfo(requestUser);
       generateAccess(res, userInfo);
 
-      return ApiResponse(
+      return SuccessResponse(
         res,
         200,
         "Profile image deleted successfully!",
         userInfo
       );
     }
-    throw new ApiError(400, "Profile image not available!");
+    throw new HttpError(400, "Profile image not available!");
   } catch (error: any) {
-    return ApiResponse(res, error.code, error.message);
+    return ErrorResponse(
+      res,
+      error.code || 500,
+      error.message || "Error while deleting profile image!"
+    );
   }
 };
 
 const changePassword = async (req: Request, res: Response) => {
   try {
-    const { old_password, new_password } = await req.body;
+    const { old_password, new_password } = (await req.body) as Password;
 
     if (old_password === new_password) {
-      throw new ApiError(400, "Please, choose a different password!");
+      throw new HttpError(400, "Please, choose a different password!");
     }
 
     const requestUser = await User.findById(req.user?._id).select("+password");
 
     if (!requestUser) {
-      throw new ApiError(403, "Invalid authorization!");
+      throw new HttpError(403, "Invalid authorization!");
     }
 
     const isCorrect = await compare(old_password, requestUser.password!);
 
     if (!isCorrect) {
-      throw new ApiError(403, "Incorrect old password!");
+      throw new HttpError(403, "Incorrect old password!");
     }
 
     const hashSalt = await genSalt(12);
@@ -150,9 +168,18 @@ const changePassword = async (req: Request, res: Response) => {
     const userInfo = createUserInfo(requestUser);
     generateAccess(res, userInfo);
 
-    return ApiResponse(res, 200, "Password changed successfully!", userInfo);
+    return SuccessResponse(
+      res,
+      200,
+      "Password changed successfully!",
+      userInfo
+    );
   } catch (error: any) {
-    return ApiResponse(res, error.code, error.message);
+    return ErrorResponse(
+      res,
+      error.code || 500,
+      error.message || "Error while changing password!"
+    );
   }
 };
 
@@ -164,9 +191,13 @@ const userInformation = async (req: Request, res: Response) => {
       ? "User profile information!"
       : "Please, complete your profile!";
 
-    return ApiResponse(res, 200, message, user);
+    return SuccessResponse(res, 200, message, user);
   } catch (error: any) {
-    return ApiResponse(res, error.code, error.message);
+    return ErrorResponse(
+      res,
+      error.code || 500,
+      error.message || "Error while getting user information!"
+    );
   }
 };
 

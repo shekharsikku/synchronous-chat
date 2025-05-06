@@ -1,4 +1,4 @@
-import { ApiResponse, ApiError } from "../utils";
+import { HttpError, SuccessResponse, ErrorResponse } from "../utils";
 import { Request, Response } from "express";
 import { Types } from "mongoose";
 import User from "../models/user";
@@ -9,7 +9,7 @@ const searchContact = async (req: Request, res: Response) => {
     const search = req.query.search as string;
 
     if (!search) {
-      throw new ApiError(400, "Search terms is required!");
+      throw new HttpError(400, "Search terms is required!");
     }
 
     const terms = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -24,12 +24,16 @@ const searchContact = async (req: Request, res: Response) => {
     }).lean();
 
     if (contacts.length == 0) {
-      throw new ApiError(404, "No any contact found!");
+      throw new HttpError(404, "No any contact found!");
     }
 
-    return ApiResponse(res, 200, "Available contacts!", contacts);
+    return SuccessResponse(res, 200, "Available contacts!", contacts);
   } catch (error: any) {
-    return ApiResponse(res, error.code, error.message);
+    return ErrorResponse(
+      res,
+      error.code || 500,
+      error.message || "Error while searching contacts!"
+    );
   }
 };
 
@@ -41,7 +45,7 @@ const availableContact = async (req: Request, res: Response) => {
     }).lean();
 
     if (users.length == 0) {
-      throw new ApiError(404, "No any contact available!");
+      throw new HttpError(404, "No any contact available!");
     }
 
     const contacts = users.map((user) => ({
@@ -49,128 +53,20 @@ const availableContact = async (req: Request, res: Response) => {
       value: user._id,
     }));
 
-    return ApiResponse(res, 200, "Contacts fetched successfully!", contacts);
+    return SuccessResponse(
+      res,
+      200,
+      "Contacts fetched successfully!",
+      contacts
+    );
   } catch (error: any) {
-    return ApiResponse(res, error.code, error.message);
+    return ErrorResponse(
+      res,
+      error.code || 500,
+      error.message || "Error while fetching contacts!"
+    );
   }
 };
-
-/*
-const fetchContacts = async (req: Request, res: Response) => {
-  try {
-    let uid = req.user?._id;
-    uid = new Types.ObjectId(uid);
-
-    const contacts = await Message.aggregate([
-      {
-        $match: {
-          $or: [{ sender: uid }, { recipient: uid }],
-        },
-      },
-      {
-        $sort: { createdAt: -1 },
-      },
-      {
-        $group: {
-          _id: {
-            $cond: {
-              if: { $eq: ["$sender", uid] },
-              then: "$recipient",
-              else: "$sender",
-            },
-          },
-          lastMessageTime: { $first: "$createdAt" },
-        },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "_id",
-          foreignField: "_id",
-          as: "contactInfo",
-        },
-      },
-      {
-        $unwind: "$contactInfo",
-      },
-      {
-        $project: {
-          _id: 1,
-          lastMessageTime: 1,
-          name: "$contactInfo.name",
-          email: "$contactInfo.email",
-          username: "$contactInfo.username",
-          gender: "$contactInfo.gender",
-          image: "$contactInfo.image",
-          bio: "$contactInfo.bio",
-        },
-      },
-      {
-        $sort: { lastMessageTime: -1 },
-      },
-    ]);
-    return ApiResponse(res, 200, "Contacts fetched successfully!", contacts);
-  } catch (error: any) {
-    return ApiResponse(res, 500, "An error occurred while fetching contacts!");
-  }
-};
-
-const fetchContacts = async (req: Request, res: Response) => {
-  try {
-    const uid = new Types.ObjectId(req.user?._id);
-    
-    const contacts = await Message.aggregate([
-      {
-        $match: {
-          $or: [{ sender: uid }, { recipient: uid }],
-        },
-      },
-      {
-        $group: {
-          _id: {
-            $cond: {
-              if: { $eq: ["$sender", uid] },
-              then: "$recipient",
-              else: "$sender",
-            },
-          },
-          lastMessageTime: { $max: "$createdAt" }, // Use `$max` to avoid sorting before grouping
-        },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "_id",
-          foreignField: "_id",
-          as: "contactInfo",
-        },
-      },
-      {
-        $unwind: "$contactInfo",
-      },
-      {
-        $project: {
-          _id: 1,
-          lastMessageTime: 1,
-          name: "$contactInfo.name",
-          email: "$contactInfo.email",
-          username: "$contactInfo.username",
-          gender: "$contactInfo.gender",
-          image: "$contactInfo.image",
-          bio: "$contactInfo.bio",
-        },
-      },
-      {
-        $sort: { lastMessageTime: -1 }, // Final sorting by last message time
-      },
-    ]);
-    
-    return ApiResponse(res, 200, "Contacts fetched successfully!", contacts);
-  } catch (error: any) {
-    return ApiResponse(res, 500, "An error occurred while fetching contacts!");
-  }
-};
-*/
 
 const fetchContacts = async (req: Request, res: Response) => {
   try {
@@ -195,9 +91,18 @@ const fetchContacts = async (req: Request, res: Response) => {
       })
       .filter(Boolean);
 
-    return ApiResponse(res, 200, "Contacts fetched successfully!", contacts);
+    return SuccessResponse(
+      res,
+      200,
+      "Contacts fetched successfully!",
+      contacts
+    );
   } catch (error: any) {
-    return ApiResponse(res, 500, "An error occurred while fetching contacts!");
+    return ErrorResponse(
+      res,
+      error.code || 500,
+      error.message || "Error while fetching contacts!"
+    );
   }
 };
 
@@ -210,12 +115,21 @@ const fetchContact = async (req: Request, res: Response) => {
     );
 
     if (!userContact) {
-      throw new ApiError(404, "Contact not found!");
+      throw new HttpError(404, "Contact not found!");
     }
 
-    return ApiResponse(res, 200, "Contact fetched successfully!", userContact);
+    return SuccessResponse(
+      res,
+      200,
+      "Contact fetched successfully!",
+      userContact
+    );
   } catch (error: any) {
-    return ApiResponse(res, 500, "An error occurred while fetching contact!");
+    return ErrorResponse(
+      res,
+      error.code || 500,
+      error.message || "Error while fetching contact!"
+    );
   }
 };
 
