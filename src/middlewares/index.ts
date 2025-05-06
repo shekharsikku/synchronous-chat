@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
-import { ApiError, ApiResponse } from "../utils";
+import { HttpError, ErrorResponse } from "../utils";
 import { UserInterface } from "../interface";
+import { ZodSchema } from "zod";
 import { Types } from "mongoose";
 import {
   generateAccess,
@@ -22,7 +23,7 @@ const authAccess = async (
     const accessToken = req.cookies.access;
 
     if (!accessToken) {
-      throw new ApiError(401, "Unauthorized access request!");
+      throw new HttpError(401, "Unauthorized access request!");
     }
 
     let decodedPayload;
@@ -32,13 +33,17 @@ const authAccess = async (
         algorithms: ["HS256"],
       }) as JwtPayload;
     } catch (error: any) {
-      throw new ApiError(403, "Invalid access request!");
+      throw new HttpError(403, "Invalid access request!");
     }
 
     req.user = decodedPayload.user as UserInterface;
     next();
   } catch (error: any) {
-    return ApiResponse(res, error.code, error.message);
+    return ErrorResponse(
+      res,
+      error.code || 500,
+      error.message || "Something went wrong!"
+    );
   }
 };
 
@@ -52,7 +57,7 @@ const authRefresh = async (
     const authorizeId = req.cookies.current;
 
     if (!refreshToken || !authorizeId) {
-      throw new ApiError(401, "Unauthorized refresh request!");
+      throw new HttpError(401, "Unauthorized refresh request!");
     }
 
     let decodedPayload;
@@ -64,7 +69,7 @@ const authRefresh = async (
         ignoreNotBefore: true,
       }) as JwtPayload;
     } catch (error: any) {
-      throw new ApiError(403, "Invalid refresh request!");
+      throw new HttpError(403, "Invalid refresh request!");
     }
 
     const userId = decodedPayload.uid as Types.ObjectId;
@@ -82,7 +87,7 @@ const authRefresh = async (
     });
 
     if (!requestUser) {
-      throw new ApiError(403, "Invalid user request!");
+      throw new HttpError(403, "Invalid user request!");
     }
 
     const userInfo = createUserInfo(requestUser);
@@ -112,7 +117,7 @@ const authRefresh = async (
         authorizeCookie(res, authorizeId);
         generateAccess(res, userInfo);
       } else {
-        throw new ApiError(403, "Invalid refresh request!");
+        throw new HttpError(403, "Invalid refresh request!");
       }
     } else if (currentTime >= decodedPayload.exp!) {
       await User.updateOne(
@@ -128,7 +133,7 @@ const authRefresh = async (
       res.clearCookie("refresh");
       res.clearCookie("current");
 
-      throw new ApiError(401, "Please, login again to continue!");
+      throw new HttpError(401, "Please, login again to continue!");
     } else {
       generateAccess(res, userInfo);
     }
@@ -136,7 +141,11 @@ const authRefresh = async (
     req.user = userInfo;
     next();
   } catch (error: any) {
-    return ApiResponse(res, error.code, error.message);
+    return ErrorResponse(
+      res,
+      error.code || 500,
+      error.message || "Something went wrong!"
+    );
   }
 };
 
@@ -151,4 +160,23 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-export { authAccess, authRefresh, upload };
+const validate =
+  <T>(schema: ZodSchema<T>) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    try {
+      req.body = schema.parse(req.body);
+      next();
+    } catch (error: any) {
+      return ErrorResponse(res, 400, "Validation error occurred!", error);
+    }
+  };
+
+const delay = (milliseconds: number) => {
+  return async (_req: Request, _res: Response, next: NextFunction) => {
+    await new Promise((resolve) => setTimeout(resolve, milliseconds));
+    console.log(`Delay api by ${milliseconds}ms.`);
+    await next();
+  };
+};
+
+export { authAccess, authRefresh, upload, validate, delay };
