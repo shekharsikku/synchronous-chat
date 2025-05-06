@@ -1,6 +1,6 @@
 {
-  "name": "server",
-  "version": "1.8.6",
+  "name": "synchronous-chat",
+  "version": "1.8.7",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -21,7 +21,7 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/morgan": "^1.9.9",
     "@types/multer": "^1.4.12",
-    "@types/node": "^22.15.3",
+    "@types/node": "^22.15.11",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.4",
@@ -30,7 +30,7 @@
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "bing-translate-api": "^4.0.2",
-    "cloudinary": "^2.6.0",
+    "cloudinary": "^2.6.1",
     "compression": "^1.8.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -45,6 +45,6 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.2",
     "socket.io": "^4.8.1",
-    "zod": "^3.24.3"
+    "zod": "^3.24.4"
   }
 }

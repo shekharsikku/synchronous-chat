@@ -11,24 +11,24 @@ const user_1 = __importDefault(require("../models/user"));
 const env_1 = __importDefault(require("../utils/env"));
 const signUpUser = async (req, res) => {
     try {
-        const { email, password } = await req.body;
+        const { email, password } = (await req.body);
         const existsEmail = await user_1.default.exists({ email });
         if (existsEmail) {
-            throw new utils_1.ApiError(409, "Email already exists!");
+            throw new utils_1.HttpError(409, "Email already exists!");
         }
         const hashSalt = await (0, bcryptjs_1.genSalt)(12);
         const hashedPassword = await (0, bcryptjs_1.hash)(password, hashSalt);
         await user_1.default.create({ email, password: hashedPassword });
-        return (0, utils_1.ApiResponse)(res, 201, "Signed up successfully!");
+        return (0, utils_1.SuccessResponse)(res, 201, "Signed up successfully!");
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, error.code, error.message);
+        return (0, utils_1.ErrorResponse)(res, error.code || 500, error.message || "Error while user signup!");
     }
 };
 exports.signUpUser = signUpUser;
 const signInUser = async (req, res) => {
     try {
-        const { email, password, username } = await req.body;
+        const { email, password, username } = (await req.body);
         const conditions = [];
         if (email) {
             conditions.push({ email });
@@ -37,22 +37,22 @@ const signInUser = async (req, res) => {
             conditions.push({ username });
         }
         else {
-            throw new utils_1.ApiError(400, "Email or Username required!");
+            throw new utils_1.HttpError(400, "Email or Username required!");
         }
         const existsUser = await user_1.default.findOne({
             $or: conditions,
         }).select("+password +authentication");
         if (!existsUser) {
-            throw new utils_1.ApiError(404, "User not exists!");
+            throw new utils_1.HttpError(404, "User not exists!");
         }
         const isCorrect = await (0, bcryptjs_1.compare)(password, existsUser.password);
         if (!isCorrect) {
-            throw new utils_1.ApiError(403, "Incorrect password!");
+            throw new utils_1.HttpError(403, "Incorrect password!");
         }
         const userInfo = (0, helpers_1.createUserInfo)(existsUser);
         (0, helpers_1.generateAccess)(res, userInfo);
         if (!userInfo.setup) {
-            return (0, utils_1.ApiResponse)(res, 200, "Please, complete your profile!", userInfo);
+            return (0, utils_1.SuccessResponse)(res, 200, "Please, complete your profile!", userInfo);
         }
         const refreshToken = (0, helpers_1.generateRefresh)(res, userInfo._id);
         const refreshExpiry = env_1.default.REFRESH_EXPIRY;
@@ -63,10 +63,10 @@ const signInUser = async (req, res) => {
         const authorizeUser = await existsUser.save();
         const authorizeId = authorizeUser.authentication?.find((auth) => auth.token === refreshToken)?._id;
         (0, helpers_1.authorizeCookie)(res, authorizeId.toString());
-        return (0, utils_1.ApiResponse)(res, 200, "Signed in successfully!", userInfo);
+        return (0, utils_1.SuccessResponse)(res, 200, "Signed in successfully!", userInfo);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, error.code, error.message);
+        return (0, utils_1.ErrorResponse)(res, error.code || 500, error.message || "Error while user signin!");
     }
 };
 exports.signInUser = signInUser;
@@ -84,10 +84,10 @@ const signOutUser = async (req, res) => {
     res.clearCookie("access");
     res.clearCookie("refresh");
     res.clearCookie("current");
-    return (0, utils_1.ApiResponse)(res, 200, "Signed out successfully!");
+    return (0, utils_1.SuccessResponse)(res, 200, "Signed out successfully!");
 };
 exports.signOutUser = signOutUser;
 const refreshAuth = async (req, res) => {
-    return (0, utils_1.ApiResponse)(res, 200, "Authentication refreshed!", req.user);
+    return (0, utils_1.SuccessResponse)(res, 200, "Authentication refreshed!", req.user);
 };
 exports.refreshAuth = refreshAuth;

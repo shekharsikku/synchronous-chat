@@ -13,6 +13,7 @@ const cors_1 = __importDefault(require("cors"));
 const path_1 = __importDefault(require("path"));
 const env_1 = __importDefault(require("./utils/env"));
 const routers_1 = __importDefault(require("./routers"));
+const utils_1 = require("./utils");
 const app = (0, express_1.default)();
 app.use(express_1.default.json({
     limit: env_1.default.PAYLOAD_LIMIT,
@@ -72,7 +73,7 @@ const limiter = (0, express_rate_limit_1.rateLimit)({
 app.use("/api", limiter, routers_1.default);
 app.all("*path", (_req, res) => {
     if (env_1.default.isDev) {
-        res.status(200).json({ message: "Welcome to Synchronous Chat!" });
+        return (0, utils_1.SuccessResponse)(res, 200, "Welcome to Synchronous Chat!");
     }
     else {
         res.sendFile(path_1.default.join(__dirname, "../client/dist", "index.html"), {
@@ -82,8 +83,19 @@ app.all("*path", (_req, res) => {
         });
     }
 });
-app.use(((err, _req, res, _next) => {
-    console.error(`Error: ${err.message}`);
-    res.status(500).json({ message: "Internal Server Error!" });
+app.use(((err, _req, res, next) => {
+    if (res.headersSent)
+        return next(err);
+    if (err instanceof utils_1.HttpError) {
+        return (0, utils_1.ErrorResponse)(res, err.code || 500, err.message || "Internal server error!");
+    }
+    const fallback = env_1.default.NODE_ENV === "production"
+        ? "Something went wrong!"
+        : "Unknown error occurred!";
+    const message = typeof err?.message === "string" && err.message.trim() !== ""
+        ? err.message
+        : fallback;
+    console.error(`Error: ${message}`);
+    return (0, utils_1.ErrorResponse)(res, 500, message);
 }));
 exports.default = app;

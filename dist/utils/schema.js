@@ -1,26 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.passwordSchema = exports.profileSchema = exports.signInSchema = exports.signUpSchema = exports.validateSchema = void 0;
+exports.TranslateSchema = exports.MessageSchema = exports.PasswordSchema = exports.ProfileSchema = exports.SignInSchema = exports.SignUpSchema = void 0;
 const zod_1 = require("zod");
-const utils_1 = require("../utils");
-const ValidationError = (error) => {
-    return error.errors.map((err) => ({
-        path: err.path.join(", "),
-        message: err.message,
-    }));
-};
-const validateSchema = (schema) => (req, res, next) => {
-    try {
-        req.body = schema.parse(req.body);
-        next();
-    }
-    catch (error) {
-        const errors = ValidationError(error);
-        return (0, utils_1.ApiResponse)(res, 400, "Validation Error!", null, errors);
-    }
-};
-exports.validateSchema = validateSchema;
-const signUpSchema = zod_1.z.object({
+exports.SignUpSchema = zod_1.z.object({
     email: zod_1.z.string().email({ message: "Invalid email address!" }),
     password: zod_1.z
         .string()
@@ -32,8 +14,7 @@ const signUpSchema = zod_1.z.object({
         message: "Password cannot contain spaces!",
     }),
 });
-exports.signUpSchema = signUpSchema;
-const signInSchema = zod_1.z
+exports.SignInSchema = zod_1.z
     .object({
     email: zod_1.z.string().email().optional(),
     username: zod_1.z.string().optional(),
@@ -43,8 +24,7 @@ const signInSchema = zod_1.z
     message: "Email or Username required!",
     path: ["email", "username"],
 });
-exports.signInSchema = signInSchema;
-const profileSchema = zod_1.z.object({
+exports.ProfileSchema = zod_1.z.object({
     name: zod_1.z.string().min(3).max(30),
     username: zod_1.z
         .string()
@@ -56,8 +36,7 @@ const profileSchema = zod_1.z.object({
     gender: zod_1.z.enum(["Male", "Female", "Other"]),
     bio: zod_1.z.string(),
 });
-exports.profileSchema = profileSchema;
-const passwordSchema = zod_1.z.object({
+exports.PasswordSchema = zod_1.z.object({
     old_password: zod_1.z.string(),
     new_password: zod_1.z
         .string()
@@ -69,4 +48,29 @@ const passwordSchema = zod_1.z.object({
         message: "Password cannot contain spaces!",
     }),
 });
-exports.passwordSchema = passwordSchema;
+exports.MessageSchema = zod_1.z
+    .object({
+    type: zod_1.z.enum(["text", "file"]),
+    text: zod_1.z.string().optional(),
+    file: zod_1.z.string().optional(),
+})
+    .superRefine((data, ctx) => {
+    if (data.type === "text" && !data.text) {
+        ctx.addIssue({
+            path: ["text"],
+            code: zod_1.z.ZodIssueCode.custom,
+            message: "Text is required when type is 'text'",
+        });
+    }
+    if (data.type === "file" && !data.file) {
+        ctx.addIssue({
+            path: ["file"],
+            code: zod_1.z.ZodIssueCode.custom,
+            message: "File is required when type is 'file'",
+        });
+    }
+});
+exports.TranslateSchema = zod_1.z.object({
+    message: zod_1.z.string(),
+    language: zod_1.z.string(),
+});

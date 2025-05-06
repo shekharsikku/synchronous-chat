@@ -2,12 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const middlewares_1 = require("../middlewares");
+const schema_1 = require("../utils/schema");
 const message_1 = require("../controllers/message");
 const router = (0, express_1.Router)();
 router.get("/:id", middlewares_1.authAccess, message_1.getMessages);
-router.post("/send/:id", middlewares_1.authAccess, message_1.sendMessage);
+router.post("/send/:id", middlewares_1.authAccess, (0, middlewares_1.validate)(schema_1.MessageSchema), message_1.sendMessage);
 router.patch("/edit/:id", middlewares_1.authAccess, message_1.editMessage);
 router.delete("/delete/:id", middlewares_1.authAccess, message_1.deleteMessage);
 router.delete("/delete", middlewares_1.authAccess, message_1.deleteMessages);
-router.post("/translate", message_1.translateMessage);
+router.post("/translate", (0, middlewares_1.validate)(schema_1.TranslateSchema), message_1.translateMessage);
 exports.default = router;

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ApiResponse = exports.ApiError = void 0;
-class ApiError extends Error {
+exports.SuccessResponse = exports.ErrorResponse = exports.HttpError = void 0;
+class HttpError extends Error {
     code;
     message;
     constructor(code, message, stack = "") {
@@ -11,14 +11,18 @@ class ApiError extends Error {
         this.stack = stack;
     }
 }
-exports.ApiError = ApiError;
-const ApiResponse = (res, code, message, data = null, error = null) => {
-    const success = code < 400;
-    const response = { success, message };
-    if (data)
-        response.data = data;
+exports.HttpError = HttpError;
+const ErrorResponse = (res, code, message, error = null) => {
+    const response = { success: false, message };
     if (error)
         response.error = error;
     res.status(code).json(response);
 };
-exports.ApiResponse = ApiResponse;
+exports.ErrorResponse = ErrorResponse;
+const SuccessResponse = (res, code, message, data = null) => {
+    const response = { success: true, message };
+    if (data)
+        response.data = data;
+    res.status(code).json(response);
+};
+exports.SuccessResponse = SuccessResponse;

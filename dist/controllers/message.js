@@ -13,7 +13,7 @@ const sendMessage = async (req, res) => {
     try {
         const sender = req.user?._id;
         const receiver = req.params.id;
-        const { type, text, file } = await req.body;
+        const { type, text, file } = (await req.body);
         let conversation = await conversation_1.default.findOne({
             participants: { $all: [sender, receiver] },
         });
@@ -50,10 +50,10 @@ const sendMessage = async (req, res) => {
             _id: receiver,
             interaction: conversation.interaction,
         });
-        return (0, utils_1.ApiResponse)(res, 201, "Message sent successfully!", message);
+        return (0, utils_1.SuccessResponse)(res, 201, "Message sent successfully!", message);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, 500, "Error while sending message!");
+        return (0, utils_1.ErrorResponse)(res, error.code || 500, error.message || "Error while sending message!");
     }
 };
 exports.sendMessage = sendMessage;
@@ -85,12 +85,12 @@ const getMessages = async (req, res) => {
             .populate("messages")
             .lean();
         if (!conversation) {
-            return (0, utils_1.ApiResponse)(res, 200, "No any message available!", []);
+            return (0, utils_1.SuccessResponse)(res, 200, "No any message available!", []);
         }
-        return (0, utils_1.ApiResponse)(res, 200, "Messages fetched successfully!", conversation?.messages);
+        return (0, utils_1.SuccessResponse)(res, 200, "Messages fetched successfully!", conversation?.messages);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, 500, "Error while fetching messages!");
+        return (0, utils_1.ErrorResponse)(res, error.code || 500, error.message || "Error while fetching messages!");
     }
 };
 exports.getMessages = getMessages;
@@ -104,7 +104,7 @@ const deleteMessage = async (req, res) => {
             $unset: { content: 1 },
         }, { new: true });
         if (!message) {
-            throw new utils_1.ApiError(403, "You can't delete this message or message not found!");
+            throw new utils_1.HttpError(403, "You can't delete this message or message not found!");
         }
         const senderSocketId = (0, socket_1.getSocketId)(message?.sender.toString());
         const receiverSocketId = (0, socket_1.getSocketId)(message?.recipient.toString());
@@ -112,10 +112,10 @@ const deleteMessage = async (req, res) => {
             socket_1.io.to(receiverSocketId).emit("message:remove", message);
         }
         socket_1.io.to(senderSocketId).emit("message:remove", message);
-        return (0, utils_1.ApiResponse)(res, 200, "Message deleted successfully!", message);
+        return (0, utils_1.SuccessResponse)(res, 200, "Message deleted successfully!", message);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, error.code || 500, error.message || "Error while deleting message!");
+        return (0, utils_1.ErrorResponse)(res, error.code || 500, error.message || "Error while deleting message!");
     }
 };
 exports.deleteMessage = deleteMessage;
@@ -125,14 +125,14 @@ const editMessage = async (req, res) => {
         const mid = req.params.id;
         const { text } = await req.body;
         if (!text) {
-            throw new utils_1.ApiError(400, "Text content is required for editing!");
+            throw new utils_1.HttpError(400, "Text content is required for editing!");
         }
         const message = await message_1.default.findOneAndUpdate({ _id: mid, sender: uid, "content.type": "text" }, {
             type: "edited",
             "content.text": text,
         }, { new: true });
         if (!message) {
-            throw new utils_1.ApiError(403, "You can't edit this message or message not found!");
+            throw new utils_1.HttpError(403, "You can't edit this message or message not found!");
         }
         const senderSocketId = (0, socket_1.getSocketId)(message?.sender.toString());
         const receiverSocketId = (0, socket_1.getSocketId)(message?.recipient.toString());
@@ -140,10 +140,10 @@ const editMessage = async (req, res) => {
             socket_1.io.to(receiverSocketId).emit("message:edited", message);
         }
         socket_1.io.to(senderSocketId).emit("message:edited", message);
-        return (0, utils_1.ApiResponse)(res, 200, "Message edited successfully!", message);
+        return (0, utils_1.SuccessResponse)(res, 200, "Message edited successfully!", message);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, error.code || 500, error.message || "Error while editing message!");
+        return (0, utils_1.ErrorResponse)(res, error.code || 500, error.message || "Error while editing message!");
     }
 };
 exports.editMessage = editMessage;
@@ -156,27 +156,27 @@ const deleteMessages = async (req, res) => {
             $or: [{ sender: uid }, { recipient: uid }],
             createdAt: { $lt: hoursAgo },
         });
-        return (0, utils_1.ApiResponse)(res, 200, "Older messages deleted!", result);
+        return (0, utils_1.SuccessResponse)(res, 200, "Older messages deleted!", result);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, 500, "Error while deleting messages!");
+        return (0, utils_1.ErrorResponse)(res, error.code || 500, error.message || "Error while deleting messages!");
     }
 };
 exports.deleteMessages = deleteMessages;
 const translateMessage = async (req, res) => {
     try {
-        const { message, language } = await req.body;
+        const { message, language } = (await req.body);
         if (!message || !language) {
-            throw new utils_1.ApiError(400, "Text message and language is required!");
+            throw new utils_1.HttpError(400, "Text message and language is required!");
         }
         const result = await (0, bing_translate_api_1.translate)(message, null, language);
         if (!result) {
-            throw new utils_1.ApiError(500, "Error while translating message!");
+            throw new utils_1.HttpError(500, "Error while translating message!");
         }
-        return (0, utils_1.ApiResponse)(res, 200, "Text translated successfully!", result.translation);
+        return (0, utils_1.SuccessResponse)(res, 200, "Text translated successfully!", result.translation);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, error.code, error.message);
+        return (0, utils_1.ErrorResponse)(res, error.code || 500, error.message || "Error while translating message!");
     }
 };
 exports.translateMessage = translateMessage;

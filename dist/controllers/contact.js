@@ -12,7 +12,7 @@ const searchContact = async (req, res) => {
     try {
         const search = req.query.search;
         if (!search) {
-            throw new utils_1.ApiError(400, "Search terms is required!");
+            throw new utils_1.HttpError(400, "Search terms is required!");
         }
         const terms = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const regex = new RegExp(terms, "i");
@@ -24,12 +24,12 @@ const searchContact = async (req, res) => {
             ],
         }).lean();
         if (contacts.length == 0) {
-            throw new utils_1.ApiError(404, "No any contact found!");
+            throw new utils_1.HttpError(404, "No any contact found!");
         }
-        return (0, utils_1.ApiResponse)(res, 200, "Available contacts!", contacts);
+        return (0, utils_1.SuccessResponse)(res, 200, "Available contacts!", contacts);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, error.code, error.message);
+        return (0, utils_1.ErrorResponse)(res, error.code || 500, error.message || "Error while searching contacts!");
     }
 };
 exports.searchContact = searchContact;
@@ -40,16 +40,16 @@ const availableContact = async (req, res) => {
             setup: true,
         }).lean();
         if (users.length == 0) {
-            throw new utils_1.ApiError(404, "No any contact available!");
+            throw new utils_1.HttpError(404, "No any contact available!");
         }
         const contacts = users.map((user) => ({
             label: `${user.name} (${user.username})`,
             value: user._id,
         }));
-        return (0, utils_1.ApiResponse)(res, 200, "Contacts fetched successfully!", contacts);
+        return (0, utils_1.SuccessResponse)(res, 200, "Contacts fetched successfully!", contacts);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, error.code, error.message);
+        return (0, utils_1.ErrorResponse)(res, error.code || 500, error.message || "Error while fetching contacts!");
     }
 };
 exports.availableContact = availableContact;
@@ -70,10 +70,10 @@ const fetchContacts = async (req, res) => {
                 : null;
         })
             .filter(Boolean);
-        return (0, utils_1.ApiResponse)(res, 200, "Contacts fetched successfully!", contacts);
+        return (0, utils_1.SuccessResponse)(res, 200, "Contacts fetched successfully!", contacts);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, 500, "An error occurred while fetching contacts!");
+        return (0, utils_1.ErrorResponse)(res, error.code || 500, error.message || "Error while fetching contacts!");
     }
 };
 exports.fetchContacts = fetchContacts;
@@ -82,12 +82,12 @@ const fetchContact = async (req, res) => {
         const userId = req.params.id;
         const userContact = await user_1.default.findById(userId).select("-setup -createdAt -updatedAt -__v");
         if (!userContact) {
-            throw new utils_1.ApiError(404, "Contact not found!");
+            throw new utils_1.HttpError(404, "Contact not found!");
         }
-        return (0, utils_1.ApiResponse)(res, 200, "Contact fetched successfully!", userContact);
+        return (0, utils_1.SuccessResponse)(res, 200, "Contact fetched successfully!", userContact);
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, 500, "An error occurred while fetching contact!");
+        return (0, utils_1.ErrorResponse)(res, error.code || 500, error.message || "Error while fetching contact!");
     }
 };
 exports.fetchContact = fetchContact;

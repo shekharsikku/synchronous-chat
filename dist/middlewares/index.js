@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.upload = exports.authRefresh = exports.authAccess = void 0;
+exports.delay = exports.validate = exports.upload = exports.authRefresh = exports.authAccess = void 0;
 const utils_1 = require("../utils");
 const helpers_1 = require("../helpers");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -14,7 +14,7 @@ const authAccess = async (req, res, next) => {
     try {
         const accessToken = req.cookies.access;
         if (!accessToken) {
-            throw new utils_1.ApiError(401, "Unauthorized access request!");
+            throw new utils_1.HttpError(401, "Unauthorized access request!");
         }
         let decodedPayload;
         try {
@@ -23,13 +23,13 @@ const authAccess = async (req, res, next) => {
             });
         }
         catch (error) {
-            throw new utils_1.ApiError(403, "Invalid access request!");
+            throw new utils_1.HttpError(403, "Invalid access request!");
         }
         req.user = decodedPayload.user;
         next();
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, error.code, error.message);
+        return (0, utils_1.ErrorResponse)(res, error.code || 500, error.message || "Something went wrong!");
     }
 };
 exports.authAccess = authAccess;
@@ -38,7 +38,7 @@ const authRefresh = async (req, res, next) => {
         const refreshToken = req.cookies.refresh;
         const authorizeId = req.cookies.current;
         if (!refreshToken || !authorizeId) {
-            throw new utils_1.ApiError(401, "Unauthorized refresh request!");
+            throw new utils_1.HttpError(401, "Unauthorized refresh request!");
         }
         let decodedPayload;
         try {
@@ -49,7 +49,7 @@ const authRefresh = async (req, res, next) => {
             });
         }
         catch (error) {
-            throw new utils_1.ApiError(403, "Invalid refresh request!");
+            throw new utils_1.HttpError(403, "Invalid refresh request!");
         }
         const userId = decodedPayload.uid;
         const currentTime = Math.floor(Date.now() / 1000);
@@ -64,7 +64,7 @@ const authRefresh = async (req, res, next) => {
             },
         });
         if (!requestUser) {
-            throw new utils_1.ApiError(403, "Invalid user request!");
+            throw new utils_1.HttpError(403, "Invalid user request!");
         }
         const userInfo = (0, helpers_1.createUserInfo)(requestUser);
         if (currentTime >= beforeExpires && currentTime < decodedPayload.exp) {
@@ -86,7 +86,7 @@ const authRefresh = async (req, res, next) => {
                 (0, helpers_1.generateAccess)(res, userInfo);
             }
             else {
-                throw new utils_1.ApiError(403, "Invalid refresh request!");
+                throw new utils_1.HttpError(403, "Invalid refresh request!");
             }
         }
         else if (currentTime >= decodedPayload.exp) {
@@ -98,7 +98,7 @@ const authRefresh = async (req, res, next) => {
             res.clearCookie("access");
             res.clearCookie("refresh");
             res.clearCookie("current");
-            throw new utils_1.ApiError(401, "Please, login again to continue!");
+            throw new utils_1.HttpError(401, "Please, login again to continue!");
         }
         else {
             (0, helpers_1.generateAccess)(res, userInfo);
@@ -107,7 +107,7 @@ const authRefresh = async (req, res, next) => {
         next();
     }
     catch (error) {
-        return (0, utils_1.ApiResponse)(res, error.code, error.message);
+        return (0, utils_1.ErrorResponse)(res, error.code || 500, error.message || "Something went wrong!");
     }
 };
 exports.authRefresh = authRefresh;
@@ -121,3 +121,21 @@ const storage = multer_1.default.diskStorage({
 });
 const upload = (0, multer_1.default)({ storage });
 exports.upload = upload;
+const validate = (schema) => (req, res, next) => {
+    try {
+        req.body = schema.parse(req.body);
+        next();
+    }
+    catch (error) {
+        return (0, utils_1.ErrorResponse)(res, 400, "Validation error occurred!", error);
+    }
+};
+exports.validate = validate;
+const delay = (milliseconds) => {
+    return async (_req, _res, next) => {
+        await new Promise((resolve) => setTimeout(resolve, milliseconds));
+        console.log(`Delay api by ${milliseconds}ms.`);
+        await next();
+    };
+};
+exports.delay = delay;
