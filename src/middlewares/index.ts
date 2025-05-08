@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import { HttpError, ErrorResponse } from "../utils";
-import { UserInterface } from "../interface";
+import { HttpError, ErrorResponse } from "../utils/index.js";
+import { UserInterface } from "../interface/index.js";
 import { ZodSchema } from "zod";
 import { Types } from "mongoose";
 import {
@@ -8,10 +8,10 @@ import {
   generateRefresh,
   authorizeCookie,
   createUserInfo,
-} from "../helpers";
+} from "../helpers/index.js";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import User from "../models/user";
-import env from "../utils/env";
+import User from "../models/user.js";
+import env from "../utils/env.js";
 import multer from "multer";
 
 const authAccess = async (

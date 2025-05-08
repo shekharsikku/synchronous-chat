@@ -1,15 +1,15 @@
 import { Request, Response } from "express";
 import { genSalt, hash, compare } from "bcryptjs";
-import { HttpError, ErrorResponse, SuccessResponse } from "../utils";
-import { SignUp, SignIn } from "../utils/schema";
+import { HttpError, ErrorResponse, SuccessResponse } from "../utils/index.js";
+import { SignUp, SignIn } from "../utils/schema.js";
 import {
   generateAccess,
   generateRefresh,
   authorizeCookie,
   createUserInfo,
-} from "../helpers";
-import User from "../models/user";
-import env from "../utils/env";
+} from "../helpers/index.js";
+import User from "../models/user.js";
+import env from "../utils/env.js";
 
 const signUpUser = async (req: Request, res: Response) => {
   try {

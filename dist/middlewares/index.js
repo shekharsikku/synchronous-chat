@@ -1,60 +1,53 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.delay = exports.validate = exports.upload = exports.authRefresh = exports.authAccess = void 0;
-const utils_1 = require("../utils");
-const helpers_1 = require("../helpers");
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const user_1 = __importDefault(require("../models/user"));
-const env_1 = __importDefault(require("../utils/env"));
-const multer_1 = __importDefault(require("multer"));
+import { HttpError, ErrorResponse } from "../utils/index.js";
+import { generateAccess, generateRefresh, authorizeCookie, createUserInfo, } from "../helpers/index.js";
+import jwt from "jsonwebtoken";
+import User from "../models/user.js";
+import env from "../utils/env.js";
+import multer from "multer";
 const authAccess = async (req, res, next) => {
     try {
         const accessToken = req.cookies.access;
         if (!accessToken) {
-            throw new utils_1.HttpError(401, "Unauthorized access request!");
+            throw new HttpError(401, "Unauthorized access request!");
         }
         let decodedPayload;
         try {
-            decodedPayload = jsonwebtoken_1.default.verify(accessToken, env_1.default.ACCESS_SECRET, {
+            decodedPayload = jwt.verify(accessToken, env.ACCESS_SECRET, {
                 algorithms: ["HS256"],
             });
         }
         catch (error) {
-            throw new utils_1.HttpError(403, "Invalid access request!");
+            throw new HttpError(403, "Invalid access request!");
         }
         req.user = decodedPayload.user;
         next();
     }
     catch (error) {
-        return (0, utils_1.ErrorResponse)(res, error.code || 500, error.message || "Something went wrong!");
+        return ErrorResponse(res, error.code || 500, error.message || "Something went wrong!");
     }
 };
-exports.authAccess = authAccess;
 const authRefresh = async (req, res, next) => {
     try {
         const refreshToken = req.cookies.refresh;
         const authorizeId = req.cookies.current;
         if (!refreshToken || !authorizeId) {
-            throw new utils_1.HttpError(401, "Unauthorized refresh request!");
+            throw new HttpError(401, "Unauthorized refresh request!");
         }
         let decodedPayload;
         try {
-            decodedPayload = jsonwebtoken_1.default.verify(refreshToken, env_1.default.REFRESH_SECRET, {
+            decodedPayload = jwt.verify(refreshToken, env.REFRESH_SECRET, {
                 algorithms: ["HS512"],
                 ignoreExpiration: true,
                 ignoreNotBefore: true,
             });
         }
         catch (error) {
-            throw new utils_1.HttpError(403, "Invalid refresh request!");
+            throw new HttpError(403, "Invalid refresh request!");
         }
         const userId = decodedPayload.uid;
         const currentTime = Math.floor(Date.now() / 1000);
-        const beforeExpires = decodedPayload.exp - env_1.default.REFRESH_EXPIRY / 2;
-        const requestUser = await user_1.default.findOne({
+        const beforeExpires = decodedPayload.exp - env.REFRESH_EXPIRY / 2;
+        const requestUser = await User.findOne({
             _id: userId,
             authentication: {
                 $elemMatch: {
@@ -64,13 +57,13 @@ const authRefresh = async (req, res, next) => {
             },
         });
         if (!requestUser) {
-            throw new utils_1.HttpError(403, "Invalid user request!");
+            throw new HttpError(403, "Invalid user request!");
         }
-        const userInfo = (0, helpers_1.createUserInfo)(requestUser);
+        const userInfo = createUserInfo(requestUser);
         if (currentTime >= beforeExpires && currentTime < decodedPayload.exp) {
-            const newRefreshToken = (0, helpers_1.generateRefresh)(res, userId);
-            const refreshExpiry = env_1.default.REFRESH_EXPIRY;
-            const updatedAuth = await user_1.default.updateOne({
+            const newRefreshToken = generateRefresh(res, userId);
+            const refreshExpiry = env.REFRESH_EXPIRY;
+            const updatedAuth = await User.updateOne({
                 _id: userId,
                 authentication: {
                     $elemMatch: { _id: authorizeId, token: refreshToken },
@@ -82,15 +75,15 @@ const authRefresh = async (req, res, next) => {
                 },
             });
             if (updatedAuth.modifiedCount > 0) {
-                (0, helpers_1.authorizeCookie)(res, authorizeId);
-                (0, helpers_1.generateAccess)(res, userInfo);
+                authorizeCookie(res, authorizeId);
+                generateAccess(res, userInfo);
             }
             else {
-                throw new utils_1.HttpError(403, "Invalid refresh request!");
+                throw new HttpError(403, "Invalid refresh request!");
             }
         }
         else if (currentTime >= decodedPayload.exp) {
-            await user_1.default.updateOne({ _id: userId }, {
+            await User.updateOne({ _id: userId }, {
                 $pull: {
                     authentication: { _id: authorizeId, token: refreshToken },
                 },
@@ -98,20 +91,19 @@ const authRefresh = async (req, res, next) => {
             res.clearCookie("access");
             res.clearCookie("refresh");
             res.clearCookie("current");
-            throw new utils_1.HttpError(401, "Please, login again to continue!");
+            throw new HttpError(401, "Please, login again to continue!");
         }
         else {
-            (0, helpers_1.generateAccess)(res, userInfo);
+            generateAccess(res, userInfo);
         }
         req.user = userInfo;
         next();
     }
     catch (error) {
-        return (0, utils_1.ErrorResponse)(res, error.code || 500, error.message || "Something went wrong!");
+        return ErrorResponse(res, error.code || 500, error.message || "Something went wrong!");
     }
 };
-exports.authRefresh = authRefresh;
-const storage = multer_1.default.diskStorage({
+const storage = multer.diskStorage({
     destination: function (_req, _file, cb) {
         cb(null, "./public/temp");
     },
@@ -119,18 +111,16 @@ const storage = multer_1.default.diskStorage({
         cb(null, file.originalname);
     },
 });
-const upload = (0, multer_1.default)({ storage });
-exports.upload = upload;
+const upload = multer({ storage });
 const validate = (schema) => (req, res, next) => {
     try {
         req.body = schema.parse(req.body);
         next();
     }
     catch (error) {
-        return (0, utils_1.ErrorResponse)(res, 400, "Validation error occurred!", error);
+        return ErrorResponse(res, 400, "Validation error occurred!", error);
     }
 };
-exports.validate = validate;
 const delay = (milliseconds) => {
     return async (_req, _res, next) => {
         await new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -138,4 +128,4 @@ const delay = (milliseconds) => {
         await next();
     };
 };
-exports.delay = delay;
+export { authAccess, authRefresh, upload, validate, delay };

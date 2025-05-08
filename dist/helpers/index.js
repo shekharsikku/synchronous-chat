@@ -1,14 +1,8 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.createUserInfo = exports.hasEmptyField = exports.authorizeCookie = exports.generateRefresh = exports.generateAccess = void 0;
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const env_1 = __importDefault(require("../utils/env"));
+import jwt from "jsonwebtoken";
+import env from "../utils/env.js";
 const generateAccess = (res, user) => {
-    const accessExpiry = env_1.default.ACCESS_EXPIRY;
-    const accessToken = jsonwebtoken_1.default.sign({ user }, env_1.default.ACCESS_SECRET, {
+    const accessExpiry = env.ACCESS_EXPIRY;
+    const accessToken = jwt.sign({ user }, env.ACCESS_SECRET, {
         algorithm: "HS256",
         expiresIn: accessExpiry,
     });
@@ -16,14 +10,13 @@ const generateAccess = (res, user) => {
         maxAge: accessExpiry * 1000,
         httpOnly: true,
         sameSite: "strict",
-        secure: env_1.default.isProd,
+        secure: env.isProd,
     });
     return accessToken;
 };
-exports.generateAccess = generateAccess;
 const generateRefresh = (res, uid) => {
-    const refreshExpiry = env_1.default.REFRESH_EXPIRY;
-    const refreshToken = jsonwebtoken_1.default.sign({ uid }, env_1.default.REFRESH_SECRET, {
+    const refreshExpiry = env.REFRESH_EXPIRY;
+    const refreshToken = jwt.sign({ uid }, env.REFRESH_SECRET, {
         algorithm: "HS512",
         expiresIn: refreshExpiry,
     });
@@ -31,25 +24,22 @@ const generateRefresh = (res, uid) => {
         maxAge: refreshExpiry * 1000 * 2,
         httpOnly: true,
         sameSite: "strict",
-        secure: env_1.default.isProd,
+        secure: env.isProd,
     });
     return refreshToken;
 };
-exports.generateRefresh = generateRefresh;
 const authorizeCookie = (res, authId) => {
-    const authExpiry = env_1.default.REFRESH_EXPIRY;
+    const authExpiry = env.REFRESH_EXPIRY;
     res.cookie("current", authId, {
         maxAge: authExpiry * 1000 * 2,
         httpOnly: true,
         sameSite: "strict",
-        secure: env_1.default.isProd,
+        secure: env.isProd,
     });
 };
-exports.authorizeCookie = authorizeCookie;
 const hasEmptyField = (fields) => {
     return Object.values(fields).some((value) => value === "" || value === undefined || value === null);
 };
-exports.hasEmptyField = hasEmptyField;
 const createUserInfo = (user) => {
     let userInfo;
     if (user.setup) {
@@ -68,4 +58,4 @@ const createUserInfo = (user) => {
     }
     return userInfo;
 };
-exports.createUserInfo = createUserInfo;
+export { generateAccess, generateRefresh, authorizeCookie, hasEmptyField, createUserInfo, };

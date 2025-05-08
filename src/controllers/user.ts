@@ -1,15 +1,15 @@
 import { Request, Response } from "express";
 import { genSalt, hash, compare } from "bcryptjs";
-import { Profile, Password } from "../utils/schema";
-import { HttpError, ErrorResponse, SuccessResponse } from "../utils";
-import { deleteImageByUrl, uploadOnCloudinary } from "../utils/cloudinary";
+import { Profile, Password } from "../utils/schema.js";
+import { HttpError, ErrorResponse, SuccessResponse } from "../utils/index.js";
+import { deleteImageByUrl, uploadOnCloudinary } from "../utils/cloudinary.js";
 import {
   unlinkFilesWithExtensions,
   extensionsToDelete,
   folderPath,
-} from "../utils/unlink";
-import { hasEmptyField, createUserInfo, generateAccess } from "../helpers";
-import User from "../models/user";
+} from "../utils/unlink.js";
+import { hasEmptyField, createUserInfo, generateAccess } from "../helpers/index.js";
+import User from "../models/user.js";
 
 const profileSetup = async (req: Request, res: Response) => {
   try {

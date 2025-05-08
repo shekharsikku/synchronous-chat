@@ -1,7 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const mongoose_1 = require("mongoose");
-const UserSchema = new mongoose_1.Schema({
+import { Types, Schema, model } from "mongoose";
+const UserSchema = new Schema({
     name: {
         type: String,
         default: null,
@@ -54,9 +52,9 @@ const UserSchema = new mongoose_1.Schema({
 });
 UserSchema.pre("save", function (next) {
     if (!this.username || this.username.trim() === "") {
-        this.username = new mongoose_1.Types.ObjectId().toString();
+        this.username = new Types.ObjectId().toString();
     }
     next();
 });
-const User = (0, mongoose_1.model)("User", UserSchema);
-exports.default = User;
+const User = model("User", UserSchema);
+export default User;

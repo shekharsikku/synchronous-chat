@@ -1,7 +1,7 @@
-import { server } from "./socket";
-import mongodb from "./mongodb";
-import job from "./utils/cron";
-import env from "./utils/env";
+import { server } from "./socket.js";
+import mongodb from "./mongodb/index.js";
+import job from "./utils/cron.js";
+import env from "./utils/env.js";
 
 const uri = env.MONGODB_URI;
 const port = env.PORT;

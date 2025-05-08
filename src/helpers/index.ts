@@ -1,8 +1,8 @@
-import { UserInterface } from "../interface";
+import { UserInterface } from "../interface/index.js";
 import { Response } from "express";
 import { Types } from "mongoose";
 import jwt from "jsonwebtoken";
-import env from "../utils/env";
+import env from "../utils/env.js";
 
 const generateAccess = (res: Response, user?: UserInterface) => {
   const accessExpiry = env.ACCESS_EXPIRY;

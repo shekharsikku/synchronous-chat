@@ -5,17 +5,22 @@ import express, {
   ErrorRequestHandler,
 } from "express";
 import { rateLimit } from "express-rate-limit";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import helmet from "helmet";
 import morgan from "morgan";
 import cors from "cors";
 import path from "path";
-import env from "./utils/env";
-import routers from "./routers";
-import { HttpError, ErrorResponse, SuccessResponse } from "./utils";
+import env from "./utils/env.js";
+import routers from "./routers/index.js";
+import { HttpError, ErrorResponse, SuccessResponse } from "./utils/index.js";
 
 const app = express();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 app.use(
   express.json({
@@ -103,7 +108,7 @@ app.all("*path", (_req: Request, res: Response) => {
   }
 });
 
-app.use(((err: any, _req: Request, res: Response, next: NextFunction) => {
+app.use(((err: Error, _req: Request, res: Response, next: NextFunction) => {
   if (res.headersSent) return next(err);
 
   if (err instanceof HttpError) {
@@ -114,15 +119,11 @@ app.use(((err: any, _req: Request, res: Response, next: NextFunction) => {
     );
   }
 
-  const fallback =
-    env.NODE_ENV === "production"
-      ? "Something went wrong!"
-      : "Unknown error occurred!";
+  const fallback = env.isProd
+    ? "Something went wrong!"
+    : "Unknown error occurred!";
 
-  const message =
-    typeof err?.message === "string" && err.message.trim() !== ""
-      ? err.message
-      : fallback;
+  const message = err.message || fallback;
 
   console.error(`Error: ${message}`);
 

@@ -1,9 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const mongoose_1 = require("mongoose");
+import { connect } from "mongoose";
 const mongodb = async (uri) => {
     try {
-        const { connection } = await (0, mongoose_1.connect)(uri);
+        const { connection } = await connect(uri);
         return connection.readyState;
     }
     catch (error) {
@@ -11,4 +9,4 @@ const mongodb = async (uri) => {
         return null;
     }
 };
-exports.default = mongodb;
+export default mongodb;

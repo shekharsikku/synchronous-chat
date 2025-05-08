@@ -1,33 +1,32 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const express_rate_limit_1 = require("express-rate-limit");
-const cookie_parser_1 = __importDefault(require("cookie-parser"));
-const compression_1 = __importDefault(require("compression"));
-const helmet_1 = __importDefault(require("helmet"));
-const morgan_1 = __importDefault(require("morgan"));
-const cors_1 = __importDefault(require("cors"));
-const path_1 = __importDefault(require("path"));
-const env_1 = __importDefault(require("./utils/env"));
-const routers_1 = __importDefault(require("./routers"));
-const utils_1 = require("./utils");
-const app = (0, express_1.default)();
-app.use(express_1.default.json({
-    limit: env_1.default.PAYLOAD_LIMIT,
+import express from "express";
+import { rateLimit } from "express-rate-limit";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+import cookieParser from "cookie-parser";
+import compression from "compression";
+import helmet from "helmet";
+import morgan from "morgan";
+import cors from "cors";
+import path from "path";
+import env from "./utils/env.js";
+import routers from "./routers/index.js";
+import { HttpError, ErrorResponse, SuccessResponse } from "./utils/index.js";
+const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+app.use(express.json({
+    limit: env.PAYLOAD_LIMIT,
     strict: true,
 }));
-app.use(express_1.default.urlencoded({
-    limit: env_1.default.PAYLOAD_LIMIT,
+app.use(express.urlencoded({
+    limit: env.PAYLOAD_LIMIT,
     extended: true,
 }));
-app.use((0, cors_1.default)({
-    origin: env_1.default.CORS_ORIGIN,
+app.use(cors({
+    origin: env.CORS_ORIGIN,
     credentials: true,
 }));
-app.use((0, helmet_1.default)({
+app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
@@ -49,34 +48,34 @@ app.use((0, helmet_1.default)({
         },
     },
 }));
-app.use((0, compression_1.default)());
-app.use((0, cookie_parser_1.default)(env_1.default.COOKIES_SECRET));
-app.use("/public/temp", express_1.default.static(path_1.default.join(__dirname, "../public/temp")));
-if (env_1.default.isDev) {
-    app.use((0, morgan_1.default)("dev"));
+app.use(compression());
+app.use(cookieParser(env.COOKIES_SECRET));
+app.use("/public/temp", express.static(path.join(__dirname, "../public/temp")));
+if (env.isDev) {
+    app.use(morgan("dev"));
 }
 else {
     app.set("trust proxy", 1);
-    app.use((0, morgan_1.default)("tiny"));
-    app.use(express_1.default.static(path_1.default.join(__dirname, "../client/dist"), {
+    app.use(morgan("tiny"));
+    app.use(express.static(path.join(__dirname, "../client/dist"), {
         maxAge: "30d",
         immutable: true,
     }));
 }
-const limiter = (0, express_rate_limit_1.rateLimit)({
+const limiter = rateLimit({
     windowMs: 5 * 60 * 1000,
     limit: 200,
     message: { message: "Maximum number of requests exceeded!" },
     standardHeaders: true,
     legacyHeaders: false,
 });
-app.use("/api", limiter, routers_1.default);
+app.use("/api", limiter, routers);
 app.all("*path", (_req, res) => {
-    if (env_1.default.isDev) {
-        return (0, utils_1.SuccessResponse)(res, 200, "Welcome to Synchronous Chat!");
+    if (env.isDev) {
+        return SuccessResponse(res, 200, "Welcome to Synchronous Chat!");
     }
     else {
-        res.sendFile(path_1.default.join(__dirname, "../client/dist", "index.html"), {
+        res.sendFile(path.join(__dirname, "../client/dist", "index.html"), {
             headers: {
                 "Cache-Control": "no-store, must-revalidate",
             },
@@ -86,16 +85,14 @@ app.all("*path", (_req, res) => {
 app.use(((err, _req, res, next) => {
     if (res.headersSent)
         return next(err);
-    if (err instanceof utils_1.HttpError) {
-        return (0, utils_1.ErrorResponse)(res, err.code || 500, err.message || "Internal server error!");
+    if (err instanceof HttpError) {
+        return ErrorResponse(res, err.code || 500, err.message || "Internal server error!");
     }
-    const fallback = env_1.default.NODE_ENV === "production"
+    const fallback = env.isProd
         ? "Something went wrong!"
         : "Unknown error occurred!";
-    const message = typeof err?.message === "string" && err.message.trim() !== ""
-        ? err.message
-        : fallback;
+    const message = err.message || fallback;
     console.error(`Error: ${message}`);
-    return (0, utils_1.ErrorResponse)(res, 500, message);
+    return ErrorResponse(res, 500, message);
 }));
-exports.default = app;
+export default app;

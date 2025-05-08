@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { authAccess } from "../middlewares";
+import { authAccess } from "../middlewares/index.js";
 import {
   searchContact,
   fetchContacts,
   fetchContact,
   availableContact,
-} from "../controllers/contact";
+} from "../controllers/contact.js";
 
 const router = Router();
 

@@ -1,6 +1,7 @@
 {
   "name": "synchronous-chat",
-  "version": "1.8.7",
+  "type": "module",
+  "version": "1.8.8",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -21,7 +22,7 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/morgan": "^1.9.9",
     "@types/multer": "^1.4.12",
-    "@types/node": "^22.15.11",
+    "@types/node": "^22.15.16",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.4",

@@ -1,28 +1,19 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSocketId = exports.server = exports.io = void 0;
-const socket_io_1 = require("socket.io");
-const http_1 = require("http");
-const env_1 = __importDefault(require("./utils/env"));
-const app_1 = __importDefault(require("./app"));
-const server = (0, http_1.createServer)(app_1.default);
-exports.server = server;
-const io = new socket_io_1.Server(server, {
+import { Server } from "socket.io";
+import { createServer } from "http";
+import env from "./utils/env.js";
+import app from "./app.js";
+const server = createServer(app);
+const io = new Server(server, {
     cors: {
-        origin: env_1.default.CORS_ORIGIN,
+        origin: env.CORS_ORIGIN,
         credentials: true,
     },
 });
-exports.io = io;
 const userSocketMap = new Map();
 const getSocketId = (userId) => {
     const userSockets = userSocketMap.get(userId) || new Set();
     return Array.from(userSockets);
 };
-exports.getSocketId = getSocketId;
 io.on("connection", (socket) => {
     const userId = socket.handshake.query.userId;
     if (userId) {
@@ -102,3 +93,4 @@ io.on("connection", (socket) => {
         }, {}));
     });
 });
+export { io, server, getSocketId };
