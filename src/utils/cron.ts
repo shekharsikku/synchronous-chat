@@ -1,8 +1,6 @@
 import { CronJob } from "cron";
-import Conversation from "../models/conversation.js";
-import Message from "../models/message.js";
-import User from "../models/user.js";
-import env from "./env.js";
+import { User, Message, Conversation } from "../models/index.js";
+import env from "../utils/env.js";
 
 const job = new CronJob(
   "0 0 0 * * *",

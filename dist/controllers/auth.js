@@ -1,7 +1,7 @@
 import { genSalt, hash, compare } from "bcryptjs";
 import { HttpError, ErrorResponse, SuccessResponse } from "../utils/index.js";
-import { generateAccess, generateRefresh, authorizeCookie, createUserInfo, } from "../helpers/index.js";
-import User from "../models/user.js";
+import { generateAccess, generateRefresh, authorizeCookie, createUserInfo, } from "../utils/helpers.js";
+import { User } from "../models/index.js";
 import env from "../utils/env.js";
 const signUpUser = async (req, res) => {
     try {

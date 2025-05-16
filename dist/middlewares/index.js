@@ -1,7 +1,7 @@
 import { HttpError, ErrorResponse } from "../utils/index.js";
-import { generateAccess, generateRefresh, authorizeCookie, createUserInfo, } from "../helpers/index.js";
+import { generateAccess, generateRefresh, authorizeCookie, createUserInfo, } from "../utils/helpers.js";
+import { User } from "../models/index.js";
 import jwt from "jsonwebtoken";
-import User from "../models/user.js";
 import env from "../utils/env.js";
 import multer from "multer";
 const authAccess = async (req, res, next) => {
@@ -125,7 +125,7 @@ const delay = (milliseconds) => {
     return async (_req, _res, next) => {
         await new Promise((resolve) => setTimeout(resolve, milliseconds));
         console.log(`Delay api by ${milliseconds}ms.`);
-        await next();
+        next();
     };
 };
 export { authAccess, authRefresh, upload, validate, delay };

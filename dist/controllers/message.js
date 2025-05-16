@@ -1,8 +1,7 @@
 import { HttpError, SuccessResponse, ErrorResponse } from "../utils/index.js";
 import { getSocketId, io } from "../socket.js";
 import { translate } from "bing-translate-api";
-import Conversation from "../models/conversation.js";
-import Message from "../models/message.js";
+import { Message, Conversation } from "../models/index.js";
 const sendMessage = async (req, res) => {
     try {
         const sender = req.user?._id;

@@ -7,8 +7,8 @@ import {
   generateRefresh,
   authorizeCookie,
   createUserInfo,
-} from "../helpers/index.js";
-import User from "../models/user.js";
+} from "../utils/helpers.js";
+import { User } from "../models/index.js";
 import env from "../utils/env.js";
 
 const signUpUser = async (req: Request, res: Response) => {

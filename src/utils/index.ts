@@ -27,7 +27,7 @@ const ErrorResponse = (
   message: string,
   error: any = null
 ) => {
-  const response: TypeResponse<null, any> = { success: false, message };
+  const response: TypeResponse<null> = { success: false, message };
 
   if (error) response.error = error;
   res.status(code).json(response);

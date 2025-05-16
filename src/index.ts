@@ -1,5 +1,5 @@
+import { connect } from "mongoose";
 import { server } from "./socket.js";
-import mongodb from "./mongodb/index.js";
 import job from "./utils/cron.js";
 import env from "./utils/env.js";
 
@@ -9,10 +9,10 @@ const port = env.PORT;
 (async () => {
   try {
     /** Connection state returned by mongoose. */
-    const state = await mongodb(uri);
+    const { connection } = await connect(uri);
 
     /** Checking connection state of mongodb. */
-    if (state === 1) {
+    if (connection.readyState === 1) {
       /** Database connection success log. */
       console.log("\nDatabase connection success!");
 

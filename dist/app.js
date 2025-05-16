@@ -1,13 +1,12 @@
 import express from "express";
-import { rateLimit } from "express-rate-limit";
 import { fileURLToPath } from "url";
-import { dirname } from "path";
+import { dirname, join } from "path";
+import { rateLimit } from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import helmet from "helmet";
 import morgan from "morgan";
 import cors from "cors";
-import path from "path";
 import env from "./utils/env.js";
 import routers from "./routers/index.js";
 import { HttpError, ErrorResponse, SuccessResponse } from "./utils/index.js";
@@ -50,14 +49,14 @@ app.use(helmet({
 }));
 app.use(compression());
 app.use(cookieParser(env.COOKIES_SECRET));
-app.use("/public/temp", express.static(path.join(__dirname, "../public/temp")));
+app.use("/public/temp", express.static(join(__dirname, "../public/temp")));
 if (env.isDev) {
     app.use(morgan("dev"));
 }
 else {
     app.set("trust proxy", 1);
     app.use(morgan("tiny"));
-    app.use(express.static(path.join(__dirname, "../client/dist"), {
+    app.use(express.static(join(__dirname, "../client/dist"), {
         maxAge: "30d",
         immutable: true,
     }));
@@ -75,7 +74,7 @@ app.all("*path", (_req, res) => {
         return SuccessResponse(res, 200, "Welcome to Synchronous Chat!");
     }
     else {
-        res.sendFile(path.join(__dirname, "../client/dist", "index.html"), {
+        res.sendFile(join(__dirname, "../client/dist", "index.html"), {
             headers: {
                 "Cache-Control": "no-store, must-revalidate",
             },

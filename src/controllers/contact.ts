@@ -1,8 +1,7 @@
 import { HttpError, SuccessResponse, ErrorResponse } from "../utils/index.js";
 import { Request, Response } from "express";
 import { Types } from "mongoose";
-import User from "../models/user.js";
-import Conversation from "../models/conversation.js";
+import { User, Conversation } from "../models/index.js";
 
 const searchContact = async (req: Request, res: Response) => {
   try {

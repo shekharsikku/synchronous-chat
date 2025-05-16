@@ -8,9 +8,9 @@ import {
   generateRefresh,
   authorizeCookie,
   createUserInfo,
-} from "../helpers/index.js";
+} from "../utils/helpers.js";
+import { User } from "../models/index.js";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import User from "../models/user.js";
 import env from "../utils/env.js";
 import multer from "multer";
 
@@ -175,7 +175,7 @@ const delay = (milliseconds: number) => {
   return async (_req: Request, _res: Response, next: NextFunction) => {
     await new Promise((resolve) => setTimeout(resolve, milliseconds));
     console.log(`Delay api by ${milliseconds}ms.`);
-    await next();
+    next();
   };
 };
 

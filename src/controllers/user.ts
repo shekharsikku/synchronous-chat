@@ -8,8 +8,12 @@ import {
   extensionsToDelete,
   folderPath,
 } from "../utils/unlink.js";
-import { hasEmptyField, createUserInfo, generateAccess } from "../helpers/index.js";
-import User from "../models/user.js";
+import {
+  hasEmptyField,
+  createUserInfo,
+  generateAccess,
+} from "../utils/helpers.js";
+import { User } from "../models/index.js";
 
 const profileSetup = async (req: Request, res: Response) => {
   try {

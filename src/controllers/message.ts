@@ -3,8 +3,7 @@ import { HttpError, SuccessResponse, ErrorResponse } from "../utils/index.js";
 import { Message as MessageType, Translate } from "../utils/schema.js";
 import { getSocketId, io } from "../socket.js";
 import { translate } from "bing-translate-api";
-import Conversation from "../models/conversation.js";
-import Message from "../models/message.js";
+import { Message, Conversation } from "../models/index.js";
 
 const sendMessage = async (req: Request<{ id: string }>, res: Response) => {
   try {
@@ -232,7 +231,7 @@ const deleteMessages = async (req: Request, res: Response) => {
 
 const translateMessage = async (req: Request, res: Response) => {
   try {
-    const { message, language} = (await req.body) as Translate;
+    const { message, language } = (await req.body) as Translate;
 
     if (!message || !language) {
       throw new HttpError(400, "Text message and language is required!");
