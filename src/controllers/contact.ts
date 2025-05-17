@@ -1,5 +1,5 @@
+import type { Request, Response } from "express";
 import { HttpError, SuccessResponse, ErrorResponse } from "../utils/index.js";
-import { Request, Response } from "express";
 import { Types } from "mongoose";
 import { User, Conversation } from "../models/index.js";
 

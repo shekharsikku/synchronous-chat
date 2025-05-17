@@ -1,4 +1,4 @@
-import { Response } from "express";
+import type { Response } from "express";
 
 class HttpError extends Error {
   public code: number;

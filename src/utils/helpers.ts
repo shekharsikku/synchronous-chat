@@ -1,6 +1,6 @@
-import { UserInterface } from "../interface/index.js";
-import { Response } from "express";
-import { Types } from "mongoose";
+import type { UserInterface } from "../interface/index.js";
+import type { Response } from "express";
+import type { Types } from "mongoose";
 import jwt from "jsonwebtoken";
 import env from "../utils/env.js";
 

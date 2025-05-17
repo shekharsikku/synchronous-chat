@@ -1,9 +1,10 @@
-import express, {
+import type {
   NextFunction,
   Request,
   Response,
   ErrorRequestHandler,
 } from "express";
+import express from "express";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { rateLimit } from "express-rate-limit";

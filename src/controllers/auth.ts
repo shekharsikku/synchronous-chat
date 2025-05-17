@@ -1,7 +1,7 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
+import type { SignUp, SignIn } from "../utils/schema.js";
 import { genSalt, hash, compare } from "bcryptjs";
 import { HttpError, ErrorResponse, SuccessResponse } from "../utils/index.js";
-import { SignUp, SignIn } from "../utils/schema.js";
 import {
   generateAccess,
   generateRefresh,

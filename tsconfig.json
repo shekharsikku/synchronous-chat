@@ -4,14 +4,15 @@
     "target": "ESNext",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "lib": [
-      "ESNext",
-    ],
+    "moduleDetection": "force",
+    "lib": ["ESNext"],
     "baseUrl": ".",
     "rootDir": "src",
     "outDir": "dist",
+    "allowJs": true,
     "resolveJsonModule": true,
     "incremental": true,
+    "verbatimModuleSyntax": true,
     /* Module & Interop Options */
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -28,13 +29,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "forceConsistentCasingInFileNames": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "include": [
-    "src",
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-  ]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
 }

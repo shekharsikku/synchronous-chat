@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router, type Request, type Response } from "express";
 import { SuccessResponse } from "../utils/index.js";
 import AuthRouter from "./auth.js";
 import UserRouter from "./user.js";

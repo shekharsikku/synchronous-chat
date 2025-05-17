@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
+import type { Profile, Password } from "../utils/schema.js";
 import { genSalt, hash, compare } from "bcryptjs";
-import { Profile, Password } from "../utils/schema.js";
 import { HttpError, ErrorResponse, SuccessResponse } from "../utils/index.js";
 import { deleteImageByUrl, uploadOnCloudinary } from "../utils/cloudinary.js";
 import {

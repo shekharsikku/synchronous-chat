@@ -1,5 +1,5 @@
+import type { MessageInterface } from "../interface/index.js";
 import { Schema, model } from "mongoose";
-import { MessageInterface } from "../interface/index.js";
 
 const MessageSchema = new Schema<MessageInterface>(
   {

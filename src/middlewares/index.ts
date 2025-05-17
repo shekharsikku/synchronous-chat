@@ -1,8 +1,9 @@
-import { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
+import type { UserInterface } from "../interface/index.js";
+import type { ZodSchema } from "zod";
+import type { Types } from "mongoose";
+import type { JwtPayload } from "jsonwebtoken";
 import { HttpError, ErrorResponse } from "../utils/index.js";
-import { UserInterface } from "../interface/index.js";
-import { ZodSchema } from "zod";
-import { Types } from "mongoose";
 import {
   generateAccess,
   generateRefresh,
@@ -10,7 +11,7 @@ import {
   createUserInfo,
 } from "../utils/helpers.js";
 import { User } from "../models/index.js";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import env from "../utils/env.js";
 import multer from "multer";
 

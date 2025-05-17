@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
+import type { Message as MessageType, Translate } from "../utils/schema.js";
 import { HttpError, SuccessResponse, ErrorResponse } from "../utils/index.js";
-import { Message as MessageType, Translate } from "../utils/schema.js";
 import { getSocketId, io } from "../socket.js";
 import { translate } from "bing-translate-api";
 import { Message, Conversation } from "../models/index.js";
