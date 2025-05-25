@@ -45,14 +45,14 @@ const updateImage = async (req, res) => {
             uploadOnCloudinary(imagePath),
             User.findById(requestUser?._id),
         ]);
-        if (!uploadImage || !uploadImage.url) {
+        if (!uploadImage || !uploadImage.secure_url) {
             throw new HttpError(500, "Error while uploading profile image!");
         }
         if (userProfile && userProfile.image !== "") {
             await deleteImageByUrl(userProfile.image);
         }
-        if (userProfile && uploadImage.url) {
-            userProfile.image = uploadImage.url;
+        if (userProfile && uploadImage.secure_url) {
+            userProfile.image = uploadImage.secure_url;
             await userProfile.save({ validateBeforeSave: true });
             const userInfo = createUserInfo(userProfile);
             generateAccess(res, userInfo);

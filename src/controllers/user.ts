@@ -82,7 +82,7 @@ const updateImage = async (req: Request, res: Response) => {
       User.findById(requestUser?._id),
     ]);
 
-    if (!uploadImage || !uploadImage.url) {
+    if (!uploadImage || !uploadImage.secure_url) {
       throw new HttpError(500, "Error while uploading profile image!");
     }
 
@@ -90,8 +90,8 @@ const updateImage = async (req: Request, res: Response) => {
       await deleteImageByUrl(userProfile.image!);
     }
 
-    if (userProfile && uploadImage.url) {
-      userProfile.image = uploadImage.url;
+    if (userProfile && uploadImage.secure_url) {
+      userProfile.image = uploadImage.secure_url;
       await userProfile.save({ validateBeforeSave: true });
 
       const userInfo = createUserInfo(userProfile);

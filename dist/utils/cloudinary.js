@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
+import { randomUUID } from "crypto";
 import env from "../utils/env.js";
 import fs from "fs";
 cloudinary.config({
@@ -11,9 +12,10 @@ const uploadOnCloudinary = async (localFilePath) => {
         if (!localFilePath)
             return null;
         const response = await cloudinary.uploader.upload(localFilePath, {
+            public_id: randomUUID(),
             resource_type: "auto",
         });
-        console.log(`File uploaded successfully: ${response.url}`);
+        console.log(`File uploaded successfully: ${response.public_id}`);
         fs.unlinkSync(localFilePath);
         return response;
     }
