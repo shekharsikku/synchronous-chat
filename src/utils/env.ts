@@ -1,9 +1,14 @@
-import dotenv from "dotenv";
 import { cleanEnv, str, url, num, port } from "envalid";
+import { config } from "dotenv";
 
-dotenv.config();
+const result = config();
 
-const env = cleanEnv(process.env, {
+if (result.error) {
+  console.log(`Error: ${result.error.message}`);
+  process.exit(1);
+}
+
+const env = cleanEnv(result.parsed, {
   CLOUDINARY_CLOUD_NAME: str(),
   CLOUDINARY_API_KEY: str(),
   CLOUDINARY_API_SECRET: str(),
