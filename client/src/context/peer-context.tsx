@@ -1,4 +1,9 @@
-import { useSocket, PeerContext, PeerInformation, ResponseActions } from "@/lib/context";
+import {
+  useSocket,
+  PeerContext,
+  PeerInformation,
+  ResponseActions,
+} from "@/lib/context";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef, useId, ReactNode } from "react";
 import { useAuthStore } from "@/zustand";
@@ -23,7 +28,9 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   const callTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [callingResponse, setCallingResponse] = useState<ResponseActions>(null);
-  const [mediaStream, setMediaStream] = useState<MediaStream | undefined>(undefined);
+  const [mediaStream, setMediaStream] = useState<MediaStream | undefined>(
+    undefined
+  );
 
   const [callingDialog, setCallingDialog] = useState(false);
   const [callingActive, setCallingActive] = useState(false);
@@ -42,25 +49,31 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       });
 
       peer.on("call", (call) => {
-        navigator.mediaDevices.getUserMedia({ audio: true }).then((localStream) => {
-          /** Answer the call with your audio stream */
-          call.answer(localStream);
-          localAudioRef.current!.srcObject = localStream;
+        navigator.mediaDevices
+          .getUserMedia({ audio: true })
+          .then((localStream) => {
+            /** Answer the call with your audio stream */
+            call.answer(localStream);
+            localAudioRef.current!.srcObject = localStream;
 
-          call.on("stream", (remoteStream) => {
-            setMediaStream(remoteStream);
-            remoteAudioRef.current!.srcObject = remoteStream;
+            call.on("stream", (remoteStream) => {
+              setMediaStream(remoteStream);
+              remoteAudioRef.current!.srcObject = remoteStream;
+            });
           });
-        });
       });
 
       /** Handle incoming signaling events */
       const handleCallingRequest = ({
-        callingDetails: details
+        callingDetails: details,
       }: {
-        callingDetails: any
+        callingDetails: any;
       }) => {
-        setRemoteInfo({ uid: details.from, name: details.name, pid: details.pid });
+        setRemoteInfo({
+          uid: details.from,
+          name: details.name,
+          pid: details.pid,
+        });
 
         toast(`Request form ${details?.name}?`, {
           description: "Accept to connect via WebRTC?",
@@ -76,14 +89,14 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
             actionButton: "h-8 w-16 justify-center hover:opacity-80",
           },
         });
-      }
+      };
 
       /** Handling signaling for call request */
       socket?.on("after:callrequest", handleCallingRequest);
       /** Cleanup for signaling request */
       return () => {
         socket?.off("after:callrequest", handleCallingRequest);
-      }
+      };
     }
   }, [userInfo?._id, socket]);
 
@@ -109,7 +122,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
         action: "busy",
         to: remoteInfo?.uid,
         pid: localInfo?.pid,
-      }
+      };
       socket?.emit("before:callconnect", { callingActions });
 
       if (action === "accept") {
@@ -129,27 +142,29 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       setCallingInfo(remoteInfo);
 
       /** Streaming Local/Remote Audio */
-      navigator.mediaDevices.getUserMedia({ audio: true }).then((localStream) => {
-        localAudioRef.current!.srcObject = localStream;
+      navigator.mediaDevices
+        .getUserMedia({ audio: true })
+        .then((localStream) => {
+          localAudioRef.current!.srcObject = localStream;
 
-        /** Call the remote user */
-        const call = peer?.call(remoteInfo?.pid!, localStream);
+          /** Call the remote user */
+          const call = peer?.call(remoteInfo?.pid!, localStream);
 
-        call?.on("stream", (remoteStream) => {
-          setMediaStream(remoteStream);
-          remoteAudioRef.current!.srcObject = remoteStream;
+          call?.on("stream", (remoteStream) => {
+            setMediaStream(remoteStream);
+            remoteAudioRef.current!.srcObject = remoteStream;
+          });
+
+          /** Notify the remote user when accept */
+          const callingActions = {
+            from: localInfo?.uid,
+            name: localInfo?.name,
+            action: action,
+            to: remoteInfo?.uid,
+            pid: localInfo?.pid,
+          };
+          socket?.emit("before:callconnect", { callingActions });
         });
-
-        /** Notify the remote user when accept */
-        const callingActions = {
-          from: localInfo?.uid,
-          name: localInfo?.name,
-          action: action,
-          to: remoteInfo?.uid,
-          pid: localInfo?.pid,
-        }
-        socket?.emit("before:callconnect", { callingActions });
-      });
     } else {
       setCallingActive(false);
       setCallingDialog(false);
@@ -161,10 +176,10 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
         action: action,
         to: remoteInfo?.uid,
         pid: localInfo?.pid,
-      }
+      };
       socket?.emit("before:callconnect", { callingActions });
     }
-  }
+  };
 
   useEffect(() => {
     if (callingResponse) {
@@ -189,13 +204,21 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   /** Mount unmount for request/response action */
   useEffect(() => {
     const handleCallingActions = ({
-      callingActions: response
+      callingActions: response,
     }: {
-      callingActions: any
+      callingActions: any;
     }) => {
       if (response.action === "accept") {
-        setRemoteInfo({ uid: response.from, name: response.name, pid: response.pid });
-        setCallingInfo({ uid: response.from, name: response.name, pid: response.pid });
+        setRemoteInfo({
+          uid: response.from,
+          name: response.name,
+          pid: response.pid,
+        });
+        setCallingInfo({
+          uid: response.from,
+          name: response.name,
+          pid: response.pid,
+        });
         setCallingActive(true);
         setCallingDialog(true);
         setPendingRequest(false);
@@ -208,19 +231,21 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
         setRemoteInfo(null);
 
         if (response.action === "busy") {
-          toast.info(`${response.name} is currently ${response.action} on another call!`);
+          toast.info(
+            `${response.name} is currently ${response.action} on another call!`
+          );
         } else {
           toast.info(`Call request ${response.action} by ${response.name}!`);
         }
       }
-    }
+    };
 
     /** Handling signaling for call request */
     socket?.on("after:callconnect", handleCallingActions);
     /** Cleanup for signaling request */
     return () => {
       socket?.off("after:callconnect", handleCallingActions);
-    }
+    };
   }, [socket]);
 
   const stopMediaTracks = (audioRef: any) => {
@@ -228,7 +253,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       const mediaStream = audioRef.current.srcObject as MediaStream;
       if (mediaStream?.getTracks) {
         mediaStream.getTracks().forEach((track) => {
-          track.stop()
+          track.stop();
           mediaStream.removeTrack(track);
         });
       }
@@ -248,7 +273,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       name: localInfo?.name,
       to: callingInfo?.uid,
       pid: localInfo?.pid,
-    }
+    };
     socket?.emit("before:calldisconnect", { callingActions });
 
     /** Reset remote info state */
@@ -257,13 +282,13 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
     setCallingResponse(null);
     setPendingRequest(false);
     setCallingInfo(null);
-  }
+  };
 
   useEffect(() => {
     const handleCallDisconnect = ({
-      callingActions: response
+      callingActions: response,
     }: {
-      callingActions: any
+      callingActions: any;
     }) => {
       /** Stop local/remote audio tracks */
       stopMediaTracks(localAudioRef);
@@ -277,42 +302,44 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       setCallingInfo(null);
 
       toast.info(`Call disconnected from ${response.name}!`);
-    }
+    };
     /** Handling signaling for call request */
     socket?.on("after:calldisconnect", handleCallDisconnect);
     /** Cleanup for signaling request */
     return () => {
       socket?.off("after:calldisconnect", handleCallDisconnect);
-    }
+    };
   }, [socket]);
 
   return (
-    <PeerContext.Provider value={{
-      peer,
-      setPeer,
-      localInfo,
-      setLocalInfo,
-      remoteInfo,
-      setRemoteInfo,
-      callingInfo,
-      setCallingInfo,
-      localAudioRef,
-      remoteAudioRef,
-      callingResponse,
-      setCallingResponse,
-      callingDialog,
-      setCallingDialog,
-      callingActive,
-      setCallingActive,
-      pendingRequest,
-      setPendingRequest,
-      disconnectCalling,
-      mediaStream,
-      setMediaStream,
-    }}>
+    <PeerContext.Provider
+      value={{
+        peer,
+        setPeer,
+        localInfo,
+        setLocalInfo,
+        remoteInfo,
+        setRemoteInfo,
+        callingInfo,
+        setCallingInfo,
+        localAudioRef,
+        remoteAudioRef,
+        callingResponse,
+        setCallingResponse,
+        callingDialog,
+        setCallingDialog,
+        callingActive,
+        setCallingActive,
+        pendingRequest,
+        setPendingRequest,
+        disconnectCalling,
+        mediaStream,
+        setMediaStream,
+      }}
+    >
       {children}
     </PeerContext.Provider>
-  )
-}
+  );
+};
 
 export default PeerProvider;

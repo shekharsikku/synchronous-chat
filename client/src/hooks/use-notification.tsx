@@ -16,16 +16,22 @@ export const useNotification = () => {
 
   useEffect(() => {
     const handleMessageNotify = async (message: Message) => {
-      const chatKey = userInfo?._id === message.sender ? message.recipient : message.sender;
+      const chatKey =
+        userInfo?._id === message.sender ? message.recipient : message.sender;
 
       /** Show Browser Notification */
       if (Notification.permission === "granted" && !selectedChatData) {
-        const senderName = contacts?.find((contact) => contact._id === chatKey)?.name;
+        const senderName = contacts?.find(
+          (contact) => contact._id === chatKey
+        )?.name;
 
         if (senderName) {
-          const notification = new Notification(`You have a message from ${senderName}`, {
-            icon: notificationIcon,
-          });
+          const notification = new Notification(
+            `You have a message from ${senderName}`,
+            {
+              icon: notificationIcon,
+            }
+          );
 
           /** Auto-close notification after 5 seconds (optional) */
           setTimeout(() => notification.close(), 5000);
@@ -35,7 +41,12 @@ export const useNotification = () => {
       /** Update message cache in background when any chat is not selected. */
       if (!selectedChatData) {
         /** Check if messages are already cached */
-        let cachedMessages = queryClient.getQueryData<Message[]>(["messages", userInfo?._id, chatKey]) || [];
+        let cachedMessages =
+          queryClient.getQueryData<Message[]>([
+            "messages",
+            userInfo?._id,
+            chatKey,
+          ]) || [];
 
         /** If messages are not cached, fetch from api */
         if (!cachedMessages || cachedMessages.length === 0) {
@@ -47,18 +58,24 @@ export const useNotification = () => {
               gcTime: 4 * 60 * 60 * 1000,
             });
           } catch (error: any) {
-            import.meta.env.DEV && console.error("Failed to fetch messages:", error.message);
+            import.meta.env.DEV &&
+              console.error("Failed to fetch messages:", error.message);
             return;
           }
         }
 
         /** Update cache with the new message (avoid duplicates) */
-        queryClient.setQueryData<Message[]>(["messages", userInfo?._id, chatKey], (previous = []) => {
-          const uniqueMessages = previous.filter((current) => current._id !== message._id);
-          return [...uniqueMessages, message];
-        });
+        queryClient.setQueryData<Message[]>(
+          ["messages", userInfo?._id, chatKey],
+          (previous = []) => {
+            const uniqueMessages = previous.filter(
+              (current) => current._id !== message._id
+            );
+            return [...uniqueMessages, message];
+          }
+        );
       }
-    }
+    };
 
     socket?.on("message:receive", handleMessageNotify);
 

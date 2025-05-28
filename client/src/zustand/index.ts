@@ -1,5 +1,2 @@
-import useAuthStore, { UserInfo } from "./auth";
-import useChatStore, { Message } from "./chat";
-
-export type { UserInfo, Message };
-export { useAuthStore, useChatStore };
+export { default as useAuthStore, type UserInfo } from "./auth";
+export { default as useChatStore, type Message } from "./chat";

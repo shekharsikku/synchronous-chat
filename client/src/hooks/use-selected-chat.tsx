@@ -26,10 +26,13 @@ export const useSelectedChat = () => {
           )
         );
 
-        queryClient.setQueryData(["contacts", userInfo?._id], (oldContacts: UserInfo[] | undefined) => [
-          ...(oldContacts || []),
-          { ...cleaned },
-        ]);
+        queryClient.setQueryData(
+          ["contacts", userInfo?._id],
+          (oldContacts: UserInfo[] | undefined) => [
+            ...(oldContacts || []),
+            { ...cleaned },
+          ]
+        );
       }
     }
   }, [contacts, selectedChatData, queryClient]);

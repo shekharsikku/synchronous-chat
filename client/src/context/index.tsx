@@ -1,4 +1,3 @@
-import SocketProvider from "./socket-context";
-import PeerProvider from "./peer-context";
-
-export { SocketProvider, PeerProvider };
+export { default as SocketProvider } from "./socket-context";
+export { default as PeerProvider } from "./peer-context";
+export { default as ThemeProvider } from "./theme-context";

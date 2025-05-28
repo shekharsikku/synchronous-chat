@@ -82,3 +82,27 @@ export const usePeer = (): PeerInterface => {
   }
   return context;
 };
+
+/** Custom hook for access theme context in app */
+
+export type Theme = "dark" | "light" | "system";
+
+type ThemeState = {
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+};
+
+const initialState: ThemeState = {
+  theme: "system",
+  setTheme: () => null,
+};
+
+export const ThemeContext = createContext<ThemeState | undefined>(initialState);
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error("useTheme must be used within a ThemeProvider");
+  }
+  return context;
+};

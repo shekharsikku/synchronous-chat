@@ -14,12 +14,12 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
     if (userInfo?.setup) {
       const socket = io(serverUrl, {
         withCredentials: true,
-        query: { userId: userInfo._id }
+        query: { userId: userInfo._id },
       });
 
       setSocket(socket);
 
-      socket.on("connect", () => { });
+      socket.on("connect", () => {});
 
       socket.on("users:online", (onlineUsers) => {
         setOnlineUsers(onlineUsers);
@@ -27,7 +27,7 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
 
       return () => {
         socket?.close();
-      }
+      };
     } else {
       socket?.close();
       setSocket(null);
@@ -38,7 +38,7 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
     <SocketContext.Provider value={{ socket, onlineUsers }}>
       {children}
     </SocketContext.Provider>
-  )
-}
+  );
+};
 
 export default SocketProvider;
