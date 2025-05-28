@@ -141,12 +141,6 @@ Tell them where to go, how often they can expect to get an update on a
 reported vulnerability, what to expect if the vulnerability is accepted or
 declined, etc.
 
----
+### **Developer License**
 
-## **License**
-
-This project is licensed under the `MIT` License.
-
----
-
-### **Developed by [shekharsikku](https://linkedin.com/in/shekharsikku)**
+#### MIT License | Developed by [Shekhar Sharma](https://linkedin.com/in/shekharsikku)
