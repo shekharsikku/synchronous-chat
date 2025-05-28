@@ -1,5 +1,9 @@
 import { useChatStore } from "@/zustand";
-import { ContactsContainer, EmptyChatContainer, ChatContainer } from "@/components/chat";
+import {
+  ContactsContainer,
+  EmptyChatContainer,
+  ChatContainer,
+} from "@/components/chat";
 
 const Chat = () => {
   const { selectedChatData } = useChatStore();
@@ -11,7 +15,7 @@ const Chat = () => {
         {selectedChatData ? <ChatContainer /> : <EmptyChatContainer />}
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default Chat;

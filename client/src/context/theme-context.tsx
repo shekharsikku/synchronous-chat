@@ -9,7 +9,7 @@ type ThemeProps = {
 
 const ThemeProvider = ({
   children,
-  storageKey = "synchronous-theme",
+  storageKey = "theme",
   defaultTheme = "system",
   ...props
 }: ThemeProps) => {

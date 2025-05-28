@@ -2,12 +2,10 @@ import {
   HiOutlineBellAlert,
   HiOutlineBellSlash,
   HiOutlineArrowRightOnRectangle,
+  HiOutlineMoon,
+  HiOutlineSun,
 } from "react-icons/hi2";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Tooltip,
   TooltipContent,
@@ -19,13 +17,14 @@ import { useAvatar } from "@/lib/hooks";
 import { useSignOut } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { usePeer } from "@/lib/context";
+import { usePeer, useTheme } from "@/lib/context";
 import { toast } from "sonner";
 
 const ProfileInfo = () => {
   const navigate = useNavigate();
   const { userInfo } = useAuthStore();
   const { handleSignOut } = useSignOut();
+  const { theme, setTheme } = useTheme();
   const { isSoundAllow, setIsSoundAllow } = useChatStore();
   const [avatar, setAvatar] = useState<any>(null);
 
@@ -44,30 +43,47 @@ const ProfileInfo = () => {
       return;
     }
     navigate("/profile");
-  }
+  };
 
   return (
     <div className="absolute bottom-0 w-full h-bar border-t p-2">
-      <div className="bg-gray-100/80 rounded h-full w-full flex items-center justify-between px-4">
+      <div className="bg-gray-100/80 dark:bg-transparent rounded h-full w-full flex items-center justify-between px-4">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger className="focus:outline-none">
-              <div className="flex gap-4 items-center" onClick={handleProfileNavigate} role="button">
+              <div
+                className="flex gap-4 items-center"
+                onClick={handleProfileNavigate}
+                role="button"
+              >
                 <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
-                  <AvatarImage src={avatar} alt="profile" className="object-fit h-full w-full" />
-                  <AvatarFallback className={`uppercase h-full w-full text-xl border text-center font-medium 
-                      transition-all duration-300 bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]`}>
-                    {userInfo?.username?.split("").shift() || userInfo?.email?.split("").shift()}
+                  <AvatarImage
+                    src={avatar}
+                    alt="profile"
+                    className="object-fit h-full w-full"
+                  />
+                  <AvatarFallback
+                    className={`uppercase h-full w-full text-xl border text-center font-medium 
+                      transition-all duration-300 bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]`}
+                  >
+                    {userInfo?.username?.split("").shift() ||
+                      userInfo?.email?.split("").shift()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col text-left">
-                  <h5 className="text-sm font-semibold text-neutral-700">{userInfo?.name}</h5>
-                  <h6 className="text-xs font-medium text-neutral-700">{userInfo?.username}</h6>
+                  <h5 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
+                    {userInfo?.name}
+                  </h5>
+                  <h6 className="text-xs font-medium text-neutral-700 dark:text-neutral-200">
+                    {userInfo?.username}
+                  </h6>
                 </div>
               </div>
             </TooltipTrigger>
             <TooltipContent>
-              <span className="text-neutral-700 font-medium">Profile</span>
+              <span className="text-neutral-700 font-medium dark:text-neutral-200">
+                Profile
+              </span>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -76,16 +92,24 @@ const ProfileInfo = () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger className="focus:outline-none">
-                {isSoundAllow ? (
-                  <HiOutlineBellAlert size={20} onClick={() => setIsSoundAllow(false)}
-                    className="text-neutral-600 border-none outline-none transition-all duration-300" />
+                {theme === "light" ? (
+                  <HiOutlineMoon
+                    size={20}
+                    onClick={() => setTheme("dark")}
+                    className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                  />
                 ) : (
-                  <HiOutlineBellSlash size={20} onClick={() => setIsSoundAllow(true)}
-                    className="text-neutral-600 border-none outline-none transition-all duration-300" />
+                  <HiOutlineSun
+                    size={20}
+                    onClick={() => setTheme("light")}
+                    className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                  />
                 )}
               </TooltipTrigger>
               <TooltipContent>
-                <span className="text-neutral-700 font-medium">Message Alert</span>
+                <span className="text-neutral-700 font-medium dark:text-neutral-200">
+                  Theme
+                </span>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -93,18 +117,48 @@ const ProfileInfo = () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger className="focus:outline-none">
-                <HiOutlineArrowRightOnRectangle size={20} onClick={handleSignOut}
-                  className="text-neutral-600 border-none outline-none transition-all duration-300" />
+                {isSoundAllow ? (
+                  <HiOutlineBellAlert
+                    size={20}
+                    onClick={() => setIsSoundAllow(false)}
+                    className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                  />
+                ) : (
+                  <HiOutlineBellSlash
+                    size={20}
+                    onClick={() => setIsSoundAllow(true)}
+                    className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                  />
+                )}
               </TooltipTrigger>
               <TooltipContent>
-                <span className="text-neutral-700 font-medium">Sign Out</span>
+                <span className="text-neutral-700 font-medium dark:text-neutral-200">
+                  Alert
+                </span>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger className="focus:outline-none">
+                <HiOutlineArrowRightOnRectangle
+                  size={20}
+                  onClick={handleSignOut}
+                  className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                />
+              </TooltipTrigger>
+              <TooltipContent>
+                <span className="text-neutral-700 font-medium dark:text-neutral-200">
+                  Sign Out
+                </span>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export { ProfileInfo };

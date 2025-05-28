@@ -26,17 +26,17 @@ const Logo = () => {
           fill="#f5f5f5"
         ></path>{" "}
       </svg>
-      <h1 className="text-2xl lg:text-3xl font-extrabold text-gray-800">Synchronous</h1>
+      <h1 className="text-2xl lg:text-3xl font-extrabold">Synchronous</h1>
     </div>
   );
 };
 
 const Title = ({ title }: { title: string }) => {
   return (
-    <h5 className="uppercase tracking-widest text-neutral-500 font-light text-opacity-90 text-xs lg:text-sm">
+    <h5 className="uppercase tracking-widest text-neutral-500 dark:text-neutral-50 font-light text-opacity-90 text-xs lg:text-sm">
       {title}
     </h5>
-  )
-}
+  );
+};
 
 export { Logo, Title };

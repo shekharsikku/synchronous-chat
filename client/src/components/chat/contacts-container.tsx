@@ -1,12 +1,5 @@
-import {
-  HiMiniSignal,
-  HiMiniSignalSlash
-} from "react-icons/hi2";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage
-} from "@/components/ui/avatar";
+import { HiMiniSignal, HiMiniSignalSlash } from "react-icons/hi2";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ContactListSkeleton } from "./contact-list-skeleton";
 import { Logo, Title } from "./logo-title";
@@ -35,30 +28,43 @@ const ContactsContainer = () => {
 
   useEffect(() => {
     setLastChatUser(searchParams.get("user"));
-  }, [searchParams])
+  }, [searchParams]);
 
-  useHotkeys("ctrl+b", () => {
-    if (lastChatUser) {
-      const lastChatData = contacts?.find((contact) => {
-        return contact.username === lastChatUser;
-      })
-      if (lastChatData) {
-        setSelectedChatType("contact");
-        setSelectedChatData(lastChatData);
+  useHotkeys(
+    "ctrl+b",
+    () => {
+      if (lastChatUser) {
+        const lastChatData = contacts?.find((contact) => {
+          return contact.username === lastChatUser;
+        });
+        if (lastChatData) {
+          setSelectedChatType("contact");
+          setSelectedChatData(lastChatData);
+        }
       }
+    },
+    {
+      enabled: !!lastChatUser,
+      enableOnFormTags: ["input"],
     }
-  }, {
-    enabled: !!lastChatUser,
-    enableOnFormTags: ["input"],
-  });
+  );
 
   return (
-    <div className={cn(selectedChatData && "hidden md:flex flex-col",
-      "h-full w-full md:w-1/3 xl:w-1/4 border-r relative")}>
+    <div
+      className={cn(
+        selectedChatData && "hidden md:flex flex-col",
+        "h-full w-full md:w-1/3 xl:w-1/4 border-r relative"
+      )}
+    >
       <div className="h-bar border-b p-2">
         <Logo />
       </div>
-      <div className={cn(callingActive ? "h-cda" : "h-clh", "w-full overflow-hidden")}>
+      <div
+        className={cn(
+          callingActive ? "h-cda" : "h-clh",
+          "w-full overflow-hidden"
+        )}
+      >
         <div className="h-full w-full flex flex-col gap-6 p-6">
           <div className="flex items-center justify-between">
             <Title title="Chat Messages" />
@@ -71,32 +77,62 @@ const ContactsContainer = () => {
           ) : (
             <>
               {contacts?.length! <= 0 ? (
-                <p className="text-neutral-700">No any chat available!</p>
+                <p className="text-neutral-700 dark:text-neutral-200">
+                  No any chat available!
+                </p>
               ) : (
                 <ScrollArea className="h-full overflow-y-auto scrollbar-hide">
                   <div className="flex flex-col gap-4">
                     {contacts?.map((contact: any) => (
-                      <div key={contact?._id} className={`w-full flex items-center justify-between cursor-pointer transition-all duration-300 rounded border py-2 px-4 xl:px-6 text-gray-600 hover:bg-gray-100 
-                        ${selectedChatData && selectedChatData._id === contact._id && "bg-gray-100/80 text-gray-700 border-gray-300/50"} ${contact?.setup === false && "disabled"} `} onClick={() => {
+                      <div
+                        key={contact?._id}
+                        className={`w-full flex items-center justify-between cursor-pointer transition-[transform,opacity,box-shadow] duration-0 rounded border py-2 px-4 xl:px-6 hover:transition-colors hover:duration-300 hover:bg-gray-100/80 dark:hover:bg-gray-100/5 dark:hover:border-gray-700
+                        ${
+                          selectedChatData &&
+                          selectedChatData._id === contact._id &&
+                          "bg-gray-100/80 dark:bg-gray-100/5 border-gray-300 dark:border-gray-700"
+                        } ${contact?.setup === false && "disabled"} `}
+                        onClick={() => {
                           setSelectedChatType("contact");
                           setSelectedChatData(contact);
-                          setSearchParams({ "user": contact.username });
-                        }} role="button">
+                          setSearchParams({ user: contact.username });
+                        }}
+                        role="button"
+                      >
                         <div className="flex items-center gap-4">
                           <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
-                            <AvatarImage src={useAvatar(contact)} alt="profile" className="object-fit h-full w-full" />
-                            <AvatarFallback className={`uppercase h-full w-full text-xl border text-center font-medium transition-all duration-300`}>
-                              {contact?.username?.split("").shift() || contact?.email?.split("").shift()}
+                            <AvatarImage
+                              src={useAvatar(contact)}
+                              alt="profile"
+                              className="object-fit h-full w-full"
+                            />
+                            <AvatarFallback
+                              className={`uppercase h-full w-full text-xl border text-center font-medium transition-all duration-300`}
+                            >
+                              {contact?.username?.split("").shift() ||
+                                contact?.email?.split("").shift()}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex flex-col">
-                            <h5 className="text-sm font-semibold text-neutral-700">{contact?.name}</h5>
-                            <h6 className="text-xs font-medium text-neutral-700">{contact?.username}</h6>
+                            <h5 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
+                              {contact?.name}
+                            </h5>
+                            <h6 className="text-xs font-medium text-neutral-700 dark:text-neutral-200">
+                              {contact?.username}
+                            </h6>
                           </div>
                         </div>
-                        {onlineUsers.hasOwnProperty(contact?._id!)
-                          ? <HiMiniSignal size={18} />
-                          : <HiMiniSignalSlash size={18} />}
+                        {onlineUsers.hasOwnProperty(contact?._id!) ? (
+                          <HiMiniSignal
+                            size={18}
+                            className="text-neutral-600 dark:text-neutral-100"
+                          />
+                        ) : (
+                          <HiMiniSignalSlash
+                            size={18}
+                            className="text-neutral-600 dark:text-neutral-100"
+                          />
+                        )}
                       </div>
                     ))}
                   </div>
@@ -109,7 +145,7 @@ const ContactsContainer = () => {
       {callingActive && <StreamInfo />}
       <ProfileInfo />
     </div>
-  )
-}
+  );
+};
 
 export { ContactsContainer };

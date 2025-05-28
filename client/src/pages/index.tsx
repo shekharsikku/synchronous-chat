@@ -1,5 +1,3 @@
-import Auth from "./auth";
-import Chat from "./chat";
-import Profile from "./profile";
-
-export { Auth, Chat, Profile };
+export { default as Auth } from "./auth";
+export { default as Chat } from "./chat";
+export { default as Profile } from "./profile";

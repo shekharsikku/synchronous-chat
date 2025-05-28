@@ -5,36 +5,45 @@ import { RenderDMMessages } from "@/components/chat/render-dm-messages";
 import { MessageSkeleton } from "@/components/chat/message-skeleton";
 import moment from "moment";
 
-const RenderMessages = React.memo(({
-  messages, lastMessageId, selectedChatType
-}: {
-  messages: Message[], lastMessageId: string, selectedChatType: string
-}) => {
-  let lastDate = "";
+const RenderMessages = React.memo(
+  ({
+    messages,
+    lastMessageId,
+    selectedChatType,
+  }: {
+    messages: Message[];
+    lastMessageId: string;
+    selectedChatType: string;
+  }) => {
+    let lastDate = "";
 
-  return messages.map((message) => {
-    const messageDate = moment(message.createdAt).format("YYYY-MM-DD");
-    const showDate = messageDate !== lastDate;
-    lastDate = messageDate;
+    return messages.map((message) => {
+      const messageDate = moment(message.createdAt).format("YYYY-MM-DD");
+      const showDate = messageDate !== lastDate;
+      lastDate = messageDate;
 
-    return (
-      <Fragment key={message._id}>
-        {showDate && (
-          <div className="text-center text-gray-500 py-4">
-            {moment(message.createdAt).isSame(moment(), "day") ? (
-              "Today"
-            ) : moment(message.createdAt).isSame(moment().subtract(1, 'day'), 'day') ? (
-              "Yesterday"
-            ) : (
-              moment(message.createdAt).format("LL"))}
-          </div>
-        )}
-        {selectedChatType === "contact" && <RenderDMMessages
-          message={message} lastMessageId={lastMessageId} />}
-      </Fragment>
-    )
-  })
-});
+      return (
+        <Fragment key={message._id}>
+          {showDate && (
+            <div className="text-center text-gray-500 dark:text-gray-100 py-4">
+              {moment(message.createdAt).isSame(moment(), "day")
+                ? "Today"
+                : moment(message.createdAt).isSame(
+                    moment().subtract(1, "day"),
+                    "day"
+                  )
+                ? "Yesterday"
+                : moment(message.createdAt).format("LL")}
+            </div>
+          )}
+          {selectedChatType === "contact" && (
+            <RenderDMMessages message={message} lastMessageId={lastMessageId} />
+          )}
+        </Fragment>
+      );
+    });
+  }
+);
 
 const MessageContainer = () => {
   const { messages, fetching } = useMessages();
@@ -67,7 +76,7 @@ const MessageContainer = () => {
       )}
       {!fetching && <div ref={lastMessageRef} />}
     </div>
-  )
-}
+  );
+};
 
 export { MessageContainer };

@@ -8,14 +8,14 @@ import {
   HiOutlineDocumentArrowDown,
   HiOutlineViewfinderCircle,
   HiOutlinePencilSquare,
-  HiOutlineArrowTopRightOnSquare
+  HiOutlineArrowTopRightOnSquare,
 } from "react-icons/hi2";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   ContextMenu,
@@ -36,9 +36,11 @@ import moment from "moment";
 import api from "@/lib/api";
 
 const RenderDMMessages = ({
-  message, lastMessageId: lastId
+  message,
+  lastMessageId: lastId,
 }: {
-  message: Message, lastMessageId: string
+  message: Message;
+  lastMessageId: string;
 }) => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
@@ -60,10 +62,10 @@ const RenderDMMessages = ({
     } catch (error: any) {
       toast.error(error.response.data.message);
     }
-  }
+  };
 
   const handleDownload = (messageFile: Message) => {
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = messageFile?.content?.file!;
     link.download = messageFile._id;
     window.document.body.appendChild(link);
@@ -91,21 +93,25 @@ const RenderDMMessages = ({
       isDevelopment && console.log("Plain text decryption failed!");
       return "Decryption Error!";
     }
-  }
+  };
 
   const [translated, setTranslated] = useState("");
   const [translation, setTranslation] = useState({ message: "", language: "" });
-  const setTextAndLanguage = (message: string) => setTranslation({ message, language });
+  const setTextAndLanguage = (message: string) =>
+    setTranslation({ message, language });
 
   const translateMessage = async (message: string, language: string) => {
     try {
-      const response = await api.post("/api/message/translate", { message, language });
+      const response = await api.post("/api/message/translate", {
+        message,
+        language,
+      });
       setTranslated(response.data.data);
     } catch (error: any) {
       setTranslated("");
       isDevelopment && console.log("Language translation error!");
     }
-  }
+  };
 
   useEffect(() => {
     if (translation.message && translation.language) {
@@ -115,15 +121,17 @@ const RenderDMMessages = ({
     }
   }, [translation]);
 
-  const mergeRefs = (...refs: any[]) => (element: any) => {
-    refs.forEach((ref) => {
-      if (typeof ref === "function") {
-        ref(element);
-      } else {
-        ref.current = element;
-      }
-    });
-  };
+  const mergeRefs =
+    (...refs: any[]) =>
+    (element: any) => {
+      refs.forEach((ref) => {
+        if (typeof ref === "function") {
+          ref(element);
+        } else {
+          ref.current = element;
+        }
+      });
+    };
 
   const isSender = message.sender === selectedChatData?._id;
 
@@ -135,53 +143,82 @@ const RenderDMMessages = ({
   useDisableAnimations(socket!, elementRef);
 
   const [openEditMessageDialog, setOpenEditMessageDialog] = useState(false);
-  const [currentMessageForEdit, setCurrentMessageForEdit] = useState({ id: "", text: "" });
+  const [currentMessageForEdit, setCurrentMessageForEdit] = useState({
+    id: "",
+    text: "",
+  });
 
   const handleEditMessageClick = (message: Message) => {
     setOpenEditMessageDialog(true);
     setCurrentMessageForEdit({
       id: message._id,
-      text: plainText(message)
+      text: plainText(message),
     });
-  }
+  };
 
   useEffect(() => {
     setEditDialog(openEditMessageDialog);
-  }, [openEditMessageDialog])
+  }, [openEditMessageDialog]);
 
-  const { isLastMinutes: isLastMinForEdit } = useLastMinutes(message?.createdAt!);
+  const { isLastMinutes: isLastMinForEdit } = useLastMinutes(
+    message?.createdAt!
+  );
 
   const visitExternalLink = (url: string) => {
     window.open(url, "_blank", "noopener,noreferrer");
-  }
+  };
 
   return (
-    <div className={`w-full flex flex-col gap-2 mb-4 ${isSender ? "items-start text-left" : "items-end text-right"}`}>
+    <div
+      className={`w-full flex flex-col gap-2 mb-4 ${
+        isSender ? "items-start text-left" : "items-end text-right"
+      }`}
+    >
       <ContextMenu>
-        <ContextMenuTrigger ref={mergeRefs(inViewRef, elementRef)}
-          className={cn("inline-block border rounded-sm p-3 break-words transition duration-300 ease-in-out transform text-start text-gray-950 max-w-[90%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[75%] xl:max-w-[70%]",
-            isSender ? "bg-gray-100 border-gray-200" : "bg-gray-200 border-gray-300",
-            message.type === "deleted" ? "cursor-not-allowed" : "cursor-default", message._id === lastId && "shake",
-            inView ? "opacity-100 translate-x-0" : `opacity-0 ${isSender ? "translate-x-16" : "-translate-x-16"}`
-          )}>
+        <ContextMenuTrigger
+          ref={mergeRefs(inViewRef, elementRef)}
+          className={cn(
+            "inline-block border rounded-sm p-3 break-words transition-[transform,opacity] duration-300 ease-in-out transform text-start text-gray-950 max-w-[90%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[75%] xl:max-w-[70%] hover:transition-colors",
+            isSender
+              ? "bg-gray-100 border-gray-200"
+              : "bg-gray-200 border-gray-300",
+            "dark:bg-gray-100/5 dark:border-gray-700 dark:text-gray-50 dark:hover:bg-gray-100/10",
+            message.type === "deleted"
+              ? "cursor-not-allowed"
+              : "cursor-default",
+            message._id === lastId && "shake",
+            inView
+              ? "opacity-100 translate-x-0"
+              : `opacity-0 ${isSender ? "translate-x-16" : "-translate-x-16"}`
+          )}
+        >
           {/* Right click here */}
           {message.type === "deleted" ? (
             <span className="flex items-center gap-1 italic text-base">
-              <HiOutlineNoSymbol size={16} /> {isSender ? "This message was deleted." : "You deleted this message."}
+              <HiOutlineNoSymbol size={16} />{" "}
+              {isSender
+                ? "This message was deleted."
+                : "You deleted this message."}
             </span>
           ) : (
             <>
               {/* For test message type */}
-              {message?.content?.type === "text" && message?.content?.text !== "" && (
-                <span className="text-base">{plainText(message)}</span>
-              )}
+              {message?.content?.type === "text" &&
+                message?.content?.text !== "" && (
+                  <span className="text-base">{plainText(message)}</span>
+                )}
               {/* For file message type */}
-              {message?.content?.type === "file" && (
-                checkImageType(message?.content?.file!) ? (
-                  <img src={message?.content?.file} alt="Image file" className="h-60 w-auto rounded" />
+              {message?.content?.type === "file" &&
+                (checkImageType(message?.content?.file!) ? (
+                  <img
+                    src={message?.content?.file}
+                    alt="Image file"
+                    className="h-60 w-auto rounded"
+                  />
                 ) : (
                   <span className="flex items-center gap-1 italic text-base">
-                    <HiOutlineDocumentArrowDown size={16} /> Download this file to view it.
+                    <HiOutlineDocumentArrowDown size={16} /> Download this file
+                    to view it.
                   </span>
                 ))}
             </>
@@ -192,39 +229,62 @@ const RenderDMMessages = ({
             {message?.content?.type === "text" && (
               <>
                 {language !== "en" && (
-                  <ContextMenuItem className="flex gap-2" onClick={() => setTextAndLanguage(plainText(message))}>
+                  <ContextMenuItem
+                    className="flex gap-2"
+                    onClick={() => setTextAndLanguage(plainText(message))}
+                  >
                     <HiOutlineLanguage size={16} /> Translate
                   </ContextMenuItem>
                 )}
-                <ContextMenuItem className="flex gap-2" onClick={() => copyToClipboard(plainText(message))}>
+                <ContextMenuItem
+                  className="flex gap-2"
+                  onClick={() => copyToClipboard(plainText(message))}
+                >
                   <HiOutlineClipboardDocument size={16} /> Copy
                 </ContextMenuItem>
-                {message.sender === userInfo?._id && message.type === "default" && isLastMinForEdit && (
-                  <ContextMenuItem className="flex gap-2" onClick={() => handleEditMessageClick(message)}>
-                    <HiOutlinePencilSquare size={16} /> Edit
-                  </ContextMenuItem>
-                )}
+                {message.sender === userInfo?._id &&
+                  message.type === "default" &&
+                  isLastMinForEdit && (
+                    <ContextMenuItem
+                      className="flex gap-2"
+                      onClick={() => handleEditMessageClick(message)}
+                    >
+                      <HiOutlinePencilSquare size={16} /> Edit
+                    </ContextMenuItem>
+                  )}
               </>
             )}
             {message?.content?.type === "file" && (
               <>
                 {checkImageType(message?.content?.file!) && (
-                  <ContextMenuItem className="flex gap-2" onClick={() => setImageViewExtend(true)}>
+                  <ContextMenuItem
+                    className="flex gap-2"
+                    onClick={() => setImageViewExtend(true)}
+                  >
                     <HiOutlineViewfinderCircle size={16} /> View
                   </ContextMenuItem>
                 )}
-                <ContextMenuItem className="flex gap-2" onClick={() => handleDownload(message)}>
+                <ContextMenuItem
+                  className="flex gap-2"
+                  onClick={() => handleDownload(message)}
+                >
                   <HiOutlineCloudArrowDown size={16} /> Download
                 </ContextMenuItem>
               </>
             )}
             {message.recipient === selectedChatData?._id && (
-              <ContextMenuItem className="flex gap-2" onClick={() => deleteSelectedMessage(message._id)}>
+              <ContextMenuItem
+                className="flex gap-2"
+                onClick={() => deleteSelectedMessage(message._id)}
+              >
                 <HiOutlineTrash size={16} /> Delete
               </ContextMenuItem>
             )}
             {isValidUrl(plainText(message)) && (
-              <ContextMenuItem className="flex gap-2" onClick={() => visitExternalLink(plainText(message))}>
+              <ContextMenuItem
+                className="flex gap-2"
+                onClick={() => visitExternalLink(plainText(message))}
+              >
                 <HiOutlineArrowTopRightOnSquare size={16} /> Visit Site
               </ContextMenuItem>
             )}
@@ -232,25 +292,32 @@ const RenderDMMessages = ({
         )}
       </ContextMenu>
       {/* Translated Message */}
-      {translated !== "" && (
-        <span className="text-base">{translated}</span>
-      )}
-      <span className="text-xs text-gray-600">
+      {translated !== "" && <span className="text-base">{translated}</span>}
+      <span className="text-xs text-gray-600 dark:text-gray-200">
         {message.type === "deleted" ? (
           <span>{`${moment(message.deletedAt).format("LT")}`}</span>
         ) : (
-          <span>{message.type === "edited" && "Edited"} {`${moment(message.updatedAt).format("LT")}`}</span>
+          <span>
+            {message.type === "edited" && "Edited"}{" "}
+            {`${moment(message.updatedAt).format("LT")}`}
+          </span>
         )}
       </span>
       {/* Dialog for image extend view */}
       <Dialog open={imageViewExtend} onOpenChange={setImageViewExtend}>
-        <DialogContent className="h-auto w-[90vw] lg:w-auto bg-gray-50 rounded-md">
+        <DialogContent className="h-auto w-[90vw] lg:w-auto rounded-md">
           <DialogHeader>
-            <DialogTitle className="text-start">Image Extend View Mode</DialogTitle>
+            <DialogTitle className="text-start">
+              Image Extend View Mode
+            </DialogTitle>
             <DialogDescription className="hidden"></DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[80vh] overflow-y-auto scrollbar-hide">
-            <img src={message?.content?.file} alt="Extend view" className="object-contain size-full rounded" />
+            <img
+              src={message?.content?.file}
+              alt="Extend view"
+              className="object-contain size-full rounded"
+            />
           </ScrollArea>
         </DialogContent>
       </Dialog>
@@ -261,7 +328,7 @@ const RenderDMMessages = ({
         currentMessage={currentMessageForEdit}
       />
     </div>
-  )
-}
+  );
+};
 
 export { RenderDMMessages };

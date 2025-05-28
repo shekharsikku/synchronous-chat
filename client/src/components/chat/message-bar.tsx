@@ -9,11 +9,14 @@ import {
   HiOutlineFaceSmile,
   HiOutlineLink,
   HiOutlinePaperAirplane,
-  HiOutlineBackspace
+  HiOutlineBackspace,
 } from "react-icons/hi2";
 import {
-  useState, useEffect, useRef,
-  ChangeEvent, KeyboardEventHandler
+  useState,
+  useEffect,
+  useRef,
+  ChangeEvent,
+  KeyboardEventHandler,
 } from "react";
 import { encryptMessage } from "@/lib/noble";
 import { convertToBase64 } from "@/lib/utils";
@@ -48,16 +51,26 @@ const MessageBar = () => {
     const handleSpaceEscapeKeyDown = (event: KeyboardEvent) => {
       const activeElement = document.activeElement as HTMLElement;
 
-      if (editDialog && (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA")) {
+      if (
+        editDialog &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA")
+      ) {
         return;
       }
 
-      if (event.code === "Space" && document.activeElement !== inputRef.current) {
+      if (
+        event.code === "Space" &&
+        document.activeElement !== inputRef.current
+      ) {
         event.preventDefault();
         inputRef.current?.focus();
       }
 
-      if (event.code === "Escape" && document.activeElement === inputRef.current) {
+      if (
+        event.code === "Escape" &&
+        document.activeElement === inputRef.current
+      ) {
         event.preventDefault();
         inputRef.current?.blur();
       }
@@ -72,27 +85,30 @@ const MessageBar = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (emojiRef.current && !emojiRef.current.contains(event.target as Node)) {
+      if (
+        emojiRef.current &&
+        !emojiRef.current.contains(event.target as Node)
+      ) {
         setEmojiPicker((prev) => !prev);
       }
-    }
+    };
 
     document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, [emojiRef]);
 
   const handleAddEmoji = (emoji: EmojiClickData) => {
     setMessage((msg) => msg + emoji.emoji);
-  }
+  };
 
   const handleAttachClick = () => {
     if (fileRef.current) {
       fileRef.current.click();
     }
-  }
+  };
 
   const [selectedImage, setSelectedImage] = useState<any | null>(null);
 
@@ -119,12 +135,12 @@ const MessageBar = () => {
     } catch (error: any) {
       console.log(`Error while attaching file!`);
     }
-  }
+  };
 
   interface MessageData {
-    type: "text" | "file",
-    text?: string,
-    file?: string,
+    type: "text" | "file";
+    text?: string;
+    file?: string;
   }
 
   const handleSendMessage = async () => {
@@ -134,7 +150,7 @@ const MessageBar = () => {
     try {
       const messageData: MessageData = {
         type: selectedImage ? "file" : "text",
-      }
+      };
 
       if (selectedImage && message !== "") {
         messageData.file = selectedImage;
@@ -155,7 +171,7 @@ const MessageBar = () => {
     } finally {
       setIsSending(false);
     }
-  }
+  };
 
   const handleEnterKeyDown: KeyboardEventHandler<HTMLInputElement> = (e) => {
     if (e.key === "Enter" && message !== "" && !isSending) {
@@ -165,7 +181,10 @@ const MessageBar = () => {
 
   useEffect(() => {
     socket?.on("typing:display", (typingUser) => {
-      if (typingUser.uid === userInfo?._id && selectedChatData?._id === typingUser.cid) {
+      if (
+        typingUser.uid === userInfo?._id &&
+        selectedChatData?._id === typingUser.cid
+      ) {
         setIsPartnerTyping(typingUser.typing);
       }
     });
@@ -185,7 +204,10 @@ const MessageBar = () => {
   const handleTyping = () => {
     if (!isTyping) {
       setIsTyping(true);
-      socket?.emit("typing:start", { selectedUser: selectedChatData?._id, currentUser: userInfo?._id });
+      socket?.emit("typing:start", {
+        selectedUser: selectedChatData?._id,
+        currentUser: userInfo?._id,
+      });
     }
 
     if (typingTimeoutRef.current) {
@@ -194,7 +216,10 @@ const MessageBar = () => {
 
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false);
-      socket?.emit("typing:stop", { selectedUser: selectedChatData?._id, currentUser: userInfo?._id });
+      socket?.emit("typing:stop", {
+        selectedUser: selectedChatData?._id,
+        currentUser: userInfo?._id,
+      });
     }, 2500);
   };
 
@@ -213,33 +238,52 @@ const MessageBar = () => {
 
   return (
     <div className="h-bar w-full border-t flex items-center justify-center p-2">
-      <div className="w-full flex rounded items-center justify-center gap-4 bg-gray-100/80 px-4 h-full">
+      <div className="w-full flex rounded items-center justify-center gap-4 bg-gray-100/80 dark:bg-transparent px-4 h-full">
         <div className="flex gap-4 relative">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger className="focus:outline-none">
-                <HiOutlineFaceSmile size={20} onClick={() => setEmojiPicker((prev) => !prev)}
-                  className="text-neutral-600 border-none outline-none transition-all duration-300" />
+                <HiOutlineFaceSmile
+                  size={20}
+                  onClick={() => setEmojiPicker((prev) => !prev)}
+                  className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                />
               </TooltipTrigger>
               <TooltipContent>
-                <span className="text-neutral-700 font-medium">Emojis</span>
+                <span className="text-neutral-700 dark:text-neutral-200 font-medium">
+                  Emojis
+                </span>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
-          {emojiPicker && <div className="absolute bottom-20 left-[-10px] sm:left-[-5px] md:left-0" ref={emojiRef}>
-            <EmojiPicker open={emojiPicker} onEmojiClick={handleAddEmoji} autoFocusSearch={false}
-              className="max-w-72 sm:max-w-80 md:max-w-96" />
-          </div>}
+          {emojiPicker && (
+            <div
+              className="absolute bottom-20 left-[-10px] sm:left-[-5px] md:left-0"
+              ref={emojiRef}
+            >
+              <EmojiPicker
+                open={emojiPicker}
+                onEmojiClick={handleAddEmoji}
+                autoFocusSearch={false}
+                className="max-w-72 sm:max-w-80 md:max-w-96"
+              />
+            </div>
+          )}
 
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger className="focus:outline-none">
-                <HiOutlineLink size={20} onClick={handleAttachClick}
-                  className="text-neutral-600 border-none outline-none transition-all duration-300" />
+                <HiOutlineLink
+                  size={20}
+                  onClick={handleAttachClick}
+                  className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                />
               </TooltipTrigger>
               <TooltipContent>
-                <span className="text-neutral-700 font-medium">Attach</span>
+                <span className="text-neutral-700 dark:text-neutral-200 font-medium">
+                  Attach
+                </span>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -267,36 +311,48 @@ const MessageBar = () => {
           onKeyDown={handleEnterKeyDown}
         />
 
-        {message && <div className="flex gap-4">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger className="focus:outline-none">
-                <HiOutlineBackspace size={20} onClick={() => {
-                  setMessage("");
-                  setSelectedImage(null);
-                }}
-                  className="text-neutral-600 border-none outline-none transition-all duration-300" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <span className="text-neutral-700 font-medium">Clear</span>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger className="focus:outline-none">
-                <HiOutlinePaperAirplane size={20} onClick={handleSendMessage}
-                  className="text-neutral-600 border-none outline-none transition-all duration-300" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <span className="text-neutral-700 font-medium">Send</span>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>}
+        {message && (
+          <div className="flex gap-4">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="focus:outline-none">
+                  <HiOutlineBackspace
+                    size={20}
+                    onClick={() => {
+                      setMessage("");
+                      setSelectedImage(null);
+                    }}
+                    className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span className="text-neutral-700 dark:text-neutral-200 font-medium">
+                    Clear
+                  </span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="focus:outline-none">
+                  <HiOutlinePaperAirplane
+                    size={20}
+                    onClick={handleSendMessage}
+                    className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span className="text-neutral-700 dark:text-neutral-200 font-medium">
+                    Send
+                  </span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 export { MessageBar };

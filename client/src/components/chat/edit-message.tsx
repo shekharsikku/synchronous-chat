@@ -17,12 +17,12 @@ import { encryptMessage } from "@/lib/noble";
 import api from "@/lib/api";
 
 interface EditMessageProps {
-  openEditMessageDialog: boolean,
-  setOpenEditMessageDialog: any,
+  openEditMessageDialog: boolean;
+  setOpenEditMessageDialog: any;
   currentMessage: {
-    id: string,
-    text: string,
-  },
+    id: string;
+    text: string;
+  };
 }
 
 const EditMessage = ({
@@ -46,25 +46,32 @@ const EditMessage = ({
   const editSelectedMessage = async () => {
     setIsLoading(true);
     try {
-      const response = await api.patch(`/api/message/edit/${currentMessage.id}`, {
-        text: encryptMessage(newMessage, selectedChatData?._id!)
-      });
+      const response = await api.patch(
+        `/api/message/edit/${currentMessage.id}`,
+        {
+          text: encryptMessage(newMessage, selectedChatData?._id!),
+        }
+      );
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <AlertDialog open={openEditMessageDialog} onOpenChange={setOpenEditMessageDialog}>
+    <AlertDialog
+      open={openEditMessageDialog}
+      onOpenChange={setOpenEditMessageDialog}
+    >
       <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
-      <AlertDialogContent
-        className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl bg-white">
+      <AlertDialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-start">Edit Message!</AlertDialogTitle>
-          <AlertDialogDescription className="text-start">
+          <AlertDialogTitle className="text-start">
+            Edit Message!
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-start dark:text-gray-300">
             This changes will reflect to other user as well.
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -75,7 +82,11 @@ const EditMessage = ({
           value={newMessage || ""}
           placeholder="Edited Message..."
           onKeyDown={(e) => {
-            if (e.key === "Tab" && !e.shiftKey && currentMessage.text !== newMessage) {
+            if (
+              e.key === "Tab" &&
+              !e.shiftKey &&
+              currentMessage.text !== newMessage
+            ) {
               e.preventDefault();
               requestAnimationFrame(() => {
                 confirmBtnRef.current?.focus();
@@ -85,14 +96,23 @@ const EditMessage = ({
         />
 
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isLoading} onClick={() => setOpenEditMessageDialog(false)}>
-            Cancel</AlertDialogCancel>
-          <AlertDialogAction disabled={isLoading || currentMessage.text === newMessage} ref={confirmBtnRef}
-            onClick={() => editSelectedMessage()}>Confirm</AlertDialogAction>
+          <AlertDialogCancel
+            disabled={isLoading}
+            onClick={() => setOpenEditMessageDialog(false)}
+          >
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            disabled={isLoading || currentMessage.text === newMessage}
+            ref={confirmBtnRef}
+            onClick={() => editSelectedMessage()}
+          >
+            Confirm
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
-}
+  );
+};
 
 export { EditMessage };

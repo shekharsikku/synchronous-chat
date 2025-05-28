@@ -3,8 +3,19 @@ import { HiOutlinePlus } from "react-icons/hi2";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ContactListSkeleton } from "@/components/chat/contact-list-skeleton";
 import { useChatStore, UserInfo } from "@/zustand";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -26,8 +37,10 @@ const AddNewChat = () => {
     if (searchTerm.length > 0) {
       try {
         setIsFetching(true);
-        const response = await api.get(`api/contact/search?search=${searchTerm}`);
-        setSearchedContacts(response.data.data)
+        const response = await api.get(
+          `api/contact/search?search=${searchTerm}`
+        );
+        setSearchedContacts(response.data.data);
       } catch (error: any) {
         setSearchedContacts([]);
       } finally {
@@ -41,18 +54,23 @@ const AddNewChat = () => {
     setSearchedContacts([]);
     setSelectedChatType("contact");
     setSelectedChatData(contact);
-  }
+  };
 
   return (
     <Dialog open={openNewChatModal} onOpenChange={setOpenNewChatModal}>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger className="focus:outline-none">
-            <HiOutlinePlus onClick={() => setOpenNewChatModal(true)} size={18}
-              className="text-neutral-600 border-none outline-none transition-all duration-300" />
+            <HiOutlinePlus
+              onClick={() => setOpenNewChatModal(true)}
+              size={18}
+              className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+            />
           </TooltipTrigger>
           <TooltipContent>
-            <span className="text-neutral-700 font-medium">New Chat</span>
+            <span className="text-neutral-700 dark:text-neutral-200 font-medium">
+              New Chat
+            </span>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -73,23 +91,41 @@ const AddNewChat = () => {
           ) : (
             <>
               {searchedContacts.length <= 0 ? (
-                <span className="text-gray-700 text-center my-auto">No any user available!</span>
+                <span className="text-gray-700 dark:text-gray-200 text-center my-auto">
+                  No any user available!
+                </span>
               ) : (
                 <ScrollArea className="h-60 overflow-y-auto scrollbar-hide">
                   <div className="flex flex-col gap-4 py-[2px]">
                     {searchedContacts.map((contact) => (
-                      <div key={contact._id} className={`flex gap-4 border border-gray-200 w-full p-2 lg:px-3 xl:px-6 rounded items-center hover:bg-gray-100/80 transition-all duration-300 cursor-pointer 
-                    ${contact.name === "" ? "disabled" : ""}`} onClick={() => selectNewContact(contact)} role="button">
+                      <div
+                        key={contact._id}
+                        className={`flex gap-4 border w-full p-2 lg:px-3 xl:px-6 rounded items-center hover:bg-gray-100/80  dark:hover:bg-gray-100/5 dark:hover:border-gray-700 transition-[transform,opacity,box-shadow] duration-0 hover:transition-colors hover:duration-300 cursor-pointer 
+                    ${contact.name === "" ? "disabled" : ""}`}
+                        onClick={() => selectNewContact(contact)}
+                        role="button"
+                      >
                         <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
-                          <AvatarImage src={useAvatar(contact)} alt="profile" className="object-fit h-full w-full" />
-                          <AvatarFallback className={`uppercase h-full w-full text-xl border text-center font-medium 
-                      transition-all duration-300`}>
-                            {contact.username?.split("").shift() || contact.email?.split("").shift()}
+                          <AvatarImage
+                            src={useAvatar(contact)}
+                            alt="profile"
+                            className="object-fit h-full w-full"
+                          />
+                          <AvatarFallback
+                            className={`uppercase h-full w-full text-xl border text-center font-medium 
+                      transition-all duration-300`}
+                          >
+                            {contact.username?.split("").shift() ||
+                              contact.email?.split("").shift()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <h5 className="text-sm font-semibold text-neutral-700">{contact?.name}</h5>
-                          <h6 className="text-xs font-medium text-neutral-700">{contact?.username}</h6>
+                          <h5 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
+                            {contact?.name}
+                          </h5>
+                          <h6 className="text-xs font-medium text-neutral-700 dark:text-neutral-200">
+                            {contact?.username}
+                          </h6>
                         </div>
                       </div>
                     ))}
@@ -101,7 +137,7 @@ const AddNewChat = () => {
         </div>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 export { AddNewChat };

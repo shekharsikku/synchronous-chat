@@ -9,7 +9,7 @@ const ChatContainer = () => {
       <MessageContainer />
       <MessageBar />
     </div>
-  )
-}
+  );
+};
 
 export { ChatContainer };
