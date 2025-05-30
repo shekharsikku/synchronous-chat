@@ -1,7 +1,7 @@
 {
   "name": "synchronous-chat",
   "type": "module",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -22,7 +22,7 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/morgan": "^1.9.9",
     "@types/multer": "^1.4.12",
-    "@types/node": "^22.15.21",
+    "@types/node": "^22.15.27",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   },
@@ -33,17 +33,17 @@
     "compression": "^1.8.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "cron": "^4.3.0",
+    "cron": "^4.3.1",
     "dotenv": "^16.5.0",
     "envalid": "^8.0.0",
     "express": "^5.1.0",
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.15.0",
+    "mongoose": "^8.15.1",
     "morgan": "^1.10.0",
     "multer": "^2.0.0",
     "socket.io": "^4.8.1",
-    "zod": "^3.25.17"
+    "zod": "^3.25.42"
   }
 }

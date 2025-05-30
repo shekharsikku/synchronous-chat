@@ -3,6 +3,8 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { Auth, Chat, Profile } from "@/pages";
 import { useEffect, ReactNode } from "react";
 import { useAuthUser } from "@/lib/auth";
+import { useHotkeys } from "react-hotkeys-hook";
+import { useTheme } from "@/lib/context";
 
 const RedirectRoute = () => {
   const { isAuthenticated, userInfo } = useAuthUser();
@@ -37,6 +39,12 @@ const AuthRoute = ({
 
 const App = () => {
   useNotification();
+  const { theme, setTheme } = useTheme();
+
+  useHotkeys("ctrl+m", () => setTheme(theme === "light" ? "dark" : "light"), {
+    enabled: theme !== "system",
+    enableOnFormTags: ["input", "textarea", "select"],
+  });
 
   useEffect(() => {
     if (Notification.permission === "default") {
