@@ -469,7 +469,7 @@ const Profile = () => {
               <Button
                 type="submit"
                 size="lg"
-                className="w-full cursor-pointer transition-all duration-300 mt-2 lg:mt-1"
+                className="w-full cursor-pointer mt-2 lg:mt-1"
                 disabled={isLoading}
               >
                 Save Changes

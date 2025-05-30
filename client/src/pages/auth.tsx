@@ -167,13 +167,13 @@ const Auth = () => {
               <TabsList className="bg-transparent rounded-none w-full">
                 <TabsTrigger
                   value="sign-in"
-                  className="data-[state=active]:bg-transparent text-black dark:text-gray-200 text-opacity-90 border-b-2 rounded-none w-full data-[state=active]:text-black data-[state=active]:font-semibold data-[state=active]:border-b-gray-700 p-3 transition-all duration-300"
+                  className="data-[state=active]:bg-transparent text-black dark:text-gray-200 text-opacity-90 border-b-2 rounded-none w-full data-[state=active]:text-black data-[state=active]:font-semibold data-[state=active]:border-b-gray-700 p-3"
                 >
                   Sign In
                 </TabsTrigger>
                 <TabsTrigger
                   value="sign-up"
-                  className="data-[state=active]:bg-transparent text-black dark:text-gray-200 text-opacity-90 border-b-2 rounded-none w-full data-[state=active]:text-black data-[state=active]:font-semibold data-[state=active]:border-b-gray-700 p-3 transition-all duration-300"
+                  className="data-[state=active]:bg-transparent text-black dark:text-gray-200 text-opacity-90 border-b-2 rounded-none w-full data-[state=active]:text-black data-[state=active]:font-semibold data-[state=active]:border-b-gray-700 p-3"
                 >
                   Sign Up
                 </TabsTrigger>
@@ -229,7 +229,7 @@ const Auth = () => {
                       )}
                     />
                     <Button
-                      className="w-full cursor-pointer transition-all duration-300 font-semibold mt-1"
+                      className="w-full cursor-pointer font-semibold mt-1"
                       size="lg"
                       type="submit"
                       disabled={isLoading}
@@ -311,7 +311,7 @@ const Auth = () => {
                       )}
                     />
                     <Button
-                      className="w-full cursor-pointer transition-all duration-300 font-semibold mt-1"
+                      className="w-full cursor-pointer font-semibold mt-1"
                       size="lg"
                       type="submit"
                       disabled={isLoading}
