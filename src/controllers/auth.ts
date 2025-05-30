@@ -64,7 +64,7 @@ const signInUser = async (req: Request, res: Response) => {
     }
 
     const userInfo = createUserInfo(existsUser);
-    generateAccess(res, userInfo);
+    await generateAccess(res, userInfo);
 
     if (!userInfo.setup) {
       return SuccessResponse(

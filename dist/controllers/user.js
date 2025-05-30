@@ -27,7 +27,7 @@ const profileSetup = async (req, res) => {
         if (!userInfo.setup) {
             return SuccessResponse(res, 200, "Please, complete your profile!", userInfo);
         }
-        generateAccess(res, userInfo);
+        await generateAccess(res, userInfo);
         return SuccessResponse(res, 200, "Profile updated successfully!", userInfo);
     }
     catch (error) {
@@ -55,7 +55,7 @@ const updateImage = async (req, res) => {
             userProfile.image = uploadImage.secure_url;
             await userProfile.save({ validateBeforeSave: true });
             const userInfo = createUserInfo(userProfile);
-            generateAccess(res, userInfo);
+            await generateAccess(res, userInfo);
             return SuccessResponse(res, 200, "Profile image updated successfully!", userInfo);
         }
         throw new HttpError(500, "Profile image not updated!");
@@ -73,7 +73,7 @@ const deleteImage = async (req, res) => {
             requestUser.image = "";
             await requestUser.save({ validateBeforeSave: true });
             const userInfo = createUserInfo(requestUser);
-            generateAccess(res, userInfo);
+            await generateAccess(res, userInfo);
             return SuccessResponse(res, 200, "Profile image deleted successfully!", userInfo);
         }
         throw new HttpError(400, "Profile image not available!");
@@ -100,7 +100,7 @@ const changePassword = async (req, res) => {
         requestUser.password = await hash(new_password, hashSalt);
         await requestUser.save({ validateBeforeSave: true });
         const userInfo = createUserInfo(requestUser);
-        generateAccess(res, userInfo);
+        await generateAccess(res, userInfo);
         return SuccessResponse(res, 200, "Password changed successfully!", userInfo);
     }
     catch (error) {

@@ -1,16 +1,27 @@
 import type { UserInterface } from "../interface/index.js";
 import type { Response } from "express";
 import type { Types } from "mongoose";
+import { createSecretKey, createHash } from "crypto";
+import { CompactEncrypt } from "jose";
+import { deflateSync } from "zlib";
 import jwt from "jsonwebtoken";
 import env from "../utils/env.js";
 
-const generateAccess = (res: Response, user?: UserInterface) => {
+const generateSecret = async () => {
+  return createSecretKey(
+    createHash("sha256").update(env.ACCESS_SECRET).digest()
+  );
+};
+
+const generateAccess = async (res: Response, user?: UserInterface) => {
   const accessExpiry = env.ACCESS_EXPIRY;
 
-  const accessToken = jwt.sign({ user }, env.ACCESS_SECRET, {
-    algorithm: "HS256",
-    expiresIn: accessExpiry,
-  });
+  const accessPayload = deflateSync(JSON.stringify(user));
+  const accessSecret = await generateSecret();
+
+  const accessToken = await new CompactEncrypt(accessPayload)
+    .setProtectedHeader({ alg: "dir", enc: "A256GCM" })
+    .encrypt(accessSecret);
 
   res.cookie("access", accessToken, {
     maxAge: accessExpiry * 1000,
@@ -78,6 +89,7 @@ const createUserInfo = (user: UserInterface) => {
 };
 
 export {
+  generateSecret,
   generateAccess,
   generateRefresh,
   authorizeCookie,

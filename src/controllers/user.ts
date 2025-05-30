@@ -56,7 +56,7 @@ const profileSetup = async (req: Request, res: Response) => {
       );
     }
 
-    generateAccess(res, userInfo);
+    await generateAccess(res, userInfo);
 
     return SuccessResponse(res, 200, "Profile updated successfully!", userInfo);
   } catch (error: any) {
@@ -95,7 +95,7 @@ const updateImage = async (req: Request, res: Response) => {
       await userProfile.save({ validateBeforeSave: true });
 
       const userInfo = createUserInfo(userProfile);
-      generateAccess(res, userInfo);
+      await generateAccess(res, userInfo);
 
       return SuccessResponse(
         res,
@@ -126,7 +126,7 @@ const deleteImage = async (req: Request, res: Response) => {
       await requestUser.save({ validateBeforeSave: true });
 
       const userInfo = createUserInfo(requestUser);
-      generateAccess(res, userInfo);
+      await generateAccess(res, userInfo);
 
       return SuccessResponse(
         res,
@@ -170,7 +170,7 @@ const changePassword = async (req: Request, res: Response) => {
     await requestUser.save({ validateBeforeSave: true });
 
     const userInfo = createUserInfo(requestUser);
-    generateAccess(res, userInfo);
+    await generateAccess(res, userInfo);
 
     return SuccessResponse(
       res,

@@ -1,11 +1,18 @@
+import { createSecretKey, createHash } from "crypto";
+import { CompactEncrypt } from "jose";
+import { deflateSync } from "zlib";
 import jwt from "jsonwebtoken";
 import env from "../utils/env.js";
-const generateAccess = (res, user) => {
+const generateSecret = async () => {
+    return createSecretKey(createHash("sha256").update(env.ACCESS_SECRET).digest());
+};
+const generateAccess = async (res, user) => {
     const accessExpiry = env.ACCESS_EXPIRY;
-    const accessToken = jwt.sign({ user }, env.ACCESS_SECRET, {
-        algorithm: "HS256",
-        expiresIn: accessExpiry,
-    });
+    const accessPayload = deflateSync(JSON.stringify(user));
+    const accessSecret = await generateSecret();
+    const accessToken = await new CompactEncrypt(accessPayload)
+        .setProtectedHeader({ alg: "dir", enc: "A256GCM" })
+        .encrypt(accessSecret);
     res.cookie("access", accessToken, {
         maxAge: accessExpiry * 1000,
         httpOnly: true,
@@ -58,4 +65,4 @@ const createUserInfo = (user) => {
     }
     return userInfo;
 };
-export { generateAccess, generateRefresh, authorizeCookie, hasEmptyField, createUserInfo, };
+export { generateSecret, generateAccess, generateRefresh, authorizeCookie, hasEmptyField, createUserInfo, };

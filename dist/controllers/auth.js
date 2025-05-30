@@ -43,7 +43,7 @@ const signInUser = async (req, res) => {
             throw new HttpError(403, "Incorrect password!");
         }
         const userInfo = createUserInfo(existsUser);
-        generateAccess(res, userInfo);
+        await generateAccess(res, userInfo);
         if (!userInfo.setup) {
             return SuccessResponse(res, 200, "Please, complete your profile!", userInfo);
         }

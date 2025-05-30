@@ -5,12 +5,15 @@ import type { Types } from "mongoose";
 import type { JwtPayload } from "jsonwebtoken";
 import { HttpError, ErrorResponse } from "../utils/index.js";
 import {
+  generateSecret,
   generateAccess,
   generateRefresh,
   authorizeCookie,
   createUserInfo,
 } from "../utils/helpers.js";
 import { User } from "../models/index.js";
+import { compactDecrypt } from "jose";
+import { inflateSync } from "zlib";
 import jwt from "jsonwebtoken";
 import env from "../utils/env.js";
 import multer from "multer";
@@ -30,14 +33,14 @@ const authAccess = async (
     let decodedPayload;
 
     try {
-      decodedPayload = jwt.verify(accessToken, env.ACCESS_SECRET, {
-        algorithms: ["HS256"],
-      }) as JwtPayload;
+      const accessSecret = await generateSecret();
+      const decrypted = await compactDecrypt(accessToken, accessSecret);
+      decodedPayload = JSON.parse(inflateSync(decrypted.plaintext).toString());
     } catch (error: any) {
       throw new HttpError(403, "Invalid access request!");
     }
 
-    req.user = decodedPayload.user as UserInterface;
+    req.user = decodedPayload as UserInterface;
     next();
   } catch (error: any) {
     return ErrorResponse(
@@ -116,7 +119,7 @@ const authRefresh = async (
 
       if (updatedAuth.modifiedCount > 0) {
         authorizeCookie(res, authorizeId);
-        generateAccess(res, userInfo);
+        await generateAccess(res, userInfo);
       } else {
         throw new HttpError(403, "Invalid refresh request!");
       }
@@ -136,7 +139,7 @@ const authRefresh = async (
 
       throw new HttpError(401, "Please, login again to continue!");
     } else {
-      generateAccess(res, userInfo);
+      await generateAccess(res, userInfo);
     }
 
     req.user = userInfo;
