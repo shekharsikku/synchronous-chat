@@ -114,10 +114,8 @@ const ContactsContainer = () => {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex flex-col">
-                            <h5 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
-                              {contact?.name}
-                            </h5>
-                            <h6 className="text-xs font-medium text-neutral-700 dark:text-neutral-200">
+                            <h5 className="heading-name">{contact?.name}</h5>
+                            <h6 className="heading-uname">
                               {contact?.username}
                             </h6>
                           </div>

@@ -246,13 +246,11 @@ const MessageBar = () => {
                 <HiOutlineFaceSmile
                   size={20}
                   onClick={() => setEmojiPicker((prev) => !prev)}
-                  className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                  className="tooltip-icon"
                 />
               </TooltipTrigger>
               <TooltipContent>
-                <span className="text-neutral-700 dark:text-neutral-200 font-medium">
-                  Emojis
-                </span>
+                <span className="tooltip-span">Emojis</span>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -277,13 +275,11 @@ const MessageBar = () => {
                 <HiOutlineLink
                   size={20}
                   onClick={handleAttachClick}
-                  className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                  className="tooltip-icon"
                 />
               </TooltipTrigger>
               <TooltipContent>
-                <span className="text-neutral-700 dark:text-neutral-200 font-medium">
-                  Attach
-                </span>
+                <span className="tooltip-span">Attach</span>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -322,13 +318,11 @@ const MessageBar = () => {
                       setMessage("");
                       setSelectedImage(null);
                     }}
-                    className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                    className="tooltip-icon"
                   />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <span className="text-neutral-700 dark:text-neutral-200 font-medium">
-                    Clear
-                  </span>
+                  <span className="tooltip-span">Clear</span>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -338,13 +332,11 @@ const MessageBar = () => {
                   <HiOutlinePaperAirplane
                     size={20}
                     onClick={handleSendMessage}
-                    className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                    className="tooltip-icon"
                   />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <span className="text-neutral-700 dark:text-neutral-200 font-medium">
-                    Send
-                  </span>
+                  <span className="tooltip-span">Send</span>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

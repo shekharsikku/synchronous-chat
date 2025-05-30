@@ -64,13 +64,11 @@ const AddNewChat = () => {
             <HiOutlinePlus
               onClick={() => setOpenNewChatModal(true)}
               size={18}
-              className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+              className="tooltip-icon"
             />
           </TooltipTrigger>
           <TooltipContent>
-            <span className="text-neutral-700 dark:text-neutral-200 font-medium">
-              New Chat
-            </span>
+            <span className="tooltip-span">New Chat</span>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -120,12 +118,8 @@ const AddNewChat = () => {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <h5 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
-                            {contact?.name}
-                          </h5>
-                          <h6 className="text-xs font-medium text-neutral-700 dark:text-neutral-200">
-                            {contact?.username}
-                          </h6>
+                          <h5 className="heading-name">{contact?.name}</h5>
+                          <h6 className="heading-uname">{contact?.username}</h6>
                         </div>
                       </div>
                     ))}

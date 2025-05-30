@@ -116,9 +116,7 @@ const ChatHeader = () => {
                 </Avatar>
               </TooltipTrigger>
               <TooltipContent>
-                <span className="text-neutral-700 dark:text-neutral-200 font-medium">
-                  Info
-                </span>
+                <span className="tooltip-span">Info</span>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -210,13 +208,11 @@ const ChatHeader = () => {
                         size={20}
                         strokeWidth={1.5}
                         onClick={() => setCallingDialog(true)}
-                        className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                        className="tooltip-icon"
                       />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <span className="text-neutral-700 dark:text-neutral-200 font-medium">
-                        Call Info
-                      </span>
+                      <span className="tooltip-span">Call Info</span>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -232,13 +228,11 @@ const ChatHeader = () => {
                         onClick={() =>
                           requestVoiceCalling(selectedChatData?._id!)
                         }
-                        className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                        className="tooltip-icon"
                       />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <span className="text-neutral-700 dark:text-neutral-200 font-medium">
-                        Voice Call
-                      </span>
+                      <span className="tooltip-span">Voice Call</span>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -249,18 +243,13 @@ const ChatHeader = () => {
           <DropdownMenu>
             <TooltipProvider>
               <Tooltip>
-                <DropdownMenuTrigger asChild>
+                <DropdownMenuTrigger asChild className="hidden">
                   <TooltipTrigger className="focus:outline-none">
-                    <HiOutlineLanguage
-                      size={18}
-                      className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
-                    />
+                    <HiOutlineLanguage size={18} className="tooltip-icon" />
                   </TooltipTrigger>
                 </DropdownMenuTrigger>
                 <TooltipContent>
-                  <span className="text-neutral-700 dark:text-neutral-200 font-medium">
-                    Translate
-                  </span>
+                  <span className="tooltip-span">Translate</span>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -297,13 +286,11 @@ const ChatHeader = () => {
                 <HiOutlineXMark
                   size={20}
                   onClick={closeChat}
-                  className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                  className="tooltip-icon"
                 />
               </TooltipTrigger>
               <TooltipContent>
-                <span className="text-neutral-700 dark:text-neutral-200 font-medium">
-                  Close
-                </span>
+                <span className="tooltip-span">Close</span>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

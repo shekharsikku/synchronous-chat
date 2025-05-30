@@ -69,6 +69,22 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  .tooltip-icon {
+    @apply text-neutral-600 dark:text-neutral-100 border-none outline-none;
+  }
+
+  .tooltip-span {
+    @apply text-neutral-700 dark:text-neutral-200 font-medium;
+  }
+
+  .heading-name {
+    @apply text-sm font-semibold text-neutral-700 dark:text-neutral-200;
+  }
+
+  .heading-uname {
+    @apply text-xs font-medium text-neutral-700 dark:text-neutral-200;
+  }
 }
 
 ::-webkit-scrollbar {

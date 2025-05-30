@@ -169,7 +169,7 @@ const StreamInfo = () => {
                   onMouseLeave={() => setHoverInfo(false)}
                   role="button"
                 >
-                  <h5 className="flex gap-2 text-sm font-semibold text-neutral-700 dark:text-neutral-200">
+                  <h5 className="flex gap-2 heading-name">
                     <span>{displayName(localInfo?.name!)}</span>
                     {hoverInfo ? (
                       <LuAudioLines
@@ -186,16 +186,14 @@ const StreamInfo = () => {
                     )}
                     <span>{displayName(callingInfo?.name!)}</span>
                   </h5>
-                  <p className="flex gap-1 text-xs font-medium text-neutral-700 dark:text-neutral-200">
+                  <p className="flex gap-1 heading-uname">
                     <span>Voice Connected</span>
                     <span>{formatTime(callTimer)}</span>
                   </p>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                <span className="text-neutral-700 dark:text-neutral-200 font-medium">
-                  Call Info
-                </span>
+                <span className="tooltip-span">Call Info</span>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -218,19 +216,19 @@ const StreamInfo = () => {
                       size={20}
                       strokeWidth={1.5}
                       onClick={() => setRemoteMicOff(false)}
-                      className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                      className="tooltip-icon"
                     />
                   ) : (
                     <LuMic
                       size={20}
                       strokeWidth={1.5}
                       onClick={() => setRemoteMicOff(true)}
-                      className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                      className="tooltip-icon"
                     />
                   )}
                 </TooltipTrigger>
                 <TooltipContent>
-                  <span className="text-neutral-700 dark:text-neutral-200 font-medium">
+                  <span className="tooltip-span">
                     {remoteMicOff ? "Mic On" : "Mic Off"}
                   </span>
                 </TooltipContent>
@@ -244,18 +242,18 @@ const StreamInfo = () => {
                     <HiOutlineSpeakerXMark
                       size={20}
                       onClick={() => setMuteUser(false)}
-                      className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                      className="tooltip-icon"
                     />
                   ) : (
                     <HiOutlineSpeakerWave
                       size={20}
                       onClick={() => setMuteUser(true)}
-                      className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                      className="tooltip-icon"
                     />
                   )}
                 </TooltipTrigger>
                 <TooltipContent>
-                  <span className="text-neutral-700 dark:text-neutral-200 font-medium">
+                  <span className="tooltip-span">
                     {muteUser ? "Voice On" : "Voice Off"}
                   </span>
                 </TooltipContent>
@@ -268,13 +266,11 @@ const StreamInfo = () => {
                   <HiOutlinePhoneXMark
                     size={18}
                     onClick={disconnectCalling}
-                    className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                    className="tooltip-icon"
                   />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <span className="text-neutral-700 dark:text-neutral-200 font-medium">
-                    Disconnect
-                  </span>
+                  <span className="tooltip-span">Disconnect</span>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

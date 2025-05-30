@@ -71,19 +71,13 @@ const ProfileInfo = () => {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col text-left">
-                  <h5 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
-                    {userInfo?.name}
-                  </h5>
-                  <h6 className="text-xs font-medium text-neutral-700 dark:text-neutral-200">
-                    {userInfo?.username}
-                  </h6>
+                  <h5 className="heading-name">{userInfo?.name}</h5>
+                  <h6 className="heading-uname">{userInfo?.username}</h6>
                 </div>
               </div>
             </TooltipTrigger>
             <TooltipContent>
-              <span className="text-neutral-700 font-medium dark:text-neutral-200">
-                Profile
-              </span>
+              <span className="tooltip-span">Profile</span>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -96,20 +90,18 @@ const ProfileInfo = () => {
                   <HiOutlineMoon
                     size={20}
                     onClick={() => setTheme("dark")}
-                    className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                    className="tooltip-icon"
                   />
                 ) : (
                   <HiOutlineSun
                     size={20}
                     onClick={() => setTheme("light")}
-                    className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                    className="tooltip-icon"
                   />
                 )}
               </TooltipTrigger>
               <TooltipContent>
-                <span className="text-neutral-700 font-medium dark:text-neutral-200">
-                  Theme
-                </span>
+                <span className="tooltip-span">Theme</span>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -121,20 +113,18 @@ const ProfileInfo = () => {
                   <HiOutlineBellAlert
                     size={20}
                     onClick={() => setIsSoundAllow(false)}
-                    className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                    className="tooltip-icon"
                   />
                 ) : (
                   <HiOutlineBellSlash
                     size={20}
                     onClick={() => setIsSoundAllow(true)}
-                    className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                    className="tooltip-icon"
                   />
                 )}
               </TooltipTrigger>
               <TooltipContent>
-                <span className="text-neutral-700 font-medium dark:text-neutral-200">
-                  Alert
-                </span>
+                <span className="tooltip-span">Alert</span>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -145,13 +135,11 @@ const ProfileInfo = () => {
                 <HiOutlineArrowRightOnRectangle
                   size={20}
                   onClick={handleSignOut}
-                  className="text-neutral-600 dark:text-neutral-100 border-none outline-none transition-all duration-300"
+                  className="tooltip-icon"
                 />
               </TooltipTrigger>
               <TooltipContent>
-                <span className="text-neutral-700 font-medium dark:text-neutral-200">
-                  Sign Out
-                </span>
+                <span className="tooltip-span">Sign Out</span>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
