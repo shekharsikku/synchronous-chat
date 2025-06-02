@@ -213,10 +213,10 @@ const RenderDMMessages = ({
                   <img
                     src={message?.content?.file}
                     alt="Image file"
-                    className="h-60 w-auto rounded"
+                    className="h-auto max-h-60 w-auto rounded"
                   />
                 ) : (
-                  <span className="flex items-center gap-1 italic text-base">
+                  <span className="flex items-center gap-1 text-base">
                     <HiOutlineDocumentArrowDown size={16} /> Download this file
                     to view it.
                   </span>

@@ -1,4 +1,4 @@
-import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
+import EmojiPicker, { EmojiClickData, type Theme } from "emoji-picker-react";
 import {
   Tooltip,
   TooltipContent,
@@ -22,11 +22,12 @@ import { encryptMessage } from "@/lib/noble";
 import { convertToBase64 } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/zustand";
 import { isMobile } from "react-device-detect";
-import { useSocket } from "@/lib/context";
+import { useSocket, useTheme } from "@/lib/context";
 import { toast } from "sonner";
 import api from "@/lib/api";
 
 const MessageBar = () => {
+  const { theme } = useTheme();
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
   const { selectedChatData, setIsPartnerTyping, editDialog } = useChatStore();
@@ -264,7 +265,8 @@ const MessageBar = () => {
                 open={emojiPicker}
                 onEmojiClick={handleAddEmoji}
                 autoFocusSearch={false}
-                className="max-w-72 sm:max-w-80 md:max-w-96"
+                theme={theme as Theme}
+                className="max-w-72 sm:max-w-80 md:max-w-96 bg-background"
               />
             </div>
           )}
