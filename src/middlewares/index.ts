@@ -85,6 +85,7 @@ const authRefresh = async (
       authentication: {
         $elemMatch: {
           _id: authorizeId,
+          ip:  req.clientIp,
           token: refreshToken,
         },
       },

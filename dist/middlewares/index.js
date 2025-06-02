@@ -54,6 +54,7 @@ const authRefresh = async (req, res, next) => {
             authentication: {
                 $elemMatch: {
                     _id: authorizeId,
+                    ip: req.clientIp,
                     token: refreshToken,
                 },
             },

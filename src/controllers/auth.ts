@@ -79,6 +79,7 @@ const signInUser = async (req: Request, res: Response) => {
     const refreshExpiry = env.REFRESH_EXPIRY;
 
     existsUser.authentication?.push({
+      ip: req.clientIp,
       token: refreshToken,
       expiry: new Date(Date.now() + refreshExpiry * 1000),
     });

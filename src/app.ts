@@ -5,6 +5,7 @@ import type {
   ErrorRequestHandler,
 } from "express";
 import express from "express";
+import requestIp from "request-ip";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { rateLimit } from "express-rate-limit";
@@ -22,27 +23,7 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-app.use(
-  express.json({
-    limit: env.PAYLOAD_LIMIT,
-    strict: true,
-  })
-);
-
-app.use(
-  express.urlencoded({
-    limit: env.PAYLOAD_LIMIT,
-    extended: true,
-  })
-);
-
-app.use(
-  cors({
-    origin: env.CORS_ORIGIN,
-    credentials: true,
-  })
-);
-
+/** Helmet - Security Headers */
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -67,11 +48,31 @@ app.use(
     },
   })
 );
-app.use(compression());
-app.use(cookieParser(env.COOKIES_SECRET));
-app.use("/public/temp", express.static(join(__dirname, "../public/temp")));
 
-/** Morgan logging middleware */
+/** CORS - Allow Origin */
+app.use(
+  cors({
+    origin: env.CORS_ORIGIN,
+    credentials: true,
+  })
+);
+
+/** Body Parser - Json & Form Data */
+app.use(
+  express.json({
+    limit: env.PAYLOAD_LIMIT,
+    strict: true,
+  })
+);
+
+app.use(
+  express.urlencoded({
+    limit: env.PAYLOAD_LIMIT,
+    extended: true,
+  })
+);
+
+/** Morgan Logging + Trust Proxy */
 if (env.isDev) {
   app.use(morgan("dev"));
 } else {
@@ -85,15 +86,34 @@ if (env.isDev) {
   );
 }
 
+/** Request IP Address */
+app.use(requestIp.mw());
+
+/** Cookies Parser */
+app.use(cookieParser(env.COOKIES_SECRET));
+
+/** Body Compression */
+app.use(compression());
+
+/** Public Static Assets */
+app.use("/public/temp", express.static(join(__dirname, "../public/temp")));
+
+/** Rate Limiter */
 const limiter = rateLimit({
   windowMs: 5 * 60 * 1000,
   limit: 200,
-  message: { message: "Maximum number of requests exceeded!" },
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req: Request, _res: Response) => {
+    return req.clientIp!;
+  },
+  handler: (req: Request, _res: Response, _next: NextFunction) => {
+    console.error(`Rate limit exceeded for IP: ${req.clientIp}`);
+    throw new HttpError(429, "Maximum number of requests exceeded!");
+  },
 });
 
-/** Rate limiter & Api routers middleware */
+/** Rate Limiter & Api Routers */
 app.use("/api", limiter, routers);
 
 app.all("*path", (_req: Request, res: Response) => {
@@ -108,6 +128,7 @@ app.all("*path", (_req: Request, res: Response) => {
   }
 });
 
+/**  Global Error Handler */
 app.use(((err: Error, _req: Request, res: Response, next: NextFunction) => {
   if (res.headersSent) return next(err);
 

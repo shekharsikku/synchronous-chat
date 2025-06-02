@@ -44,6 +44,7 @@ const UserSchema = new Schema<UserInterface>(
     authentication: {
       type: [
         {
+          ip: String,
           token: String,
           expiry: Date,
         },

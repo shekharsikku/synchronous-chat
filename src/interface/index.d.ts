@@ -12,6 +12,7 @@ interface UserInterface extends Document {
   setup?: boolean;
   authentication?: {
     _id?: Types.ObjectId;
+    ip?: string;
     token: string;
     expiry: Date;
   }[];

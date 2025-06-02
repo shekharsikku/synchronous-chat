@@ -1,4 +1,5 @@
 import express from "express";
+import requestIp from "request-ip";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { rateLimit } from "express-rate-limit";
@@ -13,18 +14,6 @@ import { HttpError, ErrorResponse, SuccessResponse } from "./utils/index.js";
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-app.use(express.json({
-    limit: env.PAYLOAD_LIMIT,
-    strict: true,
-}));
-app.use(express.urlencoded({
-    limit: env.PAYLOAD_LIMIT,
-    extended: true,
-}));
-app.use(cors({
-    origin: env.CORS_ORIGIN,
-    credentials: true,
-}));
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -47,9 +36,18 @@ app.use(helmet({
         },
     },
 }));
-app.use(compression());
-app.use(cookieParser(env.COOKIES_SECRET));
-app.use("/public/temp", express.static(join(__dirname, "../public/temp")));
+app.use(cors({
+    origin: env.CORS_ORIGIN,
+    credentials: true,
+}));
+app.use(express.json({
+    limit: env.PAYLOAD_LIMIT,
+    strict: true,
+}));
+app.use(express.urlencoded({
+    limit: env.PAYLOAD_LIMIT,
+    extended: true,
+}));
 if (env.isDev) {
     app.use(morgan("dev"));
 }
@@ -61,12 +59,22 @@ else {
         immutable: true,
     }));
 }
+app.use(requestIp.mw());
+app.use(cookieParser(env.COOKIES_SECRET));
+app.use(compression());
+app.use("/public/temp", express.static(join(__dirname, "../public/temp")));
 const limiter = rateLimit({
     windowMs: 5 * 60 * 1000,
     limit: 200,
-    message: { message: "Maximum number of requests exceeded!" },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: (req, _res) => {
+        return req.clientIp;
+    },
+    handler: (req, _res, _next) => {
+        console.error(`Rate limit exceeded for IP: ${req.clientIp}`);
+        throw new HttpError(429, "Maximum number of requests exceeded!");
+    },
 });
 app.use("/api", limiter, routers);
 app.all("*path", (_req, res) => {
