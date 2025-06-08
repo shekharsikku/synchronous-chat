@@ -141,6 +141,10 @@ Tell them where to go, how often they can expect to get an update on a
 reported vulnerability, what to expect if the vulnerability is accepted or
 declined, etc.
 
+Found a security issue? Please open an issue!
+
+We appreciate responsible disclosure and will respond promptly.
+
 ### **Developer License**
 
 #### MIT License | Developed by [Shekhar Sharma](https://linkedin.com/in/shekharsikku)
