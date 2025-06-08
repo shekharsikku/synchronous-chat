@@ -36,6 +36,14 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   const [callingActive, setCallingActive] = useState(false);
   const [pendingRequest, setPendingRequest] = useState(false);
 
+  const [muteUser, setMuteUser] = useState(false);
+  const [remoteMute, setRemoteMute] = useState(false);
+  const [remoteMicOff, setRemoteMicOff] = useState(false);
+
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [mediaType, setMediaType] = useState<"audio" | "video">("audio");
+
   const callingToastId = useId();
 
   useEffect(() => {
@@ -49,16 +57,37 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       });
 
       peer.on("call", (call) => {
+        const isVideoCall = mediaType === "video";
+
         navigator.mediaDevices
-          .getUserMedia({ audio: true })
+          .getUserMedia({ audio: true, video: isVideoCall })
           .then((localStream) => {
-            /** Answer the call with your audio stream */
+            /** Answer the call with your audio or video stream */
             call.answer(localStream);
-            localAudioRef.current!.srcObject = localStream;
+
+            if (isVideoCall) {
+              if (localVideoRef.current) {
+                localVideoRef.current.srcObject = localStream;
+              }
+            } else {
+              if (localAudioRef.current) {
+                localAudioRef.current.srcObject = localStream;
+              }
+            }
 
             call.on("stream", (remoteStream) => {
               setMediaStream(remoteStream);
-              remoteAudioRef.current!.srcObject = remoteStream;
+
+              /** Set remote stream to video or audio element */
+              if (isVideoCall) {
+                if (remoteVideoRef.current) {
+                  remoteVideoRef.current.srcObject = remoteStream;
+                }
+              } else {
+                if (remoteAudioRef.current) {
+                  remoteAudioRef.current.srcObject = remoteStream;
+                }
+              }
             });
           });
       });
@@ -74,6 +103,8 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
           name: details.name,
           pid: details.pid,
         });
+
+        setMediaType(details.type);
 
         toast(`Request form ${details?.name}?`, {
           description: "Accept to connect via WebRTC?",
@@ -141,18 +172,38 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       setCallingDialog(true);
       setCallingInfo(remoteInfo);
 
-      /** Streaming Local/Remote Audio */
+      const isVideoCall = mediaType === "video";
+
+      /** Streaming Local/Remote Audio or Video */
       navigator.mediaDevices
-        .getUserMedia({ audio: true })
+        .getUserMedia({ audio: true, video: isVideoCall })
         .then((localStream) => {
-          localAudioRef.current!.srcObject = localStream;
+          if (isVideoCall) {
+            if (localVideoRef.current) {
+              localVideoRef.current.srcObject = localStream;
+            }
+          } else {
+            if (localAudioRef.current) {
+              localAudioRef.current.srcObject = localStream;
+            }
+          }
 
           /** Call the remote user */
           const call = peer?.call(remoteInfo?.pid!, localStream);
 
           call?.on("stream", (remoteStream) => {
             setMediaStream(remoteStream);
-            remoteAudioRef.current!.srcObject = remoteStream;
+
+            /** Set remote stream to Video or Audio element */
+            if (isVideoCall) {
+              if (remoteVideoRef.current) {
+                remoteVideoRef.current.srcObject = remoteStream;
+              }
+            } else {
+              if (remoteAudioRef.current) {
+                remoteAudioRef.current.srcObject = remoteStream;
+              }
+            }
           });
 
           /** Notify the remote user when accept */
@@ -248,17 +299,17 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [socket]);
 
-  const stopMediaTracks = (audioRef: any) => {
-    if (audioRef.current) {
-      const mediaStream = audioRef.current.srcObject as MediaStream;
+  const stopMediaTracks = (mediaRef: any) => {
+    if (mediaRef.current) {
+      const mediaStream = mediaRef.current.srcObject as MediaStream;
       if (mediaStream?.getTracks) {
         mediaStream.getTracks().forEach((track) => {
           track.stop();
           mediaStream.removeTrack(track);
         });
       }
-      audioRef.current.srcObject = null;
-      audioRef.current = null;
+      mediaRef.current.srcObject = null;
+      mediaRef.current = null;
     }
   };
 
@@ -266,6 +317,9 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
     /** Stop local/remote audio tracks */
     stopMediaTracks(localAudioRef);
     stopMediaTracks(remoteAudioRef);
+    /** Stop local/remote video tracks */
+    stopMediaTracks(localVideoRef);
+    stopMediaTracks(remoteVideoRef);
 
     /** Notify the remote user */
     const callingActions = {
@@ -293,6 +347,9 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       /** Stop local/remote audio tracks */
       stopMediaTracks(localAudioRef);
       stopMediaTracks(remoteAudioRef);
+      /** Stop local/remote video tracks */
+      stopMediaTracks(localVideoRef);
+      stopMediaTracks(remoteVideoRef);
 
       /** Reset remote info state */
       setCallingDialog(false);
@@ -308,6 +365,30 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
     /** Cleanup for signaling request */
     return () => {
       socket?.off("after:calldisconnect", handleCallDisconnect);
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    const microphoneAction = {
+      to: callingInfo?.uid,
+      mute: remoteMicOff,
+    };
+    socket?.emit("before:muteaction", { microphoneAction });
+  }, [remoteMicOff]);
+
+  useEffect(() => {
+    const handleMicAction = ({
+      microphoneAction: action,
+    }: {
+      microphoneAction: any;
+    }) => {
+      setRemoteMute(action.mute);
+    };
+
+    socket?.on("after:muteaction", handleMicAction);
+
+    return () => {
+      socket?.off("after:muteaction", handleMicAction);
     };
   }, [socket]);
 
@@ -335,6 +416,16 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
         disconnectCalling,
         mediaStream,
         setMediaStream,
+        remoteMute,
+        setRemoteMute,
+        remoteMicOff,
+        setRemoteMicOff,
+        muteUser,
+        setMuteUser,
+        localVideoRef,
+        remoteVideoRef,
+        mediaType,
+        setMediaType,
       }}
     >
       {children}
