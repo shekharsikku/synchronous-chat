@@ -3,6 +3,7 @@ import {
   HiOutlinePhone,
   HiOutlineXMark,
   HiOutlineLanguage,
+  HiOutlineVideoCamera,
 } from "react-icons/hi2";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -67,12 +68,13 @@ const ChatHeader = () => {
     setPendingRequest,
     setCallingDialog,
     callingInfo,
+    setMediaType,
   } = usePeer();
   const { socket, onlineUsers } = useSocket();
 
   const isCurrentlyOnline = onlineUsers.hasOwnProperty(selectedChatData?._id!);
 
-  const requestVoiceCalling = (userId: string) => {
+  const requestVoiceCalling = (userId: string, type: "audio" | "video") => {
     if (callingActive || pendingRequest) {
       toast.info("Can't request for another call currently!");
       return;
@@ -84,8 +86,10 @@ const ChatHeader = () => {
       name: localInfo?.name,
       to: userId,
       pid: localInfo?.pid,
+      type: type,
     };
 
+    setMediaType(type);
     setPendingRequest(true);
     socket?.emit("before:callrequest", { callingDetails });
   };
@@ -217,25 +221,46 @@ const ChatHeader = () => {
                   </Tooltip>
                 </TooltipProvider>
               ) : (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger
-                      className="focus:outline-none"
-                      disabled={pendingRequest}
-                    >
-                      <HiOutlinePhone
-                        size={18}
-                        onClick={() =>
-                          requestVoiceCalling(selectedChatData?._id!)
-                        }
-                        className="tooltip-icon"
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <span className="tooltip-span">Voice Call</span>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger
+                        className="focus:outline-none"
+                        disabled={pendingRequest}
+                      >
+                        <HiOutlineVideoCamera
+                          size={20}
+                          onClick={() =>
+                            requestVoiceCalling(selectedChatData?._id!, "video")
+                          }
+                          className="tooltip-icon"
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <span className="tooltip-span">Video Call</span>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger
+                        className="focus:outline-none"
+                        disabled={pendingRequest}
+                      >
+                        <HiOutlinePhone
+                          size={18}
+                          onClick={() =>
+                            requestVoiceCalling(selectedChatData?._id!, "audio")
+                          }
+                          className="tooltip-icon"
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <span className="tooltip-span">Voice Call</span>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </>
               )}
             </>
           )}
