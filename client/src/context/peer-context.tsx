@@ -8,7 +8,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef, useId, ReactNode } from "react";
 import { useAuthStore } from "@/zustand";
 import { toast } from "sonner";
-import Peer from "peerjs";
+import Peer, { MediaConnection } from "peerjs";
 
 const PeerProvider = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
@@ -17,7 +17,8 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
 
-  const [peer, setPeer] = useState<Peer | null>(null);
+  const peerRef = useRef<Peer | null>(null);
+  const [isPeerReady, setIsPeerReady] = useState(false);
 
   const [localInfo, setLocalInfo] = useState<PeerInformation>(null);
   const [remoteInfo, setRemoteInfo] = useState<PeerInformation>(null);
@@ -49,87 +50,115 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (userInfo?.setup) {
       const peer = new Peer();
-
-      setPeer(peer);
+      peerRef.current = peer;
 
       peer.on("open", (id) => {
-        setLocalInfo({ uid: userInfo._id!, name: userInfo.name!, pid: id });
+        setLocalInfo({
+          uid: userInfo._id!,
+          name: userInfo.name!,
+          pid: id,
+        });
+        setIsPeerReady(true);
       });
 
-      peer.on("call", (call) => {
-        const isVideoCall = mediaType === "video";
-
-        navigator.mediaDevices
-          .getUserMedia({ audio: true, video: isVideoCall })
-          .then((localStream) => {
-            /** Answer the call with your audio or video stream */
-            call.answer(localStream);
-
-            if (isVideoCall) {
-              if (localVideoRef.current) {
-                localVideoRef.current.srcObject = localStream;
-              }
-            } else {
-              if (localAudioRef.current) {
-                localAudioRef.current.srcObject = localStream;
-              }
-            }
-
-            call.on("stream", (remoteStream) => {
-              setMediaStream(remoteStream);
-
-              /** Set remote stream to video or audio element */
-              if (isVideoCall) {
-                if (remoteVideoRef.current) {
-                  remoteVideoRef.current.srcObject = remoteStream;
-                }
-              } else {
-                if (remoteAudioRef.current) {
-                  remoteAudioRef.current.srcObject = remoteStream;
-                }
-              }
-            });
-          });
-      });
-
-      /** Handle incoming signaling events */
-      const handleCallingRequest = ({
-        callingDetails: details,
-      }: {
-        callingDetails: any;
-      }) => {
-        setRemoteInfo({
-          uid: details.from,
-          name: details.name,
-          pid: details.pid,
-        });
-
-        setMediaType(details.type);
-
-        toast(`Request form ${details?.name}?`, {
-          description: "Accept to connect via WebRTC?",
-          action: {
-            label: "Accept",
-            onClick: () => setCallingResponse("accept"),
-          },
-          duration: 30000,
-          onDismiss: () => setCallingResponse("reject"),
-          onAutoClose: () => setCallingResponse("missed"),
-          unstyled: false,
-          classNames: {
-            actionButton: "h-8 w-16 justify-center hover:opacity-80",
-          },
-        });
-      };
-
-      /** Handling signaling for call request */
-      socket?.on("after:callrequest", handleCallingRequest);
-      /** Cleanup for signaling request */
       return () => {
-        socket?.off("after:callrequest", handleCallingRequest);
+        if (peerRef.current && !peerRef.current.destroyed) {
+          peerRef.current.destroy();
+          peerRef.current = null;
+        }
       };
     }
-  }, [userInfo?._id, socket]);
+  }, [userInfo?._id]);
+
+  useEffect(() => {
+    /** Handle incoming signaling events */
+    const handleCallingRequest = ({
+      callingDetails: details,
+    }: {
+      callingDetails: any;
+    }) => {
+      setRemoteInfo({
+        uid: details.from,
+        name: details.name,
+        pid: details.pid,
+      });
+
+      setMediaType(details.type);
+      const callType = details.type === "video" ? "Video" : "Voice";
+
+      toast(`${callType} call form ${details?.name}?`, {
+        description: "Accept to connect via WebRTC?",
+        action: {
+          label: "Accept",
+          onClick: () => setCallingResponse("accept"),
+        },
+        duration: 30000,
+        onDismiss: () => setCallingResponse("reject"),
+        onAutoClose: () => setCallingResponse("missed"),
+        unstyled: false,
+        classNames: {
+          actionButton: "h-8 w-16 justify-center hover:opacity-80",
+        },
+      });
+    };
+
+    /** Handling signaling for call request */
+    socket?.on("after:callrequest", handleCallingRequest);
+    /** Cleanup for signaling request */
+    return () => {
+      socket?.off("after:callrequest", handleCallingRequest);
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    if (!isPeerReady || !peerRef.current) return;
+
+    const handleCall = (call: MediaConnection) => {
+      const isVideoCall = mediaType === "video";
+
+      navigator.mediaDevices
+        .getUserMedia({ audio: true, video: isVideoCall })
+        .then((localStream) => {
+          /** Answer the call with your audio or video stream */
+          call.answer(localStream);
+
+          if (isVideoCall) {
+            if (localVideoRef.current) {
+              localVideoRef.current.srcObject = localStream;
+            }
+          } else {
+            if (localAudioRef.current) {
+              localAudioRef.current.srcObject = localStream;
+            }
+          }
+
+          call.on("stream", (remoteStream) => {
+            setMediaStream(remoteStream);
+
+            /** Set remote stream to video or audio element */
+            if (isVideoCall) {
+              if (remoteVideoRef.current) {
+                remoteVideoRef.current.srcObject = remoteStream;
+              }
+            } else {
+              if (remoteAudioRef.current) {
+                remoteAudioRef.current.srcObject = remoteStream;
+              }
+            }
+          });
+        })
+        .catch((error) => {
+          console.error("Error accessing media devices:", error.message);
+          toast.error("Camera or mic is already in use!");
+        });
+    };
+
+    peerRef.current.on("call", handleCall);
+
+    return () => {
+      peerRef.current?.off("call", handleCall);
+    };
+  }, [isPeerReady, mediaType]);
 
   useEffect(() => {
     if (pendingRequest) {
@@ -189,7 +218,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
           }
 
           /** Call the remote user */
-          const call = peer?.call(remoteInfo?.pid!, localStream);
+          const call = peerRef.current?.call(remoteInfo?.pid!, localStream);
 
           call?.on("stream", (remoteStream) => {
             setMediaStream(remoteStream);
@@ -215,6 +244,10 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
             pid: localInfo?.pid,
           };
           socket?.emit("before:callconnect", { callingActions });
+        })
+        .catch((error) => {
+          console.error("Error accessing media devices:", error.message);
+          toast.error("Camera or mic is already in use!");
         });
     } else {
       setCallingActive(false);
@@ -395,8 +428,6 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   return (
     <PeerContext.Provider
       value={{
-        peer,
-        setPeer,
         localInfo,
         setLocalInfo,
         remoteInfo,

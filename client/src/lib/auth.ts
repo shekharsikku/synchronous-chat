@@ -62,7 +62,7 @@ export const useSignOut = () => {
   const navigate = useNavigate();
   const { closeChat } = useChatStore();
   const { setUserInfo, setIsAuthenticated } = useAuthStore();
-  const { disconnectCalling, callingActive, setPeer } = usePeer();
+  const { disconnectCalling, callingActive } = usePeer();
 
   const handleSignOut = async (e: any) => {
     e.preventDefault();
@@ -71,14 +71,13 @@ export const useSignOut = () => {
       const response = await api.delete("/api/auth/sign-out");
       setIsAuthenticated(false);
       setUserInfo(null);
-      setPeer(null);
       closeChat();
       delAuthUser();
-      navigate("/auth", { replace: true });
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
     }
+    navigate("/auth", { replace: true });
   };
   return { handleSignOut };
 };

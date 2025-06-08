@@ -38,8 +38,7 @@ export type PeerInformation = {
 export type ResponseActions = "accept" | "reject" | "missed" | null;
 
 export interface PeerInterface {
-  peer: Peer | null;
-  setPeer: Dispatch<SetStateAction<Peer | null>>;
+  peerRef?: RefObject<Peer | null>;
 
   localInfo: PeerInformation;
   setLocalInfo: Dispatch<SetStateAction<PeerInformation>>;

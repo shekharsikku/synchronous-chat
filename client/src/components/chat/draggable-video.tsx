@@ -103,7 +103,7 @@ const DraggableVideo = () => {
       absolute w-96 lg:w-[30rem] xl:w-[36rem] h-96 lg:h-[30rem] bg-background dark:border 
       rounded-xl cursor-move flex items-center justify-center font-bold text-lg shadow-xl p-2 
       transition-transform duration-100 ease-out select-none hover:scale-105 hover:shadow-2xl
-      ${isDragging ? "scale-110 rotate-2 shadow-3xl z-50" : ""}
+      ${isDragging ? "scale-110 shadow-3xl z-50" : ""}
       `}
         style={{
           left: `${position.x}px`,
