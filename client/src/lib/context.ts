@@ -69,6 +69,21 @@ export interface PeerInterface {
 
   mediaStream: MediaStream | undefined;
   setMediaStream: Dispatch<SetStateAction<MediaStream | undefined>>;
+
+  muteUser: boolean;
+  setMuteUser: Dispatch<SetStateAction<boolean>>;
+
+  remoteMute: boolean;
+  setRemoteMute: Dispatch<SetStateAction<boolean>>;
+
+  remoteMicOff: boolean;
+  setRemoteMicOff: Dispatch<SetStateAction<boolean>>;
+
+  localVideoRef: RefObject<HTMLVideoElement | null>;
+  remoteVideoRef: RefObject<HTMLVideoElement | null>;
+
+  mediaType: "audio" | "video";
+  setMediaType: Dispatch<SetStateAction<"audio" | "video">>;
 }
 
 export const PeerContext = createContext<PeerInterface | undefined>(undefined);
