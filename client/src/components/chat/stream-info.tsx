@@ -20,17 +20,11 @@ import {
 import { LuMic, LuMicOff, LuAudioLines, LuAudioWaveform } from "react-icons/lu";
 import { continuousVisualizer } from "sound-visualizer";
 import { useState, useRef, useEffect } from "react";
-import { usePeer, useSocket } from "@/lib/context";
+import { usePeer } from "@/lib/context";
 
 const StreamInfo = () => {
-  const { socket } = useSocket();
-
   const [callTimer, setCallTimer] = useState(0);
-  const [muteUser, setMuteUser] = useState(false);
   const [hoverInfo, setHoverInfo] = useState(false);
-  const [remoteMute, setRemoteMute] = useState(false);
-  const [remoteMicOff, setRemoteMicOff] = useState(false);
-
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -44,6 +38,12 @@ const StreamInfo = () => {
     remoteAudioRef,
     disconnectCalling,
     callingActive,
+    mediaType,
+    remoteMute,
+    remoteMicOff,
+    setRemoteMicOff,
+    muteUser,
+    setMuteUser,
   } = usePeer();
 
   const maskedPeerId = (uuid: string) => {
@@ -131,30 +131,6 @@ const StreamInfo = () => {
     }
   }, [mediaStream, callingActive, remoteAudioRef, callingDialog, remoteMute]);
 
-  useEffect(() => {
-    const microphoneAction = {
-      to: callingInfo?.uid,
-      mute: remoteMicOff,
-    };
-    socket?.emit("before:muteaction", { microphoneAction });
-  }, [remoteMicOff]);
-
-  useEffect(() => {
-    const handleMicAction = ({
-      microphoneAction: action,
-    }: {
-      microphoneAction: any;
-    }) => {
-      setRemoteMute(action.mute);
-    };
-
-    socket?.on("after:muteaction", handleMicAction);
-
-    return () => {
-      socket?.off("after:muteaction", handleMicAction);
-    };
-  }, [socket]);
-
   return (
     <>
       <div className="h-bar border-t p-2">
@@ -187,7 +163,9 @@ const StreamInfo = () => {
                     <span>{displayName(callingInfo?.name!)}</span>
                   </h5>
                   <p className="flex gap-1 heading-uname">
-                    <span>Voice Connected</span>
+                    <span>
+                      {mediaType === "video" ? "Video" : "Voice"} Connected
+                    </span>
                     <span>{formatTime(callTimer)}</span>
                   </p>
                 </div>
@@ -279,7 +257,10 @@ const StreamInfo = () => {
       </div>
 
       {/* Dialog for display info */}
-      <Dialog open={callingDialog} onOpenChange={setCallingDialog}>
+      <Dialog
+        open={callingDialog && mediaType === "audio"}
+        onOpenChange={setCallingDialog}
+      >
         <DialogContent className="h-auto w-80 md:w-96 flex flex-col rounded-md items-start">
           <DialogHeader>
             <DialogTitle className="text-start">
@@ -292,7 +273,7 @@ const StreamInfo = () => {
 
           <div className="w-full flex flex-col gap-2">
             <h3 className="text-sm font-medium flex justify-between">
-              <span>Voice Connected</span>
+              <span>{mediaType === "video" ? "Video" : "Voice"} Connected</span>
               <span>{formatTime(callTimer)}</span>
             </h3>
 

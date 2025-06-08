@@ -1,12 +1,15 @@
 import { useChatStore } from "@/zustand";
+import { usePeer } from "@/lib/context";
 import {
   ContactsContainer,
   EmptyChatContainer,
   ChatContainer,
+  DraggableVideo,
 } from "@/components/chat";
 
 const Chat = () => {
   const { selectedChatData } = useChatStore();
+  const { mediaType, callingActive } = usePeer();
 
   return (
     <div className="h-screen w-screen flex overflow-hidden">
@@ -14,6 +17,7 @@ const Chat = () => {
         <ContactsContainer />
         {selectedChatData ? <ChatContainer /> : <EmptyChatContainer />}
       </div>
+      {mediaType === "video" && callingActive && <DraggableVideo />}
     </div>
   );
 };
