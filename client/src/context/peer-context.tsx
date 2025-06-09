@@ -27,6 +27,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   const localAudioRef = useRef<HTMLAudioElement | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const callTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [callingResponse, setCallingResponse] = useState<ResponseActions>(null);
   const [mediaStream, setMediaStream] = useState<MediaStream | undefined>(
@@ -47,28 +48,108 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
 
   const callingToastId = useId();
 
-  useEffect(() => {
-    if (userInfo?.setup) {
-      const peer = new Peer();
-      peerRef.current = peer;
-
-      peer.on("open", (id) => {
-        setLocalInfo({
-          uid: userInfo._id!,
-          name: userInfo.name!,
-          pid: id,
-        });
-        setIsPeerReady(true);
-      });
-
-      return () => {
-        if (peerRef.current && !peerRef.current.destroyed) {
-          peerRef.current.destroy();
-          peerRef.current = null;
-        }
-      };
+  const cleanupPeer = () => {
+    if (peerRef.current && !peerRef.current.destroyed) {
+      peerRef.current.destroy();
+      peerRef.current = null;
+      console.log("🧹 Cleaned up old peer!");
+      return true;
     }
-  }, [userInfo?._id]);
+
+    console.log("🚫 No active peer to clean up!");
+    return false;
+  };
+
+  useEffect(() => {
+    /** Function for initialize and manage peer connection. */
+    const createPeerConnection = () => {
+      const cleaned = cleanupPeer();
+      if (cleaned) {
+        console.log("✨ Peer cleanup done!");
+      }
+
+      if (userInfo?.setup) {
+        console.log("🛠️ Creating peer connection!");
+
+        const peer = new Peer();
+        peerRef.current = peer;
+
+        peer.on("open", (id) => {
+          console.log("✅ Peer connected successfully!");
+
+          if (import.meta.env.DEV) {
+            console.log("🆔 Peer ID:", id);
+          }
+
+          setLocalInfo({
+            uid: userInfo._id!,
+            name: userInfo.name!,
+            pid: id,
+          });
+          setIsPeerReady(true);
+        });
+
+        peer.on("error", (error) => {
+          console.error("❌ Peer error:", error.message);
+          setIsPeerReady(false);
+
+          if (error.type === "network" && navigator.onLine) {
+            console.log("🔁 Retrying connection in 5s!");
+            setTimeout(() => {
+              createPeerConnection();
+            }, 5000);
+          }
+        });
+
+        peer.on("disconnected", () => {
+          console.log("⚠️ Peer disconnected!");
+          setIsPeerReady(false);
+        });
+
+        peer.on("close", () => {
+          console.log("🔚 Peer connection closed!");
+          setIsPeerReady(false);
+          peerRef.current = null;
+        });
+      }
+    };
+
+    const handleReconnect = () => {
+      if (navigator.onLine && userInfo?.setup) {
+        console.log("📶 Network reconnected!");
+
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+        }
+
+        reconnectTimeoutRef.current = setTimeout(() => {
+          createPeerConnection();
+        }, 5000);
+      }
+    };
+
+    createPeerConnection();
+
+    const handleOffline = () => {
+      console.log("📴 Network went offline!");
+      setIsPeerReady(false);
+    };
+
+    window.addEventListener("online", handleReconnect);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleReconnect);
+      window.removeEventListener("offline", handleOffline);
+
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+
+      cleanupPeer();
+    };
+  }, [userInfo?._id, userInfo?.setup]);
 
   useEffect(() => {
     /** Handle incoming signaling events */
