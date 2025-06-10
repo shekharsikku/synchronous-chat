@@ -66,8 +66,8 @@ export interface PeerInterface {
 
   disconnectCalling: () => void;
 
-  mediaStream: MediaStream | undefined;
-  setMediaStream: Dispatch<SetStateAction<MediaStream | undefined>>;
+  mediaStream: MediaStream | null;
+  setMediaStream: Dispatch<SetStateAction<MediaStream | null>>;
 
   muteUser: boolean;
   setMuteUser: Dispatch<SetStateAction<boolean>>;
@@ -115,7 +115,7 @@ export const ThemeContext = createContext<ThemeState | undefined>(initialState);
 
 export const useTheme = () => {
   const context = useContext(ThemeContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useTheme must be used within a ThemeProvider");
   }
   return context;

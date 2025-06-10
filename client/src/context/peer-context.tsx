@@ -30,9 +30,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [callingResponse, setCallingResponse] = useState<ResponseActions>(null);
-  const [mediaStream, setMediaStream] = useState<MediaStream | undefined>(
-    undefined
-  );
+  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
 
   const [callingDialog, setCallingDialog] = useState(false);
   const [callingActive, setCallingActive] = useState(false);
