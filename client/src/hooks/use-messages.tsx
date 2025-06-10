@@ -42,7 +42,7 @@ export const useMessages = () => {
   const { data: messages, isFetching: fetching } = useQuery({
     queryKey: queryKey,
     queryFn: () => fetchMessages(selectedChatData?._id!),
-    staleTime: 4 * 60 * 60 * 1000,
+    staleTime: 6 * 60 * 60 * 1000,
     gcTime: 8 * 60 * 60 * 1000,
     enabled: !!selectedChatData?._id,
   });

@@ -20,7 +20,7 @@ export const useContacts = () => {
   const { data: contacts, isFetching: fetching } = useQuery({
     queryKey: ["contacts", userInfo?._id],
     queryFn: fetchContacts,
-    staleTime: 6 * 60 * 60 * 1000,
+    staleTime: 8 * 60 * 60 * 1000,
     gcTime: 12 * 60 * 60 * 1000,
     enabled: !!userInfo?._id,
   });
