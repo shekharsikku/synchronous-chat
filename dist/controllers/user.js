@@ -6,7 +6,7 @@ import { hasEmptyField, createUserInfo, generateAccess, } from "../utils/helpers
 import { User } from "../models/index.js";
 const profileSetup = async (req, res) => {
     try {
-        const { name, username, gender, bio } = (await req.body);
+        const { name, username, gender, bio } = req.body;
         const requestUser = req.user;
         if (username !== requestUser?.username) {
             const existsUsername = await User.exists({ username });
@@ -84,7 +84,7 @@ const deleteImage = async (req, res) => {
 };
 const changePassword = async (req, res) => {
     try {
-        const { old_password, new_password } = (await req.body);
+        const { old_password, new_password } = req.body;
         if (old_password === new_password) {
             throw new HttpError(400, "Please, choose a different password!");
         }

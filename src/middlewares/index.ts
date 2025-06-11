@@ -166,7 +166,7 @@ const upload = multer({ storage });
 
 const validate =
   <T>(schema: ZodSchema<T>) =>
-  (req: Request, res: Response, next: NextFunction) => {
+  (req: Request<{}, {}, T>, res: Response, next: NextFunction) => {
     try {
       req.body = schema.parse(req.body);
       next();

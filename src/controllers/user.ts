@@ -15,9 +15,9 @@ import {
 } from "../utils/helpers.js";
 import { User } from "../models/index.js";
 
-const profileSetup = async (req: Request, res: Response) => {
+const profileSetup = async (req: Request<{}, {}, Profile>, res: Response) => {
   try {
-    const { name, username, gender, bio } = (await req.body) as Profile;
+    const { name, username, gender, bio } = req.body;
     const requestUser = req.user!;
 
     if (username !== requestUser?.username) {
@@ -145,9 +145,12 @@ const deleteImage = async (req: Request, res: Response) => {
   }
 };
 
-const changePassword = async (req: Request, res: Response) => {
+const changePassword = async (
+  req: Request<{}, {}, Password>,
+  res: Response
+) => {
   try {
-    const { old_password, new_password } = (await req.body) as Password;
+    const { old_password, new_password } = req.body;
 
     if (old_password === new_password) {
       throw new HttpError(400, "Please, choose a different password!");

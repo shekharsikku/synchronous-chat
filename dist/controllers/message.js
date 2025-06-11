@@ -113,7 +113,7 @@ const editMessage = async (req, res) => {
     try {
         const uid = req.user?._id;
         const mid = req.params.id;
-        const { text } = await req.body;
+        const { text } = req.body;
         if (!text) {
             throw new HttpError(400, "Text content is required for editing!");
         }
@@ -153,7 +153,7 @@ const deleteMessages = async (req, res) => {
 };
 const translateMessage = async (req, res) => {
     try {
-        const { message, language } = (await req.body);
+        const { message, language } = req.body;
         if (!message || !language) {
             throw new HttpError(400, "Text message and language is required!");
         }

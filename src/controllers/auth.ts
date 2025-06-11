@@ -11,9 +11,9 @@ import {
 import { User } from "../models/index.js";
 import env from "../utils/env.js";
 
-const signUpUser = async (req: Request, res: Response) => {
+const signUpUser = async (req: Request<{}, {}, SignUp>, res: Response) => {
   try {
-    const { email, password } = (await req.body) as SignUp;
+    const { email, password } = req.body;
 
     const existsEmail = await User.exists({ email });
 
@@ -36,9 +36,9 @@ const signUpUser = async (req: Request, res: Response) => {
   }
 };
 
-const signInUser = async (req: Request, res: Response) => {
+const signInUser = async (req: Request<{}, {}, SignIn>, res: Response) => {
   try {
-    const { email, password, username } = (await req.body) as SignIn;
+    const { email, password, username } = req.body;
     const conditions = [];
 
     if (email) {

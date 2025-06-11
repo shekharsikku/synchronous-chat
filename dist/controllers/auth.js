@@ -5,7 +5,7 @@ import { User } from "../models/index.js";
 import env from "../utils/env.js";
 const signUpUser = async (req, res) => {
     try {
-        const { email, password } = (await req.body);
+        const { email, password } = req.body;
         const existsEmail = await User.exists({ email });
         if (existsEmail) {
             throw new HttpError(409, "Email already exists!");
@@ -21,7 +21,7 @@ const signUpUser = async (req, res) => {
 };
 const signInUser = async (req, res) => {
     try {
-        const { email, password, username } = (await req.body);
+        const { email, password, username } = req.body;
         const conditions = [];
         if (email) {
             conditions.push({ email });

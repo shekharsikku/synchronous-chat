@@ -3,9 +3,12 @@ import { HttpError, SuccessResponse, ErrorResponse } from "../utils/index.js";
 import { Types } from "mongoose";
 import { User, Conversation } from "../models/index.js";
 
-const searchContact = async (req: Request, res: Response) => {
+const searchContact = async (
+  req: Request<{}, {}, {}, { search?: string }>,
+  res: Response
+) => {
   try {
-    const search = req.query.search as string;
+    const search = req.query.search;
 
     if (!search) {
       throw new HttpError(400, "Search terms is required!");
@@ -105,7 +108,7 @@ const fetchContacts = async (req: Request, res: Response) => {
   }
 };
 
-const fetchContact = async (req: Request, res: Response) => {
+const fetchContact = async (req: Request<{ id: string }>, res: Response) => {
   try {
     const userId = req.params.id;
 
