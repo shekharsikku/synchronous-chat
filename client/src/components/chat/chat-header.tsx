@@ -95,7 +95,7 @@ const ChatHeader = () => {
   };
 
   return (
-    <div className="h-bar border-b flex items-center justify-between p-2">
+    <header className="h-bar border-b flex items-center justify-between p-2">
       <div className="h-full w-full rounded flex items-center justify-between px-4 bg-gray-100/80 dark:bg-transparent">
         <div className="flex gap-4 items-center justify-center">
           <TooltipProvider>
@@ -321,7 +321,7 @@ const ChatHeader = () => {
           </TooltipProvider>
         </div>
       </div>
-    </div>
+    </header>
   );
 };
 

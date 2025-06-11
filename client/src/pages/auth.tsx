@@ -148,11 +148,8 @@ const Auth = () => {
   };
 
   return (
-    <div className="h-screen w-screen grid place-content-center">
-      <div
-        className="shadow-2xl dark:shadow-black/80 rounded-md grid lg:grid-cols-2 transition-transform duration-300
-      h-max w-[90vw] sm:w-[70vw] md:w-[50vw] lg:w-max px-8 sm:px-12 py-16 lg:p-20 lg:gap-16"
-      >
+    <main className="h-screen w-screen grid place-content-center">
+      <div className="shadow-2xl dark:shadow-slate-950 rounded-md grid lg:grid-cols-2 transition-transform duration-300 h-max w-[90vw] sm:w-[70vw] md:w-[50vw] lg:w-max px-8 sm:px-12 py-16 lg:p-20 lg:gap-16">
         <div className="flex flex-col gap-2 items-center justify-center">
           <div className="flex flex-col items-center justify-center gap-2">
             <h1 className="text-3xl sm:text-4xl font-extrabold">
@@ -347,7 +344,7 @@ const Auth = () => {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

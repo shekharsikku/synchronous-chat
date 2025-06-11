@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+import {
   Form,
   FormControl,
   FormField,
@@ -268,11 +274,8 @@ const Profile = () => {
     userInfo?.name || userInfo?.username || userInfo?.email;
 
   return (
-    <div className="h-screen w-screen grid place-content-center">
-      <div
-        className="shadow-2xl dark:shadow-black/80 rounded-md grid lg:grid-cols-2 transition-transform duration-300 
-      h-max w-[90vw] sm:w-[70vw] md:w-[50vw] lg:w-[70vw] xl:w-[60vw] px-8 sm:px-12 py-16 lg:p-20 lg:gap-16"
-      >
+    <main className="h-screen w-screen grid place-content-center">
+      <div className="shadow-2xl dark:shadow-slate-950 rounded-md grid lg:grid-cols-2 transition-transform duration-300 h-max w-[90vw] sm:w-[70vw] md:w-[50vw] lg:w-[70vw] xl:w-[60vw] px-8 sm:px-12 py-16 lg:p-20 lg:gap-16">
         <div className="w-full flex flex-col gap-2 items-center justify-end lg:justify-center">
           <div className="w-full flex flex-col gap-2 items-center justify-center">
             <h2 className="text-3xl font-extrabold xl:text-4xl">
@@ -328,7 +331,7 @@ const Profile = () => {
             />
           </div>
           <div className="flex flex-col gap-2 w-full mb-3 lg:mb-1">
-            <Label htmlFor="profile-email">Email</Label>
+            <Label htmlFor="profile-email">Email*</Label>
             <Input
               type="email"
               id="profile-email"
@@ -340,31 +343,60 @@ const Profile = () => {
             />
           </div>
           <div className="hidden lg:flex gap-6 w-full items-center justify-center">
-            <Button
-              size="sm"
-              className="w-full"
-              onClick={() => navigate("/chat")}
-              disabled={isLoading || !userInfo?.setup}
-            >
-              <HiOutlineChatBubbleLeftRight size={20} />
-            </Button>
-            <Button
-              size="sm"
-              className="w-full"
-              onClick={() => setOpenPasswordDialog(true)}
-              disabled={isLoading}
-            >
-              {" "}
-              <HiOutlineKey size={20} />
-            </Button>
-            <Button
-              size="sm"
-              className="w-full"
-              onClick={handleSignOut}
-              disabled={isLoading}
-            >
-              <HiOutlineArrowRightOnRectangle size={20} />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="focus:outline-none" asChild>
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={() => navigate("/chat")}
+                    disabled={isLoading || !userInfo?.setup}
+                  >
+                    <HiOutlineChatBubbleLeftRight size={20} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span className="tooltip-span">Chat Messages</span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="focus:outline-none" asChild>
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setOpenPasswordDialog(true)}
+                    disabled={isLoading}
+                  >
+                    {" "}
+                    <HiOutlineKey size={20} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span className="tooltip-span">Change Password</span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="focus:outline-none" asChild>
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={handleSignOut}
+                    disabled={isLoading}
+                  >
+                    <HiOutlineArrowRightOnRectangle size={20} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span className="tooltip-span">Sign Out</span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
 
@@ -477,30 +509,60 @@ const Profile = () => {
             </form>
           </Form>
           <div className="lg:hidden flex gap-4 md:gap-6 w-full items-center justify-center mt-2">
-            <Button
-              size="sm"
-              className="w-full"
-              onClick={() => navigate("/chat")}
-              disabled={isLoading || !userInfo?.setup}
-            >
-              <HiOutlineChatBubbleLeftRight size={20} />
-            </Button>
-            <Button
-              size="sm"
-              className="w-full"
-              onClick={() => setOpenPasswordDialog(true)}
-              disabled={isLoading}
-            >
-              <HiOutlineKey size={20} />
-            </Button>
-            <Button
-              size="sm"
-              className="w-full"
-              onClick={handleSignOut}
-              disabled={isLoading}
-            >
-              <HiOutlineArrowRightOnRectangle size={20} />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="focus:outline-none" asChild>
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={() => navigate("/chat")}
+                    disabled={isLoading || !userInfo?.setup}
+                  >
+                    <HiOutlineChatBubbleLeftRight size={20} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span className="tooltip-span">Chat Messages</span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="focus:outline-none" asChild>
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setOpenPasswordDialog(true)}
+                    disabled={isLoading}
+                  >
+                    {" "}
+                    <HiOutlineKey size={20} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span className="tooltip-span">Change Password</span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="focus:outline-none" asChild>
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={handleSignOut}
+                    disabled={isLoading}
+                  >
+                    <HiOutlineArrowRightOnRectangle size={20} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span className="tooltip-span">Sign Out</span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
       </div>
@@ -675,7 +737,7 @@ const Profile = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </main>
   );
 };
 

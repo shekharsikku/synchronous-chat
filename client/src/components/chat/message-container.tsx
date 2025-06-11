@@ -64,7 +64,7 @@ const MessageContainer = () => {
   }, [messages, fetching]);
 
   return (
-    <div className="w-full flex-1 overflow-y-auto scrollbar-hide scroll-smooth px-4">
+    <section className="w-full flex-1 overflow-y-auto scrollbar-hide scroll-smooth px-4">
       {fetching ? (
         <MessageSkeleton />
       ) : (
@@ -75,7 +75,7 @@ const MessageContainer = () => {
         />
       )}
       {!fetching && <div ref={lastMessageRef} />}
-    </div>
+    </section>
   );
 };
 

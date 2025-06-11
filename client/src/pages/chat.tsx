@@ -12,13 +12,13 @@ const Chat = () => {
   const { mediaType, callingActive } = usePeer();
 
   return (
-    <div className="h-screen w-screen flex overflow-hidden">
+    <main className="h-screen w-screen flex overflow-hidden">
       <div className="h-full w-full flex">
         <ContactsContainer />
         {selectedChatData ? <ChatContainer /> : <EmptyChatContainer />}
       </div>
       {mediaType === "video" && callingActive && <DraggableVideo />}
-    </div>
+    </main>
   );
 };
 

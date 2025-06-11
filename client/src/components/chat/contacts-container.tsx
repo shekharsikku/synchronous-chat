@@ -50,16 +50,16 @@ const ContactsContainer = () => {
   );
 
   return (
-    <div
+    <aside
       className={cn(
         selectedChatData && "hidden md:flex flex-col",
         "h-full w-full md:w-1/3 xl:w-1/4 border-r relative"
       )}
     >
-      <div className="h-bar border-b p-2">
+      <header className="h-bar border-b p-2">
         <Logo />
-      </div>
-      <div
+      </header>
+      <section
         className={cn(
           callingActive ? "h-cda" : "h-clh",
           "w-full overflow-hidden"
@@ -139,10 +139,12 @@ const ContactsContainer = () => {
             </>
           )}
         </div>
-      </div>
-      {callingActive && <StreamInfo />}
-      <ProfileInfo />
-    </div>
+      </section>
+      <footer className="w-full flex flex-col">
+        {callingActive && <StreamInfo />}
+        <ProfileInfo />
+      </footer>
+    </aside>
   );
 };
 

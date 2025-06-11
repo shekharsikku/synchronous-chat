@@ -6,14 +6,9 @@ const EmptyChatContainer = () => {
     <div className="flex-1 bg-transparent hidden md:flex flex-col items-center justify-center gap-4">
       <HiOutlineChatBubbleLeftRight size={100} />
       <h3 className="flex items-center justify-center text-center gap-3 font-extrabold text-opacity-90 text-2xl lg:text-3xl xl:text-4xl transition-transform duration-300">
-        Welcome to
-        <span className="text-gray-900 dark:text-gray-100">
-          {" "}
-          Synchronous Chat!
-        </span>{" "}
-        <HiLanguage strokeWidth={1.5} />
+        Welcome to Synchronous Chat! <HiLanguage strokeWidth={1.5} />
       </h3>
-      <p className="text-lg lg:text-xl text-gray-700  dark:text-gray-300">
+      <p className="text-sm lg:text-base text-gray-700  dark:text-gray-300">
         Share you smile with this world find friends & enjoy!
       </p>
       <h6 className="text-sm lg:text-base font-semibold text-gray-900 dark:text-gray-200">

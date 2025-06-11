@@ -238,7 +238,7 @@ const MessageBar = () => {
   };
 
   return (
-    <div className="h-bar w-full border-t flex items-center justify-center p-2">
+    <footer className="h-bar w-full border-t flex items-center justify-center p-2">
       <div className="w-full flex rounded items-center justify-center gap-4 bg-gray-100/80 dark:bg-transparent px-4 h-full">
         <div className="flex gap-4 relative">
           <TooltipProvider>
@@ -345,7 +345,7 @@ const MessageBar = () => {
           </div>
         )}
       </div>
-    </div>
+    </footer>
   );
 };
 
