@@ -21,10 +21,11 @@ io.on("connection", (socket) => {
             userSocketMap.set(userId, new Set());
         }
         userSocketMap.get(userId)?.add(socket.id);
-        console.log(`UserId ${userId} connected with socketId ${socket.id}`);
+        console.log(`User connected: ${userId}:${socket.id}`);
     }
     else {
-        console.log("Cannot get User ID for socket connection!");
+        console.log(`Socket disconnected missing userId:${socket.id}`);
+        socket.disconnect();
     }
     io.emit("users:online", Array.from(userSocketMap.entries()).reduce((acc, [userId, sockets]) => {
         acc[userId] = Array.from(sockets);
@@ -77,13 +78,12 @@ io.on("connection", (socket) => {
         });
     });
     socket.on("disconnect", () => {
-        console.log(`User disconnected: ${socket.id}`);
         for (const [userId, sockets] of userSocketMap.entries()) {
             if (sockets.has(socket.id)) {
+                console.log(`User disconnected: ${userId}:${socket.id}`);
                 sockets.delete(socket.id);
-                if (sockets.size === 0) {
+                if (sockets.size === 0)
                     userSocketMap.delete(userId);
-                }
                 break;
             }
         }
