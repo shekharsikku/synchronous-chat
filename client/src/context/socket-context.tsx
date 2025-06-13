@@ -7,7 +7,9 @@ const serverUrl = import.meta.env.VITE_SERVER_URL;
 
 const SocketProvider = ({ children }: { children: ReactNode }) => {
   const { userInfo } = useAuthStore();
+  /** States for manage socket connection and online users */
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState({});
 
   useEffect(() => {
@@ -19,13 +21,24 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
 
       setSocket(socket);
 
-      socket.on("connect", () => {});
+      socket.on("connect", () => {
+        console.log("☑️ Connected to socket server!");
+        setIsConnected(true);
+      });
+
+      socket.on("disconnect", () => {
+        console.log("⚠️ Disconnected from socket server!");
+        setIsConnected(false);
+      });
 
       socket.on("users:online", (onlineUsers) => {
         setOnlineUsers(onlineUsers);
       });
 
       return () => {
+        socket?.off("connect");
+        socket?.off("disconnect");
+        socket?.off("users:online");
         socket?.close();
       };
     } else {
@@ -35,7 +48,7 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
   }, [userInfo?._id]);
 
   return (
-    <SocketContext.Provider value={{ socket, onlineUsers }}>
+    <SocketContext.Provider value={{ socket, isConnected, onlineUsers }}>
       {children}
     </SocketContext.Provider>
   );

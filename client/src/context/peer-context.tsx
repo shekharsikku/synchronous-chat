@@ -14,7 +14,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { socket } = useSocket();
+  const { socket, isConnected } = useSocket();
   const { userInfo } = useAuthStore();
 
   const peerRef = useRef<Peer | null>(null);
@@ -59,6 +59,11 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    if (!userInfo?._id || !isConnected) {
+      console.log("⚠️ Returning from peer effect!");
+      return;
+    }
+
     /** Function for initialize and manage peer connection. */
     const createPeerConnection = () => {
       const cleaned = cleanupPeer();
@@ -147,7 +152,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
 
       cleanupPeer();
     };
-  }, [userInfo?._id, userInfo?.setup]);
+  }, [userInfo?._id, userInfo?.setup, isConnected]);
 
   useEffect(() => {
     /** Handle incoming signaling events */

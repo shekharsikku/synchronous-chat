@@ -10,6 +10,7 @@ import Peer from "peerjs";
 
 export interface SocketInterface {
   socket: Socket | null;
+  isConnected: boolean;
   onlineUsers: object;
 }
 
