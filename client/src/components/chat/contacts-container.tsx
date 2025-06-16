@@ -1,6 +1,7 @@
 import { HiMiniSignal, HiMiniSignalSlash } from "react-icons/hi2";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 import { ContactListSkeleton } from "./contact-list-skeleton";
 import { Logo, Title } from "./logo-title";
 import { AddNewChat } from "./add-new-chat";
@@ -11,9 +12,9 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { useEffect, useState } from "react";
 import { useContacts } from "@/hooks/use-contacts";
 import { useSelectedChat } from "@/hooks/use-selected-chat";
-import { useChatStore } from "@/zustand";
+import { useChatStore, UserInfo } from "@/zustand";
 import { usePeer, useSocket } from "@/lib/context";
-import { useAvatar } from "@/lib/hooks";
+import { useDebounce, useAvatar } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 
 const ContactsContainer = () => {
@@ -25,6 +26,26 @@ const ContactsContainer = () => {
 
   const { contacts, fetching } = useContacts();
   const { selectedChatData } = useSelectedChat();
+  const [filtered, setFiltered] = useState<UserInfo[]>([]);
+
+  useEffect(() => {
+    setFiltered(contacts || []);
+  }, [contacts]);
+
+  const filterContacts = useDebounce((value: string) => {
+    if (!value) {
+      setFiltered(contacts || []);
+      return;
+    }
+
+    setFiltered(
+      contacts?.filter(
+        (contact: any) =>
+          contact?.name?.toLowerCase().includes(value) ||
+          contact?.username?.toLowerCase().includes(value)
+      ) || []
+    );
+  }, 1500);
 
   useEffect(() => {
     setLastChatUser(searchParams.get("user"));
@@ -70,20 +91,28 @@ const ContactsContainer = () => {
             <Title title="Chat Messages" />
             <AddNewChat />
           </div>
+          <Input
+            type="search"
+            id="search-chat-input"
+            placeholder="Search chat"
+            className="rounded px-3 py-5"
+            autoComplete="off"
+            onChange={(e) => filterContacts(e.target.value.toLowerCase())}
+          />
           {fetching ? (
             <div className="h-full overflow-y-scroll scrollbar-hide">
               <ContactListSkeleton animate="pulse" status count={10} />
             </div>
           ) : (
             <>
-              {contacts?.length! <= 0 ? (
+              {filtered?.length! <= 0 ? (
                 <p className="text-neutral-700 dark:text-neutral-200">
                   No any chat available!
                 </p>
               ) : (
                 <ScrollArea className="h-full overflow-y-auto scrollbar-hide">
                   <div className="flex flex-col gap-4">
-                    {contacts?.map((contact: any) => (
+                    {filtered?.map((contact: any) => (
                       <div
                         key={contact?._id}
                         className={`w-full flex items-center justify-between cursor-pointer transition-[transform,opacity,box-shadow] duration-0 rounded border py-2 px-4 xl:px-6 hover:transition-colors hover:duration-300 hover:bg-gray-100/80 dark:hover:bg-gray-100/5 dark:hover:border-gray-700

@@ -82,6 +82,7 @@ const AddNewChat = () => {
             id="search-contact-input"
             placeholder="Enter name or username"
             className="rounded px-3 py-5"
+            autoComplete="off"
             onChange={(e) => searchContacts(e.target.value)}
           />
           {isFetching ? (
