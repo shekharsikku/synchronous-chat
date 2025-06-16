@@ -14,6 +14,14 @@ const getSocketId = (userId) => {
     const userSockets = userSocketMap.get(userId) || new Set();
     return Array.from(userSockets);
 };
+io.use((socket, next) => {
+    const secretKey = socket.handshake.auth.secretKey;
+    if (secretKey !== env.SOCKET_SECRET) {
+        console.log(`Unauthorized socket attempt: ${socket.handshake.address}`);
+        return next(new Error("Unauthorized socket connection!"));
+    }
+    next();
+});
 io.on("connection", (socket) => {
     const userId = socket.handshake.query.userId;
     if (userId) {

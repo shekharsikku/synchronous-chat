@@ -2,8 +2,10 @@ import { useEffect, useState, ReactNode } from "react";
 import { useAuthStore } from "@/zustand";
 import { SocketContext } from "@/lib/context";
 import io, { Socket } from "socket.io-client";
+import { toast } from "sonner";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL;
+const secretKey = import.meta.env.VITE_APP_SECRET;
 
 const SocketProvider = ({ children }: { children: ReactNode }) => {
   const { userInfo } = useAuthStore();
@@ -17,6 +19,7 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
       const socket = io(serverUrl, {
         withCredentials: true,
         query: { userId: userInfo._id },
+        auth: { secretKey: secretKey },
       });
 
       setSocket(socket);
@@ -35,10 +38,15 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
         setOnlineUsers(onlineUsers);
       });
 
+      socket.on("connect_error", (error) => {
+        toast.error(error.message);
+      });
+
       return () => {
         socket?.off("connect");
         socket?.off("disconnect");
         socket?.off("users:online");
+        socket?.off("connect_error");
         socket?.close();
       };
     } else {

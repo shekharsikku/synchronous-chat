@@ -15,6 +15,7 @@ const env = cleanEnv(process.env, {
   REFRESH_EXPIRY: num(),
 
   COOKIES_SECRET: str(),
+  SOCKET_SECRET: str(),
   PAYLOAD_LIMIT: str(),
   PORT: port(),
 
