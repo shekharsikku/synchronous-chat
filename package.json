@@ -19,10 +19,9 @@
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
-    "@types/jsonwebtoken": "^9.0.9",
     "@types/morgan": "^1.9.10",
     "@types/multer": "^1.4.13",
-    "@types/node": "^24.0.1",
+    "@types/node": "^24.0.3",
     "@types/request-ip": "^0.0.41",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
@@ -30,7 +29,7 @@
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "bing-translate-api": "^4.0.2",
-    "cloudinary": "^2.6.1",
+    "cloudinary": "^2.7.0",
     "compression": "^1.8.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -41,13 +40,12 @@
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.1.0",
     "jose": "^6.0.11",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.15.2",
+    "mongoose": "^8.16.0",
     "morgan": "^1.10.0",
     "multer": "^2.0.1",
     "peer": "^1.0.2",
     "request-ip": "^3.3.0",
     "socket.io": "^4.8.1",
-    "zod": "^3.25.64"
+    "zod": "^3.25.67"
   }
 }

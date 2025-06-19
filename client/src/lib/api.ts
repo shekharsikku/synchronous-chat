@@ -29,7 +29,10 @@ api.interceptors.response.use(
         setAuthUser(result);
         return api(originalRequest);
       } catch (error: any) {
-        delAuthUser();
+        if (error.response?.status === 403) {
+          delAuthUser();
+          window.location.href = "/auth";
+        }
         return Promise.reject(error);
       }
     }
