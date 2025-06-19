@@ -95,7 +95,7 @@ const deleteMessage = async (req, res) => {
             $unset: { content: 1 },
         }, { new: true });
         if (!message) {
-            throw new HttpError(403, "You can't delete this message or message not found!");
+            throw new HttpError(400, "You can't delete this message or message not found!");
         }
         const senderSocketId = getSocketId(message?.sender.toString());
         const receiverSocketId = getSocketId(message?.recipient.toString());
@@ -122,7 +122,7 @@ const editMessage = async (req, res) => {
             "content.text": text,
         }, { new: true });
         if (!message) {
-            throw new HttpError(403, "You can't edit this message or message not found!");
+            throw new HttpError(400, "You can't edit this message or message not found!");
         }
         const senderSocketId = getSocketId(message?.sender.toString());
         const receiverSocketId = getSocketId(message?.recipient.toString());

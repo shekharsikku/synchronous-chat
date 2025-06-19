@@ -1,5 +1,5 @@
 import type { UserInterface } from "../interface/index.js";
-import { Types, Schema, model } from "mongoose";
+import { Schema, model } from "mongoose";
 
 const UserSchema = new Schema<UserInterface>(
   {
@@ -58,7 +58,14 @@ const UserSchema = new Schema<UserInterface>(
 
 UserSchema.pre("save", function (next) {
   if (!this.username || this.username.trim() === "") {
-    this.username = new Types.ObjectId().toString();
+    /** Generate a temporary username by splitting email  */
+    const localPart = this.email.split("@")[0].split(".")[0];
+
+    /** Unique suffix according to current timestamp  */
+    const uniqueSuffix = Date.now().toString(36);
+
+    /** Use combination of temporary username and unique suffix */
+    this.username = `${localPart}_${uniqueSuffix}`;
   }
   next();
 });

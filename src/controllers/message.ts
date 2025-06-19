@@ -140,7 +140,7 @@ const deleteMessage = async (req: Request<{ id: string }>, res: Response) => {
 
     if (!message) {
       throw new HttpError(
-        403,
+        400,
         "You can't delete this message or message not found!"
       );
     }
@@ -187,7 +187,7 @@ const editMessage = async (
 
     if (!message) {
       throw new HttpError(
-        403,
+        400,
         "You can't edit this message or message not found!"
       );
     }

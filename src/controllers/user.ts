@@ -159,13 +159,13 @@ const changePassword = async (
     const requestUser = await User.findById(req.user?._id).select("+password");
 
     if (!requestUser) {
-      throw new HttpError(403, "Invalid authorization!");
+      throw new HttpError(401, "Invalid authorization!");
     }
 
     const isCorrect = await compare(old_password, requestUser.password!);
 
     if (!isCorrect) {
-      throw new HttpError(403, "Incorrect old password!");
+      throw new HttpError(401, "Incorrect old password!");
     }
 
     const hashSalt = await genSalt(12);

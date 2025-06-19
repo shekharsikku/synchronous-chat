@@ -1,4 +1,4 @@
-import { Types, Schema, model } from "mongoose";
+import { Schema, model } from "mongoose";
 const UserSchema = new Schema({
     name: {
         type: String,
@@ -52,7 +52,9 @@ const UserSchema = new Schema({
 });
 UserSchema.pre("save", function (next) {
     if (!this.username || this.username.trim() === "") {
-        this.username = new Types.ObjectId().toString();
+        const localPart = this.email.split("@")[0].split(".")[0];
+        const uniqueSuffix = Date.now().toString(36);
+        this.username = `${localPart}_${uniqueSuffix}`;
     }
     next();
 });
