@@ -2,9 +2,8 @@ import type { UserInterface } from "../interface/index.js";
 import type { Response } from "express";
 import type { Types } from "mongoose";
 import { createSecretKey, createHash } from "crypto";
-import { CompactEncrypt } from "jose";
+import { CompactEncrypt, SignJWT } from "jose";
 import { deflateSync } from "zlib";
-import jwt from "jsonwebtoken";
 import env from "../utils/env.js";
 
 const generateSecret = async () => {
@@ -33,13 +32,15 @@ const generateAccess = async (res: Response, user?: UserInterface) => {
   return accessToken;
 };
 
-const generateRefresh = (res: Response, uid: Types.ObjectId) => {
+const generateRefresh = async (res: Response, uid: Types.ObjectId) => {
   const refreshExpiry = env.REFRESH_EXPIRY;
+  const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
 
-  const refreshToken = jwt.sign({ uid }, env.REFRESH_SECRET, {
-    algorithm: "HS512",
-    expiresIn: refreshExpiry,
-  });
+  const refreshToken = await new SignJWT({ uid: uid.toString() })
+    .setProtectedHeader({ alg: "HS512" })
+    .setIssuedAt()
+    .setExpirationTime(`${refreshExpiry}sec`)
+    .sign(refreshSecret);
 
   res.cookie("refresh", refreshToken, {
     maxAge: refreshExpiry * 1000 * 2,
