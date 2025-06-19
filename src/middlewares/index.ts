@@ -2,7 +2,6 @@ import type { NextFunction, Request, Response } from "express";
 import type { UserInterface } from "../interface/index.js";
 import type { ZodSchema } from "zod";
 import type { Types } from "mongoose";
-import type { JwtPayload } from "jsonwebtoken";
 import { HttpError, ErrorResponse } from "../utils/index.js";
 import {
   generateSecret,
@@ -12,9 +11,8 @@ import {
   createUserInfo,
 } from "../utils/helpers.js";
 import { User } from "../models/index.js";
-import { compactDecrypt } from "jose";
+import { compactDecrypt, jwtVerify } from "jose";
 import { inflateSync } from "zlib";
-import jwt from "jsonwebtoken";
 import env from "../utils/env.js";
 import multer from "multer";
 
@@ -30,23 +28,23 @@ const authAccess = async (
       throw new HttpError(401, "Unauthorized access request!");
     }
 
-    let decodedPayload;
+    let accessPayload;
 
     try {
       const accessSecret = await generateSecret();
       const decrypted = await compactDecrypt(accessToken, accessSecret);
-      decodedPayload = JSON.parse(inflateSync(decrypted.plaintext).toString());
+      accessPayload = JSON.parse(inflateSync(decrypted.plaintext).toString());
     } catch (error: any) {
-      throw new HttpError(403, "Invalid access request!");
+      throw new HttpError(401, "Invalid or expired access request!");
     }
 
-    req.user = decodedPayload as UserInterface;
+    req.user = accessPayload as UserInterface;
     next();
   } catch (error: any) {
     return ErrorResponse(
       res,
       error.code || 500,
-      error.message || "Something went wrong!"
+      error.message || "Error while auth access!"
     );
   }
 };
@@ -64,68 +62,19 @@ const authRefresh = async (
       throw new HttpError(401, "Unauthorized refresh request!");
     }
 
-    let decodedPayload;
+    let refreshPayload;
 
     try {
-      decodedPayload = jwt.verify(refreshToken, env.REFRESH_SECRET, {
-        algorithms: ["HS512"],
-        ignoreExpiration: true,
-        ignoreNotBefore: true,
-      }) as JwtPayload;
+      const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
+
+      refreshPayload = (await jwtVerify(refreshToken, refreshSecret)).payload;
     } catch (error: any) {
-      throw new HttpError(403, "Invalid refresh request!");
-    }
-
-    const userId = decodedPayload.uid as Types.ObjectId;
-    const currentTime = Math.floor(Date.now() / 1000);
-    const beforeExpires = decodedPayload.exp! - env.REFRESH_EXPIRY / 2;
-
-    const requestUser = await User.findOne({
-      _id: userId,
-      authentication: {
-        $elemMatch: {
-          _id: authorizeId,
-          token: refreshToken,
-        },
-      },
-    });
-
-    if (!requestUser) {
-      throw new HttpError(403, "Invalid user request!");
-    }
-
-    const userInfo = createUserInfo(requestUser);
-
-    if (currentTime >= beforeExpires && currentTime < decodedPayload.exp!) {
-      const newRefreshToken = generateRefresh(res, userId);
-      const refreshExpiry = env.REFRESH_EXPIRY;
-
-      const updatedAuth = await User.updateOne(
+      await User.updateOne(
         {
-          _id: userId,
           authentication: {
             $elemMatch: { _id: authorizeId, token: refreshToken },
           },
         },
-        {
-          $set: {
-            "authentication.$.token": newRefreshToken,
-            "authentication.$.expiry": new Date(
-              Date.now() + refreshExpiry * 1000
-            ),
-          },
-        }
-      );
-
-      if (updatedAuth.modifiedCount > 0) {
-        authorizeCookie(res, authorizeId);
-        await generateAccess(res, userInfo);
-      } else {
-        throw new HttpError(403, "Invalid refresh request!");
-      }
-    } else if (currentTime >= decodedPayload.exp!) {
-      await User.updateOne(
-        { _id: userId },
         {
           $pull: {
             authentication: { _id: authorizeId, token: refreshToken },
@@ -137,10 +86,48 @@ const authRefresh = async (
       res.clearCookie("refresh");
       res.clearCookie("current");
 
-      throw new HttpError(401, "Please, login again to continue!");
-    } else {
-      await generateAccess(res, userInfo);
+      throw new HttpError(403, "Please, signin again to continue!");
     }
+
+    const userId = refreshPayload.uid as Types.ObjectId;
+    const currentTime = Math.floor(Date.now() / 1000);
+    const expiresAt = refreshPayload.exp ?? currentTime;
+
+    const authFilter = {
+      _id: userId,
+      authentication: {
+        $elemMatch: { _id: authorizeId, token: refreshToken },
+      },
+    };
+
+    const requestUser = await User.findOne(authFilter);
+
+    if (!requestUser) {
+      throw new HttpError(401, "Invalid authorization!");
+    }
+
+    const userInfo = createUserInfo(requestUser);
+    const shouldRotate = currentTime >= expiresAt - env.REFRESH_EXPIRY / 2;
+
+    if (shouldRotate) {
+      const newRefreshToken = await generateRefresh(res, userId);
+      const newRefreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
+
+      const updatedResult = await User.updateOne(authFilter, {
+        $set: {
+          "authentication.$.token": newRefreshToken,
+          "authentication.$.expiry": newRefreshExpiry,
+        },
+      });
+
+      if (updatedResult.modifiedCount === 0) {
+        throw new HttpError(403, "Please, signin again to continue!");
+      }
+
+      authorizeCookie(res, authorizeId);
+    }
+
+    await generateAccess(res, userInfo);
 
     req.user = userInfo;
     next();
@@ -148,7 +135,7 @@ const authRefresh = async (
     return ErrorResponse(
       res,
       error.code || 500,
-      error.message || "Something went wrong!"
+      error.message || "Error while token refresh!"
     );
   }
 };

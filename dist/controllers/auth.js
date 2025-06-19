@@ -40,18 +40,18 @@ const signInUser = async (req, res) => {
         }
         const isCorrect = await compare(password, existsUser.password);
         if (!isCorrect) {
-            throw new HttpError(403, "Incorrect password!");
+            throw new HttpError(401, "Incorrect password!");
         }
         const userInfo = createUserInfo(existsUser);
         await generateAccess(res, userInfo);
         if (!userInfo.setup) {
             return SuccessResponse(res, 200, "Please, complete your profile!", userInfo);
         }
-        const refreshToken = generateRefresh(res, userInfo._id);
-        const refreshExpiry = env.REFRESH_EXPIRY;
+        const refreshToken = await generateRefresh(res, userInfo._id);
+        const refreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
         existsUser.authentication?.push({
             token: refreshToken,
-            expiry: new Date(Date.now() + refreshExpiry * 1000),
+            expiry: refreshExpiry,
         });
         const authorizeUser = await existsUser.save();
         const authorizeId = authorizeUser.authentication?.find((auth) => auth.token === refreshToken)?._id;

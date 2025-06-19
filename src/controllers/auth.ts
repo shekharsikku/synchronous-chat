@@ -60,7 +60,7 @@ const signInUser = async (req: Request<{}, {}, SignIn>, res: Response) => {
     const isCorrect = await compare(password, existsUser.password!);
 
     if (!isCorrect) {
-      throw new HttpError(403, "Incorrect password!");
+      throw new HttpError(401, "Incorrect password!");
     }
 
     const userInfo = createUserInfo(existsUser);
@@ -75,12 +75,12 @@ const signInUser = async (req: Request<{}, {}, SignIn>, res: Response) => {
       );
     }
 
-    const refreshToken = generateRefresh(res, userInfo._id!);
-    const refreshExpiry = env.REFRESH_EXPIRY;
+    const refreshToken = await generateRefresh(res, userInfo._id!);
+    const refreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
 
     existsUser.authentication?.push({
       token: refreshToken,
-      expiry: new Date(Date.now() + refreshExpiry * 1000),
+      expiry: refreshExpiry,
     });
 
     const authorizeUser = await existsUser.save();
