@@ -108,7 +108,7 @@ const ChatHeader = () => {
                   <AvatarImage
                     src={userAvatar}
                     alt="profile"
-                    className="object-fit h-full w-full"
+                    className="object-cover size-full"
                   />
                   <AvatarFallback
                     className={`uppercase h-full w-full text-xl border text-center font-medium 
@@ -126,7 +126,7 @@ const ChatHeader = () => {
           </TooltipProvider>
           {/* Dialog for show user information */}
           <Dialog open={openUserInfoModal} onOpenChange={setOpenUserInfoModal}>
-            <DialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl p-8">
+            <DialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl p-8 select-none">
               <DialogHeader className="hidden">
                 <DialogTitle></DialogTitle>
                 <DialogDescription></DialogDescription>
@@ -135,7 +135,7 @@ const ChatHeader = () => {
               <div className="flex justify-center">
                 <img
                   className="w-24 h-24 lg:w-32 lg:h-32 rounded-full border-4 border-white 
-                shadow-lg -mt-20 lg:-mt-24 transition-all"
+                  object-cover shadow-lg -mt-20 lg:-mt-24 transition-all"
                   src={userAvatar}
                   alt="User profile"
                 />

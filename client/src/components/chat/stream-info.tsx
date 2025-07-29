@@ -261,7 +261,7 @@ const StreamInfo = () => {
         open={callingDialog && mediaType === "audio"}
         onOpenChange={setCallingDialog}
       >
-        <DialogContent className="h-auto w-80 md:w-96 flex flex-col rounded-md items-start">
+        <DialogContent className="h-auto w-80 md:w-96 flex flex-col rounded-md items-start select-none">
           <DialogHeader>
             <DialogTitle className="text-start">
               Call with {callingInfo?.name}

@@ -295,7 +295,7 @@ const Profile = () => {
                   <AvatarImage
                     src={selectedImage}
                     alt="profile"
-                    className="object-fit size-full"
+                    className="object-cover size-full"
                   />
                   <AvatarFallback
                     className={`uppercase size-full text-5xl border text-center font-bold transition-all hover:bg-black/90 bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb] dark:bg-transparent`}
@@ -569,7 +569,7 @@ const Profile = () => {
 
       {/* Dialog for changing password */}
       <Dialog open={openPasswordDialog} onOpenChange={setOpenPasswordDialog}>
-        <DialogContent className="h-auto w-80 md:w-96 flex flex-col rounded-md items-start">
+        <DialogContent className="h-auto w-80 md:w-96 flex flex-col rounded-md items-start select-none">
           <DialogHeader>
             <DialogTitle className="text-start">
               Change Your Password{" "}
@@ -676,7 +676,7 @@ const Profile = () => {
         onOpenChange={setOpenConfirmationModal}
       >
         <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
-        <AlertDialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl">
+        <AlertDialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl select-none">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-start">
               Update profile image?
@@ -712,7 +712,7 @@ const Profile = () => {
         onOpenChange={setOpenImageDeletionModal}
       >
         <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
-        <AlertDialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl">
+        <AlertDialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl select-none">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-start">
               Delete profile image?

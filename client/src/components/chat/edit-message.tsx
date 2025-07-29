@@ -66,7 +66,7 @@ const EditMessage = ({
       onOpenChange={setOpenEditMessageDialog}
     >
       <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
-      <AlertDialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl">
+      <AlertDialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl select-none">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-start">
             Edit Message!

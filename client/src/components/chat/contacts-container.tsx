@@ -133,7 +133,7 @@ const ContactsContainer = () => {
                             <AvatarImage
                               src={useAvatar(contact)}
                               alt="profile"
-                              className="object-fit h-full w-full"
+                              className="object-cover size-full"
                             />
                             <AvatarFallback
                               className={`uppercase h-full w-full text-xl border text-center font-medium transition-all duration-300`}

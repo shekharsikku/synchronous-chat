@@ -305,7 +305,7 @@ const RenderDMMessages = ({
       </span>
       {/* Dialog for image extend view */}
       <Dialog open={imageViewExtend} onOpenChange={setImageViewExtend}>
-        <DialogContent className="h-auto w-[90vw] lg:w-auto rounded-md">
+        <DialogContent className="h-auto w-[90vw] lg:w-auto rounded-md select-none">
           <DialogHeader>
             <DialogTitle className="text-start">
               Image Extend View Mode
