@@ -84,6 +84,9 @@ export interface PeerInterface {
 
   mediaType: "audio" | "video";
   setMediaType: Dispatch<SetStateAction<"audio" | "video">>;
+
+  openPeerShareModal: boolean;
+  setOpenPeerShareModal: Dispatch<SetStateAction<boolean>>;
 }
 
 export const PeerContext = createContext<PeerInterface | undefined>(undefined);

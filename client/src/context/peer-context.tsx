@@ -1,14 +1,15 @@
+import { toast } from "sonner";
+import Peer, { MediaConnection } from "peerjs";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState, useRef, useId, ReactNode } from "react";
 import {
   useSocket,
   PeerContext,
   PeerInformation,
   ResponseActions,
 } from "@/lib/context";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef, useId, ReactNode } from "react";
 import { useAuthStore } from "@/zustand";
-import { toast } from "sonner";
-import Peer, { MediaConnection } from "peerjs";
+import { PeerShare } from "@/components/chat";
 
 const PeerProvider = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
@@ -43,6 +44,8 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const [mediaType, setMediaType] = useState<"audio" | "video">("audio");
+
+  const [openPeerShareModal, setOpenPeerShareModal] = useState(false);
 
   const callingToastId = useId();
 
@@ -541,9 +544,13 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
         remoteVideoRef,
         mediaType,
         setMediaType,
+        peerRef,
+        openPeerShareModal,
+        setOpenPeerShareModal,
       }}
     >
       {children}
+      <PeerShare />
     </PeerContext.Provider>
   );
 };

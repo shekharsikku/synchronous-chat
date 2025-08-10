@@ -4,6 +4,7 @@ import {
   HiOutlineXMark,
   HiOutlineLanguage,
   HiOutlineVideoCamera,
+  HiOutlineShare,
 } from "react-icons/hi2";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -69,6 +70,7 @@ const ChatHeader = () => {
     setCallingDialog,
     callingInfo,
     setMediaType,
+    setOpenPeerShareModal,
   } = usePeer();
   const { socket, onlineUsers } = useSocket();
 
@@ -222,6 +224,23 @@ const ChatHeader = () => {
                 </TooltipProvider>
               ) : (
                 <>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger
+                        className="focus:outline-none"
+                        disabled={pendingRequest}
+                      >
+                        <HiOutlineShare
+                          size={18}
+                          onClick={() => setOpenPeerShareModal(true)}
+                          className="tooltip-icon"
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <span className="tooltip-span">Peer Share</span>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger
