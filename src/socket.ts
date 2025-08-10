@@ -112,6 +112,22 @@ io.on("connection", (socket: Socket) => {
     });
   });
 
+  socket.on("before:share-request", ({ shareInfo }) => {
+    const socketId = getSocketId(shareInfo.to);
+
+    socket.to(socketId).emit("after:share-request", {
+      shareInfo,
+    });
+  });
+
+  socket.on("before:file-request", ({ shareInfo }) => {
+    const socketId = getSocketId(shareInfo.to);
+
+    socket.to(socketId).emit("after:file-request", {
+      shareInfo,
+    });
+  });
+
   socket.on("disconnect", () => {
     for (const [userId, sockets] of userSocketMap.entries()) {
       if (sockets.has(socket.id)) {
