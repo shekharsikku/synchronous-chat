@@ -6,8 +6,7 @@ export const SignUpSchema = z.object({
     .string()
     .min(8, { message: "Password must be at least 8 characters long!" })
     .regex(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/, {
-      message:
-        "Password must have an uppercase, a lowercase letter, and a number!",
+      message: "Password must have an uppercase, a lowercase letter, and a number!",
     })
     .refine((val) => !/\s/.test(val), {
       message: "Password cannot contain spaces!",
@@ -45,8 +44,7 @@ export const PasswordSchema = z.object({
     .string()
     .min(8, { message: "Password must be at least 8 characters long!" })
     .regex(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/, {
-      message:
-        "Password must have an uppercase, a lowercase letter, and a number!",
+      message: "Password must have an uppercase, a lowercase letter, and a number!",
     })
     .refine((val) => !/\s/.test(val), {
       message: "Password cannot contain spaces!",

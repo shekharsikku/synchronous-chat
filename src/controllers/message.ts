@@ -62,11 +62,7 @@ const sendMessage = async (req: Request<{ id: string }>, res: Response) => {
 
     return SuccessResponse(res, 201, "Message sent successfully!", message);
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while sending message!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while sending message!");
   }
 };
 
@@ -108,18 +104,9 @@ const getMessages = async (req: Request<{ id: string }>, res: Response) => {
       return SuccessResponse(res, 200, "No any message available!", []);
     }
 
-    return SuccessResponse(
-      res,
-      200,
-      "Messages fetched successfully!",
-      conversation?.messages
-    );
+    return SuccessResponse(res, 200, "Messages fetched successfully!", conversation?.messages);
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while fetching messages!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while fetching messages!");
   }
 };
 
@@ -139,10 +126,7 @@ const deleteMessage = async (req: Request<{ id: string }>, res: Response) => {
     );
 
     if (!message) {
-      throw new HttpError(
-        400,
-        "You can't delete this message or message not found!"
-      );
+      throw new HttpError(400, "You can't delete this message or message not found!");
     }
 
     const senderSocketId = getSocketId(message?.sender.toString());
@@ -155,18 +139,11 @@ const deleteMessage = async (req: Request<{ id: string }>, res: Response) => {
 
     return SuccessResponse(res, 200, "Message deleted successfully!", message);
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while deleting message!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while deleting message!");
   }
 };
 
-const editMessage = async (
-  req: Request<{ id: string }, {}, { text: string }>,
-  res: Response
-) => {
+const editMessage = async (req: Request<{ id: string }, {}, { text: string }>, res: Response) => {
   try {
     const uid = req.user?._id;
     const mid = req.params.id;
@@ -186,10 +163,7 @@ const editMessage = async (
     );
 
     if (!message) {
-      throw new HttpError(
-        400,
-        "You can't edit this message or message not found!"
-      );
+      throw new HttpError(400, "You can't edit this message or message not found!");
     }
 
     const senderSocketId = getSocketId(message?.sender.toString());
@@ -202,11 +176,7 @@ const editMessage = async (
 
     return SuccessResponse(res, 200, "Message edited successfully!", message);
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while editing message!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while editing message!");
   }
 };
 
@@ -224,18 +194,11 @@ const deleteMessages = async (req: Request, res: Response) => {
 
     return SuccessResponse(res, 200, "Older messages deleted!", result);
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while deleting messages!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while deleting messages!");
   }
 };
 
-const translateMessage = async (
-  req: Request<{}, {}, Translate>,
-  res: Response
-) => {
+const translateMessage = async (req: Request<{}, {}, Translate>, res: Response) => {
   try {
     const { message, language } = req.body;
 
@@ -249,26 +212,10 @@ const translateMessage = async (
       throw new HttpError(500, "Error while translating message!");
     }
 
-    return SuccessResponse(
-      res,
-      200,
-      "Text translated successfully!",
-      result.translation
-    );
+    return SuccessResponse(res, 200, "Text translated successfully!", result.translation);
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while translating message!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while translating message!");
   }
 };
 
-export {
-  sendMessage,
-  getMessages,
-  editMessage,
-  deleteMessage,
-  deleteMessages,
-  translateMessage,
-};
+export { sendMessage, getMessages, editMessage, deleteMessage, deleteMessages, translateMessage };

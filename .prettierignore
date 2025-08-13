@@ -1,0 +1,10 @@
+# node_modules
+node_modules
+
+# env files
+.env
+.env.*
+
+# dist, test dir
+**/dist
+**/test

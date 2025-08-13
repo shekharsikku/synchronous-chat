@@ -21,24 +21,14 @@ type TypeResponse<T = any, E = any> = {
   error?: E;
 };
 
-const ErrorResponse = (
-  res: Response,
-  code: number,
-  message: string,
-  error: any = null
-) => {
+const ErrorResponse = (res: Response, code: number, message: string, error: any = null) => {
   const response: TypeResponse<null> = { success: false, message };
 
   if (error) response.error = error;
   res.status(code).json(response);
 };
 
-const SuccessResponse = (
-  res: Response,
-  code: number,
-  message: string,
-  data: any = null
-) => {
+const SuccessResponse = (res: Response, code: number, message: string, data: any = null) => {
   const response: TypeResponse<any, null> = { success: true, message };
 
   if (data) response.data = data;

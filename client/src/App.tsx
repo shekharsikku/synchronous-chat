@@ -8,11 +8,7 @@ import { useTheme } from "@/lib/context";
 
 const RedirectRoute = () => {
   const { isAuthenticated, userInfo } = useAuthUser();
-  return isAuthenticated && userInfo ? (
-    <Navigate to="/chat" />
-  ) : (
-    <Navigate to="/auth" />
-  );
+  return isAuthenticated && userInfo ? <Navigate to="/chat" /> : <Navigate to="/auth" />;
 };
 
 const ProtectedRoute = ({
@@ -30,11 +26,7 @@ const AuthRoute = ({
   children: ReactNode;
 }>) => {
   const { isAuthenticated, userInfo } = useAuthUser();
-  return isAuthenticated && userInfo?.setup ? (
-    <Navigate to="/chat" />
-  ) : (
-    children
-  );
+  return isAuthenticated && userInfo?.setup ? <Navigate to="/chat" /> : children;
 };
 
 const App = () => {

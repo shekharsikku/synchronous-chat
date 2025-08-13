@@ -3,20 +3,9 @@ import { join, extname } from "path";
 
 const folderPath = "./public/temp";
 
-const extensionsToDelete = [
-  ".png",
-  ".jpg",
-  ".jpeg",
-  ".gif",
-  ".pdf",
-  ".webp",
-  ".svg",
-];
+const extensionsToDelete = [".png", ".jpg", ".jpeg", ".gif", ".pdf", ".webp", ".svg"];
 
-const unlinkFilesWithExtensions = (
-  folderPath: string,
-  extensions: string[]
-) => {
+const unlinkFilesWithExtensions = (folderPath: string, extensions: string[]) => {
   readdir(folderPath, (err, files) => {
     if (err) {
       console.error("Error reading directory:", err);

@@ -8,10 +8,7 @@ import { toast } from "sonner";
 import api from "@/lib/api";
 
 export const setAuthUser = (user: UserInfo) => {
-  const data = encryptInfo(
-    JSON.stringify(user),
-    import.meta.env.VITE_ENCRYPTION
-  );
+  const data = encryptInfo(JSON.stringify(user), import.meta.env.VITE_ENCRYPTION);
   localStorage.setItem("current", data);
 };
 
@@ -30,13 +27,7 @@ export const delAuthUser = () => {
 
 export const useAuthUser = () => {
   const location = useLocation();
-  const {
-    userInfo,
-    isAuthenticated,
-    getUserInfo,
-    setUserInfo,
-    setIsAuthenticated,
-  } = useAuthStore();
+  const { userInfo, isAuthenticated, getUserInfo, setUserInfo, setIsAuthenticated } = useAuthStore();
 
   useEffect(() => {
     (async () => {

@@ -28,17 +28,12 @@ const RenderMessages = React.memo(
             <div className="text-center text-gray-500 dark:text-gray-100 py-4">
               {moment(message.createdAt).isSame(moment(), "day")
                 ? "Today"
-                : moment(message.createdAt).isSame(
-                    moment().subtract(1, "day"),
-                    "day"
-                  )
-                ? "Yesterday"
-                : moment(message.createdAt).format("LL")}
+                : moment(message.createdAt).isSame(moment().subtract(1, "day"), "day")
+                  ? "Yesterday"
+                  : moment(message.createdAt).format("LL")}
             </div>
           )}
-          {selectedChatType === "contact" && (
-            <RenderDMMessages message={message} lastMessageId={lastMessageId} />
-          )}
+          {selectedChatType === "contact" && <RenderDMMessages message={message} lastMessageId={lastMessageId} />}
         </Fragment>
       );
     });
@@ -68,11 +63,7 @@ const MessageContainer = () => {
       {fetching ? (
         <MessageSkeleton />
       ) : (
-        <RenderMessages
-          messages={messages!}
-          lastMessageId={lastMessageId}
-          selectedChatType={selectedChatType}
-        />
+        <RenderMessages messages={messages!} lastMessageId={lastMessageId} selectedChatType={selectedChatType} />
       )}
       {!fetching && <div ref={lastMessageRef} />}
     </section>

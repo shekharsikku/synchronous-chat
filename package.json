@@ -9,7 +9,9 @@
     "build": "tsc --build --clean && tsc --build",
     "start": "node dist/index.js",
     "dev:dev": "concurrently \"npm run dev\" \"npm run dev --prefix client\"",
-    "build:build": "npm run build && npm run build --prefix client"
+    "build:build": "npm run build && npm run build --prefix client",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "keywords": [],
   "author": "",
@@ -21,8 +23,9 @@
     "@types/express": "^5.0.3",
     "@types/morgan": "^1.9.10",
     "@types/multer": "^2.0.0",
-    "@types/node": "^24.2.1",
+    "@types/node": "^24.3.0",
     "@types/request-ip": "^0.0.41",
+    "prettier": "^3.6.2",
     "tsx": "^4.20.4",
     "typescript": "^5.9.2"
   },

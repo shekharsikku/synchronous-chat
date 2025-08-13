@@ -1,23 +1,7 @@
 import EmojiPicker, { EmojiClickData, type Theme } from "emoji-picker-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  HiOutlineFaceSmile,
-  HiOutlineLink,
-  HiOutlinePaperAirplane,
-  HiOutlineBackspace,
-} from "react-icons/hi2";
-import {
-  useState,
-  useEffect,
-  useRef,
-  ChangeEvent,
-  KeyboardEventHandler,
-} from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { HiOutlineFaceSmile, HiOutlineLink, HiOutlinePaperAirplane, HiOutlineBackspace } from "react-icons/hi2";
+import { useState, useEffect, useRef, ChangeEvent, KeyboardEventHandler } from "react";
 import { encryptMessage } from "@/lib/noble";
 import { convertToBase64 } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/zustand";
@@ -52,26 +36,16 @@ const MessageBar = () => {
     const handleSpaceEscapeKeyDown = (event: KeyboardEvent) => {
       const activeElement = document.activeElement as HTMLElement;
 
-      if (
-        editDialog &&
-        (activeElement.tagName === "INPUT" ||
-          activeElement.tagName === "TEXTAREA")
-      ) {
+      if (editDialog && (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA")) {
         return;
       }
 
-      if (
-        event.code === "Space" &&
-        document.activeElement !== inputRef.current
-      ) {
+      if (event.code === "Space" && document.activeElement !== inputRef.current) {
         event.preventDefault();
         inputRef.current?.focus();
       }
 
-      if (
-        event.code === "Escape" &&
-        document.activeElement === inputRef.current
-      ) {
+      if (event.code === "Escape" && document.activeElement === inputRef.current) {
         event.preventDefault();
         inputRef.current?.blur();
       }
@@ -86,10 +60,7 @@ const MessageBar = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        emojiRef.current &&
-        !emojiRef.current.contains(event.target as Node)
-      ) {
+      if (emojiRef.current && !emojiRef.current.contains(event.target as Node)) {
         setEmojiPicker((prev) => !prev);
       }
     };
@@ -182,10 +153,7 @@ const MessageBar = () => {
 
   useEffect(() => {
     socket?.on("typing:display", (typingUser) => {
-      if (
-        typingUser.uid === userInfo?._id &&
-        selectedChatData?._id === typingUser.cid
-      ) {
+      if (typingUser.uid === userInfo?._id && selectedChatData?._id === typingUser.cid) {
         setIsPartnerTyping(typingUser.typing);
       }
     });
@@ -257,10 +225,7 @@ const MessageBar = () => {
           </TooltipProvider>
 
           {emojiPicker && (
-            <div
-              className="absolute bottom-20 left-[-10px] sm:left-[-5px] md:left-0"
-              ref={emojiRef}
-            >
+            <div className="absolute bottom-20 left-[-10px] sm:left-[-5px] md:left-0" ref={emojiRef}>
               <EmojiPicker
                 open={emojiPicker}
                 onEmojiClick={handleAddEmoji}
@@ -274,11 +239,7 @@ const MessageBar = () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger className="focus:outline-none">
-                <HiOutlineLink
-                  size={20}
-                  onClick={handleAttachClick}
-                  className="tooltip-icon"
-                />
+                <HiOutlineLink size={20} onClick={handleAttachClick} className="tooltip-icon" />
               </TooltipTrigger>
               <TooltipContent>
                 <span className="tooltip-span">Attach</span>
@@ -287,13 +248,7 @@ const MessageBar = () => {
           </TooltipProvider>
         </div>
 
-        <input
-          type="file"
-          id="file-input"
-          className="hidden"
-          ref={fileRef}
-          onChange={handleAttachChange}
-        />
+        <input type="file" id="file-input" className="hidden" ref={fileRef} onChange={handleAttachChange} />
 
         <input
           type="text"
@@ -331,11 +286,7 @@ const MessageBar = () => {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger className="focus:outline-none">
-                  <HiOutlinePaperAirplane
-                    size={20}
-                    onClick={handleSendMessage}
-                    className="tooltip-icon"
-                  />
+                  <HiOutlinePaperAirplane size={20} onClick={handleSendMessage} className="tooltip-icon" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <span className="tooltip-span">Send</span>

@@ -1,5 +1,5 @@
 import { HttpError, ErrorResponse } from "../utils/index.js";
-import { generateSecret, generateAccess, generateRefresh, authorizeCookie, createUserInfo, } from "../utils/helpers.js";
+import { generateSecret, generateAccess, generateRefresh, authorizeCookie, createUserInfo } from "../utils/helpers.js";
 import { User } from "../models/index.js";
 import { compactDecrypt, jwtVerify } from "jose";
 import { inflateSync } from "zlib";
@@ -85,7 +85,7 @@ const authRefresh = async (req, res, next) => {
         }
         await generateAccess(res, userInfo);
         req.user = userInfo;
-        next();
+        return next();
     }
     catch (error) {
         return ErrorResponse(res, error.code || 500, error.message || "Error while token refresh!");

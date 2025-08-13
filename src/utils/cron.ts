@@ -17,16 +17,15 @@ const job = new CronJob(
       const sevenDaysAgo = calculatePastDate(7);
       const fourteenDaysAgo = calculatePastDate(14);
 
-      const [authentication, profiles, messages, conversations] =
-        await Promise.all([
-          User.updateMany(
-            { "authentication.expiry": { $lt: currentDate } },
-            { $pull: { authentication: { expiry: { $lt: currentDate } } } }
-          ),
-          User.deleteMany({ setup: false, createdAt: { $lt: threeDaysAgo } }),
-          Message.deleteMany({ createdAt: { $lt: sevenDaysAgo } }),
-          Conversation.deleteMany({ interaction: { $lt: fourteenDaysAgo } }),
-        ]);
+      const [authentication, profiles, messages, conversations] = await Promise.all([
+        User.updateMany(
+          { "authentication.expiry": { $lt: currentDate } },
+          { $pull: { authentication: { expiry: { $lt: currentDate } } } }
+        ),
+        User.deleteMany({ setup: false, createdAt: { $lt: threeDaysAgo } }),
+        Message.deleteMany({ createdAt: { $lt: sevenDaysAgo } }),
+        Conversation.deleteMany({ interaction: { $lt: fourteenDaysAgo } }),
+      ]);
 
       if (env.isDev) {
         console.log("Result:", {

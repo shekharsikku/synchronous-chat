@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useContext,
-  Dispatch,
-  SetStateAction,
-  RefObject,
-} from "react";
+import { createContext, useContext, Dispatch, SetStateAction, RefObject } from "react";
 import { Socket } from "socket.io-client";
 import Peer from "peerjs";
 
@@ -14,9 +8,7 @@ export interface SocketInterface {
   onlineUsers: object;
 }
 
-export const SocketContext = createContext<SocketInterface | undefined>(
-  undefined
-);
+export const SocketContext = createContext<SocketInterface | undefined>(undefined);
 
 /** Custom hook for use socket.io context in app */
 

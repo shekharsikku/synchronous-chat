@@ -1,11 +1,6 @@
 import { useChatStore } from "@/zustand";
 import { usePeer } from "@/lib/context";
-import {
-  ContactsContainer,
-  EmptyChatContainer,
-  ChatContainer,
-  DraggableVideo,
-} from "@/components/chat";
+import { ContactsContainer, EmptyChatContainer, ChatContainer, DraggableVideo } from "@/components/chat";
 
 const Chat = () => {
   const { selectedChatData } = useChatStore();

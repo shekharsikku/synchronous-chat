@@ -2,12 +2,7 @@ import { toast } from "sonner";
 import Peer, { MediaConnection } from "peerjs";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef, useId, ReactNode } from "react";
-import {
-  useSocket,
-  PeerContext,
-  PeerInformation,
-  ResponseActions,
-} from "@/lib/context";
+import { useSocket, PeerContext, PeerInformation, ResponseActions } from "@/lib/context";
 import { useAuthStore } from "@/zustand";
 import { PeerShare } from "@/components/chat";
 
@@ -159,11 +154,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     /** Handle incoming signaling events */
-    const handleCallingRequest = ({
-      callingDetails: details,
-    }: {
-      callingDetails: any;
-    }) => {
+    const handleCallingRequest = ({ callingDetails: details }: { callingDetails: any }) => {
       setRemoteInfo({
         uid: details.from,
         name: details.name,
@@ -374,11 +365,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
 
   /** Mount unmount for request/response action */
   useEffect(() => {
-    const handleCallingActions = ({
-      callingActions: response,
-    }: {
-      callingActions: any;
-    }) => {
+    const handleCallingActions = ({ callingActions: response }: { callingActions: any }) => {
       if (response.action === "accept") {
         setRemoteInfo({
           uid: response.from,
@@ -402,9 +389,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
         setRemoteInfo(null);
 
         if (response.action === "busy") {
-          toast.info(
-            `${response.name} is currently ${response.action} on another call!`
-          );
+          toast.info(`${response.name} is currently ${response.action} on another call!`);
         } else {
           toast.info(`Call request ${response.action} by ${response.name}!`);
         }
@@ -459,11 +444,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    const handleCallDisconnect = ({
-      callingActions: response,
-    }: {
-      callingActions: any;
-    }) => {
+    const handleCallDisconnect = ({ callingActions: response }: { callingActions: any }) => {
       /** Stop local/remote audio tracks */
       stopMediaTracks(localAudioRef);
       stopMediaTracks(remoteAudioRef);
@@ -497,11 +478,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   }, [remoteMicOff]);
 
   useEffect(() => {
-    const handleMicAction = ({
-      microphoneAction: action,
-    }: {
-      microphoneAction: any;
-    }) => {
+    const handleMicAction = ({ microphoneAction: action }: { microphoneAction: any }) => {
       setRemoteMute(action.mute);
     };
 

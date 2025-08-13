@@ -1,26 +1,16 @@
 import type { NextFunction, Request, Response } from "express";
 import type { UserInterface } from "../interface/index.js";
-import type { ZodSchema } from "zod";
+import type { ZodType } from "zod";
 import type { Types } from "mongoose";
 import { HttpError, ErrorResponse } from "../utils/index.js";
-import {
-  generateSecret,
-  generateAccess,
-  generateRefresh,
-  authorizeCookie,
-  createUserInfo,
-} from "../utils/helpers.js";
+import { generateSecret, generateAccess, generateRefresh, authorizeCookie, createUserInfo } from "../utils/helpers.js";
 import { User } from "../models/index.js";
 import { compactDecrypt, jwtVerify } from "jose";
 import { inflateSync } from "zlib";
 import env from "../utils/env.js";
 import multer from "multer";
 
-const authAccess = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<any> => {
+const authAccess = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
   try {
     const accessToken = req.cookies.access;
 
@@ -41,19 +31,11 @@ const authAccess = async (
     req.user = accessPayload as UserInterface;
     next();
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while auth access!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while auth access!");
   }
 };
 
-const authRefresh = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<any> => {
+const authRefresh = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
   try {
     const refreshToken = req.cookies.refresh;
     const authorizeId = req.cookies.current;
@@ -130,13 +112,9 @@ const authRefresh = async (
     await generateAccess(res, userInfo);
 
     req.user = userInfo;
-    next();
+    return next();
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while token refresh!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while token refresh!");
   }
 };
 
@@ -152,7 +130,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 const validate =
-  <T>(schema: ZodSchema<T>) =>
+  <T>(schema: ZodType<T>) =>
   (req: Request<{}, {}, T>, res: Response, next: NextFunction) => {
     try {
       req.body = schema.parse(req.body);

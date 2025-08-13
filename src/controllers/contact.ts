@@ -3,10 +3,7 @@ import { HttpError, SuccessResponse, ErrorResponse } from "../utils/index.js";
 import { Types } from "mongoose";
 import { User, Conversation } from "../models/index.js";
 
-const searchContact = async (
-  req: Request<{}, {}, {}, { search?: string }>,
-  res: Response
-) => {
+const searchContact = async (req: Request<{}, {}, {}, { search?: string }>, res: Response) => {
   try {
     const search = req.query.search;
 
@@ -31,11 +28,7 @@ const searchContact = async (
 
     return SuccessResponse(res, 200, "Available contacts!", contacts);
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while searching contacts!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while searching contacts!");
   }
 };
 
@@ -55,18 +48,9 @@ const availableContact = async (req: Request, res: Response) => {
       value: user._id,
     }));
 
-    return SuccessResponse(
-      res,
-      200,
-      "Contacts fetched successfully!",
-      contacts
-    );
+    return SuccessResponse(res, 200, "Contacts fetched successfully!", contacts);
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while fetching contacts!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while fetching contacts!");
   }
 };
 
@@ -83,28 +67,14 @@ const fetchContacts = async (req: Request, res: Response) => {
 
     const contacts = conversations
       .map((conversation) => {
-        const contact = conversation.participants.find(
-          (participant: any) => !participant._id.equals(uid)
-        );
-
-        return contact
-          ? { ...contact, interaction: conversation.interaction }
-          : null;
+        const contact = conversation.participants.find((participant: any) => !participant._id.equals(uid));
+        return contact ? { ...contact, interaction: conversation.interaction } : null;
       })
       .filter(Boolean);
 
-    return SuccessResponse(
-      res,
-      200,
-      "Contacts fetched successfully!",
-      contacts
-    );
+    return SuccessResponse(res, 200, "Contacts fetched successfully!", contacts);
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while fetching contacts!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while fetching contacts!");
   }
 };
 
@@ -112,26 +82,15 @@ const fetchContact = async (req: Request<{ id: string }>, res: Response) => {
   try {
     const userId = req.params.id;
 
-    const userContact = await User.findById(userId).select(
-      "-setup -createdAt -updatedAt -__v"
-    );
+    const userContact = await User.findById(userId).select("-setup -createdAt -updatedAt -__v");
 
     if (!userContact) {
       throw new HttpError(404, "Contact not found!");
     }
 
-    return SuccessResponse(
-      res,
-      200,
-      "Contact fetched successfully!",
-      userContact
-    );
+    return SuccessResponse(res, 200, "Contact fetched successfully!", userContact);
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while fetching contact!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while fetching contact!");
   }
 };
 

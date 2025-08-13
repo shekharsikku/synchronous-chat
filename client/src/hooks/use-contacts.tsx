@@ -28,26 +28,17 @@ export const useContacts = () => {
   /** Update contact interaction (socket event) */
   useEffect(() => {
     const handleConversationUpdate = (data: UserInfo) => {
-      queryClient.setQueryData<UserInfo[]>(
-        ["contacts", userInfo?._id],
-        (oldContacts: UserInfo[] | undefined) => {
-          if (!oldContacts) return [];
+      queryClient.setQueryData<UserInfo[]>(["contacts", userInfo?._id], (oldContacts: UserInfo[] | undefined) => {
+        if (!oldContacts) return [];
 
-          /** Update interaction time */
-          const updatedContacts = oldContacts.map((current) =>
-            current._id === data._id
-              ? { ...current, interaction: data.interaction }
-              : current
-          );
+        /** Update interaction time */
+        const updatedContacts = oldContacts.map((current) =>
+          current._id === data._id ? { ...current, interaction: data.interaction } : current
+        );
 
-          /** Sort by latest interaction */
-          return updatedContacts.sort(
-            (a, b) =>
-              new Date(b.interaction).getTime() -
-              new Date(a.interaction).getTime()
-          );
-        }
-      );
+        /** Sort by latest interaction */
+        return updatedContacts.sort((a, b) => new Date(b.interaction).getTime() - new Date(a.interaction).getTime());
+      });
 
       /** Update interacting contact if necessary */
       if (selectedChatData && selectedChatData._id === data._id) {
@@ -67,12 +58,10 @@ export const useContacts = () => {
 
   useEffect(() => {
     const handleMessagesContact = async (message: Message) => {
-      const chatKey =
-        userInfo?._id === message.sender ? message.recipient : message.sender;
+      const chatKey = userInfo?._id === message.sender ? message.recipient : message.sender;
 
       /** Get the latest contacts from the cache */
-      const cachedContacts =
-        queryClient.getQueryData<UserInfo[]>(["contacts", userInfo?._id]) || [];
+      const cachedContacts = queryClient.getQueryData<UserInfo[]>(["contacts", userInfo?._id]) || [];
 
       /** If the user is already in the contact list, don't fetch */
       if (cachedContacts.some((contact) => contact._id === chatKey)) {
@@ -92,21 +81,12 @@ export const useContacts = () => {
         });
 
         /** Update the contacts list with the new contact & Ensure no duplicates before updating the cache */
-        queryClient.setQueryData<UserInfo[]>(
-          ["contacts", userInfo?._id],
-          (contacts = []) => {
-            const uniqueContacts = contacts.filter(
-              (details) => details._id !== newContact._id
-            );
-            return [
-              { ...newContact, interaction: new Date().toISOString() },
-              ...uniqueContacts,
-            ];
-          }
-        );
+        queryClient.setQueryData<UserInfo[]>(["contacts", userInfo?._id], (contacts = []) => {
+          const uniqueContacts = contacts.filter((details) => details._id !== newContact._id);
+          return [{ ...newContact, interaction: new Date().toISOString() }, ...uniqueContacts];
+        });
       } catch (error: any) {
-        import.meta.env.DEV &&
-          console.error("Failed to fetch contact:", error.message);
+        import.meta.env.DEV && console.error("Failed to fetch contact:", error.message);
       }
     };
 

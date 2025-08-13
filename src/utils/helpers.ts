@@ -7,9 +7,7 @@ import { deflateSync } from "zlib";
 import env from "../utils/env.js";
 
 const generateSecret = async () => {
-  return createSecretKey(
-    createHash("sha256").update(env.ACCESS_SECRET).digest()
-  );
+  return createSecretKey(createHash("sha256").update(env.ACCESS_SECRET).digest());
 };
 
 const generateAccess = async (res: Response, user?: UserInterface) => {
@@ -64,9 +62,7 @@ const authorizeCookie = (res: Response, authId: string) => {
 };
 
 const hasEmptyField = (fields: object) => {
-  return Object.values(fields).some(
-    (value) => value === "" || value === undefined || value === null
-  );
+  return Object.values(fields).some((value) => value === "" || value === undefined || value === null);
 };
 
 const createUserInfo = (user: UserInterface) => {
@@ -89,11 +85,4 @@ const createUserInfo = (user: UserInterface) => {
   return userInfo as UserInterface;
 };
 
-export {
-  generateSecret,
-  generateAccess,
-  generateRefresh,
-  authorizeCookie,
-  hasEmptyField,
-  createUserInfo,
-};
+export { generateSecret, generateAccess, generateRefresh, authorizeCookie, hasEmptyField, createUserInfo };

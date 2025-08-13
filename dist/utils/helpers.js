@@ -66,4 +66,4 @@ const createUserInfo = (user) => {
     }
     return userInfo;
 };
-export { generateSecret, generateAccess, generateRefresh, authorizeCookie, hasEmptyField, createUserInfo, };
+export { generateSecret, generateAccess, generateRefresh, authorizeCookie, hasEmptyField, createUserInfo };

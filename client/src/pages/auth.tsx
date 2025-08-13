@@ -7,14 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 import { validateEmail, validateDummyEmail } from "@/lib/utils";
 import { useAuthStore } from "@/zustand";
@@ -41,8 +34,7 @@ const Auth = () => {
         .string()
         .min(8, { message: "Password must be at least 8 characters long!" })
         .regex(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/, {
-          message:
-            "Password ust have an uppercase, a lowercase letter, and a number!",
+          message: "Password ust have an uppercase, a lowercase letter, and a number!",
         })
         .refine((val) => !/\s/.test(val), {
           message: "Password cannot contain spaces!",
@@ -152,9 +144,7 @@ const Auth = () => {
       <div className="shadow-2xl dark:shadow-slate-950 rounded-md grid lg:grid-cols-2 transition-transform duration-300 h-max w-[90vw] sm:w-[70vw] md:w-[50vw] lg:w-max px-8 sm:px-12 py-16 lg:p-20 lg:gap-16">
         <div className="flex flex-col gap-2 items-center justify-center">
           <div className="flex flex-col items-center justify-center gap-2">
-            <h1 className="text-3xl sm:text-4xl font-extrabold">
-              Welcome User!
-            </h1>
+            <h1 className="text-3xl sm:text-4xl font-extrabold">Welcome User!</h1>
             <p className="text-sm sm:text-base text-center text-gray-700 dark:text-gray-300">
               Enter your details to get started!
             </p>
@@ -177,19 +167,14 @@ const Auth = () => {
               </TabsList>
               <TabsContent value="sign-in">
                 <Form {...signInForm}>
-                  <form
-                    onSubmit={signInForm.handleSubmit(signInSubmit)}
-                    className="flex flex-col gap-3 mt-6"
-                  >
+                  <form onSubmit={signInForm.handleSubmit(signInSubmit)} className="flex flex-col gap-3 mt-6">
                     <FormField
                       control={signInForm.control}
                       name="credential"
                       render={({ field }) => (
                         <FormItem>
                           <div className="grid gap-2">
-                            <FormLabel htmlFor="credential">
-                              Email or Username
-                            </FormLabel>
+                            <FormLabel htmlFor="credential">Email or Username</FormLabel>
                             <FormControl>
                               <Input
                                 id="credential"
@@ -238,10 +223,7 @@ const Auth = () => {
               </TabsContent>
               <TabsContent value="sign-up">
                 <Form {...signUpForm}>
-                  <form
-                    onSubmit={signUpForm.handleSubmit(signUpSubmit)}
-                    className="flex flex-col gap-3 mt-6"
-                  >
+                  <form onSubmit={signUpForm.handleSubmit(signUpSubmit)} className="flex flex-col gap-3 mt-6">
                     <FormField
                       control={signUpForm.control}
                       name="email"
@@ -290,9 +272,7 @@ const Auth = () => {
                       render={({ field }) => (
                         <FormItem>
                           <div className="grid gap-2">
-                            <FormLabel htmlFor="confirm">
-                              Confirm Password
-                            </FormLabel>
+                            <FormLabel htmlFor="confirm">Confirm Password</FormLabel>
                             <FormControl>
                               <Input
                                 id="confirm"
@@ -333,11 +313,7 @@ const Auth = () => {
             </h3>
             <h6 className="text-sm font-semibold text-gray-900 dark:text-gray-200">
               Created with ❤︎ by{" "}
-              <Link
-                to="https://github.com/shekharsikku"
-                target="_blank"
-                className="hover:underline"
-              >
+              <Link to="https://github.com/shekharsikku" target="_blank" className="hover:underline">
                 Shekhar Sharma{" "}
               </Link>
             </h6>

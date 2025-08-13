@@ -167,4 +167,4 @@ const translateMessage = async (req, res) => {
         return ErrorResponse(res, error.code || 500, error.message || "Error while translating message!");
     }
 };
-export { sendMessage, getMessages, editMessage, deleteMessage, deleteMessages, translateMessage, };
+export { sendMessage, getMessages, editMessage, deleteMessage, deleteMessages, translateMessage };

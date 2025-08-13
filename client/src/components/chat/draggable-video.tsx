@@ -135,12 +135,8 @@ const DraggableVideo = () => {
           {/* Position Info */}
           <div className="fixed top-2 right-2 bg-background backdrop-blur-sm rounded p-4 shadow-2xl dark:shadow-black/80">
             <div className="font-semibold mb-2">Element Position</div>
-            <div className="text-sm text-gray-600 dark:text-gray-200">
-              X: {Math.round(position.x)}px
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-200">
-              Y: {Math.round(position.y)}px
-            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-200">X: {Math.round(position.x)}px</div>
+            <div className="text-sm text-gray-600 dark:text-gray-200">Y: {Math.round(position.y)}px</div>
             <div className="text-xs text-gray-500 dark:text-gray-100 mt-2">
               {isDragging ? "🟢 Dragging" : "⚪ Ready"}
             </div>
@@ -149,15 +145,9 @@ const DraggableVideo = () => {
           {/* Instructions */}
           <div className="fixed bottom-2 right-2 bg-background backdrop-blur-sm rounded p-4 shadow-2xl dark:shadow-black/80">
             <div className="font-medium mb-1">Instructions:</div>
-            <div className="text-sm opacity-90">
-              • Click and drag the box to move it around
-            </div>
-            <div className="text-sm opacity-90">
-              • Works on both desktop and mobile
-            </div>
-            <div className="text-sm opacity-90">
-              • Element stays within screen bounds
-            </div>
+            <div className="text-sm opacity-90">• Click and drag the box to move it around</div>
+            <div className="text-sm opacity-90">• Works on both desktop and mobile</div>
+            <div className="text-sm opacity-90">• Element stays within screen bounds</div>
           </div>
         </>
       )}

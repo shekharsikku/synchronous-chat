@@ -3,16 +3,8 @@ import type { Profile, Password } from "../utils/schema.js";
 import { genSalt, hash, compare } from "bcryptjs";
 import { HttpError, ErrorResponse, SuccessResponse } from "../utils/index.js";
 import { deleteImageByUrl, uploadOnCloudinary } from "../utils/cloudinary.js";
-import {
-  unlinkFilesWithExtensions,
-  extensionsToDelete,
-  folderPath,
-} from "../utils/unlink.js";
-import {
-  hasEmptyField,
-  createUserInfo,
-  generateAccess,
-} from "../utils/helpers.js";
+import { unlinkFilesWithExtensions, extensionsToDelete, folderPath } from "../utils/unlink.js";
+import { hasEmptyField, createUserInfo, generateAccess } from "../utils/helpers.js";
 import { User } from "../models/index.js";
 
 const profileSetup = async (req: Request<{}, {}, Profile>, res: Response) => {
@@ -35,11 +27,9 @@ const profileSetup = async (req: Request<{}, {}, Profile>, res: Response) => {
       userDetails.setup = true;
     }
 
-    const updatedProfile = await User.findByIdAndUpdate(
-      requestUser?._id,
-      userDetails,
-      { new: true }
-    );
+    const updatedProfile = await User.findByIdAndUpdate(requestUser?._id, userDetails, {
+      new: true,
+    });
 
     if (!updatedProfile) {
       throw new HttpError(400, "Profile setup not completed!");
@@ -48,23 +38,14 @@ const profileSetup = async (req: Request<{}, {}, Profile>, res: Response) => {
     const userInfo = createUserInfo(updatedProfile);
 
     if (!userInfo.setup) {
-      return SuccessResponse(
-        res,
-        200,
-        "Please, complete your profile!",
-        userInfo
-      );
+      return SuccessResponse(res, 200, "Please, complete your profile!", userInfo);
     }
 
     await generateAccess(res, userInfo);
 
     return SuccessResponse(res, 200, "Profile updated successfully!", userInfo);
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while updating profile!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while updating profile!");
   }
 };
 
@@ -97,21 +78,12 @@ const updateImage = async (req: Request, res: Response) => {
       const userInfo = createUserInfo(userProfile);
       await generateAccess(res, userInfo);
 
-      return SuccessResponse(
-        res,
-        200,
-        "Profile image updated successfully!",
-        userInfo
-      );
+      return SuccessResponse(res, 200, "Profile image updated successfully!", userInfo);
     }
     throw new HttpError(500, "Profile image not updated!");
   } catch (error: any) {
     unlinkFilesWithExtensions(folderPath, extensionsToDelete);
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while updating profile image!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while updating profile image!");
   }
 };
 
@@ -128,27 +100,15 @@ const deleteImage = async (req: Request, res: Response) => {
       const userInfo = createUserInfo(requestUser);
       await generateAccess(res, userInfo);
 
-      return SuccessResponse(
-        res,
-        200,
-        "Profile image deleted successfully!",
-        userInfo
-      );
+      return SuccessResponse(res, 200, "Profile image deleted successfully!", userInfo);
     }
     throw new HttpError(400, "Profile image not available!");
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while deleting profile image!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while deleting profile image!");
   }
 };
 
-const changePassword = async (
-  req: Request<{}, {}, Password>,
-  res: Response
-) => {
+const changePassword = async (req: Request<{}, {}, Password>, res: Response) => {
   try {
     const { old_password, new_password } = req.body;
 
@@ -175,18 +135,9 @@ const changePassword = async (
     const userInfo = createUserInfo(requestUser);
     await generateAccess(res, userInfo);
 
-    return SuccessResponse(
-      res,
-      200,
-      "Password changed successfully!",
-      userInfo
-    );
+    return SuccessResponse(res, 200, "Password changed successfully!", userInfo);
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while changing password!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while changing password!");
   }
 };
 
@@ -194,24 +145,12 @@ const userInformation = async (req: Request, res: Response) => {
   try {
     const user = req.user!;
 
-    let message = user?.setup
-      ? "User profile information!"
-      : "Please, complete your profile!";
+    let message = user?.setup ? "User profile information!" : "Please, complete your profile!";
 
     return SuccessResponse(res, 200, message, user);
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while getting user information!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while getting user information!");
   }
 };
 
-export {
-  profileSetup,
-  updateImage,
-  deleteImage,
-  changePassword,
-  userInformation,
-};
+export { profileSetup, updateImage, deleteImage, changePassword, userInformation };

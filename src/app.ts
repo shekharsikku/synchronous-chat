@@ -1,9 +1,4 @@
-import type {
-  NextFunction,
-  Request,
-  Response,
-  ErrorRequestHandler,
-} from "express";
+import type { NextFunction, Request, Response, ErrorRequestHandler } from "express";
 import express from "express";
 import requestIp from "request-ip";
 import { fileURLToPath } from "url";
@@ -29,19 +24,9 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        imgSrc: [
-          "'self'",
-          "res.cloudinary.com",
-          "data:",
-          "https://cdn.jsdelivr.net",
-        ],
+        imgSrc: ["'self'", "res.cloudinary.com", "data:", "https://cdn.jsdelivr.net"],
         scriptSrc: ["'self'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
-        styleSrc: [
-          "'self'",
-          "'unsafe-inline'",
-          "https://fonts.googleapis.com",
-          "https://cdn.jsdelivr.net",
-        ],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         connectSrc: ["'self'", "wss://0.peerjs.com", "https://0.peerjs.com"],
       },
@@ -133,19 +118,10 @@ app.use(((err: Error, _req: Request, res: Response, next: NextFunction) => {
   if (res.headersSent) return next(err);
 
   if (err instanceof HttpError) {
-    return ErrorResponse(
-      res,
-      err.code || 500,
-      err.message || "Internal server error!"
-    );
+    return ErrorResponse(res, err.code || 500, err.message || "Unknown error occurred!");
   }
 
-  const fallback = env.isProd
-    ? "Something went wrong!"
-    : "Unknown error occurred!";
-
-  const message = err.message || fallback;
-
+  const message = err.message || "Internal server error!";
   console.error(`Error: ${message}`);
 
   return ErrorResponse(res, 500, message);

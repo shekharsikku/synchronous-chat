@@ -24,9 +24,6 @@ const ConversationSchema = new Schema<ConversationInterface>(
   { timestamps: true }
 );
 
-const Conversation = model<ConversationInterface>(
-  "Conversation",
-  ConversationSchema
-);
+const Conversation = model<ConversationInterface>("Conversation", ConversationSchema);
 
 export default Conversation;

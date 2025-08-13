@@ -55,11 +55,7 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [userInfo?._id]);
 
-  return (
-    <SocketContext.Provider value={{ socket, isConnected, onlineUsers }}>
-      {children}
-    </SocketContext.Provider>
-  );
+  return <SocketContext.Provider value={{ socket, isConnected, onlineUsers }}>{children}</SocketContext.Provider>;
 };
 
 export default SocketProvider;

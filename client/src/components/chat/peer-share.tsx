@@ -1,9 +1,5 @@
 import { toast } from "sonner";
-import {
-  HiOutlineInformationCircle,
-  HiOutlineDocumentText,
-  HiOutlineXMark,
-} from "react-icons/hi2";
+import { HiOutlineInformationCircle, HiOutlineDocumentText, HiOutlineXMark } from "react-icons/hi2";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,14 +37,7 @@ const ShareStatus = ({ status }: { status: any }) => {
 
 const PeerShare = () => {
   const { socket } = useSocket();
-  const {
-    peerRef,
-    localInfo,
-    remoteInfo,
-    setRemoteInfo,
-    openPeerShareModal,
-    setOpenPeerShareModal,
-  } = usePeer();
+  const { peerRef, localInfo, remoteInfo, setRemoteInfo, openPeerShareModal, setOpenPeerShareModal } = usePeer();
   const { selectedChatData } = useChatStore();
 
   const senderConfirmRef = useRef<HTMLButtonElement | null>(null);
@@ -58,13 +47,7 @@ const PeerShare = () => {
   const [disableShareActions, setDisableShareActions] = useState(false);
 
   const [peerShareRequestStatus, setPeerShareRequestStatus] = useState<
-    | "pending"
-    | "connecting"
-    | "connected"
-    | "sending"
-    | "receiving"
-    | "completed"
-    | "disconnected"
+    "pending" | "connecting" | "connected" | "sending" | "receiving" | "completed" | "disconnected"
   >("pending");
 
   const [incomingFileInfo, setIncomingFileInfo] = useState<{
@@ -299,10 +282,7 @@ const PeerShare = () => {
   return (
     <>
       {/* Alert Dialog for select file and request to receiver */}
-      <AlertDialog
-        open={openPeerShareModal}
-        onOpenChange={setOpenPeerShareModal}
-      >
+      <AlertDialog open={openPeerShareModal} onOpenChange={setOpenPeerShareModal}>
         <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
         <AlertDialogContent className="w-96 rounded-md shadow-lg transition-all hover:shadow-2xl select-none">
           <AlertDialogHeader>
@@ -318,10 +298,7 @@ const PeerShare = () => {
 
               <div className="space-y-4 cursor-pointer">
                 {file ? (
-                  <div
-                    className="flex items-center justify-between p-3 rounded"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  <div className="flex items-center justify-between p-3 rounded" onClick={(e) => e.stopPropagation()}>
                     <HiOutlineDocumentText size={20} />
 
                     <div className="w-full flex items-center justify-center">
@@ -329,9 +306,7 @@ const PeerShare = () => {
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate max-w-xs">
                           {file.name.split(".")[0].substring(0, 25) + "..."}
                         </p>
-                        <p className="text-xs text-gray-500">
-                          {formatSize(file.size)}
-                        </p>
+                        <p className="text-xs text-gray-500">{formatSize(file.size)}</p>
                       </div>
                     </div>
 
@@ -351,9 +326,7 @@ const PeerShare = () => {
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">
                           Click to upload or drag and drop
                         </p>
-                        <p className="text-xs text-gray-500">
-                          File (Max Size {formatSize(maxFileSize)})
-                        </p>
+                        <p className="text-xs text-gray-500">File (Max Size {formatSize(maxFileSize)})</p>
                       </div>
                     </div>
                   </div>
@@ -366,10 +339,7 @@ const PeerShare = () => {
           <ShareStatus status={peerShareRequestStatus} />
 
           <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={unselectFile}
-              disabled={disableShareActions}
-            >
+            <AlertDialogCancel onClick={unselectFile} disabled={disableShareActions}>
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction className="hidden" ref={senderConfirmRef}>
@@ -383,10 +353,7 @@ const PeerShare = () => {
       </AlertDialog>
 
       {/* Alert Dialog to receiver for handle request for file receive*/}
-      <AlertDialog
-        open={openPeerRequestModal}
-        onOpenChange={setOpenPeerRequestModal}
-      >
+      <AlertDialog open={openPeerRequestModal} onOpenChange={setOpenPeerRequestModal}>
         <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
         <AlertDialogContent className="w-96 rounded-md shadow-lg transition-all hover:shadow-2xl select-none">
           <AlertDialogHeader>
@@ -400,12 +367,9 @@ const PeerShare = () => {
             <div className="w-full flex items-center py-3 justify-center">
               <div>
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate max-w-xs">
-                  {incomingFileInfo?.file.split(".")[0].substring(0, 25) +
-                    "..."}
+                  {incomingFileInfo?.file.split(".")[0].substring(0, 25) + "..."}
                 </p>
-                <p className="text-xs text-gray-500">
-                  {incomingFileInfo?.size}
-                </p>
+                <p className="text-xs text-gray-500">{incomingFileInfo?.size}</p>
               </div>
             </div>
           </div>
@@ -414,19 +378,13 @@ const PeerShare = () => {
           <ShareStatus status={peerShareRequestStatus} />
 
           <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => responseShareRequest("reject")}
-              disabled={disableShareActions}
-            >
+            <AlertDialogCancel onClick={() => responseShareRequest("reject")} disabled={disableShareActions}>
               Reject
             </AlertDialogCancel>
             <AlertDialogAction className="hidden" ref={receiverConfirmRef}>
               Continue
             </AlertDialogAction>
-            <Button
-              onClick={() => responseShareRequest("accept")}
-              disabled={disableShareActions}
-            >
+            <Button onClick={() => responseShareRequest("accept")} disabled={disableShareActions}>
               Accept
             </Button>
           </AlertDialogFooter>

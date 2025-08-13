@@ -46,10 +46,13 @@ io.on("connection", (socket: Socket) => {
 
   io.emit(
     "users:online",
-    Array.from(userSocketMap.entries()).reduce((acc, [userId, sockets]) => {
-      acc[userId] = Array.from(sockets);
-      return acc;
-    }, {} as Record<string, string[]>)
+    Array.from(userSocketMap.entries()).reduce(
+      (acc, [userId, sockets]) => {
+        acc[userId] = Array.from(sockets);
+        return acc;
+      },
+      {} as Record<string, string[]>
+    )
   );
 
   socket.on("typing:start", ({ selectedUser, currentUser }) => {
@@ -139,10 +142,13 @@ io.on("connection", (socket: Socket) => {
     }
     io.emit(
       "users:online",
-      Array.from(userSocketMap.entries()).reduce((acc, [userId, sockets]) => {
-        acc[userId] = Array.from(sockets);
-        return acc;
-      }, {} as Record<string, string[]>)
+      Array.from(userSocketMap.entries()).reduce(
+        (acc, [userId, sockets]) => {
+          acc[userId] = Array.from(sockets);
+          return acc;
+        },
+        {} as Record<string, string[]>
+      )
     );
   });
 });

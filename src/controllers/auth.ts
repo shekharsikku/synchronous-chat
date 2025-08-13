@@ -2,12 +2,7 @@ import type { Request, Response } from "express";
 import type { SignUp, SignIn } from "../utils/schema.js";
 import { genSalt, hash, compare } from "bcryptjs";
 import { HttpError, ErrorResponse, SuccessResponse } from "../utils/index.js";
-import {
-  generateAccess,
-  generateRefresh,
-  authorizeCookie,
-  createUserInfo,
-} from "../utils/helpers.js";
+import { generateAccess, generateRefresh, authorizeCookie, createUserInfo } from "../utils/helpers.js";
 import { User } from "../models/index.js";
 import env from "../utils/env.js";
 
@@ -28,11 +23,7 @@ const signUpUser = async (req: Request<{}, {}, SignUp>, res: Response) => {
 
     return SuccessResponse(res, 201, "Signed up successfully!");
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while user signup!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while user signup!");
   }
 };
 
@@ -67,12 +58,7 @@ const signInUser = async (req: Request<{}, {}, SignIn>, res: Response) => {
     await generateAccess(res, userInfo);
 
     if (!userInfo.setup) {
-      return SuccessResponse(
-        res,
-        200,
-        "Please, complete your profile!",
-        userInfo
-      );
+      return SuccessResponse(res, 200, "Please, complete your profile!", userInfo);
     }
 
     const refreshToken = await generateRefresh(res, userInfo._id!);
@@ -84,19 +70,13 @@ const signInUser = async (req: Request<{}, {}, SignIn>, res: Response) => {
     });
 
     const authorizeUser = await existsUser.save();
-    const authorizeId = authorizeUser.authentication?.find(
-      (auth) => auth.token === refreshToken
-    )?._id!;
+    const authorizeId = authorizeUser.authentication?.find((auth) => auth.token === refreshToken)?._id!;
 
     authorizeCookie(res, authorizeId.toString());
 
     return SuccessResponse(res, 200, "Signed in successfully!", userInfo);
   } catch (error: any) {
-    return ErrorResponse(
-      res,
-      error.code || 500,
-      error.message || "Error while user signin!"
-    );
+    return ErrorResponse(res, error.code || 500, error.message || "Error while user signin!");
   }
 };
 

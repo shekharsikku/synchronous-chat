@@ -1,9 +1,6 @@
 import { createHash, createCipheriv, createDecipheriv } from "crypto";
 const generateKeyIv = (secret) => {
-    const key = createHash("sha256")
-        .update(secret)
-        .digest("base64")
-        .substring(0, 32);
+    const key = createHash("sha256").update(secret).digest("base64").substring(0, 32);
     const iv = createHash("md5").update(secret).digest();
     return { key, iv };
 };

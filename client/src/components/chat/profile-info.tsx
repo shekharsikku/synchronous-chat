@@ -6,12 +6,7 @@ import {
   HiOutlineSun,
 } from "react-icons/hi2";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuthStore, useChatStore } from "@/zustand";
 import { useAvatar } from "@/lib/hooks";
 import { useSignOut } from "@/lib/auth";
@@ -51,23 +46,14 @@ const ProfileInfo = () => {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger className="focus:outline-none">
-              <div
-                className="flex gap-4 items-center"
-                onClick={handleProfileNavigate}
-                role="button"
-              >
+              <div className="flex gap-4 items-center" onClick={handleProfileNavigate} role="button">
                 <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
-                  <AvatarImage
-                    src={avatar}
-                    alt="profile"
-                    className="object-cover size-full"
-                  />
+                  <AvatarImage src={avatar} alt="profile" className="object-cover size-full" />
                   <AvatarFallback
                     className={`uppercase h-full w-full text-xl border text-center font-medium 
                       transition-all duration-300 bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]`}
                   >
-                    {userInfo?.username?.split("").shift() ||
-                      userInfo?.email?.split("").shift()}
+                    {userInfo?.username?.split("").shift() || userInfo?.email?.split("").shift()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col text-left">
@@ -87,17 +73,9 @@ const ProfileInfo = () => {
             <Tooltip>
               <TooltipTrigger className="focus:outline-none">
                 {theme === "light" ? (
-                  <HiOutlineMoon
-                    size={20}
-                    onClick={() => setTheme("dark")}
-                    className="tooltip-icon"
-                  />
+                  <HiOutlineMoon size={20} onClick={() => setTheme("dark")} className="tooltip-icon" />
                 ) : (
-                  <HiOutlineSun
-                    size={20}
-                    onClick={() => setTheme("light")}
-                    className="tooltip-icon"
-                  />
+                  <HiOutlineSun size={20} onClick={() => setTheme("light")} className="tooltip-icon" />
                 )}
               </TooltipTrigger>
               <TooltipContent>
@@ -110,17 +88,9 @@ const ProfileInfo = () => {
             <Tooltip>
               <TooltipTrigger className="focus:outline-none">
                 {isSoundAllow ? (
-                  <HiOutlineBellAlert
-                    size={20}
-                    onClick={() => setIsSoundAllow(false)}
-                    className="tooltip-icon"
-                  />
+                  <HiOutlineBellAlert size={20} onClick={() => setIsSoundAllow(false)} className="tooltip-icon" />
                 ) : (
-                  <HiOutlineBellSlash
-                    size={20}
-                    onClick={() => setIsSoundAllow(true)}
-                    className="tooltip-icon"
-                  />
+                  <HiOutlineBellSlash size={20} onClick={() => setIsSoundAllow(true)} className="tooltip-icon" />
                 )}
               </TooltipTrigger>
               <TooltipContent>
@@ -132,11 +102,7 @@ const ProfileInfo = () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger className="focus:outline-none">
-                <HiOutlineArrowRightOnRectangle
-                  size={20}
-                  onClick={handleSignOut}
-                  className="tooltip-icon"
-                />
+                <HiOutlineArrowRightOnRectangle size={20} onClick={handleSignOut} className="tooltip-icon" />
               </TooltipTrigger>
               <TooltipContent>
                 <span className="tooltip-span">Sign Out</span>

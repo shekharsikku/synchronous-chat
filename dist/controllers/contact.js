@@ -56,9 +56,7 @@ const fetchContacts = async (req, res) => {
         const contacts = conversations
             .map((conversation) => {
             const contact = conversation.participants.find((participant) => !participant._id.equals(uid));
-            return contact
-                ? { ...contact, interaction: conversation.interaction }
-                : null;
+            return contact ? { ...contact, interaction: conversation.interaction } : null;
         })
             .filter(Boolean);
         return SuccessResponse(res, 200, "Contacts fetched successfully!", contacts);

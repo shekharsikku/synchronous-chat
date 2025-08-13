@@ -7,19 +7,8 @@ import {
   HiOutlineShare,
 } from "react-icons/hi2";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,14 +29,7 @@ import { toast } from "sonner";
 import moment from "moment";
 
 const ChatHeader = () => {
-  const {
-    selectedChatData,
-    closeChat,
-    isPartnerTyping,
-    messages,
-    language,
-    setLanguage,
-  } = useChatStore();
+  const { selectedChatData, closeChat, isPartnerTyping, messages, language, setLanguage } = useChatStore();
   const [openUserInfoModal, setOpenUserInfoModal] = useState(false);
   const [messageStats, setMessageStats] = useState({ sent: 0, received: 0 });
   const userAvatar = useAvatar(selectedChatData);
@@ -107,17 +89,12 @@ const ChatHeader = () => {
                   className="size-8 rounded-full overflow-hidden cursor-pointer border-2"
                   onClick={() => setOpenUserInfoModal(true)}
                 >
-                  <AvatarImage
-                    src={userAvatar}
-                    alt="profile"
-                    className="object-cover size-full"
-                  />
+                  <AvatarImage src={userAvatar} alt="profile" className="object-cover size-full" />
                   <AvatarFallback
                     className={`uppercase h-full w-full text-xl border text-center font-medium 
                       transition-all duration-300 bg-[#06d6a02a] text-[#06d6a0] border-[#06d6a0bb`}
                   >
-                    {selectedChatData?.username?.split("").shift() ||
-                      selectedChatData?.email?.split("").shift()}
+                    {selectedChatData?.username?.split("").shift() || selectedChatData?.email?.split("").shift()}
                   </AvatarFallback>
                 </Avatar>
               </TooltipTrigger>
@@ -145,45 +122,33 @@ const ChatHeader = () => {
               {/* User Info */}
               <div className="text-center mt-6">
                 <h2 className="text-2xl font-bold">{selectedChatData?.name}</h2>
-                <p className="text-gray-500 dark:text-gray-100">
-                  {selectedChatData?.username}
-                </p>
-                <p className="mt-2 text-gray-600 dark:text-gray-200 text-sm">
-                  {selectedChatData?.bio}
-                </p>
+                <p className="text-gray-500 dark:text-gray-100">{selectedChatData?.username}</p>
+                <p className="mt-2 text-gray-600 dark:text-gray-200 text-sm">{selectedChatData?.bio}</p>
               </div>
               {/* User Stats */}
               <div className="flex flex-col justify-around text-sm mt-4 border-t border-gray-200 pt-4">
-                <p className="text-center text-xl mb-4 font-semibold">
-                  Message Stats
-                </p>
+                <p className="text-center text-xl mb-4 font-semibold">Message Stats</p>
                 <div className="flex justify-evenly">
                   <div className="text-center">
                     <p className="font-semibold text-lg">{messageStats.sent}</p>
                     <p className="text-gray-500 dark:text-gray-100">Sent</p>
                   </div>
                   <div className="text-center">
-                    <p className="font-semibold text-lg">
-                      {messageStats.received}
-                    </p>
+                    <p className="font-semibold text-lg">{messageStats.received}</p>
                     <p className="text-gray-500 dark:text-gray-100">Received</p>
                   </div>
                 </div>
               </div>
               {/* Last Message Time */}
               <p className="text-center text-sm mt-4 text-gray-500 dark:text-gray-100">
-                {moment(selectedChatData?.interaction).format(
-                  "MMMM Do YYYY, h:mm:ss A"
-                )}
+                {moment(selectedChatData?.interaction).format("MMMM Do YYYY, h:mm:ss A")}
               </p>
             </DialogContent>
           </Dialog>
           {/* Username and Typing Indicator */}
           <div className="flex flex-col">
             <h3 className="font-semibold">
-              {selectedChatData?.name ||
-                selectedChatData?.username ||
-                selectedChatData?.email}
+              {selectedChatData?.name || selectedChatData?.username || selectedChatData?.email}
             </h3>
             {isCurrentlyOnline && (
               <p className="text-xs">
@@ -226,10 +191,7 @@ const ChatHeader = () => {
                 <>
                   <TooltipProvider>
                     <Tooltip>
-                      <TooltipTrigger
-                        className="focus:outline-none"
-                        disabled={pendingRequest}
-                      >
+                      <TooltipTrigger className="focus:outline-none" disabled={pendingRequest}>
                         <HiOutlineShare
                           size={18}
                           onClick={() => setOpenPeerShareModal(true)}
@@ -243,15 +205,10 @@ const ChatHeader = () => {
                   </TooltipProvider>
                   <TooltipProvider>
                     <Tooltip>
-                      <TooltipTrigger
-                        className="focus:outline-none"
-                        disabled={pendingRequest}
-                      >
+                      <TooltipTrigger className="focus:outline-none" disabled={pendingRequest}>
                         <HiOutlineVideoCamera
                           size={20}
-                          onClick={() =>
-                            requestVoiceCalling(selectedChatData?._id!, "video")
-                          }
+                          onClick={() => requestVoiceCalling(selectedChatData?._id!, "video")}
                           className="tooltip-icon"
                         />
                       </TooltipTrigger>
@@ -262,15 +219,10 @@ const ChatHeader = () => {
                   </TooltipProvider>
                   <TooltipProvider>
                     <Tooltip>
-                      <TooltipTrigger
-                        className="focus:outline-none"
-                        disabled={pendingRequest}
-                      >
+                      <TooltipTrigger className="focus:outline-none" disabled={pendingRequest}>
                         <HiOutlinePhone
                           size={18}
-                          onClick={() =>
-                            requestVoiceCalling(selectedChatData?._id!, "audio")
-                          }
+                          onClick={() => requestVoiceCalling(selectedChatData?._id!, "audio")}
                           className="tooltip-icon"
                         />
                       </TooltipTrigger>
@@ -301,20 +253,13 @@ const ChatHeader = () => {
               <DropdownMenuLabel>Select Language</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <ScrollArea className="h-52 overflow-y-auto scrollbar-hide">
-                <DropdownMenuRadioGroup
-                  value={language}
-                  onValueChange={setLanguage}
-                  className="space-y-1"
-                >
+                <DropdownMenuRadioGroup value={language} onValueChange={setLanguage} className="space-y-1">
                   {languageOptions.map((option) => (
                     <DropdownMenuRadioItem
                       key={option.code}
                       value={option.code}
                       className={`flex items-center justify-start gap-2 text-sm capitalize cursor-pointer rounded-md 
-                    ${
-                      option.code === language &&
-                      "bg-neutral-100 dark:bg-neutral-800"
-                    }`}
+                    ${option.code === language && "bg-neutral-100 dark:bg-neutral-800"}`}
                     >
                       {option.name}
                     </DropdownMenuRadioItem>
@@ -327,11 +272,7 @@ const ChatHeader = () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger className="focus:outline-none">
-                <HiOutlineXMark
-                  size={20}
-                  onClick={closeChat}
-                  className="tooltip-icon"
-                />
+                <HiOutlineXMark size={20} onClick={closeChat} className="tooltip-icon" />
               </TooltipTrigger>
               <TooltipContent>
                 <span className="tooltip-span">Close</span>

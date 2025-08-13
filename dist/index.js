@@ -7,16 +7,14 @@ const port = env.PORT;
 (async () => {
     try {
         const { connection } = await connect(uri);
-        if (connection.readyState === 1) {
-            console.log("\nDatabase connection success!");
-            job.start();
-            server.listen(port, () => {
-                console.log(`Server running on port: ${port}\n`);
-            });
-        }
-        else {
+        if (connection.readyState !== 1) {
             throw new Error("Database connection error!");
         }
+        console.log("\nDatabase connection success!");
+        job.start();
+        server.listen(port, () => {
+            console.log(`Server running on port: ${port}\n`);
+        });
     }
     catch (error) {
         console.error(`Error: ${error.message}\n`);

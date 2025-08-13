@@ -11,8 +11,7 @@ import noAvatar from "@/assets/no-avatar.webp";
 export const useListenMessages = () => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
-  const { messages, setMessages, selectedChatData, isSoundAllow } =
-    useChatStore();
+  const { messages, setMessages, selectedChatData, isSoundAllow } = useChatStore();
 
   const listenersAttached = useRef(false);
 
@@ -20,19 +19,12 @@ export const useListenMessages = () => {
     if (socket && !listenersAttached.current) {
       socket.on("message:receive", (message: Message) => {
         /** Play notification sound only if the message is for the current user */
-        if (
-          message.recipient === userInfo?._id &&
-          message.sender !== selectedChatData?._id &&
-          isSoundAllow
-        ) {
+        if (message.recipient === userInfo?._id && message.sender !== selectedChatData?._id && isSoundAllow) {
           const sound = new Audio(notificationSound);
           void sound.play();
         }
         /** Add the message to the chat if it's part of the selected chat */
-        if (
-          selectedChatData?._id === message.sender ||
-          userInfo?._id === message.sender
-        ) {
+        if (selectedChatData?._id === message.sender || userInfo?._id === message.sender) {
           setMessages([...messages, message]);
         }
       });
@@ -42,14 +34,7 @@ export const useListenMessages = () => {
       socket?.off("message:receive");
       listenersAttached.current = false;
     };
-  }, [
-    socket,
-    messages,
-    setMessages,
-    isSoundAllow,
-    userInfo?._id,
-    selectedChatData?._id,
-  ]);
+  }, [socket, messages, setMessages, isSoundAllow, userInfo?._id, selectedChatData?._id]);
 };
 
 export const useDebounce = (callback: Function, delay: number) => {
@@ -122,10 +107,7 @@ export const useDisableAnimations = (socket: Socket, ref: any) => {
   }, [socket, ref]);
 };
 
-export const useLastMinutes = (
-  timestamp: Date | string | number,
-  minutes = 10
-) => {
+export const useLastMinutes = (timestamp: Date | string | number, minutes = 10) => {
   const [isLastMinutes, setIsLastMinutes] = useState(false);
 
   useEffect(() => {

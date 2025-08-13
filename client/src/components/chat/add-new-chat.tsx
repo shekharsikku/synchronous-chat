@@ -3,19 +3,8 @@ import { HiOutlinePlus } from "react-icons/hi2";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  TooltipProvider,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ContactListSkeleton } from "@/components/chat/contact-list-skeleton";
 import { useChatStore, UserInfo } from "@/zustand";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -37,9 +26,7 @@ const AddNewChat = () => {
     if (searchTerm.length > 0) {
       try {
         setIsFetching(true);
-        const response = await api.get(
-          `api/contact/search?search=${searchTerm}`
-        );
+        const response = await api.get(`api/contact/search?search=${searchTerm}`);
         setSearchedContacts(response.data.data);
       } catch (error: any) {
         setSearchedContacts([]);
@@ -61,11 +48,7 @@ const AddNewChat = () => {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger className="focus:outline-none">
-            <HiOutlinePlus
-              onClick={() => setOpenNewChatModal(true)}
-              size={18}
-              className="tooltip-icon"
-            />
+            <HiOutlinePlus onClick={() => setOpenNewChatModal(true)} size={18} className="tooltip-icon" />
           </TooltipTrigger>
           <TooltipContent>
             <span className="tooltip-span">New Chat</span>
@@ -90,9 +73,7 @@ const AddNewChat = () => {
           ) : (
             <>
               {searchedContacts.length <= 0 ? (
-                <span className="text-gray-700 dark:text-gray-200 text-center my-auto">
-                  No any user available!
-                </span>
+                <span className="text-gray-700 dark:text-gray-200 text-center my-auto">No any user available!</span>
               ) : (
                 <ScrollArea className="h-60 overflow-y-auto scrollbar-hide">
                   <div className="flex flex-col gap-4 py-[2px]">
@@ -105,17 +86,12 @@ const AddNewChat = () => {
                         role="button"
                       >
                         <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
-                          <AvatarImage
-                            src={useAvatar(contact)}
-                            alt="profile"
-                            className="object-fit h-full w-full"
-                          />
+                          <AvatarImage src={useAvatar(contact)} alt="profile" className="object-fit h-full w-full" />
                           <AvatarFallback
                             className={`uppercase h-full w-full text-xl border text-center font-medium 
                       transition-all duration-300`}
                           >
-                            {contact.username?.split("").shift() ||
-                              contact.email?.split("").shift()}
+                            {contact.username?.split("").shift() || contact.email?.split("").shift()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">

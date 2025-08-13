@@ -13,11 +13,7 @@ const EmptyChatContainer = () => {
       </p>
       <h6 className="text-sm lg:text-base font-semibold text-gray-900 dark:text-gray-200">
         Created with ❤︎ by{" "}
-        <Link
-          to="https://github.com/shekharsikku"
-          target="_blank"
-          className="hover:underline"
-        >
+        <Link to="https://github.com/shekharsikku" target="_blank" className="hover:underline">
           Shekhar Sharma{" "}
         </Link>
       </h6>

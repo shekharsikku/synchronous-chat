@@ -41,11 +41,7 @@ export const checkImageType = (filePath: string): boolean => {
     return validExtensions.has(base64Type.toLowerCase());
   }
 
-  const extractedExtension = filePath
-    .split("?")[0]
-    .split("#")[0]
-    .split(".")
-    .pop();
+  const extractedExtension = filePath.split("?")[0].split("#")[0].split(".").pop();
 
   if (!extractedExtension) return false;
   return validExtensions.has(extractedExtension.toLowerCase());

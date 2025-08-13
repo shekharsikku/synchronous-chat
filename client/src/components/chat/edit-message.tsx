@@ -25,11 +25,7 @@ interface EditMessageProps {
   };
 }
 
-const EditMessage = ({
-  openEditMessageDialog,
-  setOpenEditMessageDialog,
-  currentMessage,
-}: EditMessageProps) => {
+const EditMessage = ({ openEditMessageDialog, setOpenEditMessageDialog, currentMessage }: EditMessageProps) => {
   const { selectedChatData } = useChatStore();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -46,12 +42,9 @@ const EditMessage = ({
   const editSelectedMessage = async () => {
     setIsLoading(true);
     try {
-      const response = await api.patch(
-        `/api/message/edit/${currentMessage.id}`,
-        {
-          text: encryptMessage(newMessage, selectedChatData?._id!),
-        }
-      );
+      const response = await api.patch(`/api/message/edit/${currentMessage.id}`, {
+        text: encryptMessage(newMessage, selectedChatData?._id!),
+      });
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
@@ -61,16 +54,11 @@ const EditMessage = ({
   };
 
   return (
-    <AlertDialog
-      open={openEditMessageDialog}
-      onOpenChange={setOpenEditMessageDialog}
-    >
+    <AlertDialog open={openEditMessageDialog} onOpenChange={setOpenEditMessageDialog}>
       <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
       <AlertDialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl select-none">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-start">
-            Edit Message!
-          </AlertDialogTitle>
+          <AlertDialogTitle className="text-start">Edit Message!</AlertDialogTitle>
           <AlertDialogDescription className="text-start dark:text-gray-300">
             This changes will reflect to other user as well.
           </AlertDialogDescription>
@@ -82,11 +70,7 @@ const EditMessage = ({
           value={newMessage || ""}
           placeholder="Edited Message..."
           onKeyDown={(e) => {
-            if (
-              e.key === "Tab" &&
-              !e.shiftKey &&
-              currentMessage.text !== newMessage
-            ) {
+            if (e.key === "Tab" && !e.shiftKey && currentMessage.text !== newMessage) {
               e.preventDefault();
               requestAnimationFrame(() => {
                 confirmBtnRef.current?.focus();
@@ -96,10 +80,7 @@ const EditMessage = ({
         />
 
         <AlertDialogFooter>
-          <AlertDialogCancel
-            disabled={isLoading}
-            onClick={() => setOpenEditMessageDialog(false)}
-          >
+          <AlertDialogCancel disabled={isLoading} onClick={() => setOpenEditMessageDialog(false)}>
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction

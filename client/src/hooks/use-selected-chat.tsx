@@ -21,18 +21,13 @@ export const useSelectedChat = () => {
         };
 
         const cleaned = Object.fromEntries(
-          Object.entries(selected).filter(
-            ([key]) => !["setup", "createdAt", "updatedAt", "__v"].includes(key)
-          )
+          Object.entries(selected).filter(([key]) => !["setup", "createdAt", "updatedAt", "__v"].includes(key))
         );
 
-        queryClient.setQueryData(
-          ["contacts", userInfo?._id],
-          (oldContacts: UserInfo[] | undefined) => [
-            ...(oldContacts || []),
-            { ...cleaned },
-          ]
-        );
+        queryClient.setQueryData(["contacts", userInfo?._id], (oldContacts: UserInfo[] | undefined) => [
+          ...(oldContacts || []),
+          { ...cleaned },
+        ]);
       }
     }
   }, [contacts, selectedChatData, queryClient]);

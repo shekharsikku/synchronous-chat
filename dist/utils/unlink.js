@@ -1,15 +1,7 @@
 import { readdir, stat, unlink } from "fs";
 import { join, extname } from "path";
 const folderPath = "./public/temp";
-const extensionsToDelete = [
-    ".png",
-    ".jpg",
-    ".jpeg",
-    ".gif",
-    ".pdf",
-    ".webp",
-    ".svg",
-];
+const extensionsToDelete = [".png", ".jpg", ".jpeg", ".gif", ".pdf", ".webp", ".svg"];
 const unlinkFilesWithExtensions = (folderPath, extensions) => {
     readdir(folderPath, (err, files) => {
         if (err) {

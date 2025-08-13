@@ -47,8 +47,7 @@ const useChatStore = create<{
   setSelectedChatType: (selectedChatType: string) => set({ selectedChatType }),
 
   selectedChatData: null,
-  setSelectedChatData: (selectedChatData: UserInfo) =>
-    set({ selectedChatData }),
+  setSelectedChatData: (selectedChatData: UserInfo) => set({ selectedChatData }),
 
   messages: [],
   setMessages: (messages: Message[]) => set({ messages }),
@@ -71,9 +70,7 @@ const useChatStore = create<{
 
   updateMessage: (id: string, updated: any) =>
     set((state) => ({
-      messages: state.messages.map((message) =>
-        message._id === id ? { ...message, ...updated } : message
-      ),
+      messages: state.messages.map((message) => (message._id === id ? { ...message, ...updated } : message)),
     })),
 
   editDialog: false,

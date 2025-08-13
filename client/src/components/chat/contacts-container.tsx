@@ -41,8 +41,7 @@ const ContactsContainer = () => {
     setFiltered(
       contacts?.filter(
         (contact: any) =>
-          contact?.name?.toLowerCase().includes(value) ||
-          contact?.username?.toLowerCase().includes(value)
+          contact?.name?.toLowerCase().includes(value) || contact?.username?.toLowerCase().includes(value)
       ) || []
     );
   }, 1500);
@@ -72,20 +71,12 @@ const ContactsContainer = () => {
 
   return (
     <aside
-      className={cn(
-        selectedChatData && "hidden md:flex flex-col",
-        "h-full w-full md:w-1/3 xl:w-1/4 border-r relative"
-      )}
+      className={cn(selectedChatData && "hidden md:flex flex-col", "h-full w-full md:w-1/3 xl:w-1/4 border-r relative")}
     >
       <header className="h-bar border-b p-2">
         <Logo />
       </header>
-      <section
-        className={cn(
-          callingActive ? "h-cda" : "h-clh",
-          "w-full overflow-hidden"
-        )}
-      >
+      <section className={cn(callingActive ? "h-cda" : "h-clh", "w-full overflow-hidden")}>
         <div className="h-full w-full flex flex-col gap-6 p-6">
           <div className="flex items-center justify-between">
             <Title title="Chat Messages" />
@@ -106,9 +97,7 @@ const ContactsContainer = () => {
           ) : (
             <>
               {filtered?.length! <= 0 ? (
-                <p className="text-neutral-700 dark:text-neutral-200">
-                  No any chat available!
-                </p>
+                <p className="text-neutral-700 dark:text-neutral-200">No any chat available!</p>
               ) : (
                 <ScrollArea className="h-full overflow-y-auto scrollbar-hide">
                   <div className="flex flex-col gap-4">
@@ -130,35 +119,22 @@ const ContactsContainer = () => {
                       >
                         <div className="flex items-center gap-4">
                           <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
-                            <AvatarImage
-                              src={useAvatar(contact)}
-                              alt="profile"
-                              className="object-cover size-full"
-                            />
+                            <AvatarImage src={useAvatar(contact)} alt="profile" className="object-cover size-full" />
                             <AvatarFallback
                               className={`uppercase h-full w-full text-xl border text-center font-medium transition-all duration-300`}
                             >
-                              {contact?.username?.split("").shift() ||
-                                contact?.email?.split("").shift()}
+                              {contact?.username?.split("").shift() || contact?.email?.split("").shift()}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex flex-col">
                             <h5 className="heading-name">{contact?.name}</h5>
-                            <h6 className="heading-uname">
-                              {contact?.username}
-                            </h6>
+                            <h6 className="heading-uname">{contact?.username}</h6>
                           </div>
                         </div>
                         {onlineUsers.hasOwnProperty(contact?._id!) ? (
-                          <HiMiniSignal
-                            size={18}
-                            className="text-neutral-600 dark:text-neutral-100"
-                          />
+                          <HiMiniSignal size={18} className="text-neutral-600 dark:text-neutral-100" />
                         ) : (
-                          <HiMiniSignalSlash
-                            size={18}
-                            className="text-neutral-600 dark:text-neutral-100"
-                          />
+                          <HiMiniSignalSlash size={18} className="text-neutral-600 dark:text-neutral-100" />
                         )}
                       </div>
                     ))}
