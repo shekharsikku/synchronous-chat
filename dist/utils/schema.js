@@ -55,14 +55,14 @@ export const MessageSchema = z
     if (data.type === "text" && !data.text) {
         ctx.addIssue({
             path: ["text"],
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "Text is required when type is 'text'",
         });
     }
     if (data.type === "file" && !data.file) {
         ctx.addIssue({
             path: ["file"],
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "File is required when type is 'file'",
         });
     }
