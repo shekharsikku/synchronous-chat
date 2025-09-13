@@ -1,6 +1,13 @@
 import EmojiPicker, { EmojiClickData, type Theme } from "emoji-picker-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { HiOutlineFaceSmile, HiOutlineLink, HiOutlinePaperAirplane, HiOutlineBackspace } from "react-icons/hi2";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import {
+  HiOutlineFaceSmile,
+  HiOutlineLink,
+  HiOutlinePaperAirplane,
+  HiOutlineBackspace,
+  HiOutlineClipboardDocumentCheck,
+} from "react-icons/hi2";
 import { useState, useEffect, useRef, ChangeEvent, KeyboardEventHandler } from "react";
 import { encryptMessage } from "@/lib/noble";
 import { convertToBase64 } from "@/lib/utils";
@@ -205,6 +212,29 @@ const MessageBar = () => {
     handleTyping();
   };
 
+  const pasteFromClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const element = inputRef.current;
+
+      if (text && element) {
+        const start = element.selectionStart ?? message.length;
+        const end = element.selectionEnd ?? message.length;
+        const value = element.value.substring(0, start) + text + element.value.substring(end);
+
+        setMessage(value);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            element.setSelectionRange(start + text.length, start + text.length);
+            element.focus();
+          });
+        });
+      }
+    } catch (error: any) {
+      console.error("Clipboard read failed:", error.message);
+    }
+  };
+
   return (
     <footer className="h-bar w-full border-t flex items-center justify-center p-2">
       <div className="w-full flex rounded items-center justify-center gap-4 bg-gray-100/80 dark:bg-transparent px-4 h-full">
@@ -250,19 +280,27 @@ const MessageBar = () => {
 
         <input type="file" id="file-input" className="hidden" ref={fileRef} onChange={handleAttachChange} />
 
-        <input
-          type="text"
-          id="message-input"
-          placeholder={`Message @${selectedChatData?.username || "user"}`}
-          autoComplete="off"
-          value={message}
-          onChange={handleChange}
-          className="w-full px-1 py-2 bg-transparent border-none outline-none 
-          text-sm tracking-wider disabled:text-blue-800"
-          disabled={!!(selectedImage && message !== "") || editDialog}
-          ref={inputRef}
-          onKeyDown={handleEnterKeyDown}
-        />
+        <ContextMenu>
+          <ContextMenuTrigger asChild>
+            <input
+              type="text"
+              id="message-input"
+              placeholder={`Message @${selectedChatData?.username || "user"}`}
+              autoComplete="off"
+              value={message}
+              onChange={handleChange}
+              className="w-full px-1 py-2 bg-transparent border-none outline-none text-sm tracking-wider disabled:text-blue-800"
+              disabled={!!(selectedImage && message !== "") || editDialog}
+              ref={inputRef}
+              onKeyDown={handleEnterKeyDown}
+            />
+          </ContextMenuTrigger>
+          <ContextMenuContent className="mb-2">
+            <ContextMenuItem className="flex gap-2" onClick={pasteFromClipboard}>
+              <HiOutlineClipboardDocumentCheck size={16} /> Paste
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
 
         {message && (
           <div className="flex gap-4">
