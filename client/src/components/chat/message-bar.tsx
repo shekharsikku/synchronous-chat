@@ -218,10 +218,12 @@ const MessageBar = () => {
       const element = inputRef.current;
 
       if (text && element) {
-        const start = element.selectionStart ?? message.length;
-        const end = element.selectionEnd ?? message.length;
+        element.focus();
+        const start = element.selectionStart ?? element.value.length;
+        const end = element.selectionEnd ?? element.value.length;
         const value = element.value.substring(0, start) + text + element.value.substring(end);
 
+        element.value = value;
         setMessage(value);
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {

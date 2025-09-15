@@ -7,7 +7,7 @@ import { Logo, Title } from "./logo-title";
 import { AddNewChat } from "./add-new-chat";
 import { ProfileInfo } from "./profile-info";
 import { StreamInfo } from "./stream-info";
-import { useSearchParams } from "react-router-dom";
+import { SetURLSearchParams } from "react-router-dom";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useEffect, useState } from "react";
 import { useContacts } from "@/hooks/use-contacts";
@@ -17,11 +17,15 @@ import { usePeer, useSocket } from "@/lib/context";
 import { useDebounce, useAvatar } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 
-const ContactsContainer = () => {
+const ContactsContainer = ({
+  lastChatUser,
+  setSearchParams,
+}: {
+  lastChatUser: string | null;
+  setSearchParams: SetURLSearchParams;
+}) => {
   const { callingActive } = usePeer();
   const { onlineUsers } = useSocket();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [lastChatUser, setLastChatUser] = useState<string | null>(null);
   const { setSelectedChatType, setSelectedChatData } = useChatStore();
 
   const { contacts, fetching } = useContacts();
@@ -45,10 +49,6 @@ const ContactsContainer = () => {
       ) || []
     );
   }, 1500);
-
-  useEffect(() => {
-    setLastChatUser(searchParams.get("user"));
-  }, [searchParams]);
 
   useHotkeys(
     "ctrl+b",
