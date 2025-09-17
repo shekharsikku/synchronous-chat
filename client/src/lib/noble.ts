@@ -1,7 +1,6 @@
-import { sha256 } from "@noble/hashes/sha2";
-import { utf8ToBytes } from "@noble/hashes/utils";
-import { gcm } from "@noble/ciphers/aes";
-import { randomBytes } from "@noble/ciphers/webcrypto";
+import { gcm } from "@noble/ciphers/aes.js";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { utf8ToBytes, randomBytes } from "@noble/hashes/utils.js";
 
 const isDevelopment = import.meta.env.DEV;
 
