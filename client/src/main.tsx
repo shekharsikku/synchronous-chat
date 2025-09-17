@@ -4,7 +4,7 @@ import { isMobile } from "react-device-detect";
 import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { SocketProvider, PeerProvider, ThemeProvider } from "@/context";
-import App from "@/App.tsx";
+import App from "@/app.tsx";
 import "@/main.css";
 
 const queryClient = new QueryClient();

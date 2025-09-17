@@ -5,7 +5,7 @@ import io, { Socket } from "socket.io-client";
 import { toast } from "sonner";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL;
-const secretKey = import.meta.env.VITE_APP_SECRET;
+const secretKey = import.meta.env.VITE_SECRET_KEY;
 
 const SocketProvider = ({ children }: { children: ReactNode }) => {
   const { userInfo } = useAuthStore();
