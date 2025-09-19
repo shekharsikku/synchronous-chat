@@ -14,6 +14,7 @@ import { convertToBase64 } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/zustand";
 import { isMobile } from "react-device-detect";
 import { useSocket, useTheme } from "@/lib/context";
+import { useQueryState } from "nuqs";
 import { toast } from "sonner";
 import api from "@/lib/api";
 
@@ -28,7 +29,7 @@ const MessageBar = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useQueryState("msg", { defaultValue: "" });
   const [isTyping, setIsTyping] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [emojiPicker, setEmojiPicker] = useState(false);
@@ -99,9 +100,10 @@ const MessageBar = () => {
 
     try {
       const imageFile = event.target.files?.[0];
-      setMessage(`${imageFile?.name}`);
 
       if (imageFile) {
+        setMessage(`file::${imageFile?.name}`);
+
         if (imageFile.size > maxBytesAllow) {
           setMessage("");
           toast.info("File size exceeds the max limit!");
@@ -138,7 +140,7 @@ const MessageBar = () => {
       }
 
       if (selectedImage) {
-        setMessage("Sending...");
+        setMessage((prev) => `${prev}::Sending...`);
       }
 
       await api.post(`/api/message/send/${selectedChatData?._id}`, messageData);
@@ -243,7 +245,7 @@ const MessageBar = () => {
         <div className="flex gap-4 relative">
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger className="focus:outline-none">
+              <TooltipTrigger className="focus:outline-none" disabled={isSending}>
                 <HiOutlineFaceSmile
                   size={20}
                   onClick={() => setEmojiPicker((prev) => !prev)}
@@ -270,7 +272,7 @@ const MessageBar = () => {
 
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger className="focus:outline-none">
+              <TooltipTrigger className="focus:outline-none" disabled={isSending}>
                 <HiOutlineLink size={20} onClick={handleAttachClick} className="tooltip-icon" />
               </TooltipTrigger>
               <TooltipContent>
@@ -291,8 +293,8 @@ const MessageBar = () => {
               autoComplete="off"
               value={message}
               onChange={handleChange}
-              className="w-full px-1 py-2 bg-transparent border-none outline-none text-sm tracking-wider disabled:text-blue-800"
-              disabled={!!(selectedImage && message !== "") || editDialog}
+              className="w-full px-1 py-2 bg-transparent border-none outline-none text-sm tracking-wider"
+              disabled={!!(selectedImage && message !== "") || editDialog || isSending}
               ref={inputRef}
               onKeyDown={handleEnterKeyDown}
             />
@@ -308,7 +310,7 @@ const MessageBar = () => {
           <div className="flex gap-4">
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="focus:outline-none">
+                <TooltipTrigger className="focus:outline-none" disabled={isSending}>
                   <HiOutlineBackspace
                     size={20}
                     onClick={() => {
@@ -325,7 +327,7 @@ const MessageBar = () => {
             </TooltipProvider>
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="focus:outline-none">
+                <TooltipTrigger className="focus:outline-none" disabled={isSending}>
                   <HiOutlinePaperAirplane size={20} onClick={handleSendMessage} className="tooltip-icon" />
                 </TooltipTrigger>
                 <TooltipContent>

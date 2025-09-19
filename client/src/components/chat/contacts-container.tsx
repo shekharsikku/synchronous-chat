@@ -7,7 +7,6 @@ import { Logo, Title } from "./logo-title";
 import { AddNewChat } from "./add-new-chat";
 import { ProfileInfo } from "./profile-info";
 import { StreamInfo } from "./stream-info";
-import { SetURLSearchParams } from "react-router-dom";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useEffect, useState } from "react";
 import { useContacts } from "@/hooks/use-contacts";
@@ -19,10 +18,10 @@ import { cn } from "@/lib/utils";
 
 const ContactsContainer = ({
   lastChatUser,
-  setSearchParams,
+  setLastChatUser,
 }: {
   lastChatUser: string | null;
-  setSearchParams: SetURLSearchParams;
+  setLastChatUser: any;
 }) => {
   const { callingActive } = usePeer();
   const { onlineUsers } = useSocket();
@@ -113,7 +112,7 @@ const ContactsContainer = ({
                         onClick={() => {
                           setSelectedChatType("contact");
                           setSelectedChatData(contact);
-                          setSearchParams({ user: contact.username });
+                          setLastChatUser(contact.username);
                         }}
                         role="button"
                       >
