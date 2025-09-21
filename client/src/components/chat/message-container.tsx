@@ -45,6 +45,8 @@ const MessageContainer = () => {
   const { selectedChatType, setMessages } = useChatStore();
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [skeletonCount, setSkeletonCount] = useState(9);
   const [lastMessageId, setLastMessageId] = useState("");
 
   useEffect(() => {
@@ -58,10 +60,16 @@ const MessageContainer = () => {
     }, 100);
   }, [messages, fetching]);
 
+  useEffect(() => {
+    const scrollHeight = scrollContainerRef.current?.clientHeight ?? 800;
+    const scrollCount = Math.ceil(scrollHeight / 90);
+    setSkeletonCount(scrollCount);
+  }, [scrollContainerRef]);
+
   return (
-    <section className="w-full flex-1 overflow-y-auto scrollbar-hide scroll-smooth px-4">
+    <section ref={scrollContainerRef} className="w-full flex-1 overflow-y-auto scrollbar-hide scroll-smooth px-4">
       {fetching ? (
-        <MessageSkeleton />
+        <MessageSkeleton count={skeletonCount} />
       ) : (
         <RenderMessages messages={messages!} lastMessageId={lastMessageId} selectedChatType={selectedChatType} />
       )}

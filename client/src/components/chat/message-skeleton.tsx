@@ -1,7 +1,7 @@
-const MessageSkeleton = () => {
+const MessageSkeleton = ({ count }: { count: number }) => {
   return (
     <div className="flex flex-col gap-4 transition-all duration-300">
-      {[...Array(9)].map((_, i) => (
+      {[...Array(count)].map((_, i) => (
         <div
           key={i}
           className={`flex-1 flex-col gap-4
