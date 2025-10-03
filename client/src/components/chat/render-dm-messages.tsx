@@ -20,6 +20,7 @@ import { useDisableAnimations, useLastMinutes } from "@/lib/hooks";
 import { useSocket } from "@/lib/context";
 import { useInView } from "react-intersection-observer";
 import { useEffect, useRef, useState } from "react";
+import { isDesktop } from "react-device-detect";
 import { decryptMessage } from "@/lib/noble";
 import moment from "moment";
 import api from "@/lib/api";
@@ -148,8 +149,24 @@ const RenderDMMessages = ({ message, lastMessageId: lastId }: { message: Message
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
+  const handleEmojiReaction = async (emoji: string) => {
+    try {
+      await api.patch(`/api/message/react/${message._id}`, {
+        by: userInfo?._id,
+        emoji,
+      });
+    } catch (error: any) {
+      toast.error(error.response.data.message);
+    }
+  };
+
   return (
-    <div className={`w-full flex flex-col gap-2 mb-4 ${isSender ? "items-start text-left" : "items-end text-right"}`}>
+    <div
+      className={cn(
+        "group w-full flex flex-col gap-2 mb-4",
+        isSender ? "items-start text-left" : "items-end text-right"
+      )}
+    >
       <ContextMenu>
         <ContextMenuTrigger
           ref={mergeRefs(inViewRef, elementRef)}
@@ -161,6 +178,7 @@ const RenderDMMessages = ({ message, lastMessageId: lastId }: { message: Message
             message._id === lastId && "shake",
             inView ? "opacity-100 translate-x-0" : `opacity-0 ${isSender ? "translate-x-16" : "-translate-x-16"}`
           )}
+          onDoubleClick={() => handleEmojiReaction("❤️")}
         >
           {/* Right click here */}
           {message.type === "deleted" ? (
@@ -168,7 +186,7 @@ const RenderDMMessages = ({ message, lastMessageId: lastId }: { message: Message
               <HiOutlineNoSymbol size={16} /> {isSender ? "This message was deleted." : "You deleted this message."}
             </span>
           ) : (
-            <>
+            <span className={cn("relative", isSender && "self-end")}>
               {/* For test message type */}
               {message?.content?.type === "text" && message?.content?.text !== "" && (
                 <span className="text-base">{plainText(message)}</span>
@@ -182,7 +200,46 @@ const RenderDMMessages = ({ message, lastMessageId: lastId }: { message: Message
                     <HiOutlineDocumentArrowDown size={16} /> Download this file to view it.
                   </span>
                 ))}
-            </>
+              {/* Reactions (show only on hover) */}
+              {isDesktop && (
+                <span
+                  className={cn(
+                    "absolute top-1/2 -translate-y-1/2 hidden group-hover:flex gap-2 bg-white dark:bg-gray-800 rounded-full shadow-md px-2 py-1 transition-transform duration-500 scale-95 group-hover:scale-100 text-sm",
+                    !isSender ? "right-full mr-6" : "left-full ml-6"
+                  )}
+                >
+                  {["👍", "❤️", "😂", "😲", "💯"].map((emoji) => (
+                    <button
+                      key={emoji}
+                      className="hover:scale-125 transition-transform duration-200"
+                      onClick={() => handleEmojiReaction(emoji)}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </span>
+              )}
+              {/* Selected reactions */}
+              {message.content?.reactions && message.content?.reactions?.length > 0 && (
+                <span
+                  className={cn(
+                    "absolute -bottom-6 flex gap-1 bg-white dark:bg-gray-800 rounded-full shadow-md px-1 py-0.5 text-xs",
+                    isSender ? "-right-1" : "-left-1"
+                  )}
+                >
+                  {Object.entries(
+                    message.content?.reactions?.reduce((acc: Record<string, number>, r) => {
+                      acc[r.emoji] = (acc[r.emoji] || 0) + 1;
+                      return acc;
+                    }, {})
+                  ).map(([emoji, count]) => (
+                    <span key={emoji} className="flex items-center gap-0.5">
+                      {emoji} {count > 1 ? <span>{count}</span> : null}
+                    </span>
+                  ))}
+                </span>
+              )}
+            </span>
           )}
         </ContextMenuTrigger>
         {message.type !== "deleted" && (
@@ -231,7 +288,7 @@ const RenderDMMessages = ({ message, lastMessageId: lastId }: { message: Message
       </ContextMenu>
       {/* Translated Message */}
       {translated !== "" && <span className="text-base">{translated}</span>}
-      <span className="text-xs text-gray-600 dark:text-gray-200">
+      <span className="text-xs text-gray-600 dark:text-gray-200 mt-0.5">
         {message.type === "deleted" ? (
           <span>{`${moment(message.deletedAt).format("LT")}`}</span>
         ) : (

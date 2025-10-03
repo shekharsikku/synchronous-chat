@@ -87,17 +87,20 @@ export const useMessages = () => {
       updateMessage(queryClient, queryKey, current);
     };
 
+    const events: [string, (...args: any[]) => void][] = [
+      ["message:receive", handleMessageReceive],
+      ["message:remove", handleMessageUpdate],
+      ["message:edited", handleMessageUpdate],
+      ["message:reacted", handleMessageUpdate],
+    ];
+
     if (!messageListeners.current) {
-      socket.on("message:receive", handleMessageReceive);
-      socket.on("message:remove", handleMessageUpdate);
-      socket.on("message:edited", handleMessageUpdate);
+      events.forEach(([event, handler]) => socket.on(event, handler));
       messageListeners.current = true;
     }
 
     return () => {
-      socket.off("message:receive", handleMessageReceive);
-      socket.off("message:remove", handleMessageUpdate);
-      socket.off("message:edited", handleMessageUpdate);
+      events.forEach(([event, handler]) => socket.off(event, handler));
       messageListeners.current = false;
     };
   }, [socket, userInfo?._id, selectedChatData?._id, queryClient, isSoundAllow]);

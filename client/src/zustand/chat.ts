@@ -10,6 +10,10 @@ export interface Message {
     type: "text" | "file";
     text?: string;
     file?: string;
+    reactions?: {
+      by: string;
+      emoji: string;
+    }[];
   };
   deletedAt?: Date;
   createdAt?: Date;

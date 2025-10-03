@@ -14,7 +14,6 @@ import { convertToBase64 } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/zustand";
 import { isMobile } from "react-device-detect";
 import { useSocket, useTheme } from "@/lib/context";
-import { useQueryState } from "nuqs";
 import { toast } from "sonner";
 import api from "@/lib/api";
 
@@ -29,7 +28,7 @@ const MessageBar = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [message, setMessage] = useQueryState("msg", { defaultValue: "" });
+  const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [emojiPicker, setEmojiPicker] = useState(false);
