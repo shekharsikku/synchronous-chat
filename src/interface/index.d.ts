@@ -43,5 +43,6 @@ interface MessageInterface extends Document {
       emoji: string;
     }[];
   };
+  reply: Types.ObjectId;
   deletedAt: Date;
 }

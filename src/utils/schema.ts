@@ -56,6 +56,7 @@ export const MessageSchema = z
     type: z.enum(["text", "file"]),
     text: z.string().optional(),
     file: z.string().optional(),
+    reply: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.type === "text" && !data.text) {

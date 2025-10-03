@@ -9,7 +9,7 @@ const sendMessage = async (req: Request<{ id: string }>, res: Response) => {
   try {
     const sender = req.user?._id!;
     const receiver = req.params.id;
-    const { type, text, file } = (await req.body) as MessageType;
+    const { type, text, file, reply } = (await req.body) as MessageType;
 
     let conversation = await Conversation.findOne({
       participants: { $all: [sender, receiver] },
@@ -29,6 +29,7 @@ const sendMessage = async (req: Request<{ id: string }>, res: Response) => {
         text: text,
         file: file,
       },
+      reply: reply || null,
     });
 
     if (message) {
