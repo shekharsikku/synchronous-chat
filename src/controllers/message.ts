@@ -180,6 +180,47 @@ const editMessage = async (req: Request<{ id: string }, {}, { text: string }>, r
   }
 };
 
+const reactMessage = async (req: Request<{ id: string }, {}, { by: string; emoji: string }>, res: Response) => {
+  try {
+    const mid = req.params.id;
+    const { by, emoji } = req.body;
+
+    if (!by || !emoji) {
+      throw new HttpError(400, "Emoji is required for reacting!");
+    }
+
+    const message = await Message.findById(mid);
+    if (!message) throw new HttpError(404, "Message not found!");
+    if (!message.content.reactions) message.content.reactions = [];
+
+    const existing = message.content.reactions.findIndex((r: any) => r.by === by);
+
+    if (existing >= 0) {
+      const already = message.content.reactions[existing].emoji;
+      if (already === emoji) {
+        message.content.reactions.splice(existing, 1);
+      } else {
+        message.content.reactions[existing].emoji = emoji;
+      }
+    } else {
+      message.content.reactions.push({ by, emoji });
+    }
+
+    const senderSocketId = getSocketId(message?.sender.toString());
+    const receiverSocketId = getSocketId(message?.recipient.toString());
+
+    if (receiverSocketId.length > 0) {
+      io.to(receiverSocketId).emit("message:reacted", message);
+    }
+    io.to(senderSocketId).emit("message:reacted", message);
+
+    await message.save();
+    return SuccessResponse(res, 200, "Message reacted successfully!", message);
+  } catch (error: any) {
+    return ErrorResponse(res, error.code || 500, error.message || "Error while reacting message!");
+  }
+};
+
 const deleteMessages = async (req: Request, res: Response) => {
   try {
     const uid = req.user?._id;
@@ -218,4 +259,4 @@ const translateMessage = async (req: Request<{}, {}, Translate>, res: Response) 
   }
 };
 
-export { sendMessage, getMessages, editMessage, deleteMessage, deleteMessages, translateMessage };
+export { sendMessage, getMessages, editMessage, reactMessage, deleteMessage, deleteMessages, translateMessage };

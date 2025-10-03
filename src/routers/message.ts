@@ -4,6 +4,7 @@ import { MessageSchema, TranslateSchema } from "../utils/schema.js";
 import {
   deleteMessages,
   deleteMessage,
+  reactMessage,
   editMessage,
   getMessages,
   sendMessage,
@@ -15,6 +16,7 @@ const router = Router();
 router.get("/:id", authAccess, getMessages);
 router.post("/send/:id", authAccess, validate(MessageSchema), sendMessage);
 router.patch("/edit/:id", authAccess, editMessage);
+router.patch("/react/:id", authAccess, reactMessage);
 router.delete("/delete/:id", authAccess, deleteMessage);
 router.delete("/delete", authAccess, deleteMessages);
 

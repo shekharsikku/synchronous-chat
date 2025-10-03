@@ -39,6 +39,16 @@ const MessageSchema = new Schema<MessageInterface>(
           return this.content.type === "file";
         },
       },
+      reactions: {
+        type: [
+          {
+            _id: false,
+            by: String,
+            emoji: String,
+          },
+        ],
+        default: null,
+      },
     },
     deletedAt: {
       type: Date,
