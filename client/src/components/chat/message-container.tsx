@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, Fragment } from "react";
+import React, { useEffect, useRef, useState, RefObject } from "react";
 import { Message, useChatStore } from "@/zustand";
 import { useMessages } from "@/hooks/use-messages";
 import { RenderDMMessages } from "@/components/chat/render-dm-messages";
@@ -10,12 +10,24 @@ const RenderMessages = React.memo(
     messages,
     lastMessageId,
     selectedChatType,
+    messageRefs,
   }: {
     messages: Message[];
     lastMessageId: string;
     selectedChatType: string;
+    messageRefs: RefObject<Record<string, HTMLDivElement | null>>;
   }) => {
     let lastDate = "";
+
+    const scrollToMessage = (id: string) => {
+      const element = messageRefs.current[id];
+
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        element.classList.add("shake");
+        setTimeout(() => element.classList.remove("shake"), 1500);
+      }
+    };
 
     return messages.map((message) => {
       const messageDate = moment(message.createdAt).format("YYYY-MM-DD");
@@ -23,7 +35,13 @@ const RenderMessages = React.memo(
       lastDate = messageDate;
 
       return (
-        <Fragment key={message._id}>
+        <div
+          key={message._id}
+          ref={(element) => {
+            if (element) messageRefs.current[message._id] = element;
+          }}
+          className="relative"
+        >
           {showDate && (
             <div className="text-center text-gray-500 dark:text-gray-100 py-4">
               {moment(message.createdAt).isSame(moment(), "day")
@@ -33,8 +51,10 @@ const RenderMessages = React.memo(
                   : moment(message.createdAt).format("LL")}
             </div>
           )}
-          {selectedChatType === "contact" && <RenderDMMessages message={message} lastMessageId={lastMessageId} />}
-        </Fragment>
+          {selectedChatType === "contact" && (
+            <RenderDMMessages message={message} lastMessageId={lastMessageId} scrollToMessage={scrollToMessage} />
+          )}
+        </div>
       );
     });
   }
@@ -48,6 +68,7 @@ const MessageContainer = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [skeletonCount, setSkeletonCount] = useState(9);
   const [lastMessageId, setLastMessageId] = useState("");
+  const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
     if (messages && messages.length > 0) {
@@ -71,7 +92,12 @@ const MessageContainer = () => {
       {fetching ? (
         <MessageSkeleton count={skeletonCount} />
       ) : (
-        <RenderMessages messages={messages!} lastMessageId={lastMessageId} selectedChatType={selectedChatType} />
+        <RenderMessages
+          messages={messages!}
+          lastMessageId={lastMessageId}
+          selectedChatType={selectedChatType}
+          messageRefs={messageRefs}
+        />
       )}
       {!fetching && <div ref={lastMessageRef} />}
     </section>
