@@ -109,7 +109,7 @@
 }
 
 .shake {
-  animation: shake 0.9s cubic-bezier(0.36, 0.07, 0.19, 0.97) 0.1s both;
+  animation: shake infinite cubic-bezier(0.36, 0.07, 0.19, 0.97) 1s both;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   perspective: 1000px;

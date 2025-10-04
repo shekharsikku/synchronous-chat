@@ -8,18 +8,16 @@ import moment from "moment";
 const RenderMessages = React.memo(
   ({
     messages,
-    lastMessageId,
     selectedChatType,
     messageRefs,
   }: {
     messages: Message[];
-    lastMessageId: string;
     selectedChatType: string;
     messageRefs: RefObject<Record<string, HTMLDivElement | null>>;
   }) => {
     let lastDate = "";
 
-    const scrollToMessage = (id: string) => {
+    const scrollMessage = (id: string) => {
       const element = messageRefs.current[id];
 
       if (element) {
@@ -51,9 +49,7 @@ const RenderMessages = React.memo(
                   : moment(message.createdAt).format("LL")}
             </div>
           )}
-          {selectedChatType === "contact" && (
-            <RenderDMMessages message={message} lastMessageId={lastMessageId} scrollToMessage={scrollToMessage} />
-          )}
+          {selectedChatType === "contact" && <RenderDMMessages message={message} scrollMessage={scrollMessage} />}
         </div>
       );
     });
@@ -67,14 +63,10 @@ const MessageContainer = () => {
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [skeletonCount, setSkeletonCount] = useState(9);
-  const [lastMessageId, setLastMessageId] = useState("");
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
-    if (messages && messages.length > 0) {
-      setMessages(messages);
-      setLastMessageId(messages[messages.length - 1]._id);
-    }
+    if (messages && messages.length > 0) setMessages(messages);
 
     setTimeout(() => {
       lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -92,12 +84,7 @@ const MessageContainer = () => {
       {fetching ? (
         <MessageSkeleton count={skeletonCount} />
       ) : (
-        <RenderMessages
-          messages={messages!}
-          lastMessageId={lastMessageId}
-          selectedChatType={selectedChatType}
-          messageRefs={messageRefs}
-        />
+        <RenderMessages messages={messages!} selectedChatType={selectedChatType} messageRefs={messageRefs} />
       )}
       {!fetching && <div ref={lastMessageRef} />}
     </section>

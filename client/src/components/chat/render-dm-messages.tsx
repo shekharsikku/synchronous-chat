@@ -9,26 +9,30 @@ import {
   HiOutlineViewfinderCircle,
   HiOutlinePencilSquare,
   HiOutlineArrowTopRightOnSquare,
+  HiMiniArrowUturnRight,
+  HiMiniArrowUturnLeft,
 } from "react-icons/hi2";
+import { LuReply } from "react-icons/lu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EditMessage } from "@/components/chat/edit-message";
-import { isValidUrl, checkImageType, cn } from "@/lib/utils";
+import { isValidUrl, checkImageType, cn, mergeRefs } from "@/lib/utils";
 import { useChatStore, useAuthStore, Message } from "@/zustand";
-import { useDisableAnimations, useLastMinutes } from "@/lib/hooks";
+import { useDisableAnimations, useLastMinutes, usePlainText, useReplyMessage } from "@/lib/hooks";
 import { useSocket } from "@/lib/context";
 import { useInView } from "react-intersection-observer";
 import { useEffect, useRef, useState } from "react";
 import { isDesktop } from "react-device-detect";
-import { decryptMessage } from "@/lib/noble";
 import moment from "moment";
 import api from "@/lib/api";
 
-const RenderDMMessages = ({ message, lastMessageId: lastId }: { message: Message; lastMessageId: string }) => {
+const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scrollMessage: any }) => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
-  const { selectedChatData, language, setEditDialog } = useChatStore();
+  const { plainText } = usePlainText();
+  const { selectedChatData, language, setEditDialog, setReplyTo } = useChatStore();
 
   const copyToClipboard = (text: string) => {
     try {
@@ -59,26 +63,6 @@ const RenderDMMessages = ({ message, lastMessageId: lastId }: { message: Message
 
   const [imageViewExtend, setImageViewExtend] = useState(false);
 
-  const isDevelopment = import.meta.env.DEV;
-
-  /** for convert encrypt message to plain text */
-  const plainText = (message: Message) => {
-    try {
-      let messageKey = "";
-
-      if (message.sender === selectedChatData?._id) {
-        messageKey = userInfo?._id!;
-      } else {
-        messageKey = selectedChatData?._id!;
-      }
-
-      return decryptMessage(message?.content?.text!, messageKey);
-    } catch (error) {
-      isDevelopment && console.log("Plain text decryption failed!");
-      return "Decryption Error!";
-    }
-  };
-
   const [translated, setTranslated] = useState("");
   const [translation, setTranslation] = useState({ message: "", language: "" });
   const setTextAndLanguage = (message: string) => setTranslation({ message, language });
@@ -92,7 +76,7 @@ const RenderDMMessages = ({ message, lastMessageId: lastId }: { message: Message
       setTranslated(response.data.data);
     } catch (error: any) {
       setTranslated("");
-      isDevelopment && console.log("Language translation error!");
+      import.meta.env.DEV && console.log("Language translation error!");
     }
   };
 
@@ -103,20 +87,6 @@ const RenderDMMessages = ({ message, lastMessageId: lastId }: { message: Message
       })();
     }
   }, [translation]);
-
-  const mergeRefs =
-    (...refs: any[]) =>
-    (element: any) => {
-      refs.forEach((ref) => {
-        if (typeof ref === "function") {
-          ref(element);
-        } else {
-          ref.current = element;
-        }
-      });
-    };
-
-  const isSender = message.sender === selectedChatData?._id;
 
   const { ref: inViewRef, inView } = useInView({
     threshold: 0.3,
@@ -160,6 +130,9 @@ const RenderDMMessages = ({ message, lastMessageId: lastId }: { message: Message
     }
   };
 
+  const { replyMessage } = useReplyMessage(message);
+  const isSender = message.recipient === userInfo?._id && message.sender === selectedChatData?._id;
+
   return (
     <div
       className={cn(
@@ -167,16 +140,42 @@ const RenderDMMessages = ({ message, lastMessageId: lastId }: { message: Message
         isSender ? "items-start text-left" : "items-end text-right"
       )}
     >
+      {/* Preview reply message if current message is reply */}
+      {message.reply && replyMessage && (
+        <span className="flex items-center gap-2 mr-1">
+          <span
+            className={cn(
+              "border dark:border-gray-800 rounded p-2 text-xs",
+              isSender ? "bg-gray-50 dark:bg-gray-50/5" : "bg-gray-100 dark:bg-gray-100/5"
+            )}
+            onClick={() => scrollMessage(replyMessage._id)}
+          >
+            {replyMessage.type === "deleted" ? (
+              <span className="flex items-center gap-1 italic">
+                <HiOutlineNoSymbol size={12} /> {"This message was deleted."}
+              </span>
+            ) : (
+              <span>
+                {replyMessage?.content?.type === "text" && replyMessage?.content?.text !== "" && (
+                  <span className="max-w-72 inline-block align-middle truncate">{plainText(replyMessage)}</span>
+                )}
+                {replyMessage?.content?.type === "file" && <span>📎Attachment</span>}
+              </span>
+            )}
+          </span>
+          <LuReply className={cn(isSender && "order-first transform scale-x-[-1] tooltip-icon")} />
+        </span>
+      )}
       <ContextMenu>
         <ContextMenuTrigger
           ref={mergeRefs(inViewRef, elementRef)}
           className={cn(
-            "inline-block border rounded-sm p-3 break-words transition-[transform,opacity] duration-300 ease-in-out transform text-start text-gray-950 max-w-[90%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[75%] xl:max-w-[70%] hover:transition-colors",
-            isSender ? "bg-gray-100 border-gray-200" : "bg-gray-200 border-gray-300",
-            "dark:bg-gray-100/5 dark:border-gray-700 dark:text-gray-50 dark:hover:bg-gray-100/10",
+            "inline-block border rounded-sm p-3 break-words transition-[transform,opacity] duration-300 ease-in-out transform text-start text-gray-950 dark:text-gray-50 dark:border-gray-700 max-w-[90%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[75%] xl:max-w-[70%] hover:transition-colors",
             message.type === "deleted" ? "cursor-not-allowed" : "cursor-default",
-            message._id === lastId && "shake",
-            inView ? "opacity-100 translate-x-0" : `opacity-0 ${isSender ? "translate-x-16" : "-translate-x-16"}`
+            inView ? "opacity-100 translate-x-0" : `opacity-0 ${isSender ? "translate-x-16" : "-translate-x-16"}`,
+            isSender
+              ? "bg-gray-100 border-gray-200 dark:bg-gray-100/5 dark:hover:bg-gray-100/10"
+              : "bg-gray-200 border-gray-300 dark:bg-gray-200/5 dark:hover:bg-gray-200/10"
           )}
           onDoubleClick={() => handleEmojiReaction("❤️")}
         >
@@ -200,14 +199,33 @@ const RenderDMMessages = ({ message, lastMessageId: lastId }: { message: Message
                     <HiOutlineDocumentArrowDown size={16} /> Download this file to view it.
                   </span>
                 ))}
-              {/* Reactions (show only on hover) */}
+              {/* Message Reply & Emoji Reactions (show only on hover) */}
               {isDesktop && (
                 <span
                   className={cn(
                     "absolute top-1/2 -translate-y-1/2 hidden group-hover:flex gap-2 bg-white dark:bg-gray-800 rounded-full shadow-md px-2 py-1 transition-transform duration-500 scale-95 group-hover:scale-100 text-sm",
-                    !isSender ? "right-full mr-6" : "left-full ml-6"
+                    isSender ? "left-full ml-6" : "right-full mr-6"
                   )}
                 >
+                  {/* Message Reply */}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger
+                        className={cn("focus:outline-none", !isSender && "order-last")}
+                        onClick={() => setReplyTo(message)}
+                      >
+                        {isSender ? (
+                          <HiMiniArrowUturnRight className="tooltip-icon hover:scale-125 transition-transform duration-200" />
+                        ) : (
+                          <HiMiniArrowUturnLeft className="tooltip-icon hover:scale-125 transition-transform duration-200" />
+                        )}
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <span className="tooltip-span">Reply</span>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  {/* Emoji Reaction */}
                   {["👍", "❤️", "😂", "😲", "💯"].map((emoji) => (
                     <button
                       key={emoji}
