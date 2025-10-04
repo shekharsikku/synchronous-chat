@@ -196,6 +196,18 @@ export function formatSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
+export const mergeRefs =
+  (...refs: any[]) =>
+  (element: any) => {
+    refs.forEach((ref) => {
+      if (typeof ref === "function") {
+        ref(element);
+      } else {
+        ref.current = element;
+      }
+    });
+  };
+
 /*
 
 import CryptoJS from "crypto-js";

@@ -11,9 +11,10 @@ import {
 import { useState, useEffect, useRef, ChangeEvent, KeyboardEventHandler } from "react";
 import { encryptMessage } from "@/lib/noble";
 import { convertToBase64 } from "@/lib/utils";
-import { useChatStore, useAuthStore } from "@/zustand";
+import { useChatStore, useAuthStore, MessageData } from "@/zustand";
 import { isMobile } from "react-device-detect";
 import { useSocket, useTheme } from "@/lib/context";
+import { useClipboard } from "@/lib/hooks";
 import { toast } from "sonner";
 import api from "@/lib/api";
 
@@ -21,7 +22,7 @@ const MessageBar = () => {
   const { theme } = useTheme();
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
-  const { selectedChatData, setIsPartnerTyping, editDialog } = useChatStore();
+  const { selectedChatData, setIsPartnerTyping, editDialog, replyTo, setReplyTo } = useChatStore();
 
   const emojiRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -117,12 +118,6 @@ const MessageBar = () => {
     }
   };
 
-  interface MessageData {
-    type: "text" | "file";
-    text?: string;
-    file?: string;
-  }
-
   const handleSendMessage = async () => {
     if (isSending || message === "") return;
     setIsSending(true);
@@ -138,13 +133,13 @@ const MessageBar = () => {
         messageData.text = encryptMessage(message, selectedChatData?._id!);
       }
 
-      if (selectedImage) {
-        setMessage((prev) => `${prev}::Sending...`);
-      }
+      if (replyTo) messageData.reply = replyTo._id;
+      if (selectedImage) setMessage((prev) => `${prev}::Sending...`);
 
       await api.post(`/api/message/send/${selectedChatData?._id}`, messageData);
 
       setMessage("");
+      setReplyTo(null);
       setSelectedImage(null);
     } catch (error: any) {
       toast.error(error.response.data.message);
@@ -213,30 +208,7 @@ const MessageBar = () => {
     handleTyping();
   };
 
-  const pasteFromClipboard = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      const element = inputRef.current;
-
-      if (text && element) {
-        element.focus();
-        const start = element.selectionStart ?? element.value.length;
-        const end = element.selectionEnd ?? element.value.length;
-        const value = element.value.substring(0, start) + text + element.value.substring(end);
-
-        element.value = value;
-        setMessage(value);
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            element.setSelectionRange(start + text.length, start + text.length);
-            element.focus();
-          });
-        });
-      }
-    } catch (error: any) {
-      console.error("Clipboard read failed:", error.message);
-    }
-  };
+  const { pasteFromClipboard } = useClipboard(inputRef, setMessage);
 
   return (
     <footer className="h-bar w-full border-t flex items-center justify-center p-2">

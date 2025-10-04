@@ -25,7 +25,7 @@ const ContactsContainer = ({
 }) => {
   const { callingActive } = usePeer();
   const { onlineUsers } = useSocket();
-  const { setSelectedChatType, setSelectedChatData } = useChatStore();
+  const { setSelectedChatType, setSelectedChatData, setReplyTo } = useChatStore();
 
   const { contacts, fetching } = useContacts();
   const { selectedChatData } = useSelectedChat();
@@ -113,6 +113,7 @@ const ContactsContainer = ({
                           setSelectedChatType("contact");
                           setSelectedChatData(contact);
                           setLastChatUser(contact.username);
+                          setReplyTo(null)
                         }}
                         role="button"
                       >

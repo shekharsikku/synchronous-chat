@@ -15,10 +15,18 @@ export interface Message {
       emoji: string;
     }[];
   };
+  reply?: string;
   deletedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
   __v?: any;
+}
+
+export interface MessageData {
+  type: "text" | "file";
+  text?: string;
+  file?: string;
+  reply?: string;
 }
 
 const useChatStore = create<{
@@ -45,7 +53,10 @@ const useChatStore = create<{
   updateMessage: (id: string, updated: any) => void;
 
   editDialog: boolean;
-  setEditDialog: (editMessageDialog: boolean) => void;
+  setEditDialog: (editDialog: boolean) => void;
+
+  replyTo: Message | null;
+  setReplyTo: (replyTo: Message | null) => void;
 }>((set) => ({
   selectedChatType: "",
   setSelectedChatType: (selectedChatType: string) => set({ selectedChatType }),
@@ -60,6 +71,7 @@ const useChatStore = create<{
     set({
       selectedChatType: "",
       selectedChatData: null,
+      replyTo: null,
       messages: [],
     }),
 
@@ -79,6 +91,9 @@ const useChatStore = create<{
 
   editDialog: false,
   setEditDialog: (editDialog: boolean) => set({ editDialog }),
+
+  replyTo: null,
+  setReplyTo: (replyTo: Message | null) => set({ replyTo }),
 }));
 
 export default useChatStore;

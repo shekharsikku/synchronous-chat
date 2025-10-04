@@ -1,6 +1,7 @@
 import { Socket } from "socket.io-client";
-import { useEffect, useCallback, useRef, useState } from "react";
+import { useEffect, useCallback, useRef, useState, RefObject, SetStateAction, Dispatch } from "react";
 import { useSocket } from "@/lib/context";
+import { decryptMessage } from "@/lib/noble";
 import { useAuthStore, useChatStore } from "@/zustand";
 import { Message } from "@/zustand/chat";
 import notificationSound from "@/assets/sound/message-alert.mp3";
@@ -125,4 +126,70 @@ export const useLastMinutes = (timestamp: Date | string | number, minutes = 10) 
   }, [timestamp]);
 
   return { isLastMinutes };
+};
+
+/** for convert encrypt message to plain text */
+export const usePlainText = () => {
+  const { userInfo } = useAuthStore();
+  const { selectedChatData } = useChatStore();
+
+  const plainText = (message: Message) => {
+    if (message.content?.type === "file") {
+      return "Can't Decrypt!";
+    }
+
+    try {
+      let messageKey = "";
+
+      if (message.sender === selectedChatData?._id) {
+        messageKey = userInfo?._id!;
+      } else {
+        messageKey = selectedChatData?._id!;
+      }
+
+      return decryptMessage(message?.content?.text!, messageKey);
+    } catch (error) {
+      import.meta.env.DEV && console.log("Plain text decryption failed!");
+      return "Decryption Error!";
+    }
+  };
+
+  return { plainText };
+};
+
+export const useClipboard = (
+  inputRef: RefObject<HTMLInputElement | null>,
+  setMessage: Dispatch<SetStateAction<string>>
+) => {
+  const pasteFromClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const element = inputRef.current;
+
+      if (text && element) {
+        element.focus();
+        const start = element.selectionStart ?? element.value.length;
+        const end = element.selectionEnd ?? element.value.length;
+        const value = element.value.substring(0, start) + text + element.value.substring(end);
+
+        element.value = value;
+        setMessage(value);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            element.setSelectionRange(start + text.length, start + text.length);
+            element.focus();
+          });
+        });
+      }
+    } catch (error: any) {
+      console.error("Clipboard read failed:", error.message);
+    }
+  };
+
+  return { pasteFromClipboard };
+};
+
+export const useReplyMessage = (message: Message) => {
+  const { messages } = useChatStore();
+  return { replyMessage: messages.find((msg) => msg._id === message.reply) || null };
 };
