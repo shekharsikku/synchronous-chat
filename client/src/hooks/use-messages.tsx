@@ -43,23 +43,24 @@ export const useMessages = () => {
 
     const handleMessageReceive = async (message: Message) => {
       const chatKey = userInfo?._id === message.sender ? message.recipient : message.sender;
+      const chatQueryKey = ["messages", userInfo?._id, chatKey];
 
       /** If the message belongs to the selected chat, update directly */
       if (chatKey === selectedChatData._id) {
-        queryClient.setQueryData<Message[]>(["messages", userInfo?._id, chatKey], (previous = []) => {
+        queryClient.setQueryData<Message[]>(chatQueryKey, (previous = []) => {
           return [...previous, message];
         });
         return;
       }
 
       /** Check if messages are already cached */
-      let cachedMessages = queryClient.getQueryData<Message[]>(["messages", userInfo?._id, chatKey]) || [];
+      let cachedMessages = queryClient.getQueryData<Message[]>(chatQueryKey) || [];
 
       /** If messages are not cached, fetch from api */
       if (!cachedMessages || cachedMessages.length === 0) {
         try {
           cachedMessages = await queryClient.fetchQuery({
-            queryKey: ["messages", userInfo?._id, chatKey],
+            queryKey: chatQueryKey,
             queryFn: () => fetchMessages(chatKey),
             staleTime: 2 * 60 * 60 * 1000,
             gcTime: 4 * 60 * 60 * 1000,
@@ -71,7 +72,7 @@ export const useMessages = () => {
       }
 
       /** Update cache with the new message (avoid duplicates) */
-      queryClient.setQueryData<Message[]>(["messages", userInfo?._id, chatKey], (previous = []) => {
+      queryClient.setQueryData<Message[]>(chatQueryKey, (previous = []) => {
         const uniqueMessages = previous.filter((current) => current._id !== message._id);
         return [...uniqueMessages, message];
       });

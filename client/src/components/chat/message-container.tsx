@@ -62,7 +62,7 @@ const RenderMessages = React.memo(
 
 const MessageContainer = () => {
   const { messages, fetching } = useMessages();
-  const { selectedChatData, selectedChatType, setMessages } = useChatStore();
+  const { selectedChatData, selectedChatType, setMessages, replyTo } = useChatStore();
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -117,7 +117,7 @@ const MessageContainer = () => {
         {!fetching && <div ref={mergeRefs(lastMessageRef, inViewRef)} className="h-0.5 bg-transparent" />}
       </section>
 
-      {!inView && showScrollButton && (
+      {!inView && showScrollButton && !replyTo && (
         <Button
           variant="outline"
           size="icon"

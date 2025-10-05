@@ -12,7 +12,7 @@ import { useState, useEffect, useRef, ChangeEvent, KeyboardEventHandler } from "
 import { encryptMessage } from "@/lib/noble";
 import { convertToBase64 } from "@/lib/utils";
 import { useChatStore, useAuthStore, MessageData } from "@/zustand";
-import { isMobile } from "react-device-detect";
+import { isDesktop, isMobile } from "react-device-detect";
 import { useSocket, useTheme } from "@/lib/context";
 import { useClipboard } from "@/lib/hooks";
 import { toast } from "sonner";
@@ -35,10 +35,12 @@ const MessageBar = () => {
   const [emojiPicker, setEmojiPicker] = useState(false);
 
   useEffect(() => {
-    if (selectedChatData && inputRef.current && !isMobile) {
+    if (!inputRef.current || isMobile) return;
+
+    if (isDesktop && (selectedChatData || replyTo)) {
       inputRef.current.focus();
     }
-  }, [selectedChatData]);
+  }, [selectedChatData, replyTo, isMobile, isDesktop]);
 
   useEffect(() => {
     const handleSpaceEscapeKeyDown = (event: KeyboardEvent) => {
