@@ -90,6 +90,7 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
 
   const { ref: inViewRef, inView } = useInView({
     threshold: 0.3,
+    delay: 100,
   });
 
   const elementRef = useRef<any>(null);

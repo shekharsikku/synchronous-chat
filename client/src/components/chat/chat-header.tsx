@@ -150,7 +150,7 @@ const ChatHeader = () => {
             <h3 className="font-semibold">
               {selectedChatData?.name || selectedChatData?.username || selectedChatData?.email}
             </h3>
-            {isCurrentlyOnline && (
+            {isCurrentlyOnline ? (
               <p className="text-xs">
                 {isPartnerTyping ? (
                   <>
@@ -162,6 +162,10 @@ const ChatHeader = () => {
                 ) : (
                   <span>online</span>
                 )}
+              </p>
+            ) : (
+              <p className="text-xs">
+                <span>offline</span>
               </p>
             )}
           </div>
