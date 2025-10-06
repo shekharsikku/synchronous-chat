@@ -47,6 +47,11 @@ const MessageSchema = new Schema({
             default: null,
         },
     },
+    reply: {
+        type: Schema.Types.ObjectId,
+        ref: "Message",
+        default: null,
+    },
     deletedAt: {
         type: Date,
         default: null,

@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { authAccess, validate } from "../middlewares/index.js";
 import { MessageSchema, TranslateSchema } from "../utils/schema.js";
-import { deleteMessages, deleteMessage, reactMessage, editMessage, getMessages, sendMessage, translateMessage, } from "../controllers/message.js";
+import { deleteMessages, deleteMessage, reactMessage, editMessage, getMessages, sendMessage, translateMessage, fetchMessages, } from "../controllers/message.js";
 const router = Router();
 router.get("/:id", authAccess, getMessages);
+router.get("/fetch/:id", authAccess, fetchMessages);
 router.post("/send/:id", authAccess, validate(MessageSchema), sendMessage);
 router.patch("/edit/:id", authAccess, editMessage);
 router.patch("/react/:id", authAccess, reactMessage);

@@ -6,7 +6,7 @@ const sendMessage = async (req, res) => {
     try {
         const sender = req.user?._id;
         const receiver = req.params.id;
-        const { type, text, file } = (await req.body);
+        const { type, text, file, reply } = (await req.body);
         let conversation = await Conversation.findOne({
             participants: { $all: [sender, receiver] },
         });
@@ -23,6 +23,7 @@ const sendMessage = async (req, res) => {
                 text: text,
                 file: file,
             },
+            reply: reply || null,
         });
         if (message) {
             conversation.messages.push(message._id);
@@ -80,6 +81,30 @@ const getMessages = async (req, res) => {
             return SuccessResponse(res, 200, "No any message available!", []);
         }
         return SuccessResponse(res, 200, "Messages fetched successfully!", conversation?.messages);
+    }
+    catch (error) {
+        return ErrorResponse(res, error.code || 500, error.message || "Error while fetching messages!");
+    }
+};
+const fetchMessages = async (req, res) => {
+    try {
+        const sender = req.user?._id;
+        const receiver = req.params.id;
+        const { before, limit = 10 } = req.query;
+        const query = {
+            $or: [
+                { sender: sender, recipient: receiver },
+                { sender: receiver, recipient: sender },
+            ],
+        };
+        if (before) {
+            query.createdAt = { $lt: new Date(before) };
+        }
+        const messages = await Message.find(query)
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .lean();
+        return SuccessResponse(res, 200, "Messages fetched successfully!", messages.reverse());
     }
     catch (error) {
         return ErrorResponse(res, error.code || 500, error.message || "Error while fetching messages!");
@@ -205,4 +230,4 @@ const translateMessage = async (req, res) => {
         return ErrorResponse(res, error.code || 500, error.message || "Error while translating message!");
     }
 };
-export { sendMessage, getMessages, editMessage, reactMessage, deleteMessage, deleteMessages, translateMessage };
+export { sendMessage, getMessages, editMessage, reactMessage, deleteMessage, deleteMessages, translateMessage, fetchMessages, };

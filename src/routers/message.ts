@@ -9,11 +9,13 @@ import {
   getMessages,
   sendMessage,
   translateMessage,
+  fetchMessages,
 } from "../controllers/message.js";
 
 const router = Router();
 
 router.get("/:id", authAccess, getMessages);
+router.get("/fetch/:id", authAccess, fetchMessages);
 router.post("/send/:id", authAccess, validate(MessageSchema), sendMessage);
 router.patch("/edit/:id", authAccess, editMessage);
 router.patch("/react/:id", authAccess, reactMessage);

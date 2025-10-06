@@ -111,6 +111,35 @@ const getMessages = async (req: Request<{ id: string }>, res: Response) => {
   }
 };
 
+const fetchMessages = async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const sender = req.user?._id;
+    const receiver = req.params.id;
+    const { before, limit = 10 } = req.query;
+
+    const query: any = {
+      $or: [
+        { sender: sender, recipient: receiver },
+        { sender: receiver, recipient: sender },
+      ],
+    };
+
+    if (before) {
+      query.createdAt = { $lt: new Date(before as string) };
+    }
+
+    const messages = await Message.find(query)
+      .sort({ createdAt: -1 })
+      .limit(limit as number)
+      .lean();
+
+    /* Reverse to show oldest → newest in UI */
+    return SuccessResponse(res, 200, "Messages fetched successfully!", messages.reverse());
+  } catch (error: any) {
+    return ErrorResponse(res, error.code || 500, error.message || "Error while fetching messages!");
+  }
+};
+
 const deleteMessage = async (req: Request<{ id: string }>, res: Response) => {
   try {
     const uid = req.user?._id;
@@ -260,4 +289,13 @@ const translateMessage = async (req: Request<{}, {}, Translate>, res: Response) 
   }
 };
 
-export { sendMessage, getMessages, editMessage, reactMessage, deleteMessage, deleteMessages, translateMessage };
+export {
+  sendMessage,
+  getMessages,
+  editMessage,
+  reactMessage,
+  deleteMessage,
+  deleteMessages,
+  translateMessage,
+  fetchMessages,
+};
