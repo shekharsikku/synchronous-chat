@@ -1,4 +1,3 @@
-import { useNotification } from "@/hooks/use-notification";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Auth, Chat, Profile } from "@/pages";
 import { useEffect, ReactNode } from "react";
@@ -30,7 +29,6 @@ const AuthRoute = ({
 };
 
 const App = () => {
-  useNotification();
   const { theme, setTheme } = useTheme();
 
   useHotkeys("ctrl+m", () => setTheme(theme === "light" ? "dark" : "light"), {

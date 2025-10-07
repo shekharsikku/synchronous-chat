@@ -154,13 +154,13 @@ const Auth = () => {
               <TabsList className="bg-transparent rounded-none w-full">
                 <TabsTrigger
                   value="sign-in"
-                  className="data-[state=active]:bg-transparent text-black dark:text-gray-200 text-opacity-90 border-b-2 rounded-none w-full data-[state=active]:text-black data-[state=active]:font-semibold data-[state=active]:border-b-gray-700 p-3"
+                  className="data-[state=active]:bg-transparent text-black dark:text-gray-200 text-opacity-90 border-b-2 rounded-none w-full data-[state=active]:text-black data-[state=active]:font-semibold data-[state=active]:border-b-gray-700 data-[state=active]:dark:border-b-gray-200 p-3"
                 >
                   Sign In
                 </TabsTrigger>
                 <TabsTrigger
                   value="sign-up"
-                  className="data-[state=active]:bg-transparent text-black dark:text-gray-200 text-opacity-90 border-b-2 rounded-none w-full data-[state=active]:text-black data-[state=active]:font-semibold data-[state=active]:border-b-gray-700 p-3"
+                  className="data-[state=active]:bg-transparent text-black dark:text-gray-200 text-opacity-90 border-b-2 rounded-none w-full data-[state=active]:text-black data-[state=active]:font-semibold data-[state=active]:border-b-gray-700 data-[state=active]:dark:border-b-gray-200 p-3"
                 >
                   Sign Up
                 </TabsTrigger>
@@ -181,6 +181,7 @@ const Auth = () => {
                                 type="text"
                                 placeholder="Email or Username"
                                 autoComplete="off"
+                                autoFocus
                                 {...field}
                               />
                             </FormControl>
