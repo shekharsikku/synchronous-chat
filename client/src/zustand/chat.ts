@@ -57,6 +57,9 @@ const useChatStore = create<{
 
   replyTo: Message | null;
   setReplyTo: (replyTo: Message | null) => void;
+
+  messageActive: boolean;
+  setMessageActive: (messageActive: boolean) => void;
 }>((set) => ({
   selectedChatType: "",
   setSelectedChatType: (selectedChatType: string) => set({ selectedChatType }),
@@ -94,6 +97,9 @@ const useChatStore = create<{
 
   replyTo: null,
   setReplyTo: (replyTo: Message | null) => set({ replyTo }),
+
+  messageActive: false,
+  setMessageActive: (messageActive: boolean) => set({ messageActive }),
 }));
 
 export default useChatStore;

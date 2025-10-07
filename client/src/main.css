@@ -87,10 +87,18 @@
   }
 }
 
-::-webkit-scrollbar {
-  display: none;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.message-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 0;
+}
+
+.message-scrollbar::-webkit-scrollbar-track {
+  background: inherit;
+}
+
+.message-scrollbar::-webkit-scrollbar-thumb {
+  background: gainsboro;
+  border-radius: 2px;
 }
 
 .epr-body,

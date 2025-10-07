@@ -61,68 +61,143 @@ const RenderMessages = React.memo(
 );
 
 const MessageContainer = () => {
-  const { messages, fetching } = useMessages();
-  const { selectedChatData, selectedChatType, setMessages, replyTo } = useChatStore();
+  const { data, isPending, hasNextPage, isFetchingNextPage, fetchNextPage } = useMessages();
+  const { selectedChatData, selectedChatType, setMessages, replyTo, messageActive } = useChatStore();
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [skeletonCount, setSkeletonCount] = useState(9);
+  const scrollSectionRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const [showScrollButton, setShowScrollButton] = useState(true);
-  const prevLength = useRef(0);
-  const prevChatId = useRef<string | null>(null);
 
-  const scrollLast = (delay: number) => {
-    setTimeout(() => {
-      lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, delay);
-  };
+  const [skeletonCount, setSkeletonCount] = useState(9);
+  const [scrollButton, setScrollButton] = useState(true);
 
-  useEffect(() => {
-    if (selectedChatData?._id !== prevChatId.current) {
-      prevLength.current = 0;
-      prevChatId.current = selectedChatData?._id ?? null;
-    }
-
-    if (messages && messages.length > 0) setMessages(messages);
-
-    if (prevLength.current === 0 || (messages && messages.length > prevLength.current)) {
-      scrollLast(100);
-      setShowScrollButton(false);
-      setTimeout(() => setShowScrollButton(true), 2000);
-    }
-
-    prevLength.current = messages?.length ?? 0;
-  }, [messages, fetching, selectedChatData?._id]);
-
-  useEffect(() => {
-    const scrollHeight = scrollContainerRef.current?.clientHeight ?? 800;
-    const scrollCount = Math.ceil(scrollHeight / 90);
-    setSkeletonCount(scrollCount);
-  }, [scrollContainerRef]);
+  const scrollLockedRef = useRef(false);
+  const initialFetchRef = useRef(false);
+  const prevMsgCountRef = useRef(0);
+  const prevChatIdRef = useRef<string | null>(null);
 
   const { ref: inViewRef, inView } = useInView({
     threshold: 0.6,
     delay: 200,
   });
 
+  const scrollBottom = (smooth = true) => {
+    lastMessageRef.current?.scrollIntoView({
+      behavior: smooth ? "smooth" : "instant",
+      block: "end",
+    });
+  };
+
+  /** Flatten + dedupe messages */
+  const messages: Message[] = React.useMemo(() => {
+    if (!data?.pages) return [];
+
+    const depth = data.pageParams.length;
+    const flattened = [...data.pages].reverse().flat(depth);
+
+    /* Optional: dedupe by _id while preserving order */
+    const seen = new Set<string>();
+
+    return flattened.filter((msg) => {
+      if (seen.has(msg._id)) return false;
+      seen.add(msg._id);
+      return true;
+    });
+  }, [data?.pages]);
+
+  /** Skeleton count — only calc once */
+  useEffect(() => {
+    const scrollHeight = scrollSectionRef.current?.clientHeight ?? 800;
+    setSkeletonCount(Math.ceil(scrollHeight / 90));
+  }, []);
+
+  /** Scroll to bottom after first load */
+  useEffect(() => {
+    if (!isPending && !initialFetchRef.current) {
+      requestAnimationFrame(() => {
+        scrollSectionRef.current?.scrollTo({
+          top: scrollSectionRef.current.scrollHeight,
+          behavior: "instant",
+        });
+      });
+      initialFetchRef.current = true;
+    }
+  }, [isPending]);
+
+  /** Reset when chat changes */
+  useEffect(() => {
+    if (selectedChatData?._id !== prevChatIdRef.current) {
+      prevMsgCountRef.current = 0;
+      prevChatIdRef.current = selectedChatData?._id ?? null;
+    }
+
+    if (messages && messages.length > 0) setMessages(messages);
+
+    if (messages && messages.length > prevMsgCountRef.current && !scrollLockedRef.current) {
+      requestAnimationFrame(() => {
+        scrollSectionRef.current?.scrollTo({
+          top: scrollSectionRef.current.scrollHeight,
+          behavior: messageActive ? "smooth" : "instant",
+        });
+      });
+
+      setScrollButton(false);
+      initialFetchRef.current = false;
+
+      setTimeout(() => {
+        setScrollButton(true);
+        initialFetchRef.current = true;
+      }, 2000);
+    }
+
+    prevMsgCountRef.current = messages.length;
+  }, [selectedChatData?._id, messages.length]);
+
+  /** Handle scroll fetching */
+  useEffect(() => {
+    const scrollContainer = scrollSectionRef.current;
+    if (!scrollContainer || !hasNextPage) return;
+
+    /* When top sentinel visible → load older messages */
+    const handleScrollFetch = async () => {
+      if (!initialFetchRef.current || isFetchingNextPage) return;
+
+      /* Calculate how far the user has scrolled up (0 = top, 1 = bottom) */
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+      const scrollPosition = scrollTop / (scrollHeight - clientHeight);
+
+      /* Example: fetch when scrolled above 75% (i.e., closer to top) */
+      if (scrollPosition < 0.25 && !scrollLockedRef.current) {
+        scrollLockedRef.current = true;
+        await fetchNextPage();
+        setTimeout(() => (scrollLockedRef.current = false), 2000);
+      }
+    };
+
+    scrollContainer.addEventListener("scroll", handleScrollFetch);
+
+    return () => {
+      scrollContainer.removeEventListener("scroll", handleScrollFetch);
+    };
+  }, [isFetchingNextPage, hasNextPage, fetchNextPage]);
+
   return (
     <>
-      <section ref={scrollContainerRef} className="w-full flex-1 overflow-y-auto scrollbar-hide scroll-smooth px-4">
-        {fetching ? (
+      <section ref={scrollSectionRef} className="w-full flex-1 overflow-y-auto scroll-smooth px-4 message-scrollbar">
+        {isPending ? (
           <MessageSkeleton count={skeletonCount} />
         ) : (
           <RenderMessages messages={messages!} selectedChatType={selectedChatType} messageRefs={messageRefs} />
         )}
-        {!fetching && <div ref={mergeRefs(lastMessageRef, inViewRef)} className="h-0.5 bg-transparent" />}
+        {!isPending && <div ref={mergeRefs(lastMessageRef, inViewRef)} className="h-0.5 bg-transparent" />}
       </section>
 
-      {!inView && showScrollButton && !replyTo && (
+      {!inView && scrollButton && !replyTo && (
         <Button
           variant="outline"
           size="icon"
           className="absolute z-50 bottom-24 right-6 duration-0 text-neutral-600 dark:text-neutral-100"
-          onClick={() => scrollLast(200)}
+          onClick={() => scrollBottom()}
         >
           <HiOutlineArrowSmallDown size={20} />
         </Button>

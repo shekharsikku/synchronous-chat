@@ -1,21 +1,9 @@
-import { useQuery, useQueryClient, QueryClient } from "@tanstack/react-query";
+import { useQueryClient, useInfiniteQuery, InfiniteData } from "@tanstack/react-query";
 import { useSocket } from "@/lib/context";
 import { useEffect, useRef, useMemo } from "react";
 import { useChatStore, useAuthStore, Message } from "@/zustand";
 import notificationSound from "@/assets/sound/message-alert.mp3";
 import api from "@/lib/api";
-
-export const fetchMessages = async (userId: string): Promise<Message[]> => {
-  const response = await api.get(`/api/message/${userId}`);
-  return response.data.data;
-};
-
-const updateMessage = (queryClient: QueryClient, queryKey: string[], current: Message) => {
-  queryClient.setQueryData<Message[]>(queryKey, (messages: Message[] | undefined) => {
-    if (!messages) return [];
-    return messages.map((message: Message) => (message._id === current._id ? { ...message, ...current } : message));
-  });
-};
 
 export const useMessages = () => {
   const queryClient = useQueryClient();
@@ -23,16 +11,28 @@ export const useMessages = () => {
 
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
-  const { selectedChatData, isSoundAllow } = useChatStore();
+  const { selectedChatData, isSoundAllow, setMessageActive } = useChatStore();
 
   const queryKey = useMemo(
     () => ["messages", userInfo?._id!, selectedChatData?._id!],
     [userInfo?._id, selectedChatData?._id]
   );
 
-  const { data: messages, isFetching: fetching } = useQuery({
+  const infiniteQuery = useInfiniteQuery({
     queryKey: queryKey,
-    queryFn: () => fetchMessages(selectedChatData?._id!),
+    queryFn: async ({ pageParam }) => {
+      const limit = pageParam ? 10 : 20;
+      const before = pageParam ? `&before=${pageParam}` : "";
+      const url = `/api/message/fetch/${selectedChatData?._id}?limit=${limit}${before}`;
+      const response = await api.get(url);
+      return response.data.data;
+    },
+    initialPageParam: undefined,
+    getNextPageParam: (lastPage) => {
+      if (!lastPage?.length) return undefined;
+      return lastPage[0].createdAt;
+    },
+    refetchOnWindowFocus: false,
     staleTime: 6 * 60 * 60 * 1000,
     gcTime: 8 * 60 * 60 * 1000,
     enabled: !!selectedChatData?._id,
@@ -44,37 +44,26 @@ export const useMessages = () => {
     const handleMessageReceive = async (message: Message) => {
       const chatKey = userInfo?._id === message.sender ? message.recipient : message.sender;
       const chatQueryKey = ["messages", userInfo?._id, chatKey];
+      setMessageActive(true);
 
-      /** If the message belongs to the selected chat, update directly */
-      if (chatKey === selectedChatData._id) {
-        queryClient.setQueryData<Message[]>(chatQueryKey, (previous = []) => {
-          return [...previous, message];
-        });
-        return;
-      }
+      /** Update messages with the new message (avoid duplicates) */
+      queryClient.setQueryData<InfiniteData<Message[]>>(chatQueryKey, (older) => {
+        if (!older) return { pages: [[message]], pageParams: [undefined] };
 
-      /** Check if messages are already cached */
-      let cachedMessages = queryClient.getQueryData<Message[]>(chatQueryKey) || [];
+        /** Clone latest messages pages array */
+        const newer = [...older.pages];
+        const first = newer[0];
 
-      /** If messages are not cached, fetch from api */
-      if (!cachedMessages || cachedMessages.length === 0) {
-        try {
-          cachedMessages = await queryClient.fetchQuery({
-            queryKey: chatQueryKey,
-            queryFn: () => fetchMessages(chatKey),
-            staleTime: 2 * 60 * 60 * 1000,
-            gcTime: 4 * 60 * 60 * 1000,
-          });
-        } catch (error: any) {
-          import.meta.env.DEV && console.error("Failed to fetch messages:", error.message);
-          return;
-        }
-      }
+        /** Avoid duplicates */
+        if (first.some((msg) => msg._id === message._id)) return older;
 
-      /** Update cache with the new message (avoid duplicates) */
-      queryClient.setQueryData<Message[]>(chatQueryKey, (previous = []) => {
-        const uniqueMessages = previous.filter((current) => current._id !== message._id);
-        return [...uniqueMessages, message];
+        /** Append message to the first page */
+        newer[0] = [...first, message];
+
+        return {
+          ...older,
+          pages: newer,
+        };
       });
 
       if (message.recipient === userInfo?._id && message.sender !== selectedChatData?._id && isSoundAllow) {
@@ -82,10 +71,27 @@ export const useMessages = () => {
         sound.volume = 0.25;
         void sound.play();
       }
+
+      const messageTimeout = setTimeout(() => setMessageActive(false), 2000);
+      return () => clearTimeout(messageTimeout);
     };
 
-    const handleMessageUpdate = (current: Message) => {
-      updateMessage(queryClient, queryKey, current);
+    const handleMessageUpdate = (message: Message) => {
+      const chatKey = userInfo?._id === message.sender ? message.recipient : message.sender;
+      const chatQueryKey = ["messages", userInfo?._id, chatKey];
+
+      queryClient.setQueryData<InfiniteData<Message[]>>(chatQueryKey, (existing) => {
+        if (!existing) return { pages: [[message]], pageParams: [undefined] };
+
+        const updated = existing.pages.map((page) => {
+          return page.map((msg) => (msg._id === message._id ? { ...msg, ...message } : msg));
+        });
+
+        return {
+          ...existing,
+          pages: updated,
+        };
+      });
     };
 
     const events: [string, (...args: any[]) => void][] = [
@@ -106,5 +112,5 @@ export const useMessages = () => {
     };
   }, [socket, userInfo?._id, selectedChatData?._id, queryClient, isSoundAllow]);
 
-  return { messages, fetching };
+  return infiniteQuery;
 };

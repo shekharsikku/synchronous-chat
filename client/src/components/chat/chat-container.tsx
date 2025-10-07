@@ -8,8 +8,10 @@ const ChatContainer = () => {
     <div className="fixed top-0 h-full w-full flex flex-col md:static md:flex-1">
       <ChatHeader />
       <MessageContainer />
-      <MessagePreview />
-      <MessageBar />
+      <div className="relative">
+        <MessagePreview />
+        <MessageBar />
+      </div>
     </div>
   );
 };
