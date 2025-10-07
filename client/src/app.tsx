@@ -4,6 +4,7 @@ import { useEffect, ReactNode } from "react";
 import { useAuthUser } from "@/lib/auth";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTheme } from "@/lib/context";
+import { useListeners } from "@/hooks/use-listeners";
 
 const RedirectRoute = () => {
   const { isAuthenticated, userInfo } = useAuthUser();
@@ -46,11 +47,15 @@ const App = () => {
         event.preventDefault();
       }
     };
+
     document.addEventListener("contextmenu", disableRightClick);
+
     return () => {
       document.removeEventListener("contextmenu", disableRightClick);
     };
   }, []);
+
+  useListeners();
 
   return (
     <Routes>

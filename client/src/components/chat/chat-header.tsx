@@ -19,9 +19,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { countMessages, languageOptions } from "@/lib/utils";
+import { languageOptions } from "@/lib/utils";
 import { useSocket, usePeer } from "@/lib/context";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useChatStore } from "@/zustand";
 import { useAvatar } from "@/lib/hooks";
@@ -29,20 +29,14 @@ import { toast } from "sonner";
 import moment from "moment";
 
 const ChatHeader = () => {
-  const { selectedChatData, closeChat, isPartnerTyping, messages, language, setLanguage } = useChatStore();
+  const { selectedChatData, closeChat, isPartnerTyping, language, setLanguage, messageStats } = useChatStore();
   const [openUserInfoModal, setOpenUserInfoModal] = useState(false);
-  const [messageStats, setMessageStats] = useState({ sent: 0, received: 0 });
   const userAvatar = useAvatar(selectedChatData);
 
   useHotkeys("ctrl+q", () => closeChat(), {
     enabled: !!selectedChatData,
     enableOnFormTags: ["input"],
   });
-
-  useEffect(() => {
-    const { sent, received } = countMessages(messages, selectedChatData);
-    setMessageStats({ sent, received });
-  }, [selectedChatData?._id, messages.length]);
 
   const {
     localInfo,

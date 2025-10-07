@@ -58,10 +58,6 @@ const Profile = () => {
   const [openImageDeletionModal, setOpenImageDeletionModal] = useState(false);
   const [imageUpdateFormData, setImageUpdateFormData] = useState<any | null>(null);
 
-  const handleFileInputClick = () => {
-    fileInputRef.current?.click();
-  };
-
   const handleImageSelectClick = async (e: any) => {
     e.preventDefault();
 
@@ -268,7 +264,7 @@ const Profile = () => {
                     <HiOutlineTrash size={16} /> Delete
                   </ContextMenuItem>
                 )}
-                <ContextMenuItem className="flex gap-2" onClick={handleFileInputClick}>
+                <ContextMenuItem className="flex gap-2" onClick={() => fileInputRef.current?.click()}>
                   <HiOutlineCloudArrowUp size={16} /> Upload
                 </ContextMenuItem>
               </ContextMenuContent>

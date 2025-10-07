@@ -10,7 +10,7 @@ import { StreamInfo } from "./stream-info";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useEffect, useState } from "react";
 import { useContacts } from "@/hooks/use-contacts";
-import { useSelectedChat } from "@/hooks/use-selected-chat";
+import { useChats } from "@/hooks/use-chats";
 import { useChatStore, UserInfo } from "@/zustand";
 import { usePeer, useSocket } from "@/lib/context";
 import { useDebounce, useAvatar } from "@/lib/hooks";
@@ -28,7 +28,7 @@ const ContactsContainer = ({
   const { setSelectedChatType, setSelectedChatData, setReplyTo } = useChatStore();
 
   const { contacts, fetching } = useContacts();
-  const { selectedChatData } = useSelectedChat();
+  const { selectedChatData } = useChats();
   const [filtered, setFiltered] = useState<UserInfo[]>([]);
 
   useEffect(() => {
@@ -113,7 +113,7 @@ const ContactsContainer = ({
                           setSelectedChatType("contact");
                           setSelectedChatData(contact);
                           setLastChatUser(contact.username);
-                          setReplyTo(null)
+                          setReplyTo(null);
                         }}
                         role="button"
                       >

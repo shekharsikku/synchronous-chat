@@ -62,7 +62,7 @@ const RenderMessages = React.memo(
 
 const MessageContainer = () => {
   const { data, isPending, hasNextPage, isFetchingNextPage, fetchNextPage } = useMessages();
-  const { selectedChatData, selectedChatType, setMessages, replyTo, messageActive } = useChatStore();
+  const { selectedChatData, selectedChatType, setMessages, replyTo, listenerActive, setMessageStats } = useChatStore();
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollSectionRef = useRef<HTMLDivElement>(null);
@@ -131,13 +131,16 @@ const MessageContainer = () => {
       prevChatIdRef.current = selectedChatData?._id ?? null;
     }
 
-    if (messages && messages.length > 0) setMessages(messages);
+    if (messages && messages.length > 0) {
+      setMessages(messages);
+      setMessageStats(messages, selectedChatData?._id!);
+    }
 
     if (messages && messages.length > prevMsgCountRef.current && !scrollLockedRef.current) {
       requestAnimationFrame(() => {
         scrollSectionRef.current?.scrollTo({
           top: scrollSectionRef.current.scrollHeight,
-          behavior: messageActive ? "smooth" : "instant",
+          behavior: listenerActive ? "smooth" : "instant",
         });
       });
 

@@ -1,7 +1,7 @@
 {
   "name": "synchronous-chat",
   "type": "module",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -23,7 +23,7 @@
     "@types/express": "^5.0.3",
     "@types/morgan": "^1.9.10",
     "@types/multer": "^2.0.0",
-    "@types/node": "^24.6.2",
+    "@types/node": "^24.7.0",
     "@types/request-ip": "^0.0.41",
     "prettier": "^3.6.2",
     "tsx": "^4.20.6",
@@ -43,12 +43,12 @@
     "express-rate-limit": "^8.1.0",
     "helmet": "^8.1.0",
     "jose": "^6.1.0",
-    "mongoose": "^8.19.0",
+    "mongoose": "^8.19.1",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "peer": "^1.0.2",
     "request-ip": "^3.3.0",
     "socket.io": "^4.8.1",
-    "zod": "^4.1.11"
+    "zod": "^4.1.12"
   }
 }

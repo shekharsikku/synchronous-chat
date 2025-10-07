@@ -58,8 +58,11 @@ const useChatStore = create<{
   replyTo: Message | null;
   setReplyTo: (replyTo: Message | null) => void;
 
-  messageActive: boolean;
-  setMessageActive: (messageActive: boolean) => void;
+  listenerActive: boolean;
+  setListenerActive: (listenerActive: boolean) => void;
+
+  messageStats: { sent: number; received: number };
+  setMessageStats: (messages: Message[], selectedChatId: string) => void;
 }>((set) => ({
   selectedChatType: "",
   setSelectedChatType: (selectedChatType: string) => set({ selectedChatType }),
@@ -98,8 +101,21 @@ const useChatStore = create<{
   replyTo: null,
   setReplyTo: (replyTo: Message | null) => set({ replyTo }),
 
-  messageActive: false,
-  setMessageActive: (messageActive: boolean) => set({ messageActive }),
+  listenerActive: false,
+  setListenerActive: (listenerActive: boolean) => set({ listenerActive }),
+
+  messageStats: { sent: 0, received: 0 },
+  setMessageStats: (messages: Message[], selectedChatId: string) => {
+    let sent = 0;
+    let received = 0;
+
+    for (const msg of messages) {
+      if (msg.sender === selectedChatId) received++;
+      else if (msg.recipient === selectedChatId) sent++;
+    }
+
+    set({ messageStats: { sent, received } });
+  },
 }));
 
 export default useChatStore;

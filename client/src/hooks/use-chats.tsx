@@ -3,7 +3,7 @@ import { useChatStore, useAuthStore, UserInfo } from "@/zustand";
 import { useContacts } from "@/hooks/use-contacts";
 import { useEffect } from "react";
 
-export const useSelectedChat = () => {
+export const useChats = () => {
   const queryClient = useQueryClient();
 
   const { contacts } = useContacts();
