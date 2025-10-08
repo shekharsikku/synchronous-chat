@@ -131,7 +131,12 @@ const MessageContainer = () => {
       prevChatIdRef.current = selectedChatData?._id ?? null;
     }
 
-    if (messages && messages.length > 0) {
+    if (messages && messages.length === prevMsgCountRef.current) {
+      setMessages(messages);
+      return;
+    }
+
+    if (messages && messages.length > prevMsgCountRef.current) {
       setMessages(messages);
       setMessageStats(messages, selectedChatData?._id!);
     }
@@ -154,7 +159,7 @@ const MessageContainer = () => {
     }
 
     prevMsgCountRef.current = messages.length;
-  }, [selectedChatData?._id, messages.length]);
+  }, [selectedChatData?._id, messages, listenerActive]);
 
   /** Handle scroll fetching */
   useEffect(() => {

@@ -54,7 +54,7 @@ export const useContacts = () => {
     return () => {
       socket?.off("conversation:updated", handleConversationUpdate);
     };
-  }, [socket, userInfo?._id, selectedChatData, queryClient]);
+  }, [socket, userInfo?._id, selectedChatData?._id, queryClient]);
 
   useEffect(() => {
     const handleMessagesContact = async (message: Message) => {

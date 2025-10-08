@@ -7,15 +7,7 @@ const sendMessage = async (req, res) => {
         const sender = req.user?._id;
         const receiver = req.params.id;
         const { type, text, file, reply } = (await req.body);
-        let conversation = await Conversation.findOne({
-            participants: { $all: [sender, receiver] },
-        });
-        if (!conversation) {
-            conversation = await Conversation.create({
-                participants: [sender, receiver],
-            });
-        }
-        const message = new Message({
+        const message = await Message.create({
             sender: sender,
             recipient: receiver,
             content: {
@@ -25,25 +17,30 @@ const sendMessage = async (req, res) => {
             },
             reply: reply || null,
         });
-        if (message) {
-            conversation.messages.push(message._id);
-            conversation.interaction = new Date(Date.now());
-        }
-        await Promise.all([conversation.save(), message.save()]);
+        const interaction = new Date(Date.now());
         const senderSocketId = getSocketId(sender.toString());
         const receiverSocketId = getSocketId(receiver);
         if (receiverSocketId.length > 0) {
             io.to(receiverSocketId).emit("message:receive", message);
             io.to(receiverSocketId).emit("conversation:updated", {
                 _id: sender,
-                interaction: conversation.interaction,
+                interaction: interaction,
             });
         }
         io.to(senderSocketId).emit("message:receive", message);
         io.to(senderSocketId).emit("conversation:updated", {
             _id: receiver,
-            interaction: conversation.interaction,
+            interaction: interaction,
         });
+        let conversation = await Conversation.findOneAndUpdate({ participants: { $all: [sender, receiver] } }, {
+            interaction: interaction,
+        }, { new: true });
+        if (!conversation) {
+            conversation = await Conversation.create({
+                participants: [sender, receiver],
+                interaction: interaction,
+            });
+        }
         return SuccessResponse(res, 201, "Message sent successfully!", message);
     }
     catch (error) {
@@ -59,28 +56,10 @@ const getMessages = async (req, res) => {
                 { sender: sender, recipient: receiver },
                 { sender: receiver, recipient: sender },
             ],
-        }).distinct("_id");
-        const conversation = await Conversation.findOneAndUpdate({
-            participants: { $all: [sender, receiver] },
-        }, [
-            {
-                $set: {
-                    messages: {
-                        $filter: {
-                            input: "$messages",
-                            as: "message",
-                            cond: { $in: ["$$message", messages] },
-                        },
-                    },
-                },
-            },
-        ], { new: true })
-            .populate("messages")
+        })
+            .sort({ createdAt: -1 })
             .lean();
-        if (!conversation) {
-            return SuccessResponse(res, 200, "No any message available!", []);
-        }
-        return SuccessResponse(res, 200, "Messages fetched successfully!", conversation?.messages);
+        return SuccessResponse(res, 200, "Messages fetched successfully!", messages);
     }
     catch (error) {
         return ErrorResponse(res, error.code || 500, error.message || "Error while fetching messages!");
