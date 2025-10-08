@@ -1,4 +1,4 @@
-import EmojiPicker, { EmojiClickData, type Theme } from "emoji-picker-react";
+import { EmojiClickData, type Theme } from "emoji-picker-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import {
@@ -8,7 +8,7 @@ import {
   HiOutlineBackspace,
   HiOutlineClipboardDocumentCheck,
 } from "react-icons/hi2";
-import { useState, useEffect, useRef, ChangeEvent, KeyboardEventHandler } from "react";
+import React, { useState, useEffect, useRef, ChangeEvent, KeyboardEventHandler } from "react";
 import { encryptMessage } from "@/lib/noble";
 import { convertToBase64 } from "@/lib/utils";
 import { useChatStore, useAuthStore, MessageData } from "@/zustand";
@@ -17,6 +17,8 @@ import { useSocket, useTheme } from "@/lib/context";
 import { useClipboard } from "@/lib/hooks";
 import { toast } from "sonner";
 import api from "@/lib/api";
+
+const EmojiPicker = React.lazy(() => import("emoji-picker-react"));
 
 const MessageBar = () => {
   const { theme } = useTheme();
