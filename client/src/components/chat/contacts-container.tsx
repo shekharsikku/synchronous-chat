@@ -9,9 +9,8 @@ import { ProfileInfo } from "./profile-info";
 import { StreamInfo } from "./stream-info";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useEffect, useState } from "react";
-import { useContacts } from "@/hooks/use-contacts";
 import { useChats } from "@/hooks/use-chats";
-import { useChatStore, UserInfo } from "@/zustand";
+import { UserInfo } from "@/zustand";
 import { usePeer, useSocket } from "@/lib/context";
 import { useDebounce, useAvatar } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
@@ -25,10 +24,7 @@ const ContactsContainer = ({
 }) => {
   const { callingActive } = usePeer();
   const { onlineUsers } = useSocket();
-  const { setSelectedChatType, setSelectedChatData, setReplyTo } = useChatStore();
-
-  const { contacts, fetching } = useContacts();
-  const { selectedChatData } = useChats();
+  const { contacts, fetching, selectedChatData, setSelectedChatType, setSelectedChatData, setReplyTo } = useChats();
   const [filtered, setFiltered] = useState<UserInfo[]>([]);
 
   useEffect(() => {
@@ -100,15 +96,15 @@ const ContactsContainer = ({
               ) : (
                 <ScrollArea className="h-full overflow-y-auto scrollbar-hide">
                   <div className="flex flex-col gap-4">
-                    {filtered?.map((contact: any) => (
+                    {filtered?.map((contact: UserInfo) => (
                       <div
                         key={contact?._id}
-                        className={`w-full flex items-center justify-between cursor-pointer transition-[transform,opacity,box-shadow] duration-0 rounded border py-2 px-4 xl:px-6 hover:transition-colors hover:duration-300 hover:bg-gray-100/80 dark:hover:bg-gray-100/5 dark:hover:border-gray-700
-                        ${
-                          selectedChatData &&
-                          selectedChatData._id === contact._id &&
-                          "bg-gray-100/80 dark:bg-gray-100/5 border-gray-300 dark:border-gray-700"
-                        } ${contact?.setup === false && "disabled"} `}
+                        className={cn(
+                          "w-full flex items-center justify-between cursor-pointer transition-[transform,opacity,box-shadow] duration-0 rounded border py-2 px-4 xl:px-6 hover:transition-colors hover:duration-300 hover:bg-gray-100/80 dark:hover:bg-gray-100/5 dark:hover:border-gray-700",
+                          selectedChatData?._id === contact._id &&
+                            "bg-gray-100/80 dark:bg-gray-100/5 border-gray-300 dark:border-gray-700",
+                          contact?.setup === false && "disabled"
+                        )}
                         onClick={() => {
                           setSelectedChatType("contact");
                           setSelectedChatData(contact);

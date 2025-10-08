@@ -9,14 +9,14 @@ const job = new CronJob("0 0 0 * * *", async () => {
             return taskDate;
         };
         const currentDate = new Date();
-        const threeDaysAgo = calculatePastDate(3);
+        const thirtyDaysAgo = calculatePastDate(30);
         const sevenDaysAgo = calculatePastDate(7);
         const fourteenDaysAgo = calculatePastDate(14);
         const [authentication, profiles, messages, conversations] = await Promise.all([
             User.updateMany({ "authentication.expiry": { $lt: currentDate } }, { $pull: { authentication: { expiry: { $lt: currentDate } } } }),
-            User.deleteMany({ setup: false, createdAt: { $lt: threeDaysAgo } }),
-            Message.deleteMany({ createdAt: { $lt: sevenDaysAgo } }),
-            Conversation.deleteMany({ interaction: { $lt: fourteenDaysAgo } }),
+            User.deleteMany({ setup: false, createdAt: { $lt: sevenDaysAgo } }),
+            Message.deleteMany({ createdAt: { $lt: fourteenDaysAgo } }),
+            Conversation.deleteMany({ interaction: { $lt: thirtyDaysAgo } }),
         ]);
         if (env.isDev) {
             console.log("Result:", {

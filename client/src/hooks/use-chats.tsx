@@ -6,31 +6,29 @@ import { useEffect } from "react";
 export const useChats = () => {
   const queryClient = useQueryClient();
 
-  const { contacts } = useContacts();
+  const { contacts, fetching } = useContacts();
   const { userInfo } = useAuthStore();
-  const { selectedChatData } = useChatStore();
+  const { selectedChatData, setSelectedChatType, setSelectedChatData, setReplyTo } = useChatStore();
 
   useEffect(() => {
-    if (contacts && selectedChatData) {
-      const exists = contacts.some((obj) => obj._id === selectedChatData._id);
+    if (contacts && selectedChatData?._id) {
+      if (contacts.some((obj) => obj._id === selectedChatData._id)) return;
 
-      if (!exists) {
-        const selected = {
-          ...selectedChatData,
-          interaction: new Date().toISOString(),
-        };
+      const selected = {
+        ...selectedChatData,
+        interaction: new Date().toISOString(),
+      };
 
-        const cleaned = Object.fromEntries(
-          Object.entries(selected).filter(([key]) => !["setup", "createdAt", "updatedAt", "__v"].includes(key))
-        );
+      const cleaned = Object.fromEntries(
+        Object.entries(selected).filter(([key]) => !["setup", "createdAt", "updatedAt", "__v"].includes(key))
+      );
 
-        queryClient.setQueryData(["contacts", userInfo?._id], (oldContacts: UserInfo[] | undefined) => [
-          ...(oldContacts || []),
-          { ...cleaned },
-        ]);
-      }
+      queryClient.setQueryData(["contacts", userInfo?._id], (oldContacts: UserInfo[] | undefined) => [
+        ...(oldContacts || []),
+        { ...cleaned },
+      ]);
     }
-  }, [contacts, selectedChatData, queryClient]);
+  }, [contacts, selectedChatData?._id, queryClient]);
 
-  return { selectedChatData };
+  return { contacts, fetching, selectedChatData, setSelectedChatType, setSelectedChatData, setReplyTo };
 };
