@@ -2,6 +2,7 @@ import { HttpError, ErrorResponse } from "../utils/index.js";
 import { generateSecret, generateAccess, generateRefresh, authorizeCookie, createUserInfo } from "../utils/helpers.js";
 import { User } from "../models/index.js";
 import { compactDecrypt, jwtVerify } from "jose";
+import { rateLimit } from "express-rate-limit";
 import { inflateSync } from "zlib";
 import env from "../utils/env.js";
 import multer from "multer";
@@ -116,4 +117,19 @@ const delay = (milliseconds) => {
         next();
     };
 };
-export { authAccess, authRefresh, upload, validate, delay };
+const limiter = (minute = 10, limit = 1000) => {
+    return rateLimit({
+        windowMs: minute * 60 * 1000,
+        limit: limit,
+        standardHeaders: true,
+        legacyHeaders: false,
+        keyGenerator: (req, _res) => {
+            return req.clientIp;
+        },
+        handler: (req, _res, _next) => {
+            console.error(`Rate limit exceeded for IP: ${req.clientIp}`);
+            throw new HttpError(429, "Maximum number of requests exceeded!");
+        },
+    });
+};
+export { authAccess, authRefresh, upload, validate, delay, limiter };

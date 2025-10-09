@@ -40,7 +40,7 @@ const signInUser = async (req, res) => {
         }
         const isCorrect = await compare(password, existsUser.password);
         if (!isCorrect) {
-            throw new HttpError(401, "Incorrect password!");
+            throw new HttpError(403, "Incorrect password!");
         }
         const userInfo = createUserInfo(existsUser);
         await generateAccess(res, userInfo);

@@ -55,6 +55,9 @@ const useChatStore = create<{
   editDialog: boolean;
   setEditDialog: (editDialog: boolean) => void;
 
+  messageForEdit: { id: string; text: string };
+  setMessageForEdit: (id: string, text: string) => void;
+
   replyTo: Message | null;
   setReplyTo: (replyTo: Message | null) => void;
 
@@ -97,6 +100,11 @@ const useChatStore = create<{
 
   editDialog: false,
   setEditDialog: (editDialog: boolean) => set({ editDialog }),
+
+  messageForEdit: { id: "", text: "" },
+  setMessageForEdit: (id: string, text: string) => {
+    set({ messageForEdit: { id, text } });
+  },
 
   replyTo: null,
   setReplyTo: (replyTo: Message | null) => set({ replyTo }),

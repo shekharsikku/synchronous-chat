@@ -32,7 +32,12 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
   const { plainText } = usePlainText();
-  const { selectedChatData, language, setEditDialog, setReplyTo } = useChatStore();
+  const { selectedChatData, language, setMessageForEdit, setEditDialog, setReplyTo } = useChatStore();
+
+  const [imageViewExtend, setImageViewExtend] = useState(false);
+  const [editMessageDialog, setEditMessageDialog] = useState(false);
+  const [translated, setTranslated] = useState("");
+  const [translation, setTranslation] = useState({ message: "", language: "" });
 
   const copyToClipboard = (text: string) => {
     try {
@@ -60,12 +65,6 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
     link.click();
     window.document.body.removeChild(link);
   };
-
-  const [imageViewExtend, setImageViewExtend] = useState(false);
-
-  const [translated, setTranslated] = useState("");
-  const [translation, setTranslation] = useState({ message: "", language: "" });
-  const setTextAndLanguage = (message: string) => setTranslation({ message, language });
 
   const translateMessage = async (message: string, language: string) => {
     try {
@@ -96,30 +95,6 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
   const elementRef = useRef<any>(null);
   useDisableAnimations(socket!, elementRef);
 
-  const [openEditMessageDialog, setOpenEditMessageDialog] = useState(false);
-  const [currentMessageForEdit, setCurrentMessageForEdit] = useState({
-    id: "",
-    text: "",
-  });
-
-  const handleEditMessageClick = (message: Message) => {
-    setOpenEditMessageDialog(true);
-    setCurrentMessageForEdit({
-      id: message._id,
-      text: plainText(message),
-    });
-  };
-
-  useEffect(() => {
-    setEditDialog(openEditMessageDialog);
-  }, [openEditMessageDialog]);
-
-  const { isLastMinutes: isLastMinForEdit } = useLastMinutes(message?.createdAt!);
-
-  const visitExternalLink = (url: string) => {
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
-
   const handleEmojiReaction = async (emoji: string) => {
     try {
       await api.patch(`/api/message/react/${message._id}`, {
@@ -132,6 +107,8 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
   };
 
   const { replyMessage } = useReplyMessage(message);
+  const { isLastMinutes: isLastMinForEdit } = useLastMinutes(message?.createdAt!);
+  const { isLastMinutes: isLastMinForDelete } = useLastMinutes(message?.createdAt!, 60);
   const isSender = message.recipient === userInfo?._id && message.sender === selectedChatData?._id;
 
   return (
@@ -247,10 +224,12 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
                   )}
                 >
                   {Object.entries(
-                    message.content?.reactions?.reduce((acc: Record<string, number>, r) => {
-                      acc[r.emoji] = (acc[r.emoji] || 0) + 1;
-                      return acc;
-                    }, {})
+                    message.content?.reactions
+                      ?.filter((r) => r != null)
+                      .reduce((acc: Record<string, number>, r) => {
+                        acc[r.emoji] = (acc[r.emoji] || 0) + 1;
+                        return acc;
+                      }, {})
                   ).map(([emoji, count]) => (
                     <span key={emoji} className="flex items-center gap-0.5">
                       {emoji} {count > 1 ? <span>{count}</span> : null}
@@ -262,11 +241,14 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
           )}
         </ContextMenuTrigger>
         {message.type !== "deleted" && (
-          <ContextMenuContent className="w-20 flex flex-col gap-2 p-2 transition-all duration-500">
+          <ContextMenuContent className="w-20 flex flex-col gap-2 p-2 mb-4 transition-all duration-500">
             {message?.content?.type === "text" && (
               <>
                 {language !== "en" && (
-                  <ContextMenuItem className="flex gap-2" onClick={() => setTextAndLanguage(plainText(message))}>
+                  <ContextMenuItem
+                    className="flex gap-2"
+                    onClick={() => setTranslation({ message: plainText(message), language })}
+                  >
                     <HiOutlineLanguage size={16} /> Translate
                   </ContextMenuItem>
                 )}
@@ -274,7 +256,14 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
                   <HiOutlineClipboardDocument size={16} /> Copy
                 </ContextMenuItem>
                 {message.sender === userInfo?._id && message.type === "default" && isLastMinForEdit && (
-                  <ContextMenuItem className="flex gap-2" onClick={() => handleEditMessageClick(message)}>
+                  <ContextMenuItem
+                    className="flex gap-2"
+                    onClick={() => {
+                      setEditDialog(true);
+                      setEditMessageDialog(true);
+                      setMessageForEdit(message._id, plainText(message));
+                    }}
+                  >
                     <HiOutlinePencilSquare size={16} /> Edit
                   </ContextMenuItem>
                 )}
@@ -292,13 +281,16 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
                 </ContextMenuItem>
               </>
             )}
-            {message.recipient === selectedChatData?._id && (
+            {message.recipient === selectedChatData?._id && isLastMinForDelete && (
               <ContextMenuItem className="flex gap-2" onClick={() => deleteSelectedMessage(message._id)}>
                 <HiOutlineTrash size={16} /> Delete
               </ContextMenuItem>
             )}
             {isValidUrl(plainText(message)) && (
-              <ContextMenuItem className="flex gap-2" onClick={() => visitExternalLink(plainText(message))}>
+              <ContextMenuItem
+                className="flex gap-2"
+                onClick={() => window.open(plainText(message), "_blank", "noopener,noreferrer")}
+              >
                 <HiOutlineArrowTopRightOnSquare size={16} /> Visit Site
               </ContextMenuItem>
             )}
@@ -329,11 +321,7 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
         </DialogContent>
       </Dialog>
       {/* for edit message */}
-      <EditMessage
-        openEditMessageDialog={openEditMessageDialog}
-        setOpenEditMessageDialog={setOpenEditMessageDialog}
-        currentMessage={currentMessageForEdit}
-      />
+      <EditMessage editMessageDialog={editMessageDialog} setEditMessageDialog={setEditMessageDialog} />
     </div>
   );
 };

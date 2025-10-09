@@ -2,7 +2,6 @@ import express from "express";
 import requestIp from "request-ip";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import { rateLimit } from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import helmet from "helmet";
@@ -10,6 +9,7 @@ import morgan from "morgan";
 import cors from "cors";
 import env from "./utils/env.js";
 import routers from "./routers/index.js";
+import { limiter } from "./middlewares/index.js";
 import { HttpError, ErrorResponse, SuccessResponse } from "./utils/index.js";
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -53,20 +53,7 @@ app.use(requestIp.mw());
 app.use(cookieParser(env.COOKIES_SECRET));
 app.use(compression());
 app.use("/public/temp", express.static(join(__dirname, "../public/temp")));
-const limiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    limit: 200,
-    standardHeaders: true,
-    legacyHeaders: false,
-    keyGenerator: (req, _res) => {
-        return req.clientIp;
-    },
-    handler: (req, _res, _next) => {
-        console.error(`Rate limit exceeded for IP: ${req.clientIp}`);
-        throw new HttpError(429, "Maximum number of requests exceeded!");
-    },
-});
-app.use("/api", limiter, routers);
+app.use("/api", limiter(), routers);
 app.all("*path", (_req, res) => {
     if (env.isDev) {
         return SuccessResponse(res, 200, "Welcome to Synchronous Chat!");

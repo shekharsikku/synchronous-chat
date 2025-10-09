@@ -195,34 +195,80 @@ const reactMessage = async (req: Request<{ id: string }, {}, { by: string; emoji
       throw new HttpError(400, "Emoji is required for reacting!");
     }
 
-    const message = await Message.findById(mid);
-    if (!message) throw new HttpError(404, "Message not found!");
-    if (!message.content.reactions) message.content.reactions = [];
+    const message = await Message.findOneAndUpdate(
+      { _id: mid },
+      [
+        {
+          $set: {
+            // Step 1: your existing map/remove/add logic
+            "content.reactions": {
+              $let: {
+                vars: {
+                  existing: {
+                    $filter: {
+                      input: { $ifNull: ["$content.reactions", []] },
+                      as: "r",
+                      cond: { $eq: ["$$r.by", by] },
+                    },
+                  },
+                },
+                in: {
+                  $let: {
+                    vars: {
+                      updated: {
+                        $cond: [
+                          { $eq: [{ $size: "$$existing" }, 0] },
+                          { $concatArrays: ["$content.reactions", [{ by, emoji }]] }, // add new
+                          {
+                            $map: {
+                              input: "$content.reactions",
+                              as: "r",
+                              in: {
+                                $cond: [
+                                  { $and: [{ $eq: ["$$r.by", by] }, { $eq: ["$$r.emoji", emoji] }] },
+                                  "$$REMOVE", // remove same emoji
+                                  { $cond: [{ $eq: ["$$r.by", by] }, { by, emoji }, "$$r"] }, // update emoji
+                                ],
+                              },
+                            },
+                          },
+                        ],
+                      },
+                    },
+                    in: { $ifNull: ["$$updated", []] }, // ensure empty array if all reactions removed
+                  },
+                },
+              },
+            },
+          },
+        },
+        // Step 2: Filter out any nulls left in the array
+        {
+          $set: {
+            "content.reactions": {
+              $filter: {
+                input: "$content.reactions",
+                as: "r",
+                cond: { $ne: ["$$r", null] }, // remove nulls
+              },
+            },
+          },
+        },
+      ],
+      { new: true }
+    );
 
-    const existing = message.content.reactions.findIndex((r: any) => r.by === by);
-
-    if (existing >= 0) {
-      const already = message.content.reactions[existing].emoji;
-      if (already === emoji) {
-        message.content.reactions.splice(existing, 1);
-      } else {
-        message.content.reactions[existing].emoji = emoji;
-      }
-    } else {
-      message.content.reactions.push({ by, emoji });
-    }
-
-    const senderSocketId = getSocketId(message?.sender.toString());
-    const receiverSocketId = getSocketId(message?.recipient.toString());
+    const senderSocketId = getSocketId(message?.sender.toString()!);
+    const receiverSocketId = getSocketId(message?.recipient.toString()!);
 
     if (receiverSocketId.length > 0) {
       io.to(receiverSocketId).emit("message:reacted", message);
     }
     io.to(senderSocketId).emit("message:reacted", message);
 
-    await message.save();
     return SuccessResponse(res, 200, "Message reacted successfully!", message);
   } catch (error: any) {
+    console.log({ error });
     return ErrorResponse(res, error.code || 500, error.message || "Error while reacting message!");
   }
 };
@@ -230,9 +276,10 @@ const reactMessage = async (req: Request<{ id: string }, {}, { by: string; emoji
 const deleteMessages = async (req: Request, res: Response) => {
   try {
     const uid = req.user?._id;
+    const before = Number(req.query.before ?? 1) * 24;
 
     const hoursAgo = new Date();
-    hoursAgo.setHours(hoursAgo.getHours() - 24);
+    hoursAgo.setHours(hoursAgo.getHours() - before);
 
     const result = await Message.deleteMany({
       $or: [{ sender: uid }, { recipient: uid }],

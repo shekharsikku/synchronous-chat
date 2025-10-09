@@ -3,7 +3,6 @@ import express from "express";
 import requestIp from "request-ip";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import { rateLimit } from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import helmet from "helmet";
@@ -11,6 +10,7 @@ import morgan from "morgan";
 import cors from "cors";
 import env from "./utils/env.js";
 import routers from "./routers/index.js";
+import { limiter } from "./middlewares/index.js";
 import { HttpError, ErrorResponse, SuccessResponse } from "./utils/index.js";
 
 const app = express();
@@ -83,23 +83,8 @@ app.use(compression());
 /** Public Static Assets */
 app.use("/public/temp", express.static(join(__dirname, "../public/temp")));
 
-/** Rate Limiter */
-const limiter = rateLimit({
-  windowMs: 5 * 60 * 1000,
-  limit: 200,
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req: Request, _res: Response) => {
-    return req.clientIp!;
-  },
-  handler: (req: Request, _res: Response, _next: NextFunction) => {
-    console.error(`Rate limit exceeded for IP: ${req.clientIp}`);
-    throw new HttpError(429, "Maximum number of requests exceeded!");
-  },
-});
-
 /** Rate Limiter & Api Routers */
-app.use("/api", limiter, routers);
+app.use("/api", limiter(), routers);
 
 app.all("*path", (_req: Request, res: Response) => {
   if (env.isDev) {

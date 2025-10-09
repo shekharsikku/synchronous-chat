@@ -19,7 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { languageOptions } from "@/lib/utils";
+import { cn, languageOptions } from "@/lib/utils";
 import { useSocket, usePeer } from "@/lib/context";
 import { useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -237,7 +237,7 @@ const ChatHeader = () => {
           <DropdownMenu>
             <TooltipProvider>
               <Tooltip>
-                <DropdownMenuTrigger asChild className="hidden">
+                <DropdownMenuTrigger asChild className={cn(import.meta.env.PROD && "hidden")}>
                   <TooltipTrigger className="focus:outline-none">
                     <HiOutlineLanguage size={18} className="tooltip-icon" />
                   </TooltipTrigger>

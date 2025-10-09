@@ -16,45 +16,40 @@ import { useChatStore } from "@/zustand";
 import { encryptMessage } from "@/lib/noble";
 import api from "@/lib/api";
 
-interface EditMessageProps {
-  openEditMessageDialog: boolean;
-  setOpenEditMessageDialog: any;
-  currentMessage: {
-    id: string;
-    text: string;
-  };
-}
-
-const EditMessage = ({ openEditMessageDialog, setOpenEditMessageDialog, currentMessage }: EditMessageProps) => {
-  const { selectedChatData } = useChatStore();
-
+const EditMessage = ({
+  editMessageDialog,
+  setEditMessageDialog,
+}: {
+  editMessageDialog: boolean;
+  setEditMessageDialog: any;
+}) => {
+  const { selectedChatData, messageForEdit, setEditDialog } = useChatStore();
   const [isLoading, setIsLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
 
   const confirmBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    setTimeout(() => {
-      setNewMessage(currentMessage.text);
-    }, 100);
-  }, [currentMessage]);
+    setTimeout(() => setNewMessage(messageForEdit.text), 50);
+  }, [messageForEdit]);
 
   const editSelectedMessage = async () => {
     setIsLoading(true);
     try {
-      const response = await api.patch(`/api/message/edit/${currentMessage.id}`, {
+      const response = await api.patch(`/api/message/edit/${messageForEdit.id}`, {
         text: encryptMessage(newMessage, selectedChatData?._id!),
       });
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
     } finally {
+      setEditDialog(false);
       setIsLoading(false);
     }
   };
 
   return (
-    <AlertDialog open={openEditMessageDialog} onOpenChange={setOpenEditMessageDialog}>
+    <AlertDialog open={editMessageDialog} onOpenChange={setEditMessageDialog}>
       <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
       <AlertDialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl select-none">
         <AlertDialogHeader>
@@ -70,7 +65,7 @@ const EditMessage = ({ openEditMessageDialog, setOpenEditMessageDialog, currentM
           value={newMessage || ""}
           placeholder="Edited Message..."
           onKeyDown={(e) => {
-            if (e.key === "Tab" && !e.shiftKey && currentMessage.text !== newMessage) {
+            if (e.key === "Tab" && !e.shiftKey && messageForEdit.text !== newMessage) {
               e.preventDefault();
               requestAnimationFrame(() => {
                 confirmBtnRef.current?.focus();
@@ -80,11 +75,17 @@ const EditMessage = ({ openEditMessageDialog, setOpenEditMessageDialog, currentM
         />
 
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isLoading} onClick={() => setOpenEditMessageDialog(false)}>
+          <AlertDialogCancel
+            disabled={isLoading}
+            onClick={() => {
+              setEditDialog(false);
+              setEditMessageDialog(false);
+            }}
+          >
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
-            disabled={isLoading || currentMessage.text === newMessage}
+            disabled={isLoading || messageForEdit.text === newMessage}
             ref={confirmBtnRef}
             onClick={() => editSelectedMessage()}
           >
