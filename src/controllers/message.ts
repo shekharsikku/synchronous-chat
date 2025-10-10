@@ -218,10 +218,12 @@ const reactMessage = async (req: Request<{ id: string }, {}, { by: string; emoji
                       updated: {
                         $cond: [
                           { $eq: [{ $size: "$$existing" }, 0] },
-                          { $concatArrays: ["$content.reactions", [{ by, emoji }]] }, // add new
+                          // { $concatArrays: ["$content.reactions", [{ by, emoji }]] }, // add new
+                          { $concatArrays: [{ $ifNull: ["$content.reactions", []] }, [{ by, emoji }]] },
                           {
                             $map: {
-                              input: "$content.reactions",
+                              // input: "$content.reactions",
+                              input: { $ifNull: ["$content.reactions", []] },
                               as: "r",
                               in: {
                                 $cond: [

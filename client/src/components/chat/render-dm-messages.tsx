@@ -1,4 +1,3 @@
-import { toast } from "sonner";
 import {
   HiOutlineLanguage,
   HiOutlineNoSymbol,
@@ -18,74 +17,32 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EditMessage } from "@/components/chat/edit-message";
-import { isValidUrl, checkImageType, cn, mergeRefs } from "@/lib/utils";
 import { useChatStore, useAuthStore, Message } from "@/zustand";
-import { useDisableAnimations, useLastMinutes, usePlainText, useReplyMessage } from "@/lib/hooks";
+import { useDisableAnimations, useLastMinutes, usePlainText, useReplyMessage, useMessageActions } from "@/lib/hooks";
 import { useSocket } from "@/lib/context";
-import { useInView } from "react-intersection-observer";
-import { useEffect, useRef, useState } from "react";
 import { isDesktop } from "react-device-detect";
-import moment from "moment";
-import api from "@/lib/api";
+import { useRef, useState } from "react";
+import { useInView } from "react-intersection-observer";
+import {
+  cn,
+  mergeRefs,
+  isValidUrl,
+  checkImageType,
+  messageTimestamp,
+  handleDownload,
+  copyToClipboard,
+} from "@/lib/utils";
 
 const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scrollMessage: any }) => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
   const { plainText } = usePlainText();
   const { selectedChatData, language, setMessageForEdit, setEditDialog, setReplyTo } = useChatStore();
+  const { deleteSelectedMessage, handleEmojiReaction, translateMessage } = useMessageActions();
 
   const [imageViewExtend, setImageViewExtend] = useState(false);
   const [editMessageDialog, setEditMessageDialog] = useState(false);
   const [translated, setTranslated] = useState("");
-  const [translation, setTranslation] = useState({ message: "", language: "" });
-
-  const copyToClipboard = (text: string) => {
-    try {
-      void navigator.clipboard.writeText(text);
-      toast.info("Message copied to clipboard!");
-    } catch (error) {
-      toast.error("Failed to copy message!");
-    }
-  };
-
-  const deleteSelectedMessage = async (id: string) => {
-    try {
-      const response = await api.delete(`/api/message/delete/${id}`);
-      toast.info(response.data.message);
-    } catch (error: any) {
-      toast.error(error.response.data.message);
-    }
-  };
-
-  const handleDownload = (messageFile: Message) => {
-    const link = document.createElement("a");
-    link.href = messageFile?.content?.file!;
-    link.download = messageFile._id;
-    window.document.body.appendChild(link);
-    link.click();
-    window.document.body.removeChild(link);
-  };
-
-  const translateMessage = async (message: string, language: string) => {
-    try {
-      const response = await api.post("/api/message/translate", {
-        message,
-        language,
-      });
-      setTranslated(response.data.data);
-    } catch (error: any) {
-      setTranslated("");
-      import.meta.env.DEV && console.log("Language translation error!");
-    }
-  };
-
-  useEffect(() => {
-    if (translation.message && translation.language) {
-      (async () => {
-        await translateMessage(translation.message, translation.language);
-      })();
-    }
-  }, [translation]);
 
   const { ref: inViewRef, inView } = useInView({
     threshold: 0.3,
@@ -94,17 +51,6 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
 
   const elementRef = useRef<any>(null);
   useDisableAnimations(socket!, elementRef);
-
-  const handleEmojiReaction = async (emoji: string) => {
-    try {
-      await api.patch(`/api/message/react/${message._id}`, {
-        by: userInfo?._id,
-        emoji,
-      });
-    } catch (error: any) {
-      toast.error(error.response.data.message);
-    }
-  };
 
   const { replyMessage } = useReplyMessage(message);
   const { isLastMinutes: isLastMinForEdit } = useLastMinutes(message?.createdAt!);
@@ -155,7 +101,7 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
               ? "bg-gray-100 border-gray-200 dark:bg-gray-100/5 dark:hover:bg-gray-100/10"
               : "bg-gray-200 border-gray-300 dark:bg-gray-200/5 dark:hover:bg-gray-200/10"
           )}
-          onDoubleClick={() => handleEmojiReaction("❤️")}
+          onDoubleClick={() => handleEmojiReaction(message._id, userInfo?._id!, "❤️")}
         >
           {/* Right click here */}
           {message.type === "deleted" ? (
@@ -208,7 +154,7 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
                     <button
                       key={emoji}
                       className="hover:scale-125 transition-transform duration-200"
-                      onClick={() => handleEmojiReaction(emoji)}
+                      onClick={() => handleEmojiReaction(message._id, userInfo?._id!, emoji)}
                     >
                       {emoji}
                     </button>
@@ -247,7 +193,7 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
                 {language !== "en" && (
                   <ContextMenuItem
                     className="flex gap-2"
-                    onClick={() => setTranslation({ message: plainText(message), language })}
+                    onClick={() => translateMessage(plainText(message), language, setTranslated)}
                   >
                     <HiOutlineLanguage size={16} /> Translate
                   </ContextMenuItem>
@@ -298,16 +244,8 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
         )}
       </ContextMenu>
       {/* Translated Message */}
-      {translated !== "" && <span className="text-base">{translated}</span>}
-      <span className="text-xs text-gray-600 dark:text-gray-200 mt-0.5">
-        {message.type === "deleted" ? (
-          <span>{`${moment(message.deletedAt).format("LT")}`}</span>
-        ) : (
-          <span>
-            {message.type === "edited" && "Edited"} {`${moment(message.updatedAt).format("LT")}`}
-          </span>
-        )}
-      </span>
+      {translated !== "" && <span className="text-base mt-1">{translated}</span>}
+      <span className="text-xs text-gray-600 dark:text-gray-200 mt-0.5">{messageTimestamp(message)}</span>
       {/* Dialog for image extend view */}
       <Dialog open={imageViewExtend} onOpenChange={setImageViewExtend}>
         <DialogContent className="h-auto w-[90vw] lg:w-auto rounded-md select-none">

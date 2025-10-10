@@ -6,6 +6,8 @@ import { Message } from "@/zustand/chat";
 import maleAvatar from "@/assets/male-avatar.webp";
 import femaleAvatar from "@/assets/female-avatar.webp";
 import noAvatar from "@/assets/no-avatar.webp";
+import { toast } from "sonner";
+import api from "@/lib/api";
 
 export const useDebounce = (callback: Function, delay: number) => {
   const callbackRef = useCallback(callback, [callback]);
@@ -161,4 +163,45 @@ export const useClipboard = (
 export const useReplyMessage = (message: Message) => {
   const { messages } = useChatStore();
   return { replyMessage: messages.find((msg) => msg._id === message.reply) || null };
+};
+
+export const useMessageActions = () => {
+  const deleteSelectedMessage = async (id: string) => {
+    try {
+      const response = await api.delete(`/api/message/delete/${id}`);
+      toast.info(response.data.message);
+    } catch (error: any) {
+      toast.error(error.response.data.message);
+    }
+  };
+
+  const handleEmojiReaction = async (id: string, uid: string, emoji: string) => {
+    try {
+      await api.patch(`/api/message/react/${id}`, {
+        by: uid,
+        emoji,
+      });
+    } catch (error: any) {
+      toast.error(error.response.data.message);
+    }
+  };
+
+  const translateMessage = async (
+    message: string,
+    language: string,
+    setTranslated: Dispatch<SetStateAction<string>>
+  ) => {
+    try {
+      const response = await api.post("/api/message/translate", {
+        message,
+        language,
+      });
+      setTranslated(response.data.data);
+    } catch (error: any) {
+      setTranslated("");
+      import.meta.env.DEV && console.log("Language translation error!");
+    }
+  };
+
+  return { deleteSelectedMessage, handleEmojiReaction, translateMessage };
 };

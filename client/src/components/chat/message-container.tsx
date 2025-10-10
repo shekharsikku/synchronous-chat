@@ -109,6 +109,34 @@ const MessageContainer = () => {
   useEffect(() => {
     const scrollHeight = scrollSectionRef.current?.clientHeight ?? 800;
     setSkeletonCount(Math.ceil(scrollHeight / 90));
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const element = scrollSectionRef.current;
+      if (!element) return;
+
+      switch (event.key) {
+        case "PageDown":
+          element.scrollBy({ top: 200, behavior: "smooth" });
+          break;
+        case "PageUp":
+          element.scrollBy({ top: -200, behavior: "smooth" });
+          break;
+        case "Home":
+          element.scrollTo({ top: 0, behavior: "smooth" });
+          break;
+        case "End":
+          element.scrollTo({ top: element.scrollHeight, behavior: "smooth" });
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   /** Scroll to bottom after first load */

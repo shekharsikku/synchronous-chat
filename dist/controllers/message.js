@@ -167,10 +167,10 @@ const reactMessage = async (req, res) => {
                                         updated: {
                                             $cond: [
                                                 { $eq: [{ $size: "$$existing" }, 0] },
-                                                { $concatArrays: ["$content.reactions", [{ by, emoji }]] },
+                                                { $concatArrays: [{ $ifNull: ["$content.reactions", []] }, [{ by, emoji }]] },
                                                 {
                                                     $map: {
-                                                        input: "$content.reactions",
+                                                        input: { $ifNull: ["$content.reactions", []] },
                                                         as: "r",
                                                         in: {
                                                             $cond: [

@@ -1,5 +1,8 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { Message } from "@/zustand";
+import { toast } from "sonner";
+import moment from "moment";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -207,6 +210,30 @@ export const mergeRefs =
       }
     });
   };
+
+export const messageTimestamp = (message: Message) => {
+  if (message.type === "deleted") return `Deleted at ${moment(message.deletedAt).format("LT")}`;
+  if (message.type === "edited") return `Edited at ${moment(message.updatedAt).format("LT")}`;
+  return moment(message.createdAt).format("LT");
+};
+
+export const copyToClipboard = (text: string) => {
+  try {
+    void navigator.clipboard.writeText(text);
+    toast.info("Message copied to clipboard!");
+  } catch (error) {
+    toast.error("Failed to copy message!");
+  }
+};
+
+export const handleDownload = (message: Message) => {
+  const link = document.createElement("a");
+  link.href = message?.content?.file!;
+  link.download = message._id;
+  window.document.body.appendChild(link);
+  link.click();
+  window.document.body.removeChild(link);
+};
 
 /*
 
