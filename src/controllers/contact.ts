@@ -20,7 +20,9 @@ const searchContact = async (req: Request<{}, {}, {}, { search?: string }>, res:
         { setup: true },
         { $or: [{ name: regex }, { username: regex }, { email: regex }] },
       ],
-    }).lean();
+    })
+      .select("-setup -createdAt -updatedAt -__v")
+      .lean();
 
     if (contacts.length == 0) {
       throw new HttpError(404, "No any contact found!");
@@ -34,19 +36,16 @@ const searchContact = async (req: Request<{}, {}, {}, { search?: string }>, res:
 
 const availableContact = async (req: Request, res: Response) => {
   try {
-    const users = await User.find({
+    const contacts = await User.find({
       _id: { $ne: req.user?._id },
       setup: true,
-    }).lean();
+    })
+      .select("-setup -createdAt -updatedAt -__v")
+      .lean();
 
-    if (users.length == 0) {
+    if (contacts.length == 0) {
       throw new HttpError(404, "No any contact available!");
     }
-
-    const contacts = users.map((user) => ({
-      label: `${user.name} (${user.username})`,
-      value: user._id,
-    }));
 
     return SuccessResponse(res, 200, "Contacts fetched successfully!", contacts);
   } catch (error: any) {
@@ -58,19 +57,40 @@ const fetchContacts = async (req: Request, res: Response) => {
   try {
     const uid = new Types.ObjectId(req.user?._id);
 
-    const conversations = await Conversation.find({
-      participants: uid,
-    })
-      .sort({ interaction: -1 })
-      .populate("participants", "name email username gender image bio")
-      .lean();
-
-    const contacts = conversations
-      .map((conversation) => {
-        const contact = conversation.participants.find((participant: any) => !participant._id.equals(uid));
-        return contact ? { ...contact, interaction: conversation.interaction } : null;
-      })
-      .filter(Boolean);
+    const contacts = await Conversation.aggregate([
+      { $match: { participants: uid } },
+      { $sort: { interaction: -1 } },
+      {
+        $lookup: {
+          from: "users",
+          let: { participantIds: "$participants" },
+          pipeline: [
+            { $match: { $expr: { $in: ["$_id", "$$participantIds"] } } },
+            { $project: { _id: 1, name: 1, email: 1, username: 1, gender: 1, image: 1, bio: 1 } },
+          ],
+          as: "participantsData",
+        },
+      },
+      {
+        $addFields: {
+          contact: {
+            $filter: {
+              input: "$participantsData",
+              as: "p",
+              cond: { $ne: ["$$p._id", uid] },
+            },
+          },
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [{ $arrayElemAt: ["$contact", 0] }, { interaction: "$interaction" }],
+          },
+        },
+      },
+      { $match: { _id: { $ne: null } } },
+    ]);
 
     return SuccessResponse(res, 200, "Contacts fetched successfully!", contacts);
   } catch (error: any) {
