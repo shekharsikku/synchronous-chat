@@ -67,6 +67,15 @@ const sendMessage = async (req: Request<{ id: string }>, res: Response) => {
   }
 };
 
+/** Transform null → undefined in response payload only */
+const nullToUndefined = (obj: Record<string, any>) => {
+  for (const key in obj) {
+    if (obj[key] === null) obj[key] = undefined;
+    else if (typeof obj[key] === "object" && obj[key] !== null) nullToUndefined(obj[key]);
+  }
+  return obj;
+};
+
 const getMessages = async (req: Request<{ id: string }>, res: Response) => {
   try {
     const sender = req.user?._id;
@@ -79,9 +88,9 @@ const getMessages = async (req: Request<{ id: string }>, res: Response) => {
       ],
     })
       .sort({ createdAt: -1 })
-      .lean();
+      .lean({ transform: (doc) => nullToUndefined(doc) });
 
-    return SuccessResponse(res, 200, "Messages fetched successfully!", messages);
+    return SuccessResponse(res, 200, "Messages fetched successfully!", messages.reverse());
   } catch (error: any) {
     return ErrorResponse(res, error.code || 500, error.message || "Error while fetching messages!");
   }
@@ -107,7 +116,7 @@ const fetchMessages = async (req: Request<{ id: string }>, res: Response) => {
     const messages = await Message.find(query)
       .sort({ createdAt: -1 })
       .limit(limit as number)
-      .lean();
+      .lean({ transform: (doc) => nullToUndefined(doc) });
 
     /* Reverse to show oldest → newest in UI */
     return SuccessResponse(res, 200, "Messages fetched successfully!", messages.reverse());
@@ -129,14 +138,14 @@ const deleteMessage = async (req: Request<{ id: string }>, res: Response) => {
         $unset: { content: 1 },
       },
       { new: true }
-    );
+    ).lean({ transform: (doc) => nullToUndefined(doc) });
 
     if (!message) {
       throw new HttpError(400, "You can't delete this message or message not found!");
     }
 
     const senderSocketId = getSocketId(message?.sender.toString());
-    const receiverSocketId = getSocketId(message?.recipient.toString());
+    const receiverSocketId = getSocketId(message?.recipient?.toString()!);
 
     if (receiverSocketId.length > 0) {
       io.to(receiverSocketId).emit("message:remove", message);
@@ -166,14 +175,14 @@ const editMessage = async (req: Request<{ id: string }, {}, { text: string }>, r
         "content.text": text,
       },
       { new: true }
-    );
+    ).lean({ transform: (doc) => nullToUndefined(doc) });
 
     if (!message) {
       throw new HttpError(400, "You can't edit this message or message not found!");
     }
 
     const senderSocketId = getSocketId(message?.sender.toString());
-    const receiverSocketId = getSocketId(message?.recipient.toString());
+    const receiverSocketId = getSocketId(message?.recipient?.toString()!);
 
     if (receiverSocketId.length > 0) {
       io.to(receiverSocketId).emit("message:edited", message);
@@ -258,10 +267,10 @@ const reactMessage = async (req: Request<{ id: string }, {}, { by: string; emoji
         },
       ],
       { new: true }
-    );
+    ).lean({ transform: (doc) => nullToUndefined(doc) });
 
     const senderSocketId = getSocketId(message?.sender.toString()!);
-    const receiverSocketId = getSocketId(message?.recipient.toString()!);
+    const receiverSocketId = getSocketId(message?.recipient?.toString()!);
 
     if (receiverSocketId.length > 0) {
       io.to(receiverSocketId).emit("message:reacted", message);
