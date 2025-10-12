@@ -6,6 +6,7 @@ import { LuMic, LuMicOff, LuAudioLines, LuAudioWaveform } from "react-icons/lu";
 import { continuousVisualizer } from "sound-visualizer";
 import { useState, useRef, useEffect } from "react";
 import { usePeer } from "@/lib/context";
+import { formatTimer } from "@/lib/utils";
 
 const StreamInfo = () => {
   const [callTimer, setCallTimer] = useState(0);
@@ -39,22 +40,6 @@ const StreamInfo = () => {
   const displayName = (name: string) => {
     if (!name) return "";
     return name.split(" ")[0] + "...";
-  };
-
-  const formatTime = (time: number) => {
-    const hours = Math.floor(time / 3600);
-    const minutes = Math.floor((time % 3600) / 60);
-    const seconds = time % 60;
-
-    const formattedMinutes = minutes.toString().padStart(2, "0");
-    const formattedSeconds = seconds.toString().padStart(2, "0");
-
-    if (hours > 0) {
-      const formattedHours = hours.toString().padStart(2, "0");
-      return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
-    } else {
-      return `${formattedMinutes}:${formattedSeconds}`;
-    }
   };
 
   /** Call timer */
@@ -140,7 +125,7 @@ const StreamInfo = () => {
                   </h5>
                   <p className="flex gap-1 heading-uname">
                     <span>{mediaType === "video" ? "Video" : "Voice"} Connected</span>
-                    <span>{formatTime(callTimer)}</span>
+                    <span>{formatTimer(callTimer)}</span>
                   </p>
                 </div>
               </TooltipTrigger>
@@ -218,7 +203,7 @@ const StreamInfo = () => {
           <div className="w-full flex flex-col gap-2">
             <h3 className="text-sm font-medium flex justify-between">
               <span>{mediaType === "video" ? "Video" : "Voice"} Connected</span>
-              <span>{formatTime(callTimer)}</span>
+              <span>{formatTimer(callTimer)}</span>
             </h3>
 
             <h2 className="text-base font-medium flex justify-between">

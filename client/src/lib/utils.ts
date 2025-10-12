@@ -226,13 +226,33 @@ export const copyToClipboard = (text: string) => {
   }
 };
 
-export const handleDownload = (message: Message) => {
+export const handleDownload = (file: string, name: string) => {
+  if (!file || !name) {
+    toast.error("Please, give file link to download!");
+    return;
+  }
   const link = document.createElement("a");
-  link.href = message?.content?.file!;
-  link.download = message._id;
-  window.document.body.appendChild(link);
+  link.href = file;
+  link.download = name;
+  document.body.appendChild(link);
   link.click();
-  window.document.body.removeChild(link);
+  document.body.removeChild(link);
+};
+
+export const formatTimer = (time: number) => {
+  const hours = Math.floor(time / 3600);
+  const minutes = Math.floor((time % 3600) / 60);
+  const seconds = time % 60;
+
+  const formattedMinutes = minutes.toString().padStart(2, "0");
+  const formattedSeconds = seconds.toString().padStart(2, "0");
+
+  if (hours > 0) {
+    const formattedHours = hours.toString().padStart(2, "0");
+    return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+  } else {
+    return `${formattedMinutes}:${formattedSeconds}`;
+  }
 };
 
 /*

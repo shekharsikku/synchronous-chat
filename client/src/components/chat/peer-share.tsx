@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
-import { formatSize } from "@/lib/utils";
+import { formatSize, handleDownload } from "@/lib/utils";
 import { useChatStore } from "@/zustand";
 import { usePeer, useSocket } from "@/lib/context";
 import { DataConnection } from "peerjs";
@@ -250,12 +250,7 @@ const PeerShare = () => {
           const blob = new Blob([data.file], { type: data.mime });
           const url = URL.createObjectURL(blob);
 
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = data.name;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
+          handleDownload(url, data.name);
           conn.send({ type: "completed" });
 
           setRemoteInfo(null);

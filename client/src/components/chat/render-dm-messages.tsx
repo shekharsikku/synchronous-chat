@@ -222,7 +222,10 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
                     <HiOutlineViewfinderCircle size={16} /> View
                   </ContextMenuItem>
                 )}
-                <ContextMenuItem className="flex gap-2" onClick={() => handleDownload(message)}>
+                <ContextMenuItem
+                  className="flex gap-2"
+                  onClick={() => handleDownload(message.content?.file!, message._id)}
+                >
                   <HiOutlineCloudArrowDown size={16} /> Download
                 </ContextMenuItem>
               </>
