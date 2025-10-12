@@ -31,7 +31,8 @@ interface ConversationInterface extends Document {
 interface MessageInterface extends Document {
   _id?: Types.ObjectId;
   sender: Types.ObjectId;
-  recipient: Types.ObjectId;
+  recipient?: Types.ObjectId;
+  group?: Types.ObjectId;
   type: "default" | "edited" | "deleted";
   content: {
     type: "text" | "file";
@@ -44,4 +45,13 @@ interface MessageInterface extends Document {
   };
   reply: Types.ObjectId;
   deletedAt: Date;
+}
+
+interface GroupInterface extends Document {
+  _id?: Types.ObjectId;
+  name: string;
+  description: string;
+  avatar?: string | null;
+  admin: Types.ObjectId;
+  members: Types.ObjectId[];
 }

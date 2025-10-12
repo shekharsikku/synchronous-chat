@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import type { UserInterface } from "../interface/index.js";
-import type { ZodType } from "zod";
+import { ZodError, type ZodType } from "zod";
 import type { Types } from "mongoose";
 import { HttpError, ErrorResponse } from "../utils/index.js";
 import { generateSecret, generateAccess, generateRefresh, authorizeCookie, createUserInfo } from "../utils/helpers.js";
@@ -137,6 +137,10 @@ const validate =
       req.body = schema.parse(req.body);
       next();
     } catch (error: any) {
+      if (error instanceof ZodError && error.name === "ZodError") {
+        const errors = JSON.parse(error.message);
+        return ErrorResponse(res, 400, "Validation error occurred!", errors);
+      }
       return ErrorResponse(res, 400, "Validation error occurred!", error);
     }
   };
