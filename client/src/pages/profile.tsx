@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,6 +38,7 @@ import {
   HiOutlineArrowRightOnRectangle,
   HiOutlineChatBubbleLeftRight,
 } from "react-icons/hi2";
+import { changePasswordSchema, profileUpdateSchema, genders } from "@/lib/schema";
 import { setAuthUser, useSignOut } from "@/lib/auth";
 import { useAuthStore } from "@/zustand";
 import { useSocket } from "@/lib/context";
@@ -128,28 +129,6 @@ const Profile = () => {
   };
 
   /**  Hookform Zod Resolver - Change Password */
-
-  const changePasswordSchema = z
-    .object({
-      old_password: z.string().min(1, { message: "Old password is required!" }),
-      new_password: z
-        .string()
-        .min(8, { message: "New password must be at least 8 characters long!" })
-        .regex(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/, {
-          message: "Must have an uppercase, a lowercase letter, and a number!",
-        })
-        .refine((val) => !/\s/.test(val), {
-          message: "Password cannot contain spaces!",
-        }),
-      confirm_password: z.string().min(8, {
-        message: "Confirm password must be at least 8 characters long!",
-      }),
-    })
-    .refine((data) => data.new_password === data.confirm_password, {
-      message: "Confirm password is not matching with new password!",
-      path: ["confirm_password"],
-    });
-
   const changePasswordForm = useForm<z.infer<typeof changePasswordSchema>>({
     resolver: zodResolver(changePasswordSchema),
     defaultValues: {
@@ -176,26 +155,6 @@ const Profile = () => {
   };
 
   /**  Hookform Zod Resolver - Profile Update */
-
-  const genders = ["Male", "Female", "Other"] as const;
-
-  const profileUpdateSchema = z.object({
-    name: z
-      .string()
-      .min(3, { message: "Name must be at least 3 characters long!" })
-      .max(30, { message: "Name can be maximum 30 characters long!" }),
-    username: z
-      .string()
-      .min(3, { message: "Username must be at least 3 characters long!" })
-      .max(15, { message: "Username can be maximum 15 characters long!" })
-      .regex(/^[a-z0-9_-]{3,15}$/, {
-        message:
-          "Only lowercase letters, numbers, hyphens, and underscores are allowed, with no spaces or special characters at the start/end!",
-      }),
-    gender: z.enum(genders),
-    bio: z.string(),
-  });
-
   const profileUpdateForm = useForm<z.infer<typeof profileUpdateSchema>>({
     resolver: zodResolver(profileUpdateSchema),
     defaultValues: {

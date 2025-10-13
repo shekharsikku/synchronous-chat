@@ -85,7 +85,10 @@ export const GroupSchema = z.object({
   name: z.string().min(3).max(30),
   description: z.string().min(5).max(50),
   admin: z.string(),
-  members: z.array(z.string().min(1, { error: "At least one member is required" })),
+  members: z
+    .array(z.string().min(1))
+    .min(1, { error: "Group must have at least one member!" })
+    .max(10, { error: "Group cannot have more than 10 members!" }),
 });
 
 export type SignUp = z.infer<typeof SignUpSchema>;

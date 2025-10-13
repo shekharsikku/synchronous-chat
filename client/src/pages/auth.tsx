@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 import { validateEmail, validateDummyEmail } from "@/lib/utils";
+import { signUpSchema, signInSchema } from "@/lib/schema";
 import { useAuthStore } from "@/zustand";
 import { setAuthUser } from "@/lib/auth";
 import api from "@/lib/api";
@@ -26,26 +27,6 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   /** Hookform Zod Resolver - SignUp */
-
-  const signUpSchema = z
-    .object({
-      email: z.string().email({ message: "Invalid email address!" }),
-      password: z
-        .string()
-        .min(8, { message: "Password must be at least 8 characters long!" })
-        .regex(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/, {
-          message: "Password ust have an uppercase, a lowercase letter, and a number!",
-        })
-        .refine((val) => !/\s/.test(val), {
-          message: "Password cannot contain spaces!",
-        }),
-      confirm: z.string(),
-    })
-    .refine((data) => data.password === data.confirm, {
-      message: "Confirm password not matching!",
-      path: ["confirm"],
-    });
-
   const signUpForm = useForm<z.infer<typeof signUpSchema>>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -76,15 +57,6 @@ const Auth = () => {
   };
 
   /** Hookform Zod Resolver - SignIn */
-
-  const signInSchema = z.object({
-    credential: z
-      .string()
-      .min(1, { message: "Email or Username is required!" })
-      .transform((val) => val.replace(/\s+/g, "")),
-    password: z.string().min(1, { message: "Password is required!" }),
-  });
-
   const signInForm = useForm<z.infer<typeof signInSchema>>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
