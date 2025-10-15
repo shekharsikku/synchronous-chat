@@ -12,11 +12,9 @@ import moment from "moment";
 const RenderMessages = React.memo(
   ({
     messages,
-    selectedChatType,
     messageRefs,
   }: {
     messages: Message[];
-    selectedChatType: string;
     messageRefs: RefObject<Record<string, HTMLDivElement | null>>;
   }) => {
     let lastDate = "";
@@ -53,7 +51,7 @@ const RenderMessages = React.memo(
                   : moment(message.createdAt).format("LL")}
             </div>
           )}
-          {selectedChatType === "contact" && <RenderDMMessages message={message} scrollMessage={scrollMessage} />}
+          <RenderDMMessages message={message} scrollMessage={scrollMessage} />
         </div>
       );
     });
@@ -62,7 +60,7 @@ const RenderMessages = React.memo(
 
 const MessageContainer = () => {
   const { data, isPending, hasNextPage, isFetchingNextPage, fetchNextPage } = useMessages();
-  const { selectedChatData, selectedChatType, setMessages, replyTo, listenerActive, setMessageStats } = useChatStore();
+  const { selectedChatData, setMessages, replyTo, listenerActive, setMessageStats } = useChatStore();
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollSectionRef = useRef<HTMLDivElement>(null);
@@ -223,7 +221,7 @@ const MessageContainer = () => {
         {isPending ? (
           <MessageSkeleton count={skeletonCount} />
         ) : (
-          <RenderMessages messages={messages!} selectedChatType={selectedChatType} messageRefs={messageRefs} />
+          <RenderMessages messages={messages!} messageRefs={messageRefs} />
         )}
         {!isPending && <div ref={mergeRefs(lastMessageRef, inViewRef)} className="h-0.5 bg-transparent" />}
       </section>
