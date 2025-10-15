@@ -110,6 +110,10 @@ export const usePlainText = () => {
     }
 
     try {
+      if (message.group) {
+        return decryptMessage(message?.content?.text!, message.group);
+      }
+
       let messageKey = "";
 
       if (message.sender === selectedChatData?._id) {

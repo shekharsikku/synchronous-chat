@@ -81,7 +81,7 @@ export const TranslateSchema = z.object({
   language: z.string(),
 });
 
-export const GroupSchema = z.object({
+export const CreateGroupSchema = z.object({
   name: z.string().min(3).max(30),
   description: z.string().min(5).max(50),
   admin: z.string(),
@@ -91,10 +91,22 @@ export const GroupSchema = z.object({
     .max(10, { error: "Group cannot have more than 10 members!" }),
 });
 
+export const UpdateDetailsSchema = z.object({
+  name: z.string().min(3).max(30).optional(),
+  description: z.string().min(5).max(50).optional(),
+});
+
+export const UpdateMembersSchema = z.object({
+  add: z.array(z.string().min(1)).default([]),
+  remove: z.array(z.string().min(1)).default([]),
+});
+
 export type SignUp = z.infer<typeof SignUpSchema>;
 export type SignIn = z.infer<typeof SignInSchema>;
 export type Profile = z.infer<typeof ProfileSchema>;
 export type Password = z.infer<typeof PasswordSchema>;
 export type Message = z.infer<typeof MessageSchema>;
 export type Translate = z.infer<typeof TranslateSchema>;
-export type GroupType = z.infer<typeof GroupSchema>;
+export type CreateGroupType = z.infer<typeof CreateGroupSchema>;
+export type UpdateDetailsType = z.infer<typeof UpdateDetailsSchema>;
+export type UpdateMembersType = z.infer<typeof UpdateMembersSchema>;
