@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState, RefObject } from "react";
 import { useInView } from "react-intersection-observer";
 import { HiOutlineArrowSmallDown } from "react-icons/hi2";
-import { Message, useChatStore } from "@/zustand";
+import { Message, useChatStore, useAuthStore } from "@/zustand";
 import { mergeRefs } from "@/lib/utils";
 import { useMessages } from "@/hooks/use-messages";
+import { useContacts } from "@/hooks/use-contacts";
 import { Button } from "@/components/ui/button";
 import { RenderDMMessages } from "@/components/chat/render-dm-messages";
 import { MessageSkeleton } from "@/components/chat/message-skeleton";
@@ -17,10 +18,17 @@ const RenderMessages = React.memo(
     messages: Message[];
     messageRefs: RefObject<Record<string, HTMLDivElement | null>>;
   }) => {
+    const { userInfo } = useAuthStore();
+    const { contacts } = useContacts();
+
     let lastDate = "";
 
-    const scrollMessage = (id: string) => {
-      const element = messageRefs.current[id];
+    const getSender = (sid: string) => {
+      return contacts?.find((contact) => contact._id === sid)?.name ?? `${userInfo?.name}`;
+    };
+
+    const scrollMessage = (mid: string) => {
+      const element = messageRefs.current[mid];
 
       if (element) {
         element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
@@ -51,7 +59,7 @@ const RenderMessages = React.memo(
                   : moment(message.createdAt).format("LL")}
             </div>
           )}
-          <RenderDMMessages message={message} scrollMessage={scrollMessage} />
+          <RenderDMMessages message={message} scrollMessage={scrollMessage} getSender={getSender} />
         </div>
       );
     });

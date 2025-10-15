@@ -24,7 +24,7 @@ const MessageBar = () => {
   const { theme } = useTheme();
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
-  const { selectedChatData, setIsPartnerTyping, editDialog, replyTo, setReplyTo } = useChatStore();
+  const { selectedChatType, selectedChatData, setIsPartnerTyping, editDialog, replyTo, setReplyTo } = useChatStore();
 
   const emojiRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -140,7 +140,13 @@ const MessageBar = () => {
       if (replyTo) messageData.reply = replyTo._id;
       if (selectedImage) setMessage((prev) => `${prev}::Sending...`);
 
-      await api.post(`/api/message/send/${selectedChatData?._id}`, messageData);
+      if (selectedChatType === "contact") {
+        await api.post(`/api/message/send/${selectedChatData?._id}`, messageData);
+      }
+
+      if (selectedChatType === "group") {
+        await api.post(`/api/group/message/send/${selectedChatData?._id}`, messageData);
+      }
 
       setMessage("");
       setReplyTo(null);
@@ -159,6 +165,8 @@ const MessageBar = () => {
   };
 
   useEffect(() => {
+    if (selectedChatType === "group") return;
+
     socket?.on("typing:display", (typingUser) => {
       if (typingUser.uid === userInfo?._id && selectedChatData?._id === typingUser.cid) {
         setIsPartnerTyping(typingUser.typing);
@@ -209,7 +217,7 @@ const MessageBar = () => {
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setMessage(event.target.value);
-    handleTyping();
+    selectedChatType === "contact" && handleTyping();
   };
 
   const { pasteFromClipboard } = useClipboard(inputRef, setMessage);

@@ -33,11 +33,19 @@ import {
   copyToClipboard,
 } from "@/lib/utils";
 
-const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scrollMessage: any }) => {
+const RenderDMMessages = ({
+  message,
+  scrollMessage,
+  getSender,
+}: {
+  message: Message;
+  scrollMessage: (mid: string) => void;
+  getSender: (sid: string) => string | undefined;
+}) => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
   const { plainText } = usePlainText();
-  const { language, setMessageForEdit, setEditDialog, setReplyTo } = useChatStore();
+  const { language, setMessageForEdit, setEditDialog, setReplyTo, selectedChatType } = useChatStore();
   const { deleteSelectedMessage, handleEmojiReaction, translateMessage } = useMessageActions();
 
   const [imageViewExtend, setImageViewExtend] = useState(false);
@@ -94,7 +102,7 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
         <ContextMenuTrigger
           ref={mergeRefs(inViewRef, elementRef)}
           className={cn(
-            "inline-block border rounded-sm p-3 break-words transition-[transform,opacity] duration-300 ease-in-out transform text-start text-gray-950 dark:text-gray-50 dark:border-gray-700 max-w-[90%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[75%] xl:max-w-[70%] hover:transition-colors",
+            "inline-block border rounded-sm px-3 py-2.5 break-words transition-[transform,opacity] duration-300 ease-in-out transform text-start text-gray-950 dark:text-gray-50 dark:border-gray-700 max-w-[90%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[75%] xl:max-w-[70%] hover:transition-colors",
             message.type === "deleted" ? "cursor-not-allowed" : "cursor-default",
             inView ? "opacity-100 translate-x-0" : `opacity-0 ${isSender ? "-translate-x-16" : "translate-x-16"}`,
             isSender
@@ -248,6 +256,11 @@ const RenderDMMessages = ({ message, scrollMessage }: { message: Message; scroll
       </ContextMenu>
       {/* Translated Message */}
       {translated !== "" && <span className="text-base mt-1">{translated}</span>}
+      {/* If group message show sender name */}
+      {selectedChatType === "group" && message.group && (
+        <span className="text-xs text-gray-300 mt-0.5">{`Sent by ${getSender(message.sender)}`}</span>
+      )}
+      {/* Message Timestamps */}
       <span className="text-xs text-gray-600 dark:text-gray-200 mt-0.5">{messageTimestamp(message)}</span>
       {/* Dialog for image extend view */}
       <Dialog open={imageViewExtend} onOpenChange={setImageViewExtend}>
