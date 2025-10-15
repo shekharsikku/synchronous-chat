@@ -5,9 +5,14 @@ const ConversationSchema = new Schema<ConversationInterface>({
   participants: [
     {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      refPath: "models",
     },
   ],
+  models: {
+    type: String,
+    enum: ["User", "Group"],
+    required: true,
+  },
   interaction: {
     type: Date,
     default: Date.now,

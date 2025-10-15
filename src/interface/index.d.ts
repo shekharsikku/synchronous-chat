@@ -25,6 +25,7 @@ interface TokenInterface {
 interface ConversationInterface extends Document {
   _id?: Types.ObjectId;
   participants: Types.ObjectId[];
+  models?: "User" | "Group";
   interaction: Date;
 }
 

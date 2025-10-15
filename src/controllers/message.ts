@@ -57,6 +57,7 @@ const sendMessage = async (req: Request<{ id: string }>, res: Response) => {
     if (!conversation) {
       conversation = await Conversation.create({
         participants: [sender, receiver],
+        models: "User",
         interaction: interaction,
       });
     }
