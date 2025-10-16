@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EditMessage } from "@/components/chat/edit-message";
-import { useChatStore, useAuthStore, Message } from "@/zustand";
+import { useChatStore, useAuthStore, Message } from "@/lib/zustand";
 import { useDisableAnimations, useLastMinutes, usePlainText, useReplyMessage, useMessageActions } from "@/lib/hooks";
 import { useSocket } from "@/lib/context";
 import { isDesktop } from "react-device-detect";

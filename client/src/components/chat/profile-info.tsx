@@ -7,7 +7,7 @@ import {
 } from "react-icons/hi2";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useAuthStore, useChatStore } from "@/zustand";
+import { useAuthStore, useChatStore } from "@/lib/zustand";
 import { useAvatar } from "@/lib/hooks";
 import { useSignOut } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";

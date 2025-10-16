@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Message } from "@/zustand";
+import { Message } from "@/lib/zustand";
 import { toast } from "sonner";
 import moment from "moment";
 

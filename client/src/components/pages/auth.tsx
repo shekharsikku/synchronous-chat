@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 import { validateEmail, validateDummyEmail } from "@/lib/utils";
 import { signUpSchema, signInSchema } from "@/lib/schema";
-import { useAuthStore } from "@/zustand";
+import { useAuthStore } from "@/lib/zustand";
 import { setAuthUser } from "@/lib/auth";
 import api from "@/lib/api";
 

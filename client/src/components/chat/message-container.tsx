@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, RefObject } from "react";
 import { useInView } from "react-intersection-observer";
 import { HiOutlineArrowSmallDown } from "react-icons/hi2";
-import { Message, useChatStore, useAuthStore } from "@/zustand";
+import { Message, useChatStore, useAuthStore } from "@/lib/zustand";
 import { mergeRefs } from "@/lib/utils";
 import { useMessages } from "@/hooks/use-messages";
 import { useContacts } from "@/hooks/use-contacts";
@@ -14,18 +14,13 @@ const RenderMessages = React.memo(
   ({
     messages,
     messageRefs,
+    getSender,
   }: {
     messages: Message[];
     messageRefs: RefObject<Record<string, HTMLDivElement | null>>;
+    getSender: (sid: string) => string;
   }) => {
-    const { userInfo } = useAuthStore();
-    const { contacts } = useContacts();
-
     let lastDate = "";
-
-    const getSender = (sid: string) => {
-      return contacts?.find((contact) => contact._id === sid)?.name ?? `${userInfo?.name}`;
-    };
 
     const scrollMessage = (mid: string) => {
       const element = messageRefs.current[mid];
@@ -67,6 +62,9 @@ const RenderMessages = React.memo(
 );
 
 const MessageContainer = () => {
+  const { userInfo } = useAuthStore();
+  const { contacts } = useContacts();
+
   const { data, isPending, hasNextPage, isFetchingNextPage, fetchNextPage } = useMessages();
   const { selectedChatData, setMessages, replyTo, listenerActive, setMessageStats } = useChatStore();
 
@@ -172,7 +170,7 @@ const MessageContainer = () => {
 
     if (messages && messages.length > prevMsgCountRef.current) {
       setMessages(messages);
-      setMessageStats(messages, selectedChatData?._id!);
+      setMessageStats(messages, userInfo?._id!);
     }
 
     if (messages && messages.length > prevMsgCountRef.current && !scrollLockedRef.current) {
@@ -223,13 +221,17 @@ const MessageContainer = () => {
     };
   }, [isFetchingNextPage, hasNextPage, fetchNextPage]);
 
+  const getSender = (sid: string) => {
+    return contacts?.find((contact) => contact._id === sid)?.name ?? `${userInfo?.name ?? "You"}`;
+  };
+
   return (
     <>
       <section ref={scrollSectionRef} className="w-full flex-1 overflow-y-auto scroll-smooth px-4 message-scrollbar">
         {isPending ? (
           <MessageSkeleton count={skeletonCount} />
         ) : (
-          <RenderMessages messages={messages!} messageRefs={messageRefs} />
+          <RenderMessages messages={messages!} messageRefs={messageRefs} getSender={getSender} />
         )}
         {!isPending && <div ref={mergeRefs(lastMessageRef, inViewRef)} className="h-0.5 bg-transparent" />}
       </section>

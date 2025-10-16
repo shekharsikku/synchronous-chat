@@ -40,7 +40,7 @@ import {
 } from "react-icons/hi2";
 import { changePasswordSchema, profileUpdateSchema, genders } from "@/lib/schema";
 import { setAuthUser, useSignOut } from "@/lib/auth";
-import { useAuthStore } from "@/zustand";
+import { useAuthStore } from "@/lib/zustand";
 import { useSocket } from "@/lib/context";
 import api from "@/lib/api";
 

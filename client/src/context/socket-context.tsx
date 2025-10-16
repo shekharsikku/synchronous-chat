@@ -1,5 +1,5 @@
 import { useEffect, useState, ReactNode } from "react";
-import { useAuthStore } from "@/zustand";
+import { useAuthStore } from "@/lib/zustand";
 import { SocketContext } from "@/lib/context";
 import io, { Socket } from "socket.io-client";
 import { toast } from "sonner";

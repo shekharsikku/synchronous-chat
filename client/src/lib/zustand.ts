@@ -1,10 +1,26 @@
 import { create } from "zustand";
-import { UserInfo } from "./auth";
+import api from "@/lib/api";
+
+export interface UserInfo {
+  _id?: string;
+  name?: string;
+  email?: string;
+  username?: string;
+  gender?: string;
+  image?: string;
+  bio?: string;
+  setup?: boolean;
+  createdAt?: any;
+  updatedAt?: any;
+  __v?: number;
+  interaction?: any;
+}
 
 export interface Message {
   _id: string;
   sender: string;
-  recipient: string;
+  recipient?: string;
+  group?: string;
   type: "default" | "edited" | "deleted";
   content?: {
     type: "text" | "file";
@@ -29,12 +45,61 @@ export interface MessageData {
   reply?: string;
 }
 
-const useChatStore = create<{
-  selectedChatType: string;
-  setSelectedChatType: (selectedChatType: string) => void;
+export interface GroupInfo {
+  _id?: string;
+  name?: string;
+  description?: string;
+  avatar?: string;
+  admin?: string;
+  members?: string[];
+  createdAt?: any;
+  updatedAt?: any;
+  __v?: number;
+  interaction?: any;
+}
 
-  selectedChatData: UserInfo | null;
-  setSelectedChatData: (selectedChatData: UserInfo) => void;
+export const useAuthStore = create<{
+  userInfo: UserInfo | null;
+  setUserInfo: (userInfo: UserInfo | null) => void;
+
+  isAuthenticated: boolean;
+  setIsAuthenticated: (isAuthenticated: boolean) => void;
+
+  getUserInfo: () => Promise<UserInfo | null>;
+}>((set) => ({
+  userInfo: null,
+  setUserInfo: (userInfo: UserInfo | null) => set({ userInfo }),
+
+  isAuthenticated: false,
+  setIsAuthenticated: (isAuthenticated: boolean) => set({ isAuthenticated }),
+
+  getUserInfo: async () => {
+    try {
+      const response = await api.get("/api/user/user-information");
+      const result = await response.data.data;
+      set({
+        userInfo: result,
+        isAuthenticated: true,
+      });
+      return result;
+    } catch (error: any) {
+      set({
+        userInfo: null,
+        isAuthenticated: false,
+      });
+      return null;
+    }
+  },
+}));
+
+type chatType = "contact" | "group" | null;
+
+export const useChatStore = create<{
+  selectedChatType: chatType;
+  setSelectedChatType: (selectedChatType: chatType) => void;
+
+  selectedChatData: any;
+  setSelectedChatData: (selectedChatData: any) => void;
 
   messages: Message[];
   setMessages: (messages: Message[]) => void;
@@ -67,18 +132,18 @@ const useChatStore = create<{
   messageStats: { sent: number; received: number };
   setMessageStats: (messages: Message[], selectedChatId: string) => void;
 }>((set) => ({
-  selectedChatType: "",
-  setSelectedChatType: (selectedChatType: string) => set({ selectedChatType }),
+  selectedChatType: null,
+  setSelectedChatType: (selectedChatType: chatType) => set({ selectedChatType }),
 
   selectedChatData: null,
-  setSelectedChatData: (selectedChatData: UserInfo) => set({ selectedChatData }),
+  setSelectedChatData: (selectedChatData: any) => set({ selectedChatData }),
 
   messages: [],
   setMessages: (messages: Message[]) => set({ messages }),
 
   closeChat: () =>
     set({
-      selectedChatType: "",
+      selectedChatType: null,
       selectedChatData: null,
       replyTo: null,
       messages: [],
@@ -113,17 +178,18 @@ const useChatStore = create<{
   setListenerActive: (listenerActive: boolean) => set({ listenerActive }),
 
   messageStats: { sent: 0, received: 0 },
-  setMessageStats: (messages: Message[], selectedChatId: string) => {
+  setMessageStats: (messages: Message[], userId: string) => {
     let sent = 0;
     let received = 0;
 
     for (const msg of messages) {
-      if (msg.sender === selectedChatId) received++;
-      else if (msg.recipient === selectedChatId) sent++;
+      if (msg.sender === userId) {
+        sent++;
+      } else {
+        received++;
+      }
     }
 
     set({ messageStats: { sent, received } });
   },
 }));
-
-export default useChatStore;

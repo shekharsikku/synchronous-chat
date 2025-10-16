@@ -12,7 +12,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useChatStore } from "@/zustand";
+import { useChatStore } from "@/lib/zustand";
 import { encryptMessage } from "@/lib/noble";
 import api from "@/lib/api";
 

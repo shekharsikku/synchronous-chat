@@ -1,7 +1,7 @@
-import { ChatHeader } from "./chat-header";
-import { MessageContainer } from "./message-container";
-import { MessageBar } from "./message-bar";
-import { MessagePreview } from "./message-preview";
+import { ChatHeader } from "@/components/chat/chat-header";
+import { MessageContainer } from "@/components/chat/message-container";
+import { MessageBar } from "@/components/chat/message-bar";
+import { MessagePreview } from "@/components/chat/message-preview";
 
 const ChatContainer = () => {
   return (

@@ -1,8 +1,7 @@
 import { Socket } from "socket.io-client";
 import { useEffect, useCallback, useRef, useState, RefObject, SetStateAction, Dispatch } from "react";
 import { decryptMessage } from "@/lib/noble";
-import { useAuthStore, useChatStore } from "@/zustand";
-import { Message } from "@/zustand/chat";
+import { useAuthStore, useChatStore, Message } from "@/lib/zustand";
 import maleAvatar from "@/assets/male-avatar.webp";
 import femaleAvatar from "@/assets/female-avatar.webp";
 import noAvatar from "@/assets/no-avatar.webp";

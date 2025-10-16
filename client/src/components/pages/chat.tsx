@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useQueryState } from "nuqs";
-import { useChatStore } from "@/zustand";
+import { useChatStore } from "@/lib/zustand";
 import { usePeer } from "@/lib/context";
 import { ContactsContainer, EmptyChatContainer, ChatContainer, DraggableVideo } from "@/components/chat";
 

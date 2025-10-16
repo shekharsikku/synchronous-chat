@@ -1,9 +1,8 @@
 import { encryptInfo, decryptInfo } from "@/lib/noble";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAuthStore, useChatStore } from "@/zustand";
+import { useAuthStore, useChatStore, UserInfo } from "@/lib/zustand";
 import { usePeer } from "@/lib/context";
 import { useEffect } from "react";
-import { UserInfo } from "@/zustand/auth";
 import { toast } from "sonner";
 import api from "@/lib/api";
 

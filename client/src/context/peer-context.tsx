@@ -3,7 +3,7 @@ import Peer, { MediaConnection } from "peerjs";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef, useId, ReactNode } from "react";
 import { useSocket, PeerContext, PeerInformation, ResponseActions } from "@/lib/context";
-import { useAuthStore } from "@/zustand";
+import { useAuthStore } from "@/lib/zustand";
 import { PeerShare } from "@/components/chat";
 
 const PeerProvider = ({ children }: { children: ReactNode }) => {

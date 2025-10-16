@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { Auth, Chat, Profile } from "@/pages";
+import { Auth, Chat, Profile } from "@/components/pages";
 import { useEffect, ReactNode } from "react";
 import { useAuthUser } from "@/lib/auth";
 import { useHotkeys } from "react-hotkeys-hook";

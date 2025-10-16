@@ -1,6 +1,6 @@
 import { HiOutlineXMark, HiOutlineSlash } from "react-icons/hi2";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useChatStore } from "@/zustand";
+import { useChatStore } from "@/lib/zustand";
 import { usePlainText } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 

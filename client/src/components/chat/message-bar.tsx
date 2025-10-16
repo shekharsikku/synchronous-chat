@@ -11,7 +11,7 @@ import {
 import React, { useState, useEffect, useRef, ChangeEvent, KeyboardEventHandler } from "react";
 import { encryptMessage } from "@/lib/noble";
 import { convertToBase64 } from "@/lib/utils";
-import { useChatStore, useAuthStore, MessageData } from "@/zustand";
+import { useChatStore, useAuthStore, MessageData } from "@/lib/zustand";
 import { isDesktop, isMobile } from "react-device-detect";
 import { useSocket, useTheme } from "@/lib/context";
 import { useClipboard } from "@/lib/hooks";

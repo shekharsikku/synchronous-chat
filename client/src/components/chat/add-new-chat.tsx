@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ContactListSkeleton } from "@/components/chat/contact-list-skeleton";
-import { useChatStore, UserInfo } from "@/zustand";
+import { useChatStore, UserInfo } from "@/lib/zustand";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useDebounce, useAvatar } from "@/lib/hooks";
 import api from "@/lib/api";

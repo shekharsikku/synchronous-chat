@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useChatStore } from "@/zustand";
+import { useChatStore } from "@/lib/zustand";
 import { usePeer } from "@/lib/context";
 
 const DraggableVideo = () => {

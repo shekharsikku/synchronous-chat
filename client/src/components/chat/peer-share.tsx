@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { formatSize, handleDownload } from "@/lib/utils";
-import { useChatStore } from "@/zustand";
+import { useChatStore } from "@/lib/zustand";
 import { usePeer, useSocket } from "@/lib/context";
 import { DataConnection } from "peerjs";
 
