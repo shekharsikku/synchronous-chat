@@ -3,7 +3,8 @@ import type { Message as MessageType, Translate } from "../utils/schema.js";
 import { HttpError, SuccessResponse, ErrorResponse } from "../utils/index.js";
 import { getSocketId, io } from "../socket.js";
 import { translate } from "bing-translate-api";
-import { Message, Conversation } from "../models/index.js";
+import { fetchMembers } from "./group.js";
+import { Message, Conversation, Group } from "../models/index.js";
 
 const sendMessage = async (req: Request<{ id: string }>, res: Response) => {
   try {
@@ -33,6 +34,7 @@ const sendMessage = async (req: Request<{ id: string }>, res: Response) => {
       /** for update last chat contact */
       io.to(receiverSocketId).emit("conversation:updated", {
         _id: sender,
+        type: "contact",
         interaction: interaction,
       });
     }
@@ -43,6 +45,7 @@ const sendMessage = async (req: Request<{ id: string }>, res: Response) => {
     /** for update last chat contact */
     io.to(senderSocketId).emit("conversation:updated", {
       _id: receiver,
+      type: "contact",
       interaction: interaction,
     });
 
@@ -80,14 +83,19 @@ const nullToUndefined = (obj: Record<string, any>) => {
 const getMessages = async (req: Request<{ id: string }>, res: Response) => {
   try {
     const sender = req.user?._id;
-    const receiver = req.params.id;
+    const target = req.params.id;
+    const isGroup = (req.query.group as string) === "true" || false;
 
-    const messages = await Message.find({
-      $or: [
-        { sender: sender, recipient: receiver },
-        { sender: receiver, recipient: sender },
-      ],
-    })
+    const query = isGroup
+      ? { group: target }
+      : {
+          $or: [
+            { sender: sender, recipient: target },
+            { sender: target, recipient: sender },
+          ],
+        };
+
+    const messages = await Message.find(query)
       .sort({ createdAt: -1 })
       .lean({ transform: (doc) => nullToUndefined(doc) });
 
@@ -100,15 +108,24 @@ const getMessages = async (req: Request<{ id: string }>, res: Response) => {
 const fetchMessages = async (req: Request<{ id: string }>, res: Response) => {
   try {
     const sender = req.user?._id;
-    const receiver = req.params.id;
-    const { before, limit = 10 } = req.query;
+    const target = req.params.id;
+    const { before, group, limit = 10 } = req.query;
 
-    const query: any = {
-      $or: [
-        { sender: sender, recipient: receiver },
-        { sender: receiver, recipient: sender },
-      ],
-    };
+    let isGroup = (group as string) === "true" || false;
+
+    if (!before && !group) {
+      const exists = await Group.exists({ _id: target });
+      if (exists) isGroup = true;
+    }
+
+    const query: any = isGroup
+      ? { group: target }
+      : {
+          $or: [
+            { sender: sender, recipient: target },
+            { sender: target, recipient: sender },
+          ],
+        };
 
     if (before) {
       query.createdAt = { $lt: new Date(before as string) };
@@ -123,6 +140,23 @@ const fetchMessages = async (req: Request<{ id: string }>, res: Response) => {
     return SuccessResponse(res, 200, "Messages fetched successfully!", messages.reverse());
   } catch (error: any) {
     return ErrorResponse(res, error.code || 500, error.message || "Error while fetching messages!");
+  }
+};
+
+const messageActionsEvents = async (message: any, event: string) => {
+  if (message.group) {
+    const members = await fetchMembers(message.group.toString());
+    const socketIds = members.flatMap((member) => getSocketId(member)) || [];
+
+    socketIds.forEach((sid) => io.to(sid).emit(event, message));
+  } else {
+    const senderSocketId = getSocketId(message?.sender.toString());
+    const receiverSocketId = getSocketId(message?.recipient?.toString()!);
+
+    if (receiverSocketId.length > 0) {
+      io.to(receiverSocketId).emit(event, message);
+    }
+    io.to(senderSocketId).emit(event, message);
   }
 };
 
@@ -145,13 +179,7 @@ const deleteMessage = async (req: Request<{ id: string }>, res: Response) => {
       throw new HttpError(400, "You can't delete this message or message not found!");
     }
 
-    const senderSocketId = getSocketId(message?.sender.toString());
-    const receiverSocketId = getSocketId(message?.recipient?.toString()!);
-
-    if (receiverSocketId.length > 0) {
-      io.to(receiverSocketId).emit("message:remove", message);
-    }
-    io.to(senderSocketId).emit("message:remove", message);
+    await messageActionsEvents(message, "message:remove");
 
     return SuccessResponse(res, 200, "Message deleted successfully!", message);
   } catch (error: any) {
@@ -182,13 +210,7 @@ const editMessage = async (req: Request<{ id: string }, {}, { text: string }>, r
       throw new HttpError(400, "You can't edit this message or message not found!");
     }
 
-    const senderSocketId = getSocketId(message?.sender.toString());
-    const receiverSocketId = getSocketId(message?.recipient?.toString()!);
-
-    if (receiverSocketId.length > 0) {
-      io.to(receiverSocketId).emit("message:edited", message);
-    }
-    io.to(senderSocketId).emit("message:edited", message);
+    await messageActionsEvents(message, "message:edited");
 
     return SuccessResponse(res, 200, "Message edited successfully!", message);
   } catch (error: any) {
@@ -270,13 +292,7 @@ const reactMessage = async (req: Request<{ id: string }, {}, { by: string; emoji
       { new: true }
     ).lean({ transform: (doc) => nullToUndefined(doc) });
 
-    const senderSocketId = getSocketId(message?.sender.toString()!);
-    const receiverSocketId = getSocketId(message?.recipient?.toString()!);
-
-    if (receiverSocketId.length > 0) {
-      io.to(receiverSocketId).emit("message:reacted", message);
-    }
-    io.to(senderSocketId).emit("message:reacted", message);
+    await messageActionsEvents(message, "message:reacted");
 
     return SuccessResponse(res, 200, "Message reacted successfully!", message);
   } catch (error: any) {

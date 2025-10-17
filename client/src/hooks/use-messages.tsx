@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useChatStore, useAuthStore } from "@/zustand";
+import { useChatStore, useAuthStore } from "@/lib/zustand";
 
 import api from "@/lib/api";
 
 export const useMessages = () => {
   const { userInfo } = useAuthStore();
-  const { selectedChatData } = useChatStore();
+  const { selectedChatData, selectedChatType } = useChatStore();
 
   const queryKey = useMemo(
     () => ["messages", userInfo?._id!, selectedChatData?._id!],
@@ -16,9 +16,14 @@ export const useMessages = () => {
   const infiniteQuery = useInfiniteQuery({
     queryKey: queryKey,
     queryFn: async ({ pageParam }) => {
-      const limit = pageParam ? 10 : 20;
-      const before = pageParam ? `&before=${pageParam}` : "";
-      const url = `/api/message/fetch/${selectedChatData?._id}?limit=${limit}${before}`;
+      const params = new URLSearchParams({
+        limit: pageParam ? "10" : "20",
+      });
+
+      if (pageParam) params.append("before", pageParam);
+      if (selectedChatType === "group") params.append("group", "true");
+
+      const url = `/api/message/fetch/${selectedChatData?._id}?${params.toString()}`;
       const response = await api.get(url);
       return response.data.data;
     },

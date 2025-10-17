@@ -1,11 +1,16 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useChatStore, useAuthStore, UserInfo, Message } from "@/zustand";
+import { useChatStore, useAuthStore, UserInfo, Message, GroupInfo } from "@/lib/zustand";
 import { useSocket } from "@/lib/context";
 import { useEffect } from "react";
 import api from "@/lib/api";
 
 const fetchContacts = async (): Promise<UserInfo[]> => {
   const response = await api.get("/api/contact/fetch");
+  return response.data.data;
+};
+
+const fetchGroups = async (): Promise<GroupInfo[]> => {
+  const response = await api.get("/api/group/fetch");
   return response.data.data;
 };
 
@@ -16,29 +21,55 @@ export const useContacts = () => {
   const { userInfo } = useAuthStore();
   const { selectedChatData, setSelectedChatData } = useChatStore();
 
-  /** Query and caching of contacts for 1 hour */
-  const { data: contacts, isFetching: fetching } = useQuery({
-    queryKey: ["contacts", userInfo?._id],
-    queryFn: fetchContacts,
+  /** Query and caching of contacts and groups for 8 hour */
+  const COMMON_QUERY_OPTIONS = {
     staleTime: 8 * 60 * 60 * 1000,
     gcTime: 12 * 60 * 60 * 1000,
     enabled: !!userInfo?._id,
+  };
+
+  const { data: contacts, isFetching: ctsFetching } = useQuery({
+    queryKey: ["contacts", userInfo?._id],
+    queryFn: fetchContacts,
+    ...COMMON_QUERY_OPTIONS,
+  });
+
+  const { data: groups, isFetching: gpsFetching } = useQuery({
+    queryKey: ["groups", userInfo?._id],
+    queryFn: fetchGroups,
+    ...COMMON_QUERY_OPTIONS,
   });
 
   /** Update contact interaction (socket event) */
   useEffect(() => {
-    const handleConversationUpdate = (data: UserInfo) => {
-      queryClient.setQueryData<UserInfo[]>(["contacts", userInfo?._id], (oldContacts: UserInfo[] | undefined) => {
-        if (!oldContacts) return [];
+    const handleConversationUpdate = (data: any) => {
+      if (data.type === "contact") {
+        queryClient.setQueryData<UserInfo[]>(["contacts", userInfo?._id], (older: UserInfo[] | undefined) => {
+          if (!older) return [];
 
-        /** Update interaction time */
-        const updatedContacts = oldContacts.map((current) =>
-          current._id === data._id ? { ...current, interaction: data.interaction } : current
-        );
+          /** Update interaction time */
+          const updated = older.map((current) => {
+            return current._id === data._id ? { ...current, interaction: data.interaction } : current;
+          });
 
-        /** Sort by latest interaction */
-        return updatedContacts.sort((a, b) => new Date(b.interaction).getTime() - new Date(a.interaction).getTime());
-      });
+          /** Sort by latest interaction */
+          return updated.sort((a, b) => new Date(b.interaction).getTime() - new Date(a.interaction).getTime());
+        });
+      }
+
+      if (data.type === "group") {
+        queryClient.setQueryData<GroupInfo[]>(["groups", userInfo?._id], (older: GroupInfo[] | undefined) => {
+          if (!older) return [];
+
+          /** Update interaction time */
+          const updated = older.map((current) => {
+            return current._id === data._id ? { ...current, interaction: data.interaction } : current;
+          });
+
+          /** Sort by latest interaction */
+          return updated.sort((a, b) => new Date(b.interaction).getTime() - new Date(a.interaction).getTime());
+        });
+      }
 
       /** Update interacting contact if necessary */
       if (selectedChatData && selectedChatData._id === data._id) {
@@ -58,6 +89,8 @@ export const useContacts = () => {
 
   useEffect(() => {
     const handleMessagesContact = async (message: Message) => {
+      if (message.group) return;
+
       const chatKey = userInfo?._id === message.sender ? message.recipient : message.sender;
 
       /** Get the latest contacts from the cache */
@@ -97,5 +130,5 @@ export const useContacts = () => {
     };
   }, [socket, userInfo?._id, queryClient]);
 
-  return { contacts, fetching };
+  return { contacts, groups, fetching: ctsFetching || gpsFetching };
 };

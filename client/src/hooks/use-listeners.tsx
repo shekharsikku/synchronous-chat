@@ -2,7 +2,7 @@ import { useQueryClient, InfiniteData } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useSocket } from "@/lib/context";
 import { useContacts } from "@/hooks/use-contacts";
-import { useAuthStore, useChatStore, Message } from "@/zustand";
+import { useAuthStore, useChatStore, Message } from "@/lib/zustand";
 import notificationSound from "@/assets/sound/message-alert.mp3";
 import notificationIcon from "@/assets/favicon.ico";
 import api from "@/lib/api";
@@ -20,7 +20,14 @@ export const useListeners = () => {
     if (!socket) return;
 
     const handleMessageReceive = async (message: Message) => {
-      const chatKey = userInfo?._id === message.sender ? message.recipient : message.sender;
+      let chatKey: string | undefined = undefined;
+
+      if (message.group) {
+        chatKey = message.group;
+      } else {
+        chatKey = userInfo?._id === message.sender ? message.recipient : message.sender;
+      }
+
       const chatQueryKey = ["messages", userInfo?._id, chatKey];
 
       setListenerActive(true);
@@ -92,7 +99,14 @@ export const useListeners = () => {
     };
 
     const handleMessageUpdate = (message: Message) => {
-      const chatKey = userInfo?._id === message.sender ? message.recipient : message.sender;
+      let chatKey: string | undefined = undefined;
+
+      if (message.group) {
+        chatKey = message.group;
+      } else {
+        chatKey = userInfo?._id === message.sender ? message.recipient : message.sender;
+      }
+
       const chatQueryKey = ["messages", userInfo?._id, chatKey];
 
       queryClient.setQueryData<InfiniteData<Message[]>>(chatQueryKey, (existing) => {
