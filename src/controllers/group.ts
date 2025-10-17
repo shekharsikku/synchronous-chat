@@ -213,15 +213,16 @@ const groupMessage = async (req: Request<{ id: string }>, res: Response) => {
       members = await fetchMembers(group);
     }
 
-    const socketIds = members.flatMap((member) => getSocketId(member)) || [];
+    const socketIds = members.flatMap((member) => getSocketId(member)).filter(Boolean);
 
-    socketIds.forEach((sid) => {
-      io.to(sid).emit("message:receive", message);
-      io.to(socketIds).emit("conversation:updated", {
-        _id: group,
-        type: "group",
-        interaction: interaction,
-      });
+    /** for update new message */
+    io.to(socketIds).emit("message:receive", message);
+
+    /** for update last chat contact */
+    io.to(socketIds).emit("conversation:updated", {
+      _id: group,
+      type: "group",
+      interaction: interaction,
     });
 
     return SuccessResponse(res, 201, "Message sent successfully!", message);

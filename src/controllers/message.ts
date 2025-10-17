@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import type { MessageInterface } from "../interface/index.js";
 import type { Message as MessageType, Translate } from "../utils/schema.js";
 import { HttpError, SuccessResponse, ErrorResponse } from "../utils/index.js";
 import { getSocketId, io } from "../socket.js";
@@ -24,27 +25,16 @@ const sendMessage = async (req: Request<{ id: string }>, res: Response) => {
     });
 
     const interaction = new Date(Date.now());
-    const senderSocketId = getSocketId(sender.toString());
-    const receiverSocketId = getSocketId(receiver);
-
-    if (receiverSocketId.length > 0) {
-      /** for update new message */
-      io.to(receiverSocketId).emit("message:receive", message);
-
-      /** for update last chat contact */
-      io.to(receiverSocketId).emit("conversation:updated", {
-        _id: sender,
-        type: "contact",
-        interaction: interaction,
-      });
-    }
+    const socketIds = [message.sender, message.recipient!]
+      .flatMap((uid) => getSocketId(uid.toString()))
+      .filter(Boolean);
 
     /** for update new message */
-    io.to(senderSocketId).emit("message:receive", message);
+    io.to(socketIds).emit("message:receive", message);
 
     /** for update last chat contact */
-    io.to(senderSocketId).emit("conversation:updated", {
-      _id: receiver,
+    io.to(socketIds).emit("conversation:updated", {
+      _id: sender,
       type: "contact",
       interaction: interaction,
     });
@@ -143,20 +133,16 @@ const fetchMessages = async (req: Request<{ id: string }>, res: Response) => {
   }
 };
 
-const messageActionsEvents = async (message: any, event: string) => {
+const messageActionsEvents = async (message: MessageInterface, event: string) => {
   if (message.group) {
     const members = await fetchMembers(message.group.toString());
-    const socketIds = members.flatMap((member) => getSocketId(member)) || [];
-
-    socketIds.forEach((sid) => io.to(sid).emit(event, message));
+    const socketIds = members.flatMap((member) => getSocketId(member)).filter(Boolean);
+    io.to(socketIds).emit(event, message);
   } else {
-    const senderSocketId = getSocketId(message?.sender.toString());
-    const receiverSocketId = getSocketId(message?.recipient?.toString()!);
-
-    if (receiverSocketId.length > 0) {
-      io.to(receiverSocketId).emit(event, message);
-    }
-    io.to(senderSocketId).emit(event, message);
+    const socketIds = [message.sender, message.recipient!]
+      .flatMap((uid) => getSocketId(uid.toString()))
+      .filter(Boolean);
+    io.to(socketIds).emit(event, message);
   }
 };
 
@@ -173,7 +159,7 @@ const deleteMessage = async (req: Request<{ id: string }>, res: Response) => {
         $unset: { content: 1 },
       },
       { new: true }
-    ).lean({ transform: (doc) => nullToUndefined(doc) });
+    ).lean<MessageInterface>({ transform: (doc) => nullToUndefined(doc) });
 
     if (!message) {
       throw new HttpError(400, "You can't delete this message or message not found!");
@@ -204,7 +190,7 @@ const editMessage = async (req: Request<{ id: string }, {}, { text: string }>, r
         "content.text": text,
       },
       { new: true }
-    ).lean({ transform: (doc) => nullToUndefined(doc) });
+    ).lean<MessageInterface>({ transform: (doc) => nullToUndefined(doc) });
 
     if (!message) {
       throw new HttpError(400, "You can't edit this message or message not found!");
@@ -290,7 +276,11 @@ const reactMessage = async (req: Request<{ id: string }, {}, { by: string; emoji
         },
       ],
       { new: true }
-    ).lean({ transform: (doc) => nullToUndefined(doc) });
+    ).lean<MessageInterface>({ transform: (doc) => nullToUndefined(doc) });
+
+    if (!message) {
+      throw new HttpError(400, "Unable to react on this message or message not found!");
+    }
 
     await messageActionsEvents(message, "message:reacted");
 
