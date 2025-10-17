@@ -5,14 +5,17 @@ import { usePeer } from "@/lib/context";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import api from "@/lib/api";
+import Cookies from "js-cookie";
+
+const cookiesKey = import.meta.env.VITE_COOKIE_KEY;
 
 export const setAuthUser = (user: UserInfo) => {
   const data = encryptInfo(JSON.stringify(user), import.meta.env.VITE_ENCRYPTION);
-  localStorage.setItem("current", data);
+  Cookies.set(cookiesKey, data, { expires: 2, sameSite: "strict", secure: import.meta.env.PROD });
 };
 
 export const getAuthUser = (): UserInfo | null => {
-  const data = localStorage.getItem("current");
+  const data = Cookies.get(cookiesKey);
   if (data) {
     const user = decryptInfo(data, import.meta.env.VITE_ENCRYPTION);
     return JSON.parse(user);
@@ -21,7 +24,7 @@ export const getAuthUser = (): UserInfo | null => {
 };
 
 export const delAuthUser = () => {
-  localStorage.removeItem("current");
+  Cookies.remove(cookiesKey);
 };
 
 export const useAuthUser = () => {
