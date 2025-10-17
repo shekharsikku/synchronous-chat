@@ -59,50 +59,58 @@ const Profile = () => {
   const [openImageDeletionModal, setOpenImageDeletionModal] = useState(false);
   const [imageUpdateFormData, setImageUpdateFormData] = useState<any | null>(null);
 
-  const handleImageSelectClick = async (e: any) => {
-    e.preventDefault();
+  const handleImageSelectClick = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.preventDefault();
 
-    const maxSizeAllow = 5; // Size in MB
-    const maxBytesAllow = maxSizeAllow * 1024 * 1024;
-    const imageFile = e.target.files[0];
+    const inputTarget = event.target;
+    const imageFile = inputTarget.files?.[0];
+    const maxBytesAllow = 5 * 1024 * 1024; // Size in MB
 
-    if (imageFile) {
-      if (imageFile.size > maxBytesAllow) {
-        setSelectedImage("");
-        toast.info("File size exceeds the max limit!");
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("profile-image", imageFile);
-
-      const fileReader = new FileReader();
-
-      fileReader.onload = () => {
-        const file = fileReader.result as string;
-        setSelectedImage(file);
-      };
-
-      fileReader.readAsDataURL(imageFile);
-
-      if (formData) {
-        setOpenConfirmationModal(true);
-        setImageUpdateFormData(formData);
-      }
+    if (!imageFile) {
+      toast.error("Please, select image file to update!");
+      return;
     }
+
+    if (imageFile.size > maxBytesAllow) {
+      inputTarget.value = "";
+      setSelectedImage(userInfo?.image);
+      toast.info("File size exceeds the max limit!");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("profile-image", imageFile);
+
+    const fileReader = new FileReader();
+    fileReader.onload = () => setSelectedImage(fileReader.result as string);
+    fileReader.readAsDataURL(imageFile);
+
+    if (formData) {
+      setImageUpdateFormData(formData);
+      setOpenConfirmationModal(true);
+      inputTarget.value = "";
+    }
+  };
+
+  const syncUpdatedProfile = (result: any, event = true) => {
+    if (event) {
+      socket?.emit("before:profileupdate", { updatedDetails: result.data });
+    }
+
+    setAuthUser(result.data);
+    setUserInfo(result.data);
+    setSelectedImage(result.data?.image);
+
+    toast.success(result.message);
   };
 
   const updateProfileImage = async (formData: FormData) => {
     try {
       setIsLoading(true);
       const response = await api.patch("/api/user/update-profile-image", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      setAuthUser(response.data.data);
-      setUserInfo(response.data.data);
-      toast.success(response.data.message);
+      syncUpdatedProfile(response.data);
     } catch (error: any) {
       toast.error(error.response.data.message);
     } finally {
@@ -116,13 +124,10 @@ const Profile = () => {
     try {
       setIsLoading(true);
       const response = await api.delete("/api/user/delete-profile-image");
-      setAuthUser(response.data.data);
-      setUserInfo(response.data.data);
-      toast.success(response.data.message);
+      syncUpdatedProfile(response.data);
     } catch (error: any) {
       toast.error(error.response.data.message);
     } finally {
-      setSelectedImage(userInfo?.image);
       setOpenImageDeletionModal(false);
       setIsLoading(false);
     }
@@ -142,11 +147,9 @@ const Profile = () => {
     try {
       setIsLoading(true);
       const response = await api.patch("/api/user/change-password", values);
-      setAuthUser(response.data.data);
-      setUserInfo(response.data.data);
+      syncUpdatedProfile(response.data, false);
       setOpenPasswordDialog(false);
       changePasswordForm.reset();
-      toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
     } finally {
@@ -169,13 +172,8 @@ const Profile = () => {
     try {
       setIsLoading(true);
       const response = await api.patch("/api/user/user-profile-setup", values);
-      const result = await response.data.data;
-      setAuthUser(result);
-      setUserInfo(result);
-      profileUpdateForm.reset({ ...result });
-      toast.success(response.data.message);
-      /** Emitting event for update details to active clients of current user */
-      socket?.emit("before:profileupdate", { updatedDetails: result });
+      syncUpdatedProfile(response.data);
+      profileUpdateForm.reset({ ...response.data.data });
     } catch (error: any) {
       toast.error(error.response.data.message);
     } finally {
@@ -184,12 +182,21 @@ const Profile = () => {
   };
 
   useEffect(() => {
-    socket?.on("after:profileupdate", ({ updatedDetails }) => {
+    if (!socket) return;
+
+    const handleProfileUpdate = ({ updatedDetails }: any) => {
       setAuthUser(updatedDetails);
       setUserInfo(updatedDetails);
+      setSelectedImage(updatedDetails?.image);
       profileUpdateForm.reset({ ...updatedDetails });
-      toast.info("Your details has been updated!");
-    });
+      toast.info("Your details have been updated!");
+    };
+
+    socket.on("after:profileupdate", handleProfileUpdate);
+
+    return () => {
+      socket.off("after:profileupdate", handleProfileUpdate);
+    };
   }, [socket]);
 
   const fallbackAvatar = userInfo?.name || userInfo?.username || userInfo?.email;
@@ -209,7 +216,11 @@ const Profile = () => {
             <ContextMenu>
               <ContextMenuTrigger className="w-full h-full">
                 <Avatar className="h-full w-full rounded-full overflow-hidden">
-                  <AvatarImage src={selectedImage} alt="profile" className="object-cover size-full" />
+                  <AvatarImage
+                    src={selectedImage || userInfo?.image}
+                    alt="profile"
+                    className="object-cover size-full"
+                  />
                   <AvatarFallback
                     className={`uppercase size-full text-5xl border text-center font-bold transition-all hover:bg-black/90 bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb] dark:bg-transparent`}
                   >
