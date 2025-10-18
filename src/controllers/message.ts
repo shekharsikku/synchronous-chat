@@ -25,19 +25,26 @@ const sendMessage = async (req: Request<{ id: string }>, res: Response) => {
     });
 
     const interaction = new Date(Date.now());
-    const socketIds = [message.sender, message.recipient!]
-      .flatMap((uid) => getSocketId(uid.toString()))
-      .filter(Boolean);
+    const socketEventInfo = [
+      { userId: message.sender.toString(), targetId: message.recipient?.toString()! },
+      { userId: message.recipient?.toString()!, targetId: message.sender.toString() },
+    ];
 
-    /** for update new message */
-    io.to(socketIds).emit("message:receive", message);
+    for (const { userId, targetId } of socketEventInfo) {
+      const userSocketIds = getSocketId(userId);
 
-    /** for update last chat contact */
-    io.to(socketIds).emit("conversation:updated", {
-      _id: sender,
-      type: "contact",
-      interaction: interaction,
-    });
+      if (userSocketIds.length > 0) {
+        /** for update new message */
+        io.to(userSocketIds).emit("message:receive", message);
+
+        /** for update last chat contact */
+        io.to(userSocketIds).emit("conversation:updated", {
+          _id: targetId,
+          type: "contact",
+          interaction,
+        });
+      }
+    }
 
     let conversation = await Conversation.findOneAndUpdate(
       { participants: { $all: [sender, receiver] } },
