@@ -175,12 +175,10 @@ const MessageContainer = () => {
       setScrollButton(false);
       initialFetchRef.current = false;
 
-      const scrollTimer = setTimeout(() => {
+      setTimeout(() => {
         setScrollButton(true);
         initialFetchRef.current = true;
       }, 2000);
-
-      return () => clearTimeout(scrollTimer);
     }
 
     setMessages(messages);

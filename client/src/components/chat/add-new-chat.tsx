@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { HiOutlineUserPlus } from "react-icons/hi2";
 import { Input } from "@/components/ui/input";
@@ -6,12 +7,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ContactListSkeleton } from "@/components/chat/contact-list-skeleton";
-import { useChatStore, UserInfo } from "@/lib/zustand";
+import { useAuthStore, useChatStore, UserInfo } from "@/lib/zustand";
+import { useContacts } from "@/hooks/use-contacts";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useDebounce, useAvatar } from "@/lib/hooks";
 import api from "@/lib/api";
 
 const AddNewChat = () => {
+  const queryClient = useQueryClient();
+  const { contacts } = useContacts();
+  const { userInfo } = useAuthStore();
   const { setSelectedChatType, setSelectedChatData } = useChatStore();
   const [openNewChatModal, setOpenNewChatModal] = useState(false);
   const [searchedContacts, setSearchedContacts] = useState<UserInfo[]>([]);
@@ -23,11 +28,21 @@ const AddNewChat = () => {
   });
 
   const searchContacts = useDebounce(async (searchTerm: string) => {
-    if (searchTerm.length > 0) {
+    if (searchTerm.length > 3) {
       try {
         setIsFetching(true);
-        const response = await api.get(`api/contact/search?search=${searchTerm}`);
-        setSearchedContacts(response.data.data);
+
+        const newContact = await queryClient.fetchQuery({
+          queryKey: ["search", searchTerm],
+          queryFn: async () => {
+            const response = await api.get(`api/contact/search?search=${searchTerm}`);
+            return response.data.data;
+          },
+          staleTime: 60 * 60 * 1000, // Cache for 1 hour
+          gcTime: 2 * 60 * 60 * 1000,
+        });
+
+        setSearchedContacts(newContact);
       } catch (error: any) {
         setSearchedContacts([]);
       } finally {
@@ -36,11 +51,24 @@ const AddNewChat = () => {
     }
   }, 1500);
 
-  const selectNewContact = (contact: object) => {
+  const selectNewContact = (contact: UserInfo) => {
     setOpenNewChatModal(false);
     setSearchedContacts([]);
     setSelectedChatType("contact");
     setSelectedChatData(contact);
+
+    if (!contacts || contacts.some((obj) => obj._id === contact._id)) return;
+
+    const selected = { ...contact, interaction: new Date().toISOString() };
+
+    const cleaned = Object.fromEntries(
+      Object.entries(selected).filter(([key]) => !["setup", "createdAt", "updatedAt", "__v"].includes(key))
+    );
+
+    queryClient.setQueryData(["contacts", userInfo?._id], (older: UserInfo[] | undefined) => [
+      ...(older || []),
+      { ...cleaned },
+    ]);
   };
 
   return (

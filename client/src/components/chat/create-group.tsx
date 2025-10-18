@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { HiOutlineUsers } from "react-icons/hi2";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -55,7 +56,7 @@ const ContactItem: React.FC<ContactItemProps> = ({ id, name, avatar, selected, o
 const CreateGroup = () => {
   const queryClient = useQueryClient();
   const { userInfo } = useAuthStore();
-  const { contacts } = useContacts();
+  const { contacts, groups } = useContacts();
   const [isPending, setIsPending] = useState(false);
   const { groupDialog, setGroupDialog } = useChatStore();
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
@@ -71,6 +72,11 @@ const CreateGroup = () => {
   });
 
   const createGroupSubmit = async (values: z.infer<typeof createGroupSchema>) => {
+    if (groups?.some((group) => group.name === values.name && group.admin === userInfo?._id)) {
+      toast.info("You can't create groups with same name!");
+      return;
+    }
+
     try {
       setIsPending(true);
       const response = await api.post("api/group/create", values);
@@ -91,7 +97,7 @@ const CreateGroup = () => {
           createGroupForm.reset();
           setSelectedContacts([]);
           setGroupDialog(false);
-        }, 2000);
+        }, 50);
 
         toast.success(response.data.message);
       }
@@ -180,7 +186,7 @@ const CreateGroup = () => {
                   Cancel
                 </Button>
                 <Button type="submit" className="w-full outline-none" disabled={isPending || !selectedContacts.length}>
-                  Submit
+                  {isPending && <Spinner className="mr-2" />} Submit
                 </Button>
               </div>
             </form>
