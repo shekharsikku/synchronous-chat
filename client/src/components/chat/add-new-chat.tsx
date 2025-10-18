@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { HiOutlinePlus } from "react-icons/hi2";
+import { HiOutlineUserPlus } from "react-icons/hi2";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -48,7 +48,7 @@ const AddNewChat = () => {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger className="focus:outline-none">
-            <HiOutlinePlus onClick={() => setOpenNewChatModal(true)} size={18} className="tooltip-icon" />
+            <HiOutlineUserPlus onClick={() => setOpenNewChatModal(true)} size={18} className="tooltip-icon" />
           </TooltipTrigger>
           <TooltipContent>
             <span className="tooltip-span">New Chat</span>
@@ -80,17 +80,13 @@ const AddNewChat = () => {
                     {searchedContacts.map((contact) => (
                       <div
                         key={contact._id}
-                        className={`flex gap-4 border w-full p-2 lg:px-3 xl:px-6 rounded items-center hover:bg-gray-100/80  dark:hover:bg-gray-100/5 dark:hover:border-gray-700 transition-[transform,opacity,box-shadow] duration-0 hover:transition-colors hover:duration-300 cursor-pointer 
-                    ${contact.name === "" ? "disabled" : ""}`}
+                        className="flex gap-4 border w-full p-2 lg:px-3 xl:px-6 rounded items-center hover:bg-gray-100/80  dark:hover:bg-gray-100/5 dark:hover:border-gray-700 transition-[transform,opacity,box-shadow] duration-0 hover:transition-colors hover:duration-300 cursor-pointer"
                         onClick={() => selectNewContact(contact)}
                         role="button"
                       >
                         <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
                           <AvatarImage src={useAvatar(contact)} alt="profile" className="object-fit h-full w-full" />
-                          <AvatarFallback
-                            className={`uppercase h-full w-full text-xl border text-center font-medium 
-                      transition-all duration-300`}
-                          >
+                          <AvatarFallback className="uppercase h-full w-full text-xl border text-center font-medium transition-all duration-300">
                             {contact.username?.split("").shift() || contact.email?.split("").shift()}
                           </AvatarFallback>
                         </Avatar>

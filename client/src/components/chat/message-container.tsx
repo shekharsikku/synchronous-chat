@@ -163,16 +163,7 @@ const MessageContainer = () => {
       prevChatIdRef.current = selectedChatData?._id ?? null;
     }
 
-    if (messages && messages.length === prevMsgCountRef.current) {
-      setMessages(messages);
-      return;
-    }
-
-    if (messages && messages.length > prevMsgCountRef.current) {
-      setMessages(messages);
-      setMessageStats(messages, userInfo?._id!);
-    }
-
+    /** Scroll into view to the latest message */
     if (messages && messages.length > prevMsgCountRef.current && !scrollLockedRef.current) {
       requestAnimationFrame(() => {
         scrollSectionRef.current?.scrollTo({
@@ -184,12 +175,16 @@ const MessageContainer = () => {
       setScrollButton(false);
       initialFetchRef.current = false;
 
-      setTimeout(() => {
+      const scrollTimer = setTimeout(() => {
         setScrollButton(true);
         initialFetchRef.current = true;
       }, 2000);
+
+      return () => clearTimeout(scrollTimer);
     }
 
+    setMessages(messages);
+    setMessageStats(messages, userInfo?._id!);
     prevMsgCountRef.current = messages.length;
   }, [selectedChatData?._id, messages, listenerActive]);
 
