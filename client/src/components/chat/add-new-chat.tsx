@@ -55,7 +55,10 @@ const AddNewChat = () => {
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <DialogContent className="h-96 w-80 md:w-96 flex flex-col rounded-md select-none">
+      <DialogContent
+        onInteractOutside={(e) => e.preventDefault()}
+        className="h-96 w-80 md:w-96 flex flex-col rounded-md select-none"
+      >
         <DialogHeader>
           <DialogTitle className="text-start">New Chat</DialogTitle>
           <DialogDescription className="hidden"></DialogDescription>

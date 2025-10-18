@@ -120,6 +120,9 @@ export const useChatStore = create<{
   editDialog: boolean;
   setEditDialog: (editDialog: boolean) => void;
 
+  groupDialog: boolean;
+  setGroupDialog: (groupDialog: boolean) => void;
+
   messageForEdit: { id: string; text: string };
   setMessageForEdit: (id: string, text: string) => void;
 
@@ -165,6 +168,9 @@ export const useChatStore = create<{
 
   editDialog: false,
   setEditDialog: (editDialog: boolean) => set({ editDialog }),
+
+  groupDialog: false,
+  setGroupDialog: (groupDialog: boolean) => set({ groupDialog }),
 
   messageForEdit: { id: "", text: "" },
   setMessageForEdit: (id: string, text: string) => {

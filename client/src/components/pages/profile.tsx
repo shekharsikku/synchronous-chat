@@ -441,7 +441,10 @@ const Profile = () => {
 
       {/* Dialog for changing password */}
       <Dialog open={openPasswordDialog} onOpenChange={setOpenPasswordDialog}>
-        <DialogContent className="h-auto w-80 md:w-96 flex flex-col rounded-md items-start select-none">
+        <DialogContent
+          onInteractOutside={(e) => e.preventDefault()}
+          className="h-auto w-80 md:w-96 flex flex-col rounded-md items-start select-none"
+        >
           <DialogHeader>
             <DialogTitle className="text-start">Change Your Password </DialogTitle>
             <DialogDescription className="text-start dark:text-gray-300">

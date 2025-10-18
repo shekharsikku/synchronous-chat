@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useAuthStore, GroupInfo } from "@/lib/zustand";
+import { useAuthStore, useChatStore, GroupInfo } from "@/lib/zustand";
 import { useContacts } from "@/hooks/use-contacts";
 import { createGroupSchema } from "@/lib/schema";
 import { useAvatar } from "@/lib/hooks";
@@ -57,7 +57,7 @@ const CreateGroup = () => {
   const { userInfo } = useAuthStore();
   const { contacts } = useContacts();
   const [isPending, setIsPending] = useState(false);
-  const [openNewGroupModal, setOpenNewGroupModal] = useState(false);
+  const { groupDialog, setGroupDialog } = useChatStore();
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
 
   const createGroupForm = useForm<z.infer<typeof createGroupSchema>>({
@@ -90,7 +90,7 @@ const CreateGroup = () => {
         setTimeout(() => {
           createGroupForm.reset();
           setSelectedContacts([]);
-          setOpenNewGroupModal(false);
+          setGroupDialog(false);
         }, 2000);
 
         toast.success(response.data.message);
@@ -111,11 +111,11 @@ const CreateGroup = () => {
   }, [selectedContacts.length]);
 
   return (
-    <Dialog open={openNewGroupModal} onOpenChange={setOpenNewGroupModal}>
+    <Dialog open={groupDialog} onOpenChange={setGroupDialog}>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger className="focus:outline-none">
-            <HiOutlineUsers onClick={() => setOpenNewGroupModal(true)} size={18} className="tooltip-icon" />
+            <HiOutlineUsers onClick={() => setGroupDialog(true)} size={18} className="tooltip-icon" />
           </TooltipTrigger>
           <TooltipContent>
             <span className="tooltip-span">New Group</span>
@@ -123,7 +123,10 @@ const CreateGroup = () => {
         </Tooltip>
       </TooltipProvider>
 
-      <DialogContent className="flex flex-col rounded-md select-none">
+      <DialogContent
+        onInteractOutside={(e) => e.preventDefault()}
+        className="flex flex-col rounded-md select-none outline-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+      >
         <DialogHeader>
           <DialogTitle className="text-start">New Group</DialogTitle>
           <DialogDescription className="text-start">
@@ -171,7 +174,7 @@ const CreateGroup = () => {
                   onClick={() => {
                     createGroupForm.reset();
                     setSelectedContacts([]);
-                    setOpenNewGroupModal(false);
+                    setGroupDialog(false);
                   }}
                 >
                   Cancel
