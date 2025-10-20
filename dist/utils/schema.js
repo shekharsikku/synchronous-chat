@@ -1,24 +1,24 @@
-import { z } from "zod";
+import * as z from "zod";
 export const SignUpSchema = z.object({
-    email: z.string().email({ message: "Invalid email address!" }),
+    email: z.email({ error: "Invalid email address!" }),
     password: z
         .string()
-        .min(8, { message: "Password must be at least 8 characters long!" })
+        .min(8, { error: "Password must be at least 8 characters long!" })
         .regex(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/, {
-        message: "Password must have an uppercase, a lowercase letter, and a number!",
+        error: "Password must have an uppercase, a lowercase letter, and a number!",
     })
         .refine((val) => !/\s/.test(val), {
-        message: "Password cannot contain spaces!",
+        error: "Password cannot contain spaces!",
     }),
 });
 export const SignInSchema = z
     .object({
-    email: z.string().email().optional(),
+    email: z.email().optional(),
     username: z.string().optional(),
     password: z.string(),
 })
     .refine((data) => data.email || data.username, {
-    message: "Email or Username required!",
+    error: "Email or Username required!",
     path: ["email", "username"],
 });
 export const ProfileSchema = z.object({
@@ -28,7 +28,7 @@ export const ProfileSchema = z.object({
         .min(3)
         .max(15)
         .regex(/^[a-z0-9_-]{3,15}$/, {
-        message: "Only lowercase letters, numbers, hyphens, and underscores are allowed, with no spaces or special characters at the start/end!",
+        error: "Only lowercase letters, numbers, hyphens, and underscores are allowed, with no spaces or special characters at the start/end!",
     }),
     gender: z.enum(["Male", "Female", "Other"]),
     bio: z.string(),
@@ -37,12 +37,12 @@ export const PasswordSchema = z.object({
     old_password: z.string(),
     new_password: z
         .string()
-        .min(8, { message: "Password must be at least 8 characters long!" })
+        .min(8, { error: "Password must be at least 8 characters long!" })
         .regex(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/, {
-        message: "Password must have an uppercase, a lowercase letter, and a number!",
+        error: "Password must have an uppercase, a lowercase letter, and a number!",
     })
         .refine((val) => !/\s/.test(val), {
-        message: "Password cannot contain spaces!",
+        error: "Password cannot contain spaces!",
     }),
 });
 export const MessageSchema = z
@@ -71,4 +71,21 @@ export const MessageSchema = z
 export const TranslateSchema = z.object({
     message: z.string(),
     language: z.string(),
+});
+export const CreateGroupSchema = z.object({
+    name: z.string().min(3).max(30),
+    description: z.string().min(5).max(50),
+    admin: z.string(),
+    members: z
+        .array(z.string().min(1))
+        .min(1, { error: "Group must have at least one member!" })
+        .max(10, { error: "Group cannot have more than 10 members!" }),
+});
+export const UpdateDetailsSchema = z.object({
+    name: z.string().min(3).max(30).optional(),
+    description: z.string().min(5).max(50).optional(),
+});
+export const UpdateMembersSchema = z.object({
+    add: z.array(z.string().min(1)).default([]),
+    remove: z.array(z.string().min(1)).default([]),
 });

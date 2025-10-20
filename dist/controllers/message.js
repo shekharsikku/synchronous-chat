@@ -1,7 +1,8 @@
 import { HttpError, SuccessResponse, ErrorResponse } from "../utils/index.js";
 import { getSocketId, io } from "../socket.js";
 import { translate } from "bing-translate-api";
-import { Message, Conversation } from "../models/index.js";
+import { fetchMembers } from "./group.js";
+import { Message, Conversation, Group } from "../models/index.js";
 const sendMessage = async (req, res) => {
     try {
         const sender = req.user?._id;
@@ -18,26 +19,28 @@ const sendMessage = async (req, res) => {
             reply: reply || null,
         });
         const interaction = new Date(Date.now());
-        const senderSocketId = getSocketId(sender.toString());
-        const receiverSocketId = getSocketId(receiver);
-        if (receiverSocketId.length > 0) {
-            io.to(receiverSocketId).emit("message:receive", message);
-            io.to(receiverSocketId).emit("conversation:updated", {
-                _id: sender,
-                interaction: interaction,
-            });
+        const socketEventInfo = [
+            { userId: message.sender.toString(), targetId: message.recipient?.toString() },
+            { userId: message.recipient?.toString(), targetId: message.sender.toString() },
+        ];
+        for (const { userId, targetId } of socketEventInfo) {
+            const userSocketIds = getSocketId(userId);
+            if (userSocketIds.length > 0) {
+                io.to(userSocketIds).emit("message:receive", message);
+                io.to(userSocketIds).emit("conversation:updated", {
+                    _id: targetId,
+                    type: "contact",
+                    interaction,
+                });
+            }
         }
-        io.to(senderSocketId).emit("message:receive", message);
-        io.to(senderSocketId).emit("conversation:updated", {
-            _id: receiver,
-            interaction: interaction,
-        });
         let conversation = await Conversation.findOneAndUpdate({ participants: { $all: [sender, receiver] } }, {
             interaction: interaction,
         }, { new: true });
         if (!conversation) {
             conversation = await Conversation.create({
                 participants: [sender, receiver],
+                models: "User",
                 interaction: interaction,
             });
         }
@@ -47,19 +50,32 @@ const sendMessage = async (req, res) => {
         return ErrorResponse(res, error.code || 500, error.message || "Error while sending message!");
     }
 };
+const nullToUndefined = (obj) => {
+    for (const key in obj) {
+        if (obj[key] === null)
+            obj[key] = undefined;
+        else if (typeof obj[key] === "object" && obj[key] !== null)
+            nullToUndefined(obj[key]);
+    }
+    return obj;
+};
 const getMessages = async (req, res) => {
     try {
         const sender = req.user?._id;
-        const receiver = req.params.id;
-        const messages = await Message.find({
-            $or: [
-                { sender: sender, recipient: receiver },
-                { sender: receiver, recipient: sender },
-            ],
-        })
+        const target = req.params.id;
+        const isGroup = req.query.group === "true" || false;
+        const query = isGroup
+            ? { group: target }
+            : {
+                $or: [
+                    { sender: sender, recipient: target },
+                    { sender: target, recipient: sender },
+                ],
+            };
+        const messages = await Message.find(query)
             .sort({ createdAt: -1 })
-            .lean();
-        return SuccessResponse(res, 200, "Messages fetched successfully!", messages);
+            .lean({ transform: (doc) => nullToUndefined(doc) });
+        return SuccessResponse(res, 200, "Messages fetched successfully!", messages.reverse());
     }
     catch (error) {
         return ErrorResponse(res, error.code || 500, error.message || "Error while fetching messages!");
@@ -68,25 +84,46 @@ const getMessages = async (req, res) => {
 const fetchMessages = async (req, res) => {
     try {
         const sender = req.user?._id;
-        const receiver = req.params.id;
-        const { before, limit = 10 } = req.query;
-        const query = {
-            $or: [
-                { sender: sender, recipient: receiver },
-                { sender: receiver, recipient: sender },
-            ],
-        };
+        const target = req.params.id;
+        const { before, group, limit = 10 } = req.query;
+        let isGroup = group === "true" || false;
+        if (!before && !group) {
+            const exists = await Group.exists({ _id: target });
+            if (exists)
+                isGroup = true;
+        }
+        const query = isGroup
+            ? { group: target }
+            : {
+                $or: [
+                    { sender: sender, recipient: target },
+                    { sender: target, recipient: sender },
+                ],
+            };
         if (before) {
             query.createdAt = { $lt: new Date(before) };
         }
         const messages = await Message.find(query)
             .sort({ createdAt: -1 })
             .limit(limit)
-            .lean();
+            .lean({ transform: (doc) => nullToUndefined(doc) });
         return SuccessResponse(res, 200, "Messages fetched successfully!", messages.reverse());
     }
     catch (error) {
         return ErrorResponse(res, error.code || 500, error.message || "Error while fetching messages!");
+    }
+};
+const messageActionsEvents = async (message, event) => {
+    if (message.group) {
+        const members = await fetchMembers(message.group.toString());
+        const socketIds = members.flatMap((member) => getSocketId(member)).filter(Boolean);
+        io.to(socketIds).emit(event, message);
+    }
+    else {
+        const socketIds = [message.sender, message.recipient]
+            .flatMap((uid) => getSocketId(uid.toString()))
+            .filter(Boolean);
+        io.to(socketIds).emit(event, message);
     }
 };
 const deleteMessage = async (req, res) => {
@@ -97,16 +134,11 @@ const deleteMessage = async (req, res) => {
             type: "deleted",
             deletedAt: new Date(),
             $unset: { content: 1 },
-        }, { new: true });
+        }, { new: true }).lean({ transform: (doc) => nullToUndefined(doc) });
         if (!message) {
             throw new HttpError(400, "You can't delete this message or message not found!");
         }
-        const senderSocketId = getSocketId(message?.sender.toString());
-        const receiverSocketId = getSocketId(message?.recipient.toString());
-        if (receiverSocketId.length > 0) {
-            io.to(receiverSocketId).emit("message:remove", message);
-        }
-        io.to(senderSocketId).emit("message:remove", message);
+        await messageActionsEvents(message, "message:remove");
         return SuccessResponse(res, 200, "Message deleted successfully!", message);
     }
     catch (error) {
@@ -124,16 +156,11 @@ const editMessage = async (req, res) => {
         const message = await Message.findOneAndUpdate({ _id: mid, sender: uid, "content.type": "text" }, {
             type: "edited",
             "content.text": text,
-        }, { new: true });
+        }, { new: true }).lean({ transform: (doc) => nullToUndefined(doc) });
         if (!message) {
             throw new HttpError(400, "You can't edit this message or message not found!");
         }
-        const senderSocketId = getSocketId(message?.sender.toString());
-        const receiverSocketId = getSocketId(message?.recipient.toString());
-        if (receiverSocketId.length > 0) {
-            io.to(receiverSocketId).emit("message:edited", message);
-        }
-        io.to(senderSocketId).emit("message:edited", message);
+        await messageActionsEvents(message, "message:edited");
         return SuccessResponse(res, 200, "Message edited successfully!", message);
     }
     catch (error) {
@@ -202,13 +229,11 @@ const reactMessage = async (req, res) => {
                     },
                 },
             },
-        ], { new: true });
-        const senderSocketId = getSocketId(message?.sender.toString());
-        const receiverSocketId = getSocketId(message?.recipient.toString());
-        if (receiverSocketId.length > 0) {
-            io.to(receiverSocketId).emit("message:reacted", message);
+        ], { new: true }).lean({ transform: (doc) => nullToUndefined(doc) });
+        if (!message) {
+            throw new HttpError(400, "Unable to react on this message or message not found!");
         }
-        io.to(senderSocketId).emit("message:reacted", message);
+        await messageActionsEvents(message, "message:reacted");
         return SuccessResponse(res, 200, "Message reacted successfully!", message);
     }
     catch (error) {

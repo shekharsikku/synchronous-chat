@@ -8,7 +8,16 @@ const MessageSchema = new Schema({
     recipient: {
         type: Schema.Types.ObjectId,
         ref: "User",
-        required: true,
+        default: function () {
+            return this.group && undefined;
+        },
+    },
+    group: {
+        type: Schema.Types.ObjectId,
+        ref: "Group",
+        default: function () {
+            return this.recipient && undefined;
+        },
     },
     type: {
         type: String,
@@ -59,5 +68,13 @@ const MessageSchema = new Schema({
 }, {
     timestamps: true,
 });
+MessageSchema.pre("validate", function (next) {
+    if (!this.recipient && !this.group) {
+        return next(new Error("Either recipient or group must be provided!"));
+    }
+    next();
+});
+MessageSchema.index({ group: 1, createdAt: -1 });
+MessageSchema.index({ sender: 1, recipient: 1, createdAt: -1 });
 const Message = model("Message", MessageSchema);
 export default Message;

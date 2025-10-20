@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import { HttpError, ErrorResponse } from "../utils/index.js";
 import { generateSecret, generateAccess, generateRefresh, authorizeCookie, createUserInfo } from "../utils/helpers.js";
 import { User } from "../models/index.js";
@@ -107,6 +108,10 @@ const validate = (schema) => (req, res, next) => {
         next();
     }
     catch (error) {
+        if (error instanceof ZodError && error.name === "ZodError") {
+            const errors = JSON.parse(error.message);
+            return ErrorResponse(res, 400, "Validation error occurred!", errors);
+        }
         return ErrorResponse(res, 400, "Validation error occurred!", error);
     }
 };
