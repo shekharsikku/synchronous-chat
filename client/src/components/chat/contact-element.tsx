@@ -32,7 +32,7 @@ export const ContactElement = ({
           <AvatarFallback
             className={`uppercase h-full w-full text-xl border text-center font-medium transition-all duration-300`}
           >
-            {contact?.username?.split("").shift() || contact?.email?.split("").shift()}
+            {(contact?.name ?? contact?.username ?? contact?.email)?.charAt(0) ?? ""}
           </AvatarFallback>
         </Avatar>
         <div className="flex flex-col">
@@ -72,15 +72,13 @@ export const GroupElement = ({
           <AvatarFallback
             className={`uppercase h-full w-full text-xl border text-center font-medium transition-all duration-300`}
           >
-            {group.name?.split("").shift()}
+            {group.name?.charAt(0) ?? ""}
           </AvatarFallback>
         </Avatar>
         <div className="flex flex-col">
           <h5 className="heading-name">{group?.name}</h5>
           <h6 className="heading-uname">
-            {group?.members && group.members.length > 1
-              ? `You + ${group.members.length - 1} ${group.members.length - 1 === 1 ? "member" : "members"}`
-              : "Just you"}
+            {`${group?.members?.length ?? 0} ${group?.members?.length === 1 ? "member" : "members"}`}
           </h6>
         </div>
       </div>

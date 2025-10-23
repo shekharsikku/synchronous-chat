@@ -53,7 +53,7 @@ const ProfileInfo = () => {
                     className={`uppercase h-full w-full text-xl border text-center font-medium 
                       transition-all duration-300 bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]`}
                   >
-                    {userInfo?.username?.split("").shift() || userInfo?.email?.split("").shift()}
+                    {(userInfo?.name ?? userInfo?.username ?? userInfo?.email)?.charAt(0) ?? ""}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col text-left">

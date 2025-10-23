@@ -258,7 +258,7 @@ const RenderDMMessages = ({
       {translated !== "" && <span className="text-base mt-1">{translated}</span>}
       {/* If group message show sender name */}
       {selectedChatType === "group" && message.group && (
-        <span className="text-xs text-gray-300 mt-0.5">{`Sent by ${getSender(message.sender)}`}</span>
+        <span className="text-xs text-gray-700 dark:text-gray-300 mt-0.5">{`Sent by ${getSender(message.sender)}`}</span>
       )}
       {/* Message Timestamps */}
       <span className="text-xs text-gray-600 dark:text-gray-200 mt-0.5">{messageTimestamp(message)}</span>

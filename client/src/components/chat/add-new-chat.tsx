@@ -118,7 +118,7 @@ const AddNewChat = () => {
                         <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
                           <AvatarImage src={useAvatar(contact)} alt="profile" className="object-fit h-full w-full" />
                           <AvatarFallback className="uppercase h-full w-full text-xl border text-center font-medium transition-all duration-300">
-                            {contact.username?.split("").shift() || contact.email?.split("").shift()}
+                            {(contact?.name ?? contact?.username ?? contact?.email)?.charAt(0) ?? ""}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">

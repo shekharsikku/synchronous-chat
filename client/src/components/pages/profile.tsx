@@ -199,8 +199,6 @@ const Profile = () => {
     };
   }, [socket]);
 
-  const fallbackAvatar = userInfo?.name || userInfo?.username || userInfo?.email;
-
   return (
     <main className="h-screen w-screen grid place-content-center">
       <div className="shadow-2xl dark:shadow-neutral-950 rounded-md grid lg:grid-cols-2 transition-transform duration-300 h-max w-[90vw] sm:w-[70vw] md:w-[50vw] lg:w-[70vw] xl:w-[60vw] px-8 sm:px-12 py-16 lg:p-20 lg:gap-16">
@@ -224,7 +222,7 @@ const Profile = () => {
                   <AvatarFallback
                     className={`uppercase size-full text-5xl border text-center font-bold transition-all hover:bg-black/90 bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb] dark:bg-transparent`}
                   >
-                    {fallbackAvatar?.split("").shift()}
+                    {(userInfo?.name ?? userInfo?.username ?? userInfo?.email)?.charAt(0) ?? ""}
                   </AvatarFallback>
                 </Avatar>
               </ContextMenuTrigger>
