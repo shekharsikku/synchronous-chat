@@ -13,9 +13,7 @@ import { Fragment, useEffect, useState } from "react";
 import { useContacts } from "@/hooks/use-contacts";
 import { UserInfo, GroupInfo, useChatStore } from "@/lib/zustand";
 import { usePeer, useSocket } from "@/lib/context";
-import { useAvatar } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
-import groupAvatar from "@/assets/group-avatar.webp";
 
 const ContactsContainer = ({
   lastChatUser,
@@ -136,7 +134,6 @@ const ContactsContainer = ({
                             <ContactElement
                               contact={current}
                               selectedChatData={selectedChatData}
-                              useAvatar={useAvatar}
                               onlineUsers={onlineUsers}
                               onSelectContact={onSelectContact}
                             />
@@ -144,7 +141,6 @@ const ContactsContainer = ({
                             <GroupElement
                               group={current}
                               selectedChatData={selectedChatData}
-                              fallbackAvatar={groupAvatar}
                               onSelectGroup={onSelectGroup}
                             />
                           )}
@@ -165,7 +161,6 @@ const ContactsContainer = ({
                           <ContactElement
                             contact={contact}
                             selectedChatData={selectedChatData}
-                            useAvatar={useAvatar}
                             onlineUsers={onlineUsers}
                             onSelectContact={onSelectContact}
                           />
@@ -186,7 +181,6 @@ const ContactsContainer = ({
                           <GroupElement
                             group={group}
                             selectedChatData={selectedChatData}
-                            fallbackAvatar={groupAvatar}
                             onSelectGroup={onSelectGroup}
                           />
                         </Fragment>

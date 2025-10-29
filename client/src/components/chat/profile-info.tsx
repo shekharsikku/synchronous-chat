@@ -11,7 +11,6 @@ import { useAuthStore, useChatStore } from "@/lib/zustand";
 import { useAvatar } from "@/lib/hooks";
 import { useSignOut } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
 import { usePeer, useTheme } from "@/lib/context";
 import { toast } from "sonner";
 
@@ -21,15 +20,6 @@ const ProfileInfo = () => {
   const { handleSignOut } = useSignOut();
   const { theme, setTheme } = useTheme();
   const { isSoundAllow, setIsSoundAllow } = useChatStore();
-  const [avatar, setAvatar] = useState<any>(null);
-
-  useEffect(() => {
-    if (userInfo) {
-      const userAvatar = useAvatar(userInfo);
-      setAvatar(userAvatar);
-    }
-  }, [userInfo]);
-
   const { callingActive } = usePeer();
 
   const handleProfileNavigate = () => {
@@ -48,7 +38,7 @@ const ProfileInfo = () => {
             <TooltipTrigger className="focus:outline-none">
               <div className="flex gap-4 items-center" onClick={handleProfileNavigate} role="button">
                 <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
-                  <AvatarImage src={avatar} alt="profile" className="object-cover size-full" />
+                  <AvatarImage src={useAvatar(userInfo)} alt="profile" className="object-cover size-full" />
                   <AvatarFallback
                     className={`uppercase h-full w-full text-xl border text-center font-medium 
                       transition-all duration-300 bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]`}

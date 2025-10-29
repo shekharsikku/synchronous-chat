@@ -1,17 +1,17 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAvatar } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
+import groupAvatar from "@/assets/group-avatar.webp";
 
 export const ContactElement = ({
   contact,
   selectedChatData,
   onlineUsers,
-  useAvatar,
   onSelectContact,
 }: {
   contact: any;
   selectedChatData: any;
   onlineUsers: object;
-  useAvatar: (info: any) => any;
   onSelectContact: (contact: any) => void;
 }) => {
   return (
@@ -48,12 +48,10 @@ export const ContactElement = ({
 export const GroupElement = ({
   group,
   selectedChatData,
-  fallbackAvatar,
   onSelectGroup,
 }: {
   group: any;
   selectedChatData: any;
-  fallbackAvatar: string;
   onSelectGroup: (group: any) => void;
 }) => {
   return (
@@ -68,7 +66,7 @@ export const GroupElement = ({
     >
       <div className="flex items-center gap-4">
         <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
-          <AvatarImage src={group.avatar || fallbackAvatar} alt="profile" className="object-cover size-full" />
+          <AvatarImage src={group.avatar || groupAvatar} alt="profile" className="object-cover size-full" />
           <AvatarFallback
             className={`uppercase h-full w-full text-xl border text-center font-medium transition-all duration-300`}
           >
