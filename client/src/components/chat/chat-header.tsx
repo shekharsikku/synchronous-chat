@@ -23,13 +23,15 @@ import { cn, languageOptions } from "@/lib/utils";
 import { useSocket, usePeer } from "@/lib/context";
 import { useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
-import { useChatStore } from "@/zustand";
+import { useChatStore } from "@/lib/zustand";
 import { useAvatar } from "@/lib/hooks";
 import { toast } from "sonner";
 import moment from "moment";
+import groupAvatar from "@/assets/group-avatar.webp";
 
 const ChatHeader = () => {
-  const { selectedChatData, closeChat, isPartnerTyping, language, setLanguage, messageStats } = useChatStore();
+  const { selectedChatData, selectedChatType, closeChat, isPartnerTyping, language, setLanguage, messageStats } =
+    useChatStore();
   const [openUserInfoModal, setOpenUserInfoModal] = useState(false);
   const userAvatar = useAvatar(selectedChatData);
 
@@ -76,27 +78,47 @@ const ChatHeader = () => {
     <header className="h-bar border-b flex items-center justify-between p-2">
       <div className="h-full w-full rounded flex items-center justify-between px-4 bg-gray-100/80 dark:bg-transparent">
         <div className="flex gap-4 items-center justify-center">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger className="focus:outline-none">
-                <Avatar
-                  className="size-8 rounded-full overflow-hidden cursor-pointer border-2"
-                  onClick={() => setOpenUserInfoModal(true)}
-                >
-                  <AvatarImage src={userAvatar} alt="profile" className="object-cover size-full" />
-                  <AvatarFallback
-                    className={`uppercase h-full w-full text-xl border text-center font-medium 
-                      transition-all duration-300 bg-[#06d6a02a] text-[#06d6a0] border-[#06d6a0bb`}
+          {selectedChatType === "group" && (
+            <Avatar className="size-9 rounded-full overflow-hidden cursor-pointer border-2">
+              <AvatarImage
+                src={selectedChatData.avatar || groupAvatar}
+                alt="avatar"
+                className="object-cover size-full"
+              />
+              <AvatarFallback
+                className={`uppercase h-full w-full text-xl border text-center font-medium 
+                transition-all duration-300 bg-[#06d6a02a] text-[#06d6a0] border-[#06d6a0bb`}
+              >
+                {selectedChatData?.name.charAt(0) ?? ""}
+              </AvatarFallback>
+            </Avatar>
+          )}
+
+          {selectedChatType === "contact" && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="focus:outline-none">
+                  <Avatar
+                    className="size-9 rounded-full overflow-hidden cursor-pointer border-2"
+                    onClick={() => setOpenUserInfoModal(true)}
                   >
-                    {selectedChatData?.username?.split("").shift() || selectedChatData?.email?.split("").shift()}
-                  </AvatarFallback>
-                </Avatar>
-              </TooltipTrigger>
-              <TooltipContent>
-                <span className="tooltip-span">Info</span>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+                    <AvatarImage src={userAvatar} alt="profile" className="object-cover size-full" />
+                    <AvatarFallback
+                      className={`uppercase h-full w-full text-xl border text-center font-medium 
+                      transition-all duration-300 bg-[#06d6a02a] text-[#06d6a0] border-[#06d6a0bb`}
+                    >
+                      {(selectedChatData?.name || selectedChatData?.username || selectedChatData?.email).charAt(0) ??
+                        ""}
+                    </AvatarFallback>
+                  </Avatar>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span className="tooltip-span">Info</span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
           {/* Dialog for show user information */}
           <Dialog open={openUserInfoModal} onOpenChange={setOpenUserInfoModal}>
             <DialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl p-8 select-none">
@@ -107,20 +129,20 @@ const ChatHeader = () => {
               {/* Profile Image */}
               <div className="flex justify-center">
                 <img
-                  className="w-24 h-24 lg:w-32 lg:h-32 rounded-full border-4 border-white 
+                  className="size-24 lg:size-32 rounded-full border-4 border-white 
                   object-cover shadow-lg -mt-20 lg:-mt-24 transition-all"
                   src={userAvatar}
                   alt="User profile"
                 />
               </div>
               {/* User Info */}
-              <div className="text-center mt-6">
+              <div className="text-center pt-4">
                 <h2 className="text-2xl font-bold">{selectedChatData?.name}</h2>
                 <p className="text-gray-500 dark:text-gray-100">{selectedChatData?.username}</p>
                 <p className="mt-2 text-gray-600 dark:text-gray-200 text-sm">{selectedChatData?.bio}</p>
               </div>
               {/* User Stats */}
-              <div className="flex flex-col justify-around text-sm mt-4 border-t border-gray-200 pt-4">
+              <div className="flex flex-col justify-around text-sm border-t border-gray-200 pt-4">
                 <p className="text-center text-xl mb-4 font-semibold">Message Stats</p>
                 <div className="flex justify-evenly">
                   <div className="text-center">
@@ -134,40 +156,49 @@ const ChatHeader = () => {
                 </div>
               </div>
               {/* Last Message Time */}
-              <p className="text-center text-sm mt-4 text-gray-500 dark:text-gray-100">
-                {moment(selectedChatData?.interaction).format("MMMM Do YYYY, h:mm:ss A")}
+              <p className="text-center text-sm tracking-wider text-gray-500 dark:text-gray-100">
+                {moment(selectedChatData?.interaction).format("MMM Do YYYY | h:mm:ss A")}
               </p>
             </DialogContent>
           </Dialog>
+
           {/* Username and Typing Indicator */}
           <div className="flex flex-col">
             <h3 className="font-semibold">
               {selectedChatData?.name || selectedChatData?.username || selectedChatData?.email}
             </h3>
-            {isCurrentlyOnline ? (
-              <p className="text-xs">
-                {isPartnerTyping ? (
-                  <>
-                    <span>typing</span>
-                    <span className="typing">.</span>
-                    <span className="typing">.</span>
-                    <span className="typing">.</span>
-                  </>
-                ) : (
-                  <span>online</span>
-                )}
-              </p>
-            ) : (
-              <p className="text-xs">
-                <span>offline</span>
-              </p>
-            )}
+            <p className="text-xs">
+              {selectedChatType === "contact" ? (
+                <>
+                  {isCurrentlyOnline ? (
+                    <>
+                      {isPartnerTyping ? (
+                        <>
+                          <span>typing</span>
+                          <span className="typing">.</span>
+                          <span className="typing">.</span>
+                          <span className="typing">.</span>
+                        </>
+                      ) : (
+                        <span>online</span>
+                      )}
+                    </>
+                  ) : (
+                    <span>offline</span>
+                  )}
+                </>
+              ) : (
+                <span>
+                  {`${selectedChatData?.members?.length ?? 0} ${selectedChatData?.members?.length === 1 ? "member" : "members"}`}
+                </span>
+              )}
+            </p>
           </div>
         </div>
 
         <div className="flex items-center justify-center gap-4">
-          {/* Voice Stream */}
-          {isCurrentlyOnline && (
+          {/* Voice & Video Stream Info */}
+          {selectedChatType === "contact" && isCurrentlyOnline && (
             <>
               {callingActive && callingInfo?.uid === selectedChatData?._id ? (
                 <TooltipProvider>
