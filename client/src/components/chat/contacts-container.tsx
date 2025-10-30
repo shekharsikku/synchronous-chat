@@ -100,7 +100,7 @@ const ContactsContainer = ({
             defaultValue="all"
             value={currentTab}
             onValueChange={(value) => setCurrentTab(value)}
-            className="w-full h-full overflow-hidden"
+            className="w-full h-full overflow-hidden pb-14"
           >
             <TabsList className="bg-transparent rounded-none w-full flex gap-4 mb-4 p-0">
               {["All", "Chats", "Groups"].map((current) => (
@@ -121,7 +121,7 @@ const ContactsContainer = ({
                 <ContactListSkeleton animate="pulse" count={10} />
               </div>
             ) : (
-              <ScrollArea className="h-full overflow-y-auto scrollbar-hide">
+              <ScrollArea className="h-full overflow-y-scroll scrollbar-hide py-0.5">
                 {/* For all Contact & Groups */}
                 <TabsContent value="all" className="mt-0">
                   {allChats.length <= 0 ? (

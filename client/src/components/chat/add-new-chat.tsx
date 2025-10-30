@@ -107,7 +107,7 @@ const AddNewChat = () => {
                 <span className="text-gray-700 dark:text-gray-200 text-center my-auto">No any user available!</span>
               ) : (
                 <ScrollArea className="h-60 overflow-y-auto scrollbar-hide">
-                  <div className="flex flex-col gap-4 py-[2px]">
+                  <div className="flex flex-col gap-4 py-0.5">
                     {searchedContacts.map((contact) => (
                       <div
                         key={contact._id}
