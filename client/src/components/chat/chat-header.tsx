@@ -125,7 +125,9 @@ const ChatHeader = () => {
                   </div>
                   <div className="w-2/3 flex flex-col justify-center gap-1.5">
                     <h3 className="text-lg md:text-xl font-bold">{selectedChatData.name}</h3>
-                    <p className="text-xs md:text-sm">{selectedChatData.description}</p>
+                    <p className="text-xs md:text-sm max-w-48 md:max-w-56 text-ellipsis break-words line-clamp-2">
+                      {selectedChatData.description}
+                    </p>
                   </div>
                 </div>
 
