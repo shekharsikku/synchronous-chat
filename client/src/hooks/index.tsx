@@ -1,10 +1,12 @@
-import { useEffect, useCallback, useRef, useState, RefObject, SetStateAction, Dispatch } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 import { toast } from "sonner";
 
 import api from "@/lib/api";
 import { decryptMessage } from "@/lib/noble";
-import { useAuthStore, useChatStore, Message } from "@/lib/zustand";
+import { useAuthStore, useChatStore, type Message } from "@/lib/zustand";
+
+import type { RefObject, SetStateAction, Dispatch } from "react";
 
 export const useDebounce = (callback: Function, delay: number) => {
   const callbackRef = useCallback(callback, [callback]);

@@ -24,7 +24,7 @@ export default defineConfig([
         ecmaVersion: "latest",
         sourceType: "module",
         ecmaFeatures: { jsx: true },
-        project: true,
+        project: ["./tsconfig.app.json"],
       },
       globals: {
         React: "writable",

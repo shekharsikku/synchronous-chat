@@ -1,10 +1,10 @@
-import Peer, { MediaConnection } from "peerjs";
-import { useEffect, useState, useRef, useId, ReactNode, useEffectEvent } from "react";
+import Peer, { type MediaConnection } from "peerjs";
+import { useEffect, useState, useRef, useId, useEffectEvent, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { PeerShare } from "@/components/chat";
-import { useSocket, PeerContext, PeerInformation, ResponseActions } from "@/lib/context";
+import { useSocket, PeerContext, type PeerInformation, type ResponseActions } from "@/lib/context";
 import { useAuthStore } from "@/lib/zustand";
 
 const PeerProvider = ({ children }: { children: ReactNode }) => {

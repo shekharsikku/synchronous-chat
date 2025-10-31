@@ -1,4 +1,4 @@
-import { useQueryClient, InfiniteData } from "@tanstack/react-query";
+import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { useEffect, useRef, useEffectEvent } from "react";
 
 import notificationIcon from "@/assets/favicon.ico";
@@ -6,7 +6,7 @@ import notificationSound from "@/assets/sound/message-alert.mp3";
 import { useContacts } from "@/hooks";
 import api from "@/lib/api";
 import { useSocket } from "@/lib/context";
-import { useAuthStore, useChatStore, Message } from "@/lib/zustand";
+import { useAuthStore, useChatStore, type Message } from "@/lib/zustand";
 
 export const useListeners = () => {
   const queryClient = useQueryClient();

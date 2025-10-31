@@ -1,4 +1,4 @@
-import { DataConnection } from "peerjs";
+import { type DataConnection } from "peerjs";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { HiOutlineInformationCircle, HiOutlineDocumentText, HiOutlineXMark } from "react-icons/hi2";

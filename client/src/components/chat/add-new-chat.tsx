@@ -12,7 +12,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/comp
 import { useDebounce, useContacts } from "@/hooks";
 import api from "@/lib/api";
 import { getAvatar } from "@/lib/utils";
-import { useAuthStore, useChatStore, UserInfo } from "@/lib/zustand";
+import { useAuthStore, useChatStore, type UserInfo } from "@/lib/zustand";
 
 const AddNewChat = () => {
   const queryClient = useQueryClient();

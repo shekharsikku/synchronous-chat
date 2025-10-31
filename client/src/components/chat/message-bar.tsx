@@ -1,5 +1,4 @@
-import { EmojiClickData, type Theme } from "emoji-picker-react";
-import React, { useState, useEffect, useRef, ChangeEvent, KeyboardEventHandler } from "react";
+import React, { useState, useEffect, useRef, type ChangeEvent, type KeyboardEventHandler } from "react";
 import { isDesktop, isMobile } from "react-device-detect";
 import {
   HiOutlineFaceSmile,
@@ -17,7 +16,9 @@ import api from "@/lib/api";
 import { useSocket, useTheme } from "@/lib/context";
 import { encryptMessage } from "@/lib/noble";
 import { convertToBase64 } from "@/lib/utils";
-import { useChatStore, useAuthStore, MessageData } from "@/lib/zustand";
+import { useChatStore, useAuthStore, type MessageData } from "@/lib/zustand";
+
+import type { EmojiClickData, Theme } from "emoji-picker-react";
 
 const EmojiPicker = React.lazy(() => import("emoji-picker-react"));
 

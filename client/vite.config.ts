@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import { config } from "dotenv";
 import { resolve } from "path";
 import { visualizer } from "rollup-plugin-visualizer";
-import react from "@vitejs/plugin-react";
+import react from "@vitejs/plugin-react-swc";
 
 config();
 

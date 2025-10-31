@@ -3,7 +3,9 @@ import { useEffect, useEffectEvent } from "react";
 
 import api from "@/lib/api";
 import { useSocket } from "@/lib/context";
-import { useChatStore, useAuthStore, UserInfo, Message, GroupInfo } from "@/lib/zustand";
+import { useChatStore, useAuthStore } from "@/lib/zustand";
+
+import type { UserInfo, Message, GroupInfo } from "@/lib/zustand";
 
 const fetchContacts = async (): Promise<UserInfo[]> => {
   const response = await api.get("/api/contact/fetch");

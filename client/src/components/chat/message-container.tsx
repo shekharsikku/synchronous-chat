@@ -1,5 +1,5 @@
 import moment from "moment";
-import React, { useEffect, useRef, useState, RefObject, useEffectEvent } from "react";
+import React, { useEffect, useRef, useState, useEffectEvent, type RefObject } from "react";
 import { HiOutlineArrowSmallDown } from "react-icons/hi2";
 import { useInView } from "react-intersection-observer";
 
@@ -8,7 +8,7 @@ import { RenderDMMessages } from "@/components/chat/render-dm-messages";
 import { Button } from "@/components/ui/button";
 import { useMessages, useContacts } from "@/hooks";
 import { mergeRefs } from "@/lib/utils";
-import { Message, useChatStore, useAuthStore } from "@/lib/zustand";
+import { type Message, useChatStore, useAuthStore } from "@/lib/zustand";
 
 const RenderMessages = React.memo(
   ({

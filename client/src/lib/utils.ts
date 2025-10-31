@@ -6,7 +6,7 @@ import { twMerge } from "tailwind-merge";
 import femaleAvatar from "@/assets/female-avatar.webp";
 import maleAvatar from "@/assets/male-avatar.webp";
 import noAvatar from "@/assets/no-avatar.webp";
-import { Message } from "@/lib/zustand";
+import { type Message } from "@/lib/zustand";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import api from "@/lib/api";
 import { usePeer } from "@/lib/context";
 import { encryptInfo, decryptInfo } from "@/lib/noble";
-import { useAuthStore, useChatStore, UserInfo } from "@/lib/zustand";
+import { useAuthStore, useChatStore, type UserInfo } from "@/lib/zustand";
 
 const cookiesKey = import.meta.env.VITE_COOKIE_KEY;
 

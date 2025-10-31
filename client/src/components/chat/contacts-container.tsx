@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useContacts } from "@/hooks";
 import { usePeer, useSocket } from "@/lib/context";
 import { cn } from "@/lib/utils";
-import { UserInfo, GroupInfo, useChatStore } from "@/lib/zustand";
+import { type UserInfo, type GroupInfo, useChatStore } from "@/lib/zustand";
 
 const ContactsContainer = ({
   lastChatUser,

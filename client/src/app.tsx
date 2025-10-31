@@ -1,4 +1,4 @@
-import { useEffect, ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Navigate, Route, Routes } from "react-router-dom";
 

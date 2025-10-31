@@ -1,6 +1,8 @@
 import Peer from "peerjs";
-import { createContext, useContext, Dispatch, SetStateAction, RefObject } from "react";
+import { createContext, useContext } from "react";
 import { Socket } from "socket.io-client";
+
+import type { Dispatch, SetStateAction, RefObject } from "react";
 
 export interface SocketInterface {
   socket: Socket | null;

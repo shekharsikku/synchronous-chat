@@ -18,7 +18,7 @@ import { useContacts } from "@/hooks";
 import api from "@/lib/api";
 import { createGroupSchema } from "@/lib/schema";
 import { cn, getAvatar } from "@/lib/utils";
-import { useAuthStore, useChatStore, GroupInfo } from "@/lib/zustand";
+import { useAuthStore, useChatStore, type GroupInfo } from "@/lib/zustand";
 
 interface ContactItemProps {
   id: string;
