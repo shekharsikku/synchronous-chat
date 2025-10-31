@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
 import { HiLanguage, HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
+import { Link } from "react-router-dom";
 
 const EmptyChatContainer = () => {
   return (

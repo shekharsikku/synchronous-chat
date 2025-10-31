@@ -1,19 +1,20 @@
-import * as z from "zod";
-import { toast } from "sonner";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate, Link } from "react-router-dom";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
-import { validateEmail, validateDummyEmail } from "@/lib/utils";
-import { signUpSchema, signInSchema } from "@/lib/schema";
-import { useAuthStore } from "@/lib/zustand";
-import { setAuthUser } from "@/lib/auth";
+import { useNavigate, Link } from "react-router-dom";
+import { toast } from "sonner";
+import * as z from "zod";
+
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import api from "@/lib/api";
+import { setAuthUser } from "@/lib/auth";
+import { signUpSchema, signInSchema } from "@/lib/schema";
+import { validateEmail, validateDummyEmail } from "@/lib/utils";
+import { useAuthStore } from "@/lib/zustand";
 
 interface SignInInterface {
   email?: string;

@@ -1,3 +1,5 @@
+import { useRef, useState } from "react";
+import { isDesktop } from "react-device-detect";
 import {
   HiOutlineLanguage,
   HiOutlineNoSymbol,
@@ -12,17 +14,15 @@ import {
   HiMiniArrowUturnLeft,
 } from "react-icons/hi2";
 import { LuReply } from "react-icons/lu";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { EditMessage } from "@/components/chat/edit-message";
-import { useChatStore, useAuthStore, Message } from "@/lib/zustand";
-import { useDisableAnimations, useLastMinutes, usePlainText, useReplyMessage, useMessageActions } from "@/lib/hooks";
-import { useSocket } from "@/lib/context";
-import { isDesktop } from "react-device-detect";
-import { useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
+
+import { EditMessage } from "@/components/chat/edit-message";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useDisableAnimations, useLastMinutes, usePlainText, useReplyMessage, useMessageActions } from "@/hooks";
+import { useSocket } from "@/lib/context";
 import {
   cn,
   mergeRefs,
@@ -32,6 +32,7 @@ import {
   handleDownload,
   copyToClipboard,
 } from "@/lib/utils";
+import { useChatStore, useAuthStore, Message } from "@/lib/zustand";
 
 const RenderDMMessages = ({
   message,

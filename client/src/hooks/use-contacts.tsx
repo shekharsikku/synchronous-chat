@@ -1,8 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useChatStore, useAuthStore, UserInfo, Message, GroupInfo } from "@/lib/zustand";
-import { useSocket } from "@/lib/context";
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
+
 import api from "@/lib/api";
+import { useSocket } from "@/lib/context";
+import { useChatStore, useAuthStore, UserInfo, Message, GroupInfo } from "@/lib/zustand";
 
 const fetchContacts = async (): Promise<UserInfo[]> => {
   const response = await api.get("/api/contact/fetch");
@@ -40,6 +41,15 @@ export const useContacts = () => {
     ...COMMON_QUERY_OPTIONS,
   });
 
+  const updateChatInteraction = useEffectEvent((data: any) => {
+    if (selectedChatData && selectedChatData._id === data._id) {
+      setSelectedChatData({
+        ...selectedChatData,
+        interaction: data.interaction,
+      });
+    }
+  });
+
   /** Update contact interaction (socket event) */
   useEffect(() => {
     const handleConversationUpdate = (data: any) => {
@@ -72,12 +82,7 @@ export const useContacts = () => {
       }
 
       /** Update interacting contact if necessary */
-      if (selectedChatData && selectedChatData._id === data._id) {
-        setSelectedChatData({
-          ...selectedChatData,
-          interaction: data.interaction,
-        });
-      }
+      updateChatInteraction(data);
     };
 
     socket?.on("conversation:updated", handleConversationUpdate);

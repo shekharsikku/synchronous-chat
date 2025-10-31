@@ -1,8 +1,12 @@
 import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-import { Message } from "@/lib/zustand";
-import { toast } from "sonner";
 import moment from "moment";
+import { toast } from "sonner";
+import { twMerge } from "tailwind-merge";
+
+import femaleAvatar from "@/assets/female-avatar.webp";
+import maleAvatar from "@/assets/male-avatar.webp";
+import noAvatar from "@/assets/no-avatar.webp";
+import { Message } from "@/lib/zustand";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -221,7 +225,7 @@ export const copyToClipboard = (text: string) => {
   try {
     void navigator.clipboard.writeText(text);
     toast.info("Message copied to clipboard!");
-  } catch (error) {
+  } catch (_error) {
     toast.error("Failed to copy message!");
   }
 };
@@ -253,6 +257,15 @@ export const formatTimer = (time: number) => {
   } else {
     return `${formattedMinutes}:${formattedSeconds}`;
   }
+};
+
+export const getAvatar = (userInfo: any) => {
+  if (userInfo?.image) return userInfo.image;
+
+  if (userInfo?.gender === "Male") return maleAvatar;
+  if (userInfo?.gender === "Female") return femaleAvatar;
+
+  return noAvatar;
 };
 
 /*

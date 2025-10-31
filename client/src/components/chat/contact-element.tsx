@@ -1,7 +1,6 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAvatar } from "@/lib/hooks";
-import { cn } from "@/lib/utils";
 import groupAvatar from "@/assets/group-avatar.webp";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn, getAvatar } from "@/lib/utils";
 
 export const ContactElement = ({
   contact,
@@ -28,7 +27,7 @@ export const ContactElement = ({
     >
       <div className="flex items-center gap-4">
         <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
-          <AvatarImage src={useAvatar(contact)} alt="profile" className="object-cover size-full" />
+          <AvatarImage src={getAvatar(contact)} alt="profile" className="object-cover size-full" />
           <AvatarFallback
             className={`uppercase h-full w-full text-xl border text-center font-medium transition-all duration-300`}
           >

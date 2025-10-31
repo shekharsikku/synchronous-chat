@@ -1,14 +1,14 @@
-import React, { useEffect, useRef, useState, RefObject } from "react";
-import { useInView } from "react-intersection-observer";
-import { HiOutlineArrowSmallDown } from "react-icons/hi2";
-import { Message, useChatStore, useAuthStore } from "@/lib/zustand";
-import { mergeRefs } from "@/lib/utils";
-import { useMessages } from "@/hooks/use-messages";
-import { useContacts } from "@/hooks/use-contacts";
-import { Button } from "@/components/ui/button";
-import { RenderDMMessages } from "@/components/chat/render-dm-messages";
-import { MessageSkeleton } from "@/components/chat/message-skeleton";
 import moment from "moment";
+import React, { useEffect, useRef, useState, RefObject, useEffectEvent } from "react";
+import { HiOutlineArrowSmallDown } from "react-icons/hi2";
+import { useInView } from "react-intersection-observer";
+
+import { MessageSkeleton } from "@/components/chat/message-skeleton";
+import { RenderDMMessages } from "@/components/chat/render-dm-messages";
+import { Button } from "@/components/ui/button";
+import { useMessages, useContacts } from "@/hooks";
+import { mergeRefs } from "@/lib/utils";
+import { Message, useChatStore, useAuthStore } from "@/lib/zustand";
 
 const RenderMessages = React.memo(
   ({
@@ -66,7 +66,7 @@ const MessageContainer = () => {
   const { contacts } = useContacts();
 
   const { data, isPending, hasNextPage, isFetchingNextPage, fetchNextPage } = useMessages();
-  const { selectedChatData, setMessages, replyTo, listenerActive, setMessageStats } = useChatStore();
+  const { selectedChatData, setMessages, replyTo, setMessageStats } = useChatStore();
 
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const scrollSectionRef = useRef<HTMLDivElement>(null);
@@ -85,9 +85,9 @@ const MessageContainer = () => {
     delay: 200,
   });
 
-  const scrollBottom = (smooth = true) => {
+  const scrollBottom = () => {
     lastMessageRef.current?.scrollIntoView({
-      behavior: smooth ? "smooth" : "instant",
+      behavior: "smooth",
       block: "end",
     });
   };
@@ -96,8 +96,8 @@ const MessageContainer = () => {
   const messages: Message[] = React.useMemo(() => {
     if (!data?.pages) return [];
 
-    const depth = data.pageParams.length;
-    const flattened = [...data.pages].reverse().flat(depth);
+    /** Create a flattened array with pages of message */
+    const flattened = [...data.pages].reverse().flat();
 
     /* Optional: dedupe by _id while preserving order */
     const seen = new Set<string>();
@@ -157,6 +157,11 @@ const MessageContainer = () => {
   }, [isPending]);
 
   /** Reset when chat changes */
+  const updateMessageStats = useEffectEvent(() => {
+    setMessages(messages);
+    setMessageStats(messages, userInfo?._id!);
+  });
+
   useEffect(() => {
     if (selectedChatData?._id !== prevChatIdRef.current) {
       prevMsgCountRef.current = 0;
@@ -168,7 +173,7 @@ const MessageContainer = () => {
       requestAnimationFrame(() => {
         scrollSectionRef.current?.scrollTo({
           top: scrollSectionRef.current.scrollHeight,
-          behavior: listenerActive ? "smooth" : "instant",
+          behavior: "instant",
         });
       });
 
@@ -181,10 +186,9 @@ const MessageContainer = () => {
       }, 2000);
     }
 
-    setMessages(messages);
-    setMessageStats(messages, userInfo?._id!);
+    updateMessageStats();
     prevMsgCountRef.current = messages.length;
-  }, [selectedChatData?._id, messages, listenerActive]);
+  }, [selectedChatData?._id, messages]);
 
   /** Handle scroll fetching */
   useEffect(() => {

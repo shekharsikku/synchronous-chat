@@ -1,8 +1,9 @@
-import { useEffect, useState, ReactNode } from "react";
-import { useAuthStore } from "@/lib/zustand";
-import { SocketContext } from "@/lib/context";
+import { useEffectEvent, useEffect, useState, ReactNode } from "react";
 import io, { Socket } from "socket.io-client";
 import { toast } from "sonner";
+
+import { SocketContext } from "@/lib/context";
+import { useAuthStore } from "@/lib/zustand";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL;
 const secretKey = import.meta.env.VITE_SECRET_KEY;
@@ -13,6 +14,11 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState({});
+
+  const handleSocketClose = useEffectEvent(() => {
+    socket?.close();
+    setSocket(null);
+  });
 
   useEffect(() => {
     if (userInfo?.setup) {
@@ -50,10 +56,9 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
         socket?.close();
       };
     } else {
-      socket?.close();
-      setSocket(null);
+      handleSocketClose();
     }
-  }, [userInfo?._id]);
+  }, [userInfo?._id, userInfo?.setup]);
 
   return <SocketContext.Provider value={{ socket, isConnected, onlineUsers }}>{children}</SocketContext.Provider>;
 };

@@ -1,17 +1,18 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { HiOutlineUserPlus } from "react-icons/hi2";
+
+import { ContactListSkeleton } from "@/components/chat/contact-list-skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ContactListSkeleton } from "@/components/chat/contact-list-skeleton";
-import { useAuthStore, useChatStore, UserInfo } from "@/lib/zustand";
-import { useContacts } from "@/hooks/use-contacts";
-import { useHotkeys } from "react-hotkeys-hook";
-import { useDebounce, useAvatar } from "@/lib/hooks";
+import { useDebounce, useContacts } from "@/hooks";
 import api from "@/lib/api";
+import { getAvatar } from "@/lib/utils";
+import { useAuthStore, useChatStore, UserInfo } from "@/lib/zustand";
 
 const AddNewChat = () => {
   const queryClient = useQueryClient();
@@ -43,7 +44,7 @@ const AddNewChat = () => {
         });
 
         setSearchedContacts(newContact);
-      } catch (error: any) {
+      } catch (_error: any) {
         setSearchedContacts([]);
       } finally {
         setTimeout(() => setIsFetching(false), 500);
@@ -116,7 +117,7 @@ const AddNewChat = () => {
                         role="button"
                       >
                         <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
-                          <AvatarImage src={useAvatar(contact)} alt="profile" className="object-fit h-full w-full" />
+                          <AvatarImage src={getAvatar(contact)} alt="profile" className="object-fit h-full w-full" />
                           <AvatarFallback className="uppercase h-full w-full text-xl border text-center font-medium transition-all duration-300">
                             {(contact?.name ?? contact?.username ?? contact?.email)?.charAt(0) ?? ""}
                           </AvatarFallback>

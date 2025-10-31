@@ -1,5 +1,6 @@
-import { setAuthUser, delAuthUser } from "@/lib/auth";
 import axios from "axios";
+
+import { setAuthUser, delAuthUser } from "@/lib/auth";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL;
 

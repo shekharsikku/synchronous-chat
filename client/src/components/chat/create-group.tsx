@@ -1,24 +1,24 @@
-import * as z from "zod";
-import { toast } from "sonner";
-import { Fragment, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
+import { Fragment, useState } from "react";
+import { useForm } from "react-hook-form";
 import { HiOutlineUsers } from "react-icons/hi2";
-import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import * as z from "zod";
+
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useAuthStore, useChatStore, GroupInfo } from "@/lib/zustand";
-import { useContacts } from "@/hooks/use-contacts";
-import { createGroupSchema } from "@/lib/schema";
-import { useAvatar } from "@/lib/hooks";
-import { cn } from "@/lib/utils";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Spinner } from "@/components/ui/spinner";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { useContacts } from "@/hooks";
 import api from "@/lib/api";
+import { createGroupSchema } from "@/lib/schema";
+import { cn, getAvatar } from "@/lib/utils";
+import { useAuthStore, useChatStore, GroupInfo } from "@/lib/zustand";
 
 interface ContactItemProps {
   id: string;
@@ -40,7 +40,7 @@ const ContactItem: React.FC<ContactItemProps> = ({ id, name, avatar, selected, o
     >
       <div className="flex items-center gap-3">
         <img src={avatar} alt={name} className="size-8 rounded-full object-cover border border-border" />
-        <span className="font-medium text-foreground">{name}</span>
+        <span className="font-medium text-foreground text-sm max-w-16 inline-block align-middle truncate">{name}</span>
       </div>
 
       <Checkbox
@@ -109,12 +109,12 @@ const CreateGroup = () => {
   };
 
   const handleSelectToggle = (id: string) => {
-    setSelectedContacts((prev) => (prev.includes(id) ? prev.filter((uid) => uid !== id) : [...prev, id]));
+    setSelectedContacts((prev) => {
+      const updated = prev.includes(id) ? prev.filter((uid) => uid !== id) : [...prev, id];
+      createGroupForm.setValue("members", updated);
+      return updated;
+    });
   };
-
-  useEffect(() => {
-    createGroupForm.setValue("members", selectedContacts);
-  }, [selectedContacts.length]);
 
   return (
     <Dialog open={groupDialog} onOpenChange={setGroupDialog}>
@@ -192,7 +192,7 @@ const CreateGroup = () => {
             </form>
           </Form>
 
-          <div className="h-52 w-1/3 py-1 overflow-y-scroll scrollbar-hide">
+          <div className="h-52 w-2/5 py-1 overflow-y-scroll scrollbar-hide">
             <ScrollArea className="min-h-20 overflow-y-auto scrollbar-hide">
               <div className="flex flex-col gap-1">
                 {contacts?.map((contact) => (
@@ -200,7 +200,7 @@ const CreateGroup = () => {
                     <ContactItem
                       id={contact._id!}
                       name={contact.name!}
-                      avatar={useAvatar(contact)}
+                      avatar={getAvatar(contact)}
                       selected={selectedContacts.includes(contact._id!)}
                       onToggle={handleSelectToggle}
                     />

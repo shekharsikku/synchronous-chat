@@ -1,19 +1,20 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ContactListSkeleton } from "@/components/chat/contact-list-skeleton";
-import { GroupElement, ContactElement } from "@/components/chat/contact-element";
-import { Logo, Title } from "@/components/chat/logo-title";
+import { Fragment, useEffect, useState } from "react";
+import { isDesktop } from "react-device-detect";
+import { useHotkeys } from "react-hotkeys-hook";
+
 import { AddNewChat } from "@/components/chat/add-new-chat";
+import { GroupElement, ContactElement } from "@/components/chat/contact-element";
+import { ContactListSkeleton } from "@/components/chat/contact-list-skeleton";
 import { CreateGroup } from "@/components/chat/create-group";
+import { Logo, Title } from "@/components/chat/logo-title";
 import { ProfileInfo } from "@/components/chat/profile-info";
 import { StreamInfo } from "@/components/chat/stream-info";
-import { useHotkeys } from "react-hotkeys-hook";
-import { isDesktop } from "react-device-detect";
-import { Fragment, useEffect, useState } from "react";
-import { useContacts } from "@/hooks/use-contacts";
-import { UserInfo, GroupInfo, useChatStore } from "@/lib/zustand";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useContacts } from "@/hooks";
 import { usePeer, useSocket } from "@/lib/context";
 import { cn } from "@/lib/utils";
+import { UserInfo, GroupInfo, useChatStore } from "@/lib/zustand";
 
 const ContactsContainer = ({
   lastChatUser,
@@ -38,7 +39,10 @@ const ContactsContainer = ({
 
     if (currentTab === "all" && contacts && groups) {
       /* Merge both and tag them with type (optional) */
-      let merged = [...contacts.map((c) => ({ ...c, type: "chat" })), ...groups.map((g) => ({ ...g, type: "group" }))];
+      let merged = [
+        ...contacts.map((c) => ({ ...c, type: "contact" })),
+        ...groups.map((g) => ({ ...g, type: "group" })),
+      ];
 
       /* Sort by last interaction (descending) */
       merged.sort((a, b) => new Date(b.interaction || 0).getTime() - new Date(a.interaction || 0).getTime());
@@ -51,11 +55,11 @@ const ContactsContainer = ({
     "ctrl+b",
     () => {
       if (lastChatUser) {
-        const lastChatData = contacts?.find((contact) => {
-          return contact.username === lastChatUser;
+        const lastChatData = allChats?.find((current) => {
+          return current._id === lastChatUser;
         });
         if (lastChatData) {
-          setSelectedChatType("contact");
+          setSelectedChatType(lastChatData.type);
           setSelectedChatData(lastChatData);
         }
       }
@@ -130,7 +134,7 @@ const ContactsContainer = ({
                     <div className="flex flex-col gap-4">
                       {allChats.map((current) => (
                         <Fragment key={current._id}>
-                          {current.type === "chat" ? (
+                          {current.type === "contact" ? (
                             <ContactElement
                               contact={current}
                               selectedChatData={selectedChatData}

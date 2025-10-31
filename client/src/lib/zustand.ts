@@ -1,4 +1,5 @@
 import { create } from "zustand";
+
 import api from "@/lib/api";
 
 export interface UserInfo {
@@ -82,7 +83,7 @@ export const useAuthStore = create<{
         isAuthenticated: true,
       });
       return result;
-    } catch (error: any) {
+    } catch (_error: any) {
       set({
         userInfo: null,
         isAuthenticated: false,
@@ -128,9 +129,6 @@ export const useChatStore = create<{
 
   replyTo: Message | null;
   setReplyTo: (replyTo: Message | null) => void;
-
-  listenerActive: boolean;
-  setListenerActive: (listenerActive: boolean) => void;
 
   messageStats: { sent: number; received: number };
   setMessageStats: (messages: Message[], selectedChatId: string) => void;
@@ -179,9 +177,6 @@ export const useChatStore = create<{
 
   replyTo: null,
   setReplyTo: (replyTo: Message | null) => set({ replyTo }),
-
-  listenerActive: false,
-  setListenerActive: (listenerActive: boolean) => set({ listenerActive }),
 
   messageStats: { sent: 0, received: 0 },
   setMessageStats: (messages: Message[], userId: string) => {

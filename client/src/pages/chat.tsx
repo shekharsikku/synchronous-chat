@@ -1,16 +1,21 @@
-import { useEffect } from "react";
 import { useQueryState } from "nuqs";
-import { useChatStore } from "@/lib/zustand";
-import { usePeer } from "@/lib/context";
+import { useEffect, useEffectEvent } from "react";
+
 import { ContactsContainer, EmptyChatContainer, ChatContainer, DraggableVideo } from "@/components/chat";
+import { usePeer } from "@/lib/context";
+import { useChatStore } from "@/lib/zustand";
 
 const Chat = () => {
-  const [lastChatUser, setLastChatUser] = useQueryState("user", { defaultValue: "" });
-  const { selectedChatData, selectedChatType } = useChatStore();
+  const [lastChatUser, setLastChatUser] = useQueryState("chat", { defaultValue: "" });
+  const { selectedChatData } = useChatStore();
   const { mediaType, callingActive } = usePeer();
 
+  const handleLastSelectedChat = useEffectEvent((selectedChat: any) => {
+    if (selectedChatData) setLastChatUser(selectedChat._id!);
+  });
+
   useEffect(() => {
-    if (selectedChatData && selectedChatType === "contact") setLastChatUser(selectedChatData.username!);
+    handleLastSelectedChat(selectedChatData);
   }, [selectedChatData]);
 
   return (

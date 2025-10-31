@@ -1,5 +1,9 @@
-import { toast } from "sonner";
+import { DataConnection } from "peerjs";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useDropzone } from "react-dropzone";
 import { HiOutlineInformationCircle, HiOutlineDocumentText, HiOutlineXMark } from "react-icons/hi2";
+import { toast } from "sonner";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,12 +16,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { useState, useCallback, useRef, useEffect } from "react";
-import { useDropzone } from "react-dropzone";
+import { usePeer, useSocket } from "@/lib/context";
 import { formatSize, handleDownload } from "@/lib/utils";
 import { useChatStore } from "@/lib/zustand";
-import { usePeer, useSocket } from "@/lib/context";
-import { DataConnection } from "peerjs";
 
 const ShareStatus = ({ status }: { status: any }) => {
   return (
@@ -60,7 +61,7 @@ const PeerShare = () => {
       const file = acceptedFiles[0] || null;
       setSelectedFile(file);
     },
-    [selectedFile]
+    [selectedFile] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const maxFileSize = 512 * 1024 * 1024;
@@ -127,7 +128,7 @@ const PeerShare = () => {
     return () => {
       socket?.off("after:share-request", handleShareRequest);
     };
-  }, [socket]);
+  }, [socket]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /** Response accept/reject from receiver side for file share */
   const responseShareRequest = (action: "accept" | "reject") => {
@@ -236,10 +237,12 @@ const PeerShare = () => {
     return () => {
       socket?.off("after:file-request", handleShareRequest);
     };
-  }, [socket, file]);
+  }, [socket, file]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!peerRef?.current) return;
+
+    const peerConn = peerRef.current;
 
     const handleConnection = (conn: DataConnection) => {
       setPeerShareRequestStatus("receiving");
@@ -267,12 +270,12 @@ const PeerShare = () => {
       });
     };
 
-    peerRef.current.on("connection", handleConnection);
+    peerConn.on("connection", handleConnection);
 
     return () => {
-      peerRef.current?.off("connection", handleConnection);
+      peerConn.off("connection", handleConnection);
     };
-  }, [peerRef?.current]);
+  }, [peerRef?.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>

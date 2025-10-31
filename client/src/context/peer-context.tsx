@@ -1,10 +1,11 @@
-import { toast } from "sonner";
 import Peer, { MediaConnection } from "peerjs";
+import { useEffect, useState, useRef, useId, ReactNode, useEffectEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef, useId, ReactNode } from "react";
+import { toast } from "sonner";
+
+import { PeerShare } from "@/components/chat";
 import { useSocket, PeerContext, PeerInformation, ResponseActions } from "@/lib/context";
 import { useAuthStore } from "@/lib/zustand";
-import { PeerShare } from "@/components/chat";
 
 const PeerProvider = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
@@ -150,7 +151,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
 
       cleanupPeer();
     };
-  }, [userInfo?._id, userInfo?.setup, isConnected]);
+  }, [userInfo?._id, userInfo?.setup, userInfo?.name, isConnected]);
 
   useEffect(() => {
     /** Handle incoming signaling events */
@@ -249,7 +250,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [pendingRequest, callingToastId]);
 
-  const responseCallingRequest = (action: ResponseActions) => {
+  const responseCallingRequest = useEffectEvent((action: ResponseActions) => {
     if (!remoteInfo?.pid) return;
 
     if (callingActive) {
@@ -341,7 +342,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       };
       socket?.emit("before:callconnect", { callingActions });
     }
-  };
+  });
 
   useEffect(() => {
     if (callingResponse) {
@@ -361,7 +362,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
         }, 2000);
       }
     }
-  }, [callingResponse]);
+  }, [callingResponse, callingActive]);
 
   /** Mount unmount for request/response action */
   useEffect(() => {
@@ -475,7 +476,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       mute: remoteMicOff,
     };
     socket?.emit("before:muteaction", { microphoneAction });
-  }, [remoteMicOff]);
+  }, [socket, callingInfo?.uid, remoteMicOff]);
 
   useEffect(() => {
     const handleMicAction = ({ microphoneAction: action }: { microphoneAction: any }) => {

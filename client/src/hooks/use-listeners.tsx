@@ -1,11 +1,12 @@
 import { useQueryClient, InfiniteData } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
-import { useSocket } from "@/lib/context";
-import { useContacts } from "@/hooks/use-contacts";
-import { useAuthStore, useChatStore, Message } from "@/lib/zustand";
-import notificationSound from "@/assets/sound/message-alert.mp3";
+import { useEffect, useRef, useEffectEvent } from "react";
+
 import notificationIcon from "@/assets/favicon.ico";
+import notificationSound from "@/assets/sound/message-alert.mp3";
+import { useContacts } from "@/hooks";
 import api from "@/lib/api";
+import { useSocket } from "@/lib/context";
+import { useAuthStore, useChatStore, Message } from "@/lib/zustand";
 
 export const useListeners = () => {
   const queryClient = useQueryClient();
@@ -14,7 +15,11 @@ export const useListeners = () => {
   const { socket } = useSocket();
   const { contacts } = useContacts();
   const { userInfo } = useAuthStore();
-  const { selectedChatData, setListenerActive, isSoundAllow } = useChatStore();
+  const { selectedChatData, isSoundAllow } = useChatStore();
+
+  const getSenderName = useEffectEvent((chatKey: string) => {
+    return contacts?.find((contact) => contact._id === chatKey)?.name;
+  });
 
   useEffect(() => {
     if (!socket) return;
@@ -29,8 +34,6 @@ export const useListeners = () => {
       }
 
       const chatQueryKey = ["messages", userInfo?._id, chatKey];
-
-      setListenerActive(true);
 
       /** Check if messages are already cached */
       let cachedMessages = queryClient.getQueryData<InfiniteData<Message[]>>(chatQueryKey);
@@ -76,7 +79,7 @@ export const useListeners = () => {
 
       /** Show Browser Notification */
       if (Notification.permission === "granted" && !selectedChatData?._id) {
-        const senderName = contacts?.find((contact) => contact._id === chatKey)?.name;
+        const senderName = getSenderName(chatKey!);
 
         if (senderName) {
           const notification = new Notification(`You have a message from ${senderName}`, {
@@ -93,9 +96,6 @@ export const useListeners = () => {
         sound.volume = 0.25;
         void sound.play();
       }
-
-      const messageTimeout = setTimeout(() => setListenerActive(false), 2000);
-      return () => clearTimeout(messageTimeout);
     };
 
     const handleMessageUpdate = (message: Message) => {

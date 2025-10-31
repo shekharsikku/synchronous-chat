@@ -1,6 +1,6 @@
 import { EmojiClickData, type Theme } from "emoji-picker-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import React, { useState, useEffect, useRef, ChangeEvent, KeyboardEventHandler } from "react";
+import { isDesktop, isMobile } from "react-device-detect";
 import {
   HiOutlineFaceSmile,
   HiOutlineLink,
@@ -8,15 +8,16 @@ import {
   HiOutlineBackspace,
   HiOutlineClipboardDocumentCheck,
 } from "react-icons/hi2";
-import React, { useState, useEffect, useRef, ChangeEvent, KeyboardEventHandler } from "react";
+import { toast } from "sonner";
+
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useClipboard } from "@/hooks";
+import api from "@/lib/api";
+import { useSocket, useTheme } from "@/lib/context";
 import { encryptMessage } from "@/lib/noble";
 import { convertToBase64 } from "@/lib/utils";
 import { useChatStore, useAuthStore, MessageData } from "@/lib/zustand";
-import { isDesktop, isMobile } from "react-device-detect";
-import { useSocket, useTheme } from "@/lib/context";
-import { useClipboard } from "@/lib/hooks";
-import { toast } from "sonner";
-import api from "@/lib/api";
 
 const EmojiPicker = React.lazy(() => import("emoji-picker-react"));
 
@@ -43,7 +44,7 @@ const MessageBar = () => {
     if (isDesktop && (selectedChatData || replyTo)) {
       inputRef.current.focus();
     }
-  }, [selectedChatData, replyTo, isMobile, isDesktop]);
+  }, [selectedChatData, replyTo]);
 
   useEffect(() => {
     const handleSpaceEscapeKeyDown = (event: KeyboardEvent) => {
@@ -118,7 +119,7 @@ const MessageBar = () => {
         const base64 = await convertToBase64(imageFile);
         setSelectedImage(base64);
       }
-    } catch (error: any) {
+    } catch (_error: any) {
       console.log(`Error while attaching file!`);
     }
   };
@@ -184,7 +185,7 @@ const MessageBar = () => {
       socket?.off("typing:display");
       socket?.off("typing:hide");
     };
-  }, [selectedChatData?._id]);
+  }, [socket, userInfo?._id, selectedChatData?._id, selectedChatType, setIsPartnerTyping]);
 
   const handleTyping = () => {
     if (!isTyping) {

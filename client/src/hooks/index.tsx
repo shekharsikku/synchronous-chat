@@ -1,12 +1,10 @@
-import { Socket } from "socket.io-client";
 import { useEffect, useCallback, useRef, useState, RefObject, SetStateAction, Dispatch } from "react";
+import { Socket } from "socket.io-client";
+import { toast } from "sonner";
+
+import api from "@/lib/api";
 import { decryptMessage } from "@/lib/noble";
 import { useAuthStore, useChatStore, Message } from "@/lib/zustand";
-import maleAvatar from "@/assets/male-avatar.webp";
-import femaleAvatar from "@/assets/female-avatar.webp";
-import noAvatar from "@/assets/no-avatar.webp";
-import { toast } from "sonner";
-import api from "@/lib/api";
 
 export const useDebounce = (callback: Function, delay: number) => {
   const callbackRef = useCallback(callback, [callback]);
@@ -29,23 +27,6 @@ export const useDebounce = (callback: Function, delay: number) => {
     }, delay);
   };
   return debouncedFunction;
-};
-
-export const useAvatar = (userInformation: any) => {
-  let avatar;
-
-  if (userInformation?.image) {
-    avatar = userInformation.image;
-  } else {
-    if (userInformation?.gender === "Male") {
-      avatar = maleAvatar;
-    } else if (userInformation?.gender === "Female") {
-      avatar = femaleAvatar;
-    } else {
-      avatar = noAvatar;
-    }
-  }
-  return avatar;
 };
 
 export const useDisableAnimations = (socket: Socket, ref: any) => {
@@ -93,7 +74,7 @@ export const useLastMinutes = (timestamp: Date | string | number, minutes = 10) 
     const interval = setInterval(checkTimestamp, 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [timestamp]);
+  }, [timestamp, minutes]);
 
   return { isLastMinutes };
 };
@@ -122,7 +103,7 @@ export const usePlainText = () => {
       }
 
       return decryptMessage(message?.content?.text!, messageKey);
-    } catch (error) {
+    } catch (_error) {
       import.meta.env.DEV && console.log("Plain text decryption failed!");
       return "Decryption Error!";
     }
@@ -200,7 +181,7 @@ export const useMessageActions = () => {
         language,
       });
       setTranslated(response.data.data);
-    } catch (error: any) {
+    } catch (_error: any) {
       setTranslated("");
       import.meta.env.DEV && console.log("Language translation error!");
     }
@@ -208,3 +189,7 @@ export const useMessageActions = () => {
 
   return { deleteSelectedMessage, handleEmojiReaction, translateMessage };
 };
+
+export { useContacts } from "@/hooks/use-contacts";
+export { useListeners } from "@/hooks/use-listeners";
+export { useMessages } from "@/hooks/use-messages";

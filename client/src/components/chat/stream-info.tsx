@@ -1,10 +1,11 @@
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useState, useRef, useEffect } from "react";
 import { HiOutlinePhoneXMark, HiOutlineSpeakerWave, HiOutlineSpeakerXMark } from "react-icons/hi2";
 import { LuMic, LuMicOff, LuAudioLines, LuAudioWaveform } from "react-icons/lu";
 import { continuousVisualizer } from "sound-visualizer";
-import { useState, useRef, useEffect } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePeer } from "@/lib/context";
 import { formatTimer } from "@/lib/utils";
 

@@ -1,8 +1,9 @@
 import { HiOutlineXMark, HiOutlineSlash } from "react-icons/hi2";
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useChatStore } from "@/lib/zustand";
-import { usePlainText } from "@/lib/hooks";
+import { usePlainText } from "@/hooks";
 import { cn } from "@/lib/utils";
+import { useChatStore } from "@/lib/zustand";
 
 const MessagePreview = () => {
   const { plainText } = usePlainText();

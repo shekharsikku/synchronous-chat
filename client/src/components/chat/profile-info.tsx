@@ -5,14 +5,15 @@ import {
   HiOutlineMoon,
   HiOutlineSun,
 } from "react-icons/hi2";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useAuthStore, useChatStore } from "@/lib/zustand";
-import { useAvatar } from "@/lib/hooks";
 import { useSignOut } from "@/lib/auth";
-import { useNavigate } from "react-router-dom";
 import { usePeer, useTheme } from "@/lib/context";
-import { toast } from "sonner";
+import { getAvatar } from "@/lib/utils";
+import { useAuthStore, useChatStore } from "@/lib/zustand";
 
 const ProfileInfo = () => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ const ProfileInfo = () => {
             <TooltipTrigger className="focus:outline-none">
               <div className="flex gap-4 items-center" onClick={handleProfileNavigate} role="button">
                 <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
-                  <AvatarImage src={useAvatar(userInfo)} alt="profile" className="object-cover size-full" />
+                  <AvatarImage src={getAvatar(userInfo)} alt="profile" className="object-cover size-full" />
                   <AvatarFallback
                     className={`uppercase h-full w-full text-xl border text-center font-medium 
                       transition-all duration-300 bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]`}

@@ -1,8 +1,8 @@
-import { useMemo } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useChatStore, useAuthStore } from "@/lib/zustand";
+import { useMemo } from "react";
 
 import api from "@/lib/api";
+import { useChatStore, useAuthStore } from "@/lib/zustand";
 
 export const useMessages = () => {
   const { userInfo } = useAuthStore();

@@ -1,4 +1,6 @@
-import { LuAudioLines } from "react-icons/lu";
+import moment from "moment";
+import { useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import {
   HiOutlinePhone,
   HiOutlineXMark,
@@ -6,8 +8,11 @@ import {
   HiOutlineVideoCamera,
   HiOutlineShare,
 } from "react-icons/hi2";
+import { LuAudioLines } from "react-icons/lu";
+import { toast } from "sonner";
+
+import groupAvatar from "@/assets/group-avatar.webp";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -19,21 +24,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn, languageOptions } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSocket, usePeer } from "@/lib/context";
-import { useState } from "react";
-import { useHotkeys } from "react-hotkeys-hook";
+import { cn, languageOptions, getAvatar } from "@/lib/utils";
 import { useChatStore } from "@/lib/zustand";
-import { useAvatar } from "@/lib/hooks";
-import { toast } from "sonner";
-import moment from "moment";
-import groupAvatar from "@/assets/group-avatar.webp";
 
 const ChatHeader = () => {
   const { selectedChatData, selectedChatType, closeChat, isPartnerTyping, language, setLanguage, messageStats } =
     useChatStore();
   const [openUserInfoModal, setOpenUserInfoModal] = useState(false);
-  const userAvatar = useAvatar(selectedChatData);
+  const userAvatar = getAvatar(selectedChatData);
 
   useHotkeys("ctrl+q", () => closeChat(), {
     enabled: !!selectedChatData,

@@ -1,10 +1,11 @@
-import { Navigate, Route, Routes } from "react-router-dom";
-import { Auth, Chat, Profile } from "@/components/pages";
 import { useEffect, ReactNode } from "react";
-import { useAuthUser } from "@/lib/auth";
 import { useHotkeys } from "react-hotkeys-hook";
+import { Navigate, Route, Routes } from "react-router-dom";
+
+import { useListeners } from "@/hooks";
+import { useAuthUser } from "@/lib/auth";
 import { useTheme } from "@/lib/context";
-import { useListeners } from "@/hooks/use-listeners";
+import { Auth, Chat, Profile } from "@/pages";
 
 const RedirectRoute = () => {
   const { isAuthenticated, userInfo } = useAuthUser();

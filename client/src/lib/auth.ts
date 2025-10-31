@@ -1,11 +1,12 @@
-import { encryptInfo, decryptInfo } from "@/lib/noble";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useAuthStore, useChatStore, UserInfo } from "@/lib/zustand";
-import { usePeer } from "@/lib/context";
-import { useEffect } from "react";
-import { toast } from "sonner";
-import api from "@/lib/api";
 import Cookies from "js-cookie";
+import { useEffect, useEffectEvent } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+
+import api from "@/lib/api";
+import { usePeer } from "@/lib/context";
+import { encryptInfo, decryptInfo } from "@/lib/noble";
+import { useAuthStore, useChatStore, UserInfo } from "@/lib/zustand";
 
 const cookiesKey = import.meta.env.VITE_COOKIE_KEY;
 
@@ -31,21 +32,20 @@ export const useAuthUser = () => {
   const location = useLocation();
   const { userInfo, isAuthenticated, getUserInfo, setUserInfo, setIsAuthenticated } = useAuthStore();
 
+  const handleAuthSync = useEffectEvent(async () => {
+    let userData = getAuthUser();
+
+    if (userData) {
+      setUserInfo(userData);
+      setIsAuthenticated(true);
+    } else {
+      userData = await getUserInfo();
+      if (userData) setAuthUser(userData);
+    }
+  });
+
   useEffect(() => {
-    (async () => {
-      let userData = getAuthUser();
-
-      if (userData) {
-        setUserInfo(userData);
-        setIsAuthenticated(true);
-      } else {
-        userData = await getUserInfo();
-
-        if (userData) {
-          setAuthUser(userData);
-        }
-      }
-    })();
+    handleAuthSync();
   }, [location.pathname]);
 
   return { isAuthenticated, userInfo };

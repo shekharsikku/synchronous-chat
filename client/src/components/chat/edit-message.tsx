@@ -1,6 +1,6 @@
-import { toast } from "sonner";
 import { useState, useEffect, useRef } from "react";
-import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,9 +12,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useChatStore } from "@/lib/zustand";
-import { encryptMessage } from "@/lib/noble";
+import { Input } from "@/components/ui/input";
 import api from "@/lib/api";
+import { encryptMessage } from "@/lib/noble";
+import { useChatStore } from "@/lib/zustand";
 
 const EditMessage = ({
   editMessageDialog,

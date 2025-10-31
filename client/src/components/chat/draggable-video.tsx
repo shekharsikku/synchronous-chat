@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { useChatStore } from "@/lib/zustand";
+
 import { usePeer } from "@/lib/context";
+import { useChatStore } from "@/lib/zustand";
 
 const DraggableVideo = () => {
   const { selectedChatData } = useChatStore();
@@ -89,7 +90,7 @@ const DraggableVideo = () => {
       document.removeEventListener("touchmove", handleTouchMove);
       document.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [isDragging]);
+  }, [isDragging]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Custom methods and states and video ref for calling interactions
   const { localVideoRef, remoteVideoRef, muteUser, remoteMute } = usePeer();

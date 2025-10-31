@@ -1,15 +1,17 @@
-import * as z from "zod";
-import { toast } from "sonner";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useEffectEvent } from "react";
+import { useForm } from "react-hook-form";
+import {
+  HiOutlineCloudArrowUp,
+  HiOutlineTrash,
+  HiOutlineKey,
+  HiOutlineArrowRightOnRectangle,
+  HiOutlineChatBubbleLeftRight,
+} from "react-icons/hi2";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
+import * as z from "zod";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +23,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import {
   Dialog,
@@ -30,19 +34,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  HiOutlineCloudArrowUp,
-  HiOutlineTrash,
-  HiOutlineKey,
-  HiOutlineArrowRightOnRectangle,
-  HiOutlineChatBubbleLeftRight,
-} from "react-icons/hi2";
-import { changePasswordSchema, profileUpdateSchema, genders } from "@/lib/schema";
-import { setAuthUser, useSignOut } from "@/lib/auth";
-import { useAuthStore } from "@/lib/zustand";
-import { useSocket } from "@/lib/context";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import api from "@/lib/api";
+import { setAuthUser, useSignOut } from "@/lib/auth";
+import { useSocket } from "@/lib/context";
+import { changePasswordSchema, profileUpdateSchema, genders } from "@/lib/schema";
+import { useAuthStore } from "@/lib/zustand";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -181,16 +182,16 @@ const Profile = () => {
     }
   };
 
+  const handleProfileUpdate = useEffectEvent(({ updatedDetails }: any) => {
+    setAuthUser(updatedDetails);
+    setUserInfo(updatedDetails);
+    setSelectedImage(updatedDetails?.image);
+    profileUpdateForm.reset({ ...updatedDetails });
+    toast.info("Your details have been updated!");
+  });
+
   useEffect(() => {
     if (!socket) return;
-
-    const handleProfileUpdate = ({ updatedDetails }: any) => {
-      setAuthUser(updatedDetails);
-      setUserInfo(updatedDetails);
-      setSelectedImage(updatedDetails?.image);
-      profileUpdateForm.reset({ ...updatedDetails });
-      toast.info("Your details have been updated!");
-    };
 
     socket.on("after:profileupdate", handleProfileUpdate);
 
