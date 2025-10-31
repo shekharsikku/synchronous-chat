@@ -148,9 +148,9 @@ const fetchGroups = async (req: Request, res: Response) => {
           avatar: 1,
           admin: 1,
           members: 1,
-          // createdAt: 1,
-          // updatedAt: 1,
-          // __v: 1
+          createdAt: 1,
+          updatedAt: 1,
+          __v: 1,
           interaction: 1,
         },
       },

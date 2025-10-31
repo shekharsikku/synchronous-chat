@@ -12,6 +12,7 @@ import { LuAudioLines } from "react-icons/lu";
 import { toast } from "sonner";
 
 import groupAvatar from "@/assets/group-avatar.webp";
+import { GroupMembersList } from "@/components/chat/member-list";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
@@ -33,6 +34,7 @@ const ChatHeader = () => {
   const { selectedChatData, selectedChatType, closeChat, isPartnerTyping, language, setLanguage, messageStats } =
     useChatStore();
   const [openUserInfoModal, setOpenUserInfoModal] = useState(false);
+  const [openGroupInfoModal, setOpenGroupInfoModal] = useState(false);
   const userAvatar = getAvatar(selectedChatData);
 
   useHotkeys("ctrl+q", () => closeChat(), {
@@ -79,20 +81,62 @@ const ChatHeader = () => {
       <div className="h-full w-full rounded flex items-center justify-between px-4 bg-gray-100/80 dark:bg-transparent">
         <div className="flex gap-4 items-center justify-center">
           {selectedChatType === "group" && (
-            <Avatar className="size-9 rounded-full overflow-hidden cursor-pointer border-2">
-              <AvatarImage
-                src={selectedChatData.avatar || groupAvatar}
-                alt="avatar"
-                className="object-cover size-full"
-              />
-              <AvatarFallback
-                className={`uppercase h-full w-full text-xl border text-center font-medium 
-                transition-all duration-300 bg-[#06d6a02a] text-[#06d6a0] border-[#06d6a0bb`}
-              >
-                {selectedChatData?.name.charAt(0) ?? ""}
-              </AvatarFallback>
-            </Avatar>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="focus:outline-none">
+                  <Avatar
+                    className="size-9 rounded-full overflow-hidden cursor-pointer border-2"
+                    onClick={() => setOpenGroupInfoModal(true)}
+                  >
+                    <AvatarImage
+                      src={selectedChatData.avatar || groupAvatar}
+                      alt="avatar"
+                      className="object-cover size-full"
+                    />
+                    <AvatarFallback
+                      className={`uppercase h-full w-full text-xl border text-center font-medium 
+                  transition-all duration-300 bg-[#06d6a02a] text-[#06d6a0] border-[#06d6a0bb`}
+                    >
+                      {selectedChatData?.name.charAt(0) ?? ""}
+                    </AvatarFallback>
+                  </Avatar>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span className="tooltip-span">Group Info</span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
+
+          <Dialog open={openGroupInfoModal} onOpenChange={setOpenGroupInfoModal}>
+            <DialogContent className="w-80 md:w-96 h-max rounded-md shadow-lg transition-all hover:shadow-2xl p-6 select-none">
+              <DialogHeader className="hidden">
+                <DialogTitle></DialogTitle>
+                <DialogDescription></DialogDescription>
+              </DialogHeader>
+
+              <div className="w-full flex flex-col gap-4">
+                <div className="w-full flex gap-4">
+                  <div className="size-max">
+                    <img
+                      src={selectedChatData.avatar || groupAvatar}
+                      className="size-16 md:size-20 rounded-full border-4 border-white object-cover shadow-lg transition-all"
+                    />
+                  </div>
+                  <div className="w-2/3 flex flex-col justify-center gap-1.5">
+                    <h3 className="text-lg md:text-xl font-bold">{selectedChatData.name}</h3>
+                    <p className="text-xs md:text-sm">{selectedChatData.description}</p>
+                  </div>
+                </div>
+
+                <GroupMembersList selectedChatData={selectedChatData} />
+
+                <p className="text-center text-xs md:text-sm tracking-wider text-gray-500 dark:text-gray-100">
+                  Created at: {moment(selectedChatData?.createdAt).format("MMM DD, YYYY | h:mm A")}
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {selectedChatType === "contact" && (
             <TooltipProvider>
@@ -113,7 +157,7 @@ const ChatHeader = () => {
                   </Avatar>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <span className="tooltip-span">Info</span>
+                  <span className="tooltip-span">Chat Info</span>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -121,7 +165,7 @@ const ChatHeader = () => {
 
           {/* Dialog for show user information */}
           <Dialog open={openUserInfoModal} onOpenChange={setOpenUserInfoModal}>
-            <DialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl p-8 select-none">
+            <DialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl p-6 select-none">
               <DialogHeader className="hidden">
                 <DialogTitle></DialogTitle>
                 <DialogDescription></DialogDescription>
@@ -129,7 +173,7 @@ const ChatHeader = () => {
               {/* Profile Image */}
               <div className="flex justify-center">
                 <img
-                  className="size-24 lg:size-32 rounded-full border-4 border-white 
+                  className="size-28 lg:size-32 rounded-full border-4 border-white 
                   object-cover shadow-lg -mt-20 lg:-mt-24 transition-all"
                   src={userAvatar}
                   alt="User profile"
@@ -156,8 +200,8 @@ const ChatHeader = () => {
                 </div>
               </div>
               {/* Last Message Time */}
-              <p className="text-center text-sm tracking-wider text-gray-500 dark:text-gray-100">
-                {moment(selectedChatData?.interaction).format("MMM Do YYYY | h:mm:ss A")}
+              <p className="text-center text-xs md:text-sm tracking-wider text-gray-500 dark:text-gray-100">
+                Last msg: {moment(selectedChatData?.interaction).format("MMM DD, YYYY | h:mm A")}
               </p>
             </DialogContent>
           </Dialog>

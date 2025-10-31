@@ -1,7 +1,7 @@
 {
   "name": "synchronous-chat",
   "type": "module",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -10,6 +10,7 @@
     "start": "node dist/index.js",
     "dev:dev": "concurrently \"npm run dev\" \"npm run dev --prefix client\"",
     "build:build": "npm run build && npm run build --prefix client",
+    "lint": "npm run lint --prefix client",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
