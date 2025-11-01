@@ -34,6 +34,14 @@ const createGroup = async (req: Request<{}, {}, CreateGroupType>, res: Response)
     }
 
     const newGroup = await Group.create(groupData);
+    const socketIds = newGroup.members.flatMap((member) => getSocketId(member.toString())).filter(Boolean);
+
+    /** Notify to all members after group created */
+    io.to(socketIds).emit("group:created", {
+      ...newGroup.toJSON(),
+      interaction: new Date().toISOString(),
+    });
+
     await Conversation.create({ participants: [newGroup._id], models: "Group" });
 
     return SuccessResponse(res, 200, "Group created successfully!", newGroup);

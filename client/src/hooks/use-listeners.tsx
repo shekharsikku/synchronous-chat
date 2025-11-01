@@ -6,7 +6,7 @@ import notificationSound from "@/assets/sound/message-alert.mp3";
 import { useContacts } from "@/hooks";
 import api from "@/lib/api";
 import { useSocket } from "@/lib/context";
-import { useAuthStore, useChatStore, type Message } from "@/lib/zustand";
+import { useAuthStore, useChatStore, type GroupInfo, type Message } from "@/lib/zustand";
 
 export const useListeners = () => {
   const queryClient = useQueryClient();
@@ -123,11 +123,21 @@ export const useListeners = () => {
       });
     };
 
+    const handleGroupCreate = (newGroup: GroupInfo) => {
+      if (newGroup.members && newGroup.members.some((member) => member === userInfo?._id)) {
+        queryClient.setQueryData(["groups", userInfo?._id], (older: GroupInfo[] | undefined) => [
+          ...(older || []),
+          { ...newGroup },
+        ]);
+      }
+    };
+
     const events: [string, (...args: any[]) => void][] = [
       ["message:receive", handleMessageReceive],
       ["message:remove", handleMessageUpdate],
       ["message:edited", handleMessageUpdate],
       ["message:reacted", handleMessageUpdate],
+      ["group:created", handleGroupCreate],
     ];
 
     if (!messageListeners.current) {

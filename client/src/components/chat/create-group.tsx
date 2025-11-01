@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
 import { Fragment, useState } from "react";
 import { useForm } from "react-hook-form";
 import { HiOutlineUsers } from "react-icons/hi2";
@@ -18,7 +17,7 @@ import { useContacts } from "@/hooks";
 import api from "@/lib/api";
 import { createGroupSchema } from "@/lib/schema";
 import { cn, getAvatar } from "@/lib/utils";
-import { useAuthStore, useChatStore, type GroupInfo } from "@/lib/zustand";
+import { useAuthStore, useChatStore } from "@/lib/zustand";
 
 interface ContactItemProps {
   id: string;
@@ -54,7 +53,6 @@ const ContactItem: React.FC<ContactItemProps> = ({ id, name, avatar, selected, o
 };
 
 const CreateGroup = () => {
-  const queryClient = useQueryClient();
   const { userInfo } = useAuthStore();
   const { contacts, groups } = useContacts();
   const [isPending, setIsPending] = useState(false);
@@ -82,17 +80,6 @@ const CreateGroup = () => {
       const response = await api.post("api/group/create", values);
 
       if (response.data.success) {
-        const current = { ...response.data.data, interaction: new Date().toISOString() };
-
-        const cleaned = Object.fromEntries(
-          Object.entries(current).filter(([key]) => !["createdAt", "updatedAt", "__v"].includes(key))
-        );
-
-        queryClient.setQueryData(["groups", userInfo?._id], (older: GroupInfo[] | undefined) => [
-          ...(older || []),
-          { ...cleaned },
-        ]);
-
         setTimeout(() => {
           createGroupForm.reset();
           setSelectedContacts([]);
