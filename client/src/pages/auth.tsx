@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import api from "@/lib/api";
 import { setAuthUser } from "@/lib/auth";
 import { signUpSchema, signInSchema } from "@/lib/schema";
-import { validateEmail, validateDummyEmail } from "@/lib/utils";
+import { validateEmail, validateDummyEmail, cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/zustand";
 
 interface SignInInterface {
@@ -123,24 +123,30 @@ const Auth = () => {
             </p>
           </div>
           <div className="w-full flex items-center justify-center">
-            <Tabs defaultValue="sign-in" className="w-full">
-              <TabsList className="bg-transparent rounded-none w-full">
-                <TabsTrigger
-                  value="sign-in"
-                  className="data-[state=active]:bg-transparent text-black dark:text-gray-200 text-opacity-90 border-b-2 rounded-none w-full data-[state=active]:text-black data-[state=active]:font-semibold data-[state=active]:border-b-gray-700 data-[state=active]:dark:border-b-gray-200 p-3"
-                >
-                  Sign In
-                </TabsTrigger>
-                <TabsTrigger
-                  value="sign-up"
-                  className="data-[state=active]:bg-transparent text-black dark:text-gray-200 text-opacity-90 border-b-2 rounded-none w-full data-[state=active]:text-black data-[state=active]:font-semibold data-[state=active]:border-b-gray-700 data-[state=active]:dark:border-b-gray-200 p-3"
-                >
-                  Sign Up
-                </TabsTrigger>
+            <Tabs defaultValue="sign-in" className="w-full space-y-3">
+              <TabsList className="bg-transparent rounded-none w-full space-x-3">
+                {[{ "sign-in": "Sign In" }, { "sign-up": "Sign Up" }].map((item) => {
+                  const [value, label] = Object.entries(item)[0];
+
+                  return (
+                    <TabsTrigger
+                      value={value}
+                      className={cn(
+                        "w-full px-3 py-5 text-sm font-medium text-gray-700 dark:text-gray-300 border-b-2 bg-background! rounded-none duration-0",
+                        "data-[state=inactive]:border-b-gray-300 dark:data-[state=inactive]:border-b-gray-700",
+                        "data-[state=active]:border-b-gray-800 dark:data-[state=active]:border-b-gray-200",
+                        "data-[state=active]:text-gray-800 dark:data-[state=active]:text-gray-200",
+                        "data-[state=active]:rounded-t-md"
+                      )}
+                    >
+                      {label}
+                    </TabsTrigger>
+                  );
+                })}
               </TabsList>
               <TabsContent value="sign-in">
                 <Form {...signInForm}>
-                  <form onSubmit={signInForm.handleSubmit(signInSubmit)} className="flex flex-col gap-3 mt-6">
+                  <form onSubmit={signInForm.handleSubmit(signInSubmit)} className="flex flex-col gap-3">
                     <FormField
                       control={signInForm.control}
                       name="credential"
@@ -197,7 +203,7 @@ const Auth = () => {
               </TabsContent>
               <TabsContent value="sign-up">
                 <Form {...signUpForm}>
-                  <form onSubmit={signUpForm.handleSubmit(signUpSubmit)} className="flex flex-col gap-3 mt-6">
+                  <form onSubmit={signUpForm.handleSubmit(signUpSubmit)} className="flex flex-col gap-3">
                     <FormField
                       control={signUpForm.control}
                       name="email"

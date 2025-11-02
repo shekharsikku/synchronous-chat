@@ -227,14 +227,14 @@ const Profile = () => {
                   </AvatarFallback>
                 </Avatar>
               </ContextMenuTrigger>
-              <ContextMenuContent className="w-20 flex flex-col gap-2 p-2 transition-all duration-500">
+              <ContextMenuContent className="w-20 flex flex-col gap-2 p-2 transition-all duration-300 text-gray-950 dark:text-gray-50">
                 {userInfo?.image && (
                   <ContextMenuItem className="flex gap-2" onClick={() => setOpenImageDeletionModal(true)}>
-                    <HiOutlineTrash size={16} /> Delete
+                    <HiOutlineTrash size={16} className="text-neutral-600 dark:text-neutral-100" /> Delete
                   </ContextMenuItem>
                 )}
                 <ContextMenuItem className="flex gap-2" onClick={() => fileInputRef.current?.click()}>
-                  <HiOutlineCloudArrowUp size={16} /> Upload
+                  <HiOutlineCloudArrowUp size={16} className="text-neutral-600 dark:text-neutral-100" /> Upload
                 </ContextMenuItem>
               </ContextMenuContent>
             </ContextMenu>
@@ -262,7 +262,7 @@ const Profile = () => {
           <div className="hidden lg:flex gap-6 w-full items-center justify-center">
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="focus:outline-none" asChild>
+                <TooltipTrigger className="focus:outline-none cursor-pointer" asChild>
                   <Button
                     size="sm"
                     className="w-full"
@@ -280,9 +280,8 @@ const Profile = () => {
 
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="focus:outline-none" asChild>
+                <TooltipTrigger className="focus:outline-none cursor-pointer" asChild>
                   <Button size="sm" className="w-full" onClick={() => setOpenPasswordDialog(true)} disabled={isLoading}>
-                    {" "}
                     <HiOutlineKey size={20} />
                   </Button>
                 </TooltipTrigger>
@@ -294,7 +293,7 @@ const Profile = () => {
 
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="focus:outline-none" asChild>
+                <TooltipTrigger className="focus:outline-none cursor-pointer" asChild>
                   <Button size="sm" className="w-full" onClick={handleSignOut} disabled={isLoading}>
                     <HiOutlineArrowRightOnRectangle size={20} />
                   </Button>
@@ -367,10 +366,10 @@ const Profile = () => {
                       <FormLabel htmlFor="gender">Gender*</FormLabel>
                       <FormControl>
                         <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger className="w-full py-5" id="gender">
+                          <SelectTrigger className="w-full py-5 bg-background!" id="gender">
                             <SelectValue>{field.value || "Gender"}</SelectValue>
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-background!">
                             {genders.map((gender) => (
                               <SelectItem key={gender} value={gender}>
                                 {gender}
@@ -392,7 +391,7 @@ const Profile = () => {
           <div className="lg:hidden flex gap-4 md:gap-6 w-full items-center justify-center mt-2">
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="focus:outline-none" asChild>
+                <TooltipTrigger className="focus:outline-none cursor-pointer" asChild>
                   <Button
                     size="sm"
                     className="w-full"
@@ -410,7 +409,7 @@ const Profile = () => {
 
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="focus:outline-none" asChild>
+                <TooltipTrigger className="focus:outline-none cursor-pointer" asChild>
                   <Button size="sm" className="w-full" onClick={() => setOpenPasswordDialog(true)} disabled={isLoading}>
                     {" "}
                     <HiOutlineKey size={20} />
@@ -424,7 +423,7 @@ const Profile = () => {
 
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="focus:outline-none" asChild>
+                <TooltipTrigger className="focus:outline-none cursor-pointer" asChild>
                   <Button size="sm" className="w-full" onClick={handleSignOut} disabled={isLoading}>
                     <HiOutlineArrowRightOnRectangle size={20} />
                   </Button>
