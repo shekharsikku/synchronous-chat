@@ -1,13 +1,17 @@
 import { defineConfig } from "vite";
-import { config } from "dotenv";
 import { resolve } from "path";
-import { visualizer } from "rollup-plugin-visualizer";
-import react from "@vitejs/plugin-react-swc";
-
-config();
+import viteReact from "@vitejs/plugin-react-swc";
+import tailwindcss from "@tailwindcss/vite";
+import viteTsConfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
-  plugins: [react(), visualizer({ filename: resolve(__dirname, "../public/test/stats.html") })],
+  plugins: [
+    viteTsConfigPaths({
+      projects: ["./tsconfig.json"],
+    }),
+    tailwindcss(),
+    viteReact(),
+  ],
   resolve: {
     alias: {
       "@": resolve(__dirname, "src"),
