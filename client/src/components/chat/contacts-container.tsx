@@ -104,7 +104,7 @@ const ContactsContainer = ({
             defaultValue="all"
             value={currentTab}
             onValueChange={(value) => setCurrentTab(value)}
-            className="w-full h-full overflow-hidden pb-14"
+            className={cn("w-full h-full overflow-hidden", fetching ? "pb-0" : "pb-14")}
           >
             <TabsList className="bg-transparent rounded-none w-full flex gap-4 mb-4 p-0">
               {["All", "Chats", "Groups"].map((current) => (
@@ -113,7 +113,7 @@ const ContactsContainer = ({
                   value={current.toLowerCase()}
                   className="dark:data-[state=inactive]:bg-gray-700/20 dark:data-[state=active]:bg-gray-200 dark:data-[state=inactive]:text-white dark:data-[state=active]:text-black  
                   data-[state=inactive]:bg-gray-100/80 data-[state=active]:bg-gray-200/80 data-[state=inactive]:text-gray-700 data-[state=active]:text-gray-950
-                  data-[state=active]:font-semibold w-full border-none rounded p-1.5"
+                  data-[state=active]:font-semibold w-full border-none rounded p-1.5 duration-0"
                 >
                   {current}
                 </TabsTrigger>

@@ -103,7 +103,7 @@ const RenderDMMessages = ({
         <ContextMenuTrigger
           ref={mergeRefs(inViewRef, elementRef)}
           className={cn(
-            "inline-block border rounded-sm px-3 py-2.5 break-words transition-[transform,opacity] duration-300 ease-in-out transform text-start text-gray-950 dark:text-gray-50 dark:border-gray-700 max-w-[90%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[75%] xl:max-w-[70%] hover:transition-colors",
+            "inline-block border rounded-sm px-3 py-2.5 wrap-break-words transition-transform transition-opacity] duration-300 ease-in-out transform text-start text-gray-950 dark:text-gray-50 dark:border-gray-700 max-w-[90%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[75%] xl:max-w-[70%] hover:transition-colors",
             message.type === "deleted" ? "cursor-not-allowed" : "cursor-default",
             inView ? "opacity-100 translate-x-0" : `opacity-0 ${isSender ? "-translate-x-16" : "translate-x-16"}`,
             isSender
@@ -144,7 +144,7 @@ const RenderDMMessages = ({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger
-                        className={cn("focus:outline-none", !isSender && "order-last")}
+                        className={cn("focus:outline-none cursor-pointer", !isSender && "order-last")}
                         onClick={() => setReplyTo(message)}
                       >
                         {isSender ? (
@@ -196,7 +196,7 @@ const RenderDMMessages = ({
           )}
         </ContextMenuTrigger>
         {message.type !== "deleted" && (
-          <ContextMenuContent className="w-20 flex flex-col gap-2 p-2 mb-4 transition-all duration-500">
+          <ContextMenuContent className="w-20 flex flex-col gap-2 p-2 mb-4 transition-all duration-300 text-gray-950 dark:text-gray-50">
             {message?.content?.type === "text" && (
               <>
                 {language !== "en" && (
@@ -204,11 +204,11 @@ const RenderDMMessages = ({
                     className="flex gap-2"
                     onClick={() => translateMessage(plainText(message), language, setTranslated)}
                   >
-                    <HiOutlineLanguage size={16} /> Translate
+                    <HiOutlineLanguage size={16} className="text-neutral-600 dark:text-neutral-100" /> Translate
                   </ContextMenuItem>
                 )}
                 <ContextMenuItem className="flex gap-2" onClick={() => copyToClipboard(plainText(message))}>
-                  <HiOutlineClipboardDocument size={16} /> Copy
+                  <HiOutlineClipboardDocument size={16} className="text-neutral-600 dark:text-neutral-100" /> Copy
                 </ContextMenuItem>
                 {isSender && message.type === "default" && isLastMinForEdit && (
                   <ContextMenuItem
@@ -219,7 +219,7 @@ const RenderDMMessages = ({
                       setMessageForEdit(message._id, plainText(message));
                     }}
                   >
-                    <HiOutlinePencilSquare size={16} /> Edit
+                    <HiOutlinePencilSquare size={16} className="text-neutral-600 dark:text-neutral-100" /> Edit
                   </ContextMenuItem>
                 )}
               </>
@@ -228,20 +228,20 @@ const RenderDMMessages = ({
               <>
                 {checkImageType(message?.content?.file!) && (
                   <ContextMenuItem className="flex gap-2" onClick={() => setImageViewExtend(true)}>
-                    <HiOutlineViewfinderCircle size={16} /> View
+                    <HiOutlineViewfinderCircle size={16} className="text-neutral-600 dark:text-neutral-100" /> View
                   </ContextMenuItem>
                 )}
                 <ContextMenuItem
                   className="flex gap-2"
                   onClick={() => handleDownload(message.content?.file!, message._id)}
                 >
-                  <HiOutlineCloudArrowDown size={16} /> Download
+                  <HiOutlineCloudArrowDown size={16} className="text-neutral-600 dark:text-neutral-100" /> Download
                 </ContextMenuItem>
               </>
             )}
             {isSender && isLastMinForDelete && (
               <ContextMenuItem className="flex gap-2" onClick={() => deleteSelectedMessage(message._id)}>
-                <HiOutlineTrash size={16} /> Delete
+                <HiOutlineTrash size={16} className="text-neutral-600 dark:text-neutral-100" /> Delete
               </ContextMenuItem>
             )}
             {isValidUrl(plainText(message)) && (
@@ -249,7 +249,8 @@ const RenderDMMessages = ({
                 className="flex gap-2"
                 onClick={() => window.open(plainText(message), "_blank", "noopener,noreferrer")}
               >
-                <HiOutlineArrowTopRightOnSquare size={16} /> Visit Site
+                <HiOutlineArrowTopRightOnSquare size={16} className="text-neutral-600 dark:text-neutral-100" /> Visit
+                Site
               </ContextMenuItem>
             )}
           </ContextMenuContent>

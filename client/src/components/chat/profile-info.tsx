@@ -36,7 +36,7 @@ const ProfileInfo = () => {
       <div className="bg-gray-100/80 dark:bg-transparent rounded h-full w-full flex items-center justify-between px-4">
         <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger className="focus:outline-none">
+            <TooltipTrigger className="focus:outline-none cursor-pointer" asChild>
               <div className="flex gap-4 items-center" onClick={handleProfileNavigate} role="button">
                 <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
                   <AvatarImage src={getAvatar(userInfo)} alt="profile" className="object-cover size-full" />
@@ -62,7 +62,7 @@ const ProfileInfo = () => {
         <div className="flex gap-4">
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger className="focus:outline-none">
+              <TooltipTrigger className="focus:outline-none cursor-pointer">
                 {theme === "light" ? (
                   <HiOutlineMoon size={20} onClick={() => setTheme("dark")} className="tooltip-icon" />
                 ) : (
@@ -77,7 +77,7 @@ const ProfileInfo = () => {
 
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger className="focus:outline-none">
+              <TooltipTrigger className="focus:outline-none cursor-pointer">
                 {isSoundAllow ? (
                   <HiOutlineBellAlert size={20} onClick={() => setIsSoundAllow(false)} className="tooltip-icon" />
                 ) : (
@@ -92,7 +92,7 @@ const ProfileInfo = () => {
 
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger className="focus:outline-none">
+              <TooltipTrigger className="focus:outline-none cursor-pointer">
                 <HiOutlineArrowRightOnRectangle size={20} onClick={handleSignOut} className="tooltip-icon" />
               </TooltipTrigger>
               <TooltipContent>

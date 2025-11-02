@@ -76,7 +76,7 @@ const AddNewChat = () => {
     <Dialog open={openNewChatModal} onOpenChange={setOpenNewChatModal}>
       <TooltipProvider>
         <Tooltip>
-          <TooltipTrigger className="focus:outline-none">
+          <TooltipTrigger className="focus:outline-none cursor-pointer">
             <HiOutlineUserPlus onClick={() => setOpenNewChatModal(true)} size={18} className="tooltip-icon" />
           </TooltipTrigger>
           <TooltipContent>

@@ -12,7 +12,7 @@ const MessagePreview = () => {
   return (
     <div
       className={cn(
-        "absolute bottom-[4.5rem] h-bar w-full border-t flex items-center justify-center p-2 transition-[opacity,transform] duration-300 backdrop-blur-sm z-50",
+        "absolute bottom-18 h-bar w-full border-t flex items-center justify-center p-2 transition-all duration-300 backdrop-blur-sm z-50",
         replyTo ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16 pointer-events-none"
       )}
     >
@@ -33,7 +33,7 @@ const MessagePreview = () => {
 
         <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger className="focus:outline-none" disabled={undefined}>
+            <TooltipTrigger className="focus:outline-none cursor-pointer" disabled={undefined}>
               <HiOutlineXMark size={20} onClick={() => setReplyTo(null)} className="tooltip-icon" />
             </TooltipTrigger>
             <TooltipContent>

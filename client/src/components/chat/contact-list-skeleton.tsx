@@ -12,7 +12,7 @@ const ContactListSkeleton = ({
       {Array.from({ length: count }).map((_, index) => (
         <div
           key={index}
-          className={`flex border border-gray-200 dark:border-gray-700 p-2 lg:px-3 xl:px-6 h-14 items-center justify-between w-full bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 dark:from-neutral-900 dark:via-neutral-950 dark:to-neutral-900 rounded ${animate}`}
+          className={`flex border border-gray-200 dark:border-gray-700 p-2 lg:px-3 xl:px-6 h-14 items-center justify-between w-full bg-linear-to-r from-gray-100 via-gray-200 to-gray-100 dark:from-neutral-900 dark:via-neutral-950 dark:to-neutral-900 rounded ${animate}`}
         >
           {/* Avatar skeleton */}
           <div className="flex items-center gap-4">

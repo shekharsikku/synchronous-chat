@@ -8,7 +8,7 @@ const MessageSkeleton = ({ count }: { count: number }) => {
           ${i % 2 === 0 ? "justify-start" : "justify-end"} ${i % 2 === 0 ? "lg:ml-2" : "lg:mr-2"}`}
         >
           <div
-            className={`border border-gray-200 p-3 rounded-sm my-2 cursor-default glow bg-gradient-to-r 
+            className={`border border-gray-200 p-3 rounded-sm my-2 cursor-default glow bg-linear-to-r 
           dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 dark:border-gray-700
               ${i % 2 !== 0 ? "from-gray-200 via-gray-300 to-gray-200" : "from-gray-100 via-gray-200 to-gray-100"}
               ${i % 2 === 0 ? "justify-self-start justify-items-start" : "justify-self-end justify-items-end"}
@@ -16,7 +16,7 @@ const MessageSkeleton = ({ count }: { count: number }) => {
           >
             {/* Placeholder for message text */}
             <div
-              className={`h-3 w-full rounded mb-2 bg-gradient-to-r 
+              className={`h-3 w-full rounded mb-2 bg-linear-to-r 
                 dark:from-neutral-700 dark:via-neutral-700 dark:to-neutral-800
                  ${
                    i % 2 !== 0 ? "from-gray-300 via-gray-400 to-gray-300" : "from-gray-100 via-gray-200 to-gray-100"
@@ -24,7 +24,7 @@ const MessageSkeleton = ({ count }: { count: number }) => {
             ></div>
 
             <div
-              className={`h-3 w-2/3 rounded bg-gradient-to-r
+              className={`h-3 w-2/3 rounded bg-linear-to-r
                 dark:from-neutral-700 dark:via-neutral-700 dark:to-neutral-800
                  ${
                    i % 2 !== 0 ? "from-gray-300 via-gray-400 to-gray-300" : "from-gray-100 via-gray-200 to-gray-100"
@@ -35,7 +35,7 @@ const MessageSkeleton = ({ count }: { count: number }) => {
           {/* Timestamp skeleton */}
           <div className={`text-xs text-gray-400 my-2 flex ${i % 2 === 0 ? "justify-self-start" : "justify-self-end"}`}>
             <div
-              className={`h-3 w-16 lg:w-20 rounded bg-gradient-to-r dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900 ${
+              className={`h-3 w-16 lg:w-20 rounded bg-linear-to-r dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900 ${
                 i % 2 !== 0 ? "from-gray-300 via-gray-400 to-gray-300" : "from-gray-100 via-gray-200 to-gray-100"
               } pulse`}
             ></div>

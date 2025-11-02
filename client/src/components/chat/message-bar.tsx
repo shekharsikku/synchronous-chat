@@ -231,7 +231,7 @@ const MessageBar = () => {
         <div className="flex gap-4 relative">
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger className="focus:outline-none" disabled={isSending}>
+              <TooltipTrigger className="focus:outline-none cursor-pointer" disabled={isSending}>
                 <HiOutlineFaceSmile
                   size={20}
                   onClick={() => setEmojiPicker((prev) => !prev)}
@@ -245,20 +245,20 @@ const MessageBar = () => {
           </TooltipProvider>
 
           {emojiPicker && (
-            <div className="absolute bottom-20 left-[-10px] sm:left-[-5px] md:left-0" ref={emojiRef}>
+            <div className="absolute bottom-20 -left-2.5 sm:-left-1.5 md:left-0" ref={emojiRef}>
               <EmojiPicker
                 open={emojiPicker}
                 onEmojiClick={handleAddEmoji}
                 autoFocusSearch={false}
                 theme={theme as Theme}
-                className="max-w-72 sm:max-w-80 md:max-w-96 bg-background"
+                className="max-w-80 sm:max-w-96 md:max-w-96 bg-background!"
               />
             </div>
           )}
 
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger className="focus:outline-none" disabled={isSending}>
+              <TooltipTrigger className="focus:outline-none cursor-pointer" disabled={isSending}>
                 <HiOutlineLink size={20} onClick={handleAttachClick} className="tooltip-icon" />
               </TooltipTrigger>
               <TooltipContent>
@@ -296,7 +296,7 @@ const MessageBar = () => {
           <div className="flex gap-4">
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="focus:outline-none" disabled={isSending}>
+                <TooltipTrigger className="focus:outline-none cursor-pointer" disabled={isSending}>
                   <HiOutlineBackspace
                     size={20}
                     onClick={() => {
@@ -313,7 +313,7 @@ const MessageBar = () => {
             </TooltipProvider>
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="focus:outline-none" disabled={isSending}>
+                <TooltipTrigger className="focus:outline-none cursor-pointer" disabled={isSending}>
                   <HiOutlinePaperAirplane size={20} onClick={handleSendMessage} className="tooltip-icon" />
                 </TooltipTrigger>
                 <TooltipContent>

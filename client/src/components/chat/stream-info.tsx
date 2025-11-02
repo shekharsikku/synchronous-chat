@@ -107,7 +107,7 @@ const StreamInfo = () => {
         <div className="bg-gray-100/80 dark:bg-transparent rounded h-full w-full flex items-center justify-between px-4">
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger className="focus:outline-none">
+              <TooltipTrigger className="focus:outline-none cursor-pointer" asChild>
                 <div
                   className="flex flex-col justify-center px-1"
                   onClick={() => setCallingDialog(true)}
@@ -118,9 +118,9 @@ const StreamInfo = () => {
                   <h5 className="flex gap-2 heading-name">
                     <span>{displayName(localInfo?.name!)}</span>
                     {hoverInfo ? (
-                      <LuAudioLines size={16} strokeWidth={1.5} className="mt-[2px]" />
+                      <LuAudioLines size={16} strokeWidth={1.5} className="mt-0.5" />
                     ) : (
-                      <LuAudioWaveform size={16} strokeWidth={1.5} className="mt-[2px]" />
+                      <LuAudioWaveform size={16} strokeWidth={1.5} className="mt-0.5" />
                     )}
                     <span>{displayName(callingInfo?.name!)}</span>
                   </h5>
@@ -144,7 +144,7 @@ const StreamInfo = () => {
           <div className="flex gap-4 justify-end">
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="focus:outline-none">
+                <TooltipTrigger className="focus:outline-none cursor-pointer">
                   {remoteMicOff ? (
                     <LuMicOff
                       size={20}
@@ -164,7 +164,7 @@ const StreamInfo = () => {
 
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="focus:outline-none">
+                <TooltipTrigger className="focus:outline-none cursor-pointer">
                   {muteUser ? (
                     <HiOutlineSpeakerXMark size={20} onClick={() => setMuteUser(false)} className="tooltip-icon" />
                   ) : (
@@ -179,7 +179,7 @@ const StreamInfo = () => {
 
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="focus:outline-none">
+                <TooltipTrigger className="focus:outline-none cursor-pointer">
                   <HiOutlinePhoneXMark size={18} onClick={disconnectCalling} className="tooltip-icon" />
                 </TooltipTrigger>
                 <TooltipContent>

@@ -107,7 +107,7 @@ const CreateGroup = () => {
     <Dialog open={groupDialog} onOpenChange={setGroupDialog}>
       <TooltipProvider>
         <Tooltip>
-          <TooltipTrigger className="focus:outline-none">
+          <TooltipTrigger className="focus:outline-none cursor-pointer">
             <HiOutlineUsers onClick={() => setGroupDialog(true)} size={18} className="tooltip-icon" />
           </TooltipTrigger>
           <TooltipContent>

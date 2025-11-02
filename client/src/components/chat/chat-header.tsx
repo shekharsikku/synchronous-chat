@@ -83,7 +83,7 @@ const ChatHeader = () => {
           {selectedChatType === "group" && (
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="focus:outline-none">
+                <TooltipTrigger className="focus:outline-none" asChild>
                   <Avatar
                     className="size-9 rounded-full overflow-hidden cursor-pointer border-2"
                     onClick={() => setOpenGroupInfoModal(true)}
@@ -125,7 +125,7 @@ const ChatHeader = () => {
                   </div>
                   <div className="w-2/3 flex flex-col justify-center gap-1.5">
                     <h3 className="text-lg md:text-xl font-bold">{selectedChatData.name}</h3>
-                    <p className="text-xs md:text-sm max-w-48 md:max-w-56 text-ellipsis break-words line-clamp-2">
+                    <p className="text-xs md:text-sm max-w-48 md:max-w-56 text-ellipsis wrap-break-word line-clamp-2">
                       {selectedChatData.description}
                     </p>
                   </div>
@@ -143,7 +143,7 @@ const ChatHeader = () => {
           {selectedChatType === "contact" && (
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="focus:outline-none">
+                <TooltipTrigger className="focus:outline-none" asChild>
                   <Avatar
                     className="size-9 rounded-full overflow-hidden cursor-pointer border-2"
                     onClick={() => setOpenUserInfoModal(true)}
@@ -249,7 +249,7 @@ const ChatHeader = () => {
               {callingActive && callingInfo?.uid === selectedChatData?._id ? (
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger className="focus:outline-none">
+                    <TooltipTrigger className="focus:outline-none cursor-pointer">
                       <LuAudioLines
                         size={20}
                         strokeWidth={1.5}
@@ -266,7 +266,7 @@ const ChatHeader = () => {
                 <>
                   <TooltipProvider>
                     <Tooltip>
-                      <TooltipTrigger className="focus:outline-none" disabled={pendingRequest}>
+                      <TooltipTrigger className="focus:outline-none cursor-pointer" disabled={pendingRequest}>
                         <HiOutlineShare
                           size={18}
                           onClick={() => setOpenPeerShareModal(true)}
@@ -280,7 +280,7 @@ const ChatHeader = () => {
                   </TooltipProvider>
                   <TooltipProvider>
                     <Tooltip>
-                      <TooltipTrigger className="focus:outline-none" disabled={pendingRequest}>
+                      <TooltipTrigger className="focus:outline-none cursor-pointer" disabled={pendingRequest}>
                         <HiOutlineVideoCamera
                           size={20}
                           onClick={() => requestVoiceCalling(selectedChatData?._id!, "video")}
@@ -294,7 +294,7 @@ const ChatHeader = () => {
                   </TooltipProvider>
                   <TooltipProvider>
                     <Tooltip>
-                      <TooltipTrigger className="focus:outline-none" disabled={pendingRequest}>
+                      <TooltipTrigger className="focus:outline-none cursor-pointer" disabled={pendingRequest}>
                         <HiOutlinePhone
                           size={18}
                           onClick={() => requestVoiceCalling(selectedChatData?._id!, "audio")}
@@ -315,7 +315,7 @@ const ChatHeader = () => {
             <TooltipProvider>
               <Tooltip>
                 <DropdownMenuTrigger asChild className={cn(import.meta.env.PROD && "hidden")}>
-                  <TooltipTrigger className="focus:outline-none">
+                  <TooltipTrigger className="focus:outline-none cursor-pointer">
                     <HiOutlineLanguage size={18} className="tooltip-icon" />
                   </TooltipTrigger>
                 </DropdownMenuTrigger>
@@ -324,7 +324,7 @@ const ChatHeader = () => {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <DropdownMenuContent className="w-36 mt-4 mr-6">
+            <DropdownMenuContent className="w-36 mt-4 mr-6 bg-background">
               <DropdownMenuLabel>Select Language</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <ScrollArea className="h-52 overflow-y-auto scrollbar-hide">
@@ -346,7 +346,7 @@ const ChatHeader = () => {
           {/* Close Chat */}
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger className="focus:outline-none">
+              <TooltipTrigger className="focus:outline-none cursor-pointer">
                 <HiOutlineXMark size={20} onClick={closeChat} className="tooltip-icon" />
               </TooltipTrigger>
               <TooltipContent>
