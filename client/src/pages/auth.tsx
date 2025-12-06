@@ -130,6 +130,7 @@ const Auth = () => {
 
                   return (
                     <TabsTrigger
+                      key={value}
                       value={value}
                       className={cn(
                         "w-full px-3 py-5 text-sm font-medium text-gray-700 dark:text-gray-300 border-b-2 bg-background! rounded-none duration-0",

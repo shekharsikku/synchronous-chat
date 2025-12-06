@@ -253,6 +253,12 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   const responseCallingRequest = useEffectEvent((action: ResponseActions) => {
     if (!remoteInfo?.pid) return;
 
+    /** Clear any existing timeout before doing anything */
+    if (callTimeoutRef.current) {
+      clearTimeout(callTimeoutRef.current);
+      callTimeoutRef.current = null;
+    }
+
     if (callingActive) {
       /** Notify the remote user when you busy */
       const callingActions = {
@@ -269,6 +275,16 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       }
       setRemoteInfo(callingInfo);
       return;
+    }
+
+    if (!callingActive && action !== "accept") {
+      callTimeoutRef.current = setTimeout(() => {
+        setCallingDialog(false);
+        setCallingActive(false);
+        setCallingResponse(null);
+        setRemoteInfo(null);
+        callTimeoutRef.current = null;
+      }, 2000);
     }
 
     if (action === "accept") {
@@ -347,22 +363,8 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (callingResponse) {
       responseCallingRequest(callingResponse);
-
-      if (callTimeoutRef.current) {
-        clearTimeout(callTimeoutRef.current);
-      }
-
-      if (callingResponse !== "accept" && !callingActive) {
-        callTimeoutRef.current = setTimeout(() => {
-          setCallingDialog(false);
-          setCallingActive(false);
-          setCallingResponse(null);
-          setRemoteInfo(null);
-          callTimeoutRef.current = null;
-        }, 2000);
-      }
     }
-  }, [callingResponse, callingActive]);
+  }, [callingResponse]);
 
   /** Mount unmount for request/response action */
   useEffect(() => {
