@@ -5,8 +5,9 @@ import notificationIcon from "@/assets/favicon.ico";
 import notificationSound from "@/assets/sound/message-alert.mp3";
 import { useContacts } from "@/hooks";
 import api from "@/lib/api";
+import { setAuthUser } from "@/lib/auth";
 import { useSocket } from "@/lib/context";
-import { useAuthStore, useChatStore, type GroupInfo, type Message } from "@/lib/zustand";
+import { useAuthStore, useChatStore, type GroupInfo, type Message, type UserInfo } from "@/lib/zustand";
 
 export const useListeners = () => {
   const queryClient = useQueryClient();
@@ -14,11 +15,18 @@ export const useListeners = () => {
 
   const { socket } = useSocket();
   const { contacts } = useContacts();
-  const { userInfo } = useAuthStore();
+  const { userInfo, setUserInfo } = useAuthStore();
   const { selectedChatData, isSoundAllow } = useChatStore();
 
   const getSenderName = useEffectEvent((chatKey: string) => {
     return contacts?.find((contact) => contact._id === chatKey)?.name;
+  });
+
+  const handleProfileUpdate = useEffectEvent((updatedProfile: UserInfo) => {
+    if (updatedProfile._id === userInfo?._id) {
+      setUserInfo(updatedProfile);
+      setAuthUser(updatedProfile);
+    }
   });
 
   useEffect(() => {
@@ -138,6 +146,7 @@ export const useListeners = () => {
       ["message:edited", handleMessageUpdate],
       ["message:reacted", handleMessageUpdate],
       ["group:created", handleGroupCreate],
+      ["profile:update", handleProfileUpdate],
     ];
 
     if (!messageListeners.current) {

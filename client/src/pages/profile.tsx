@@ -40,7 +40,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import api from "@/lib/api";
-import { setAuthUser, useSignOut } from "@/lib/auth";
+import { useSignOut } from "@/lib/auth";
 import { useSocket } from "@/lib/context";
 import { changePasswordSchema, profileUpdateSchema, genders } from "@/lib/schema";
 import { useAuthStore } from "@/lib/zustand";
@@ -51,7 +51,7 @@ const Profile = () => {
 
   const { socket } = useSocket();
   const { handleSignOut } = useSignOut();
-  const { userInfo, setUserInfo } = useAuthStore();
+  const { userInfo } = useAuthStore();
 
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(userInfo?.image);
@@ -93,25 +93,13 @@ const Profile = () => {
     }
   };
 
-  const syncUpdatedProfile = (result: any, event = true) => {
-    if (event) {
-      socket?.emit("before:profileupdate", { updatedDetails: result.data });
-    }
-
-    setAuthUser(result.data);
-    setUserInfo(result.data);
-    setSelectedImage(result.data?.image);
-
-    toast.success(result.message);
-  };
-
   const updateProfileImage = async (formData: FormData) => {
     try {
       setIsLoading(true);
       const response = await api.patch("/api/user/update-profile-image", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      syncUpdatedProfile(response.data);
+      toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
     } finally {
@@ -125,7 +113,7 @@ const Profile = () => {
     try {
       setIsLoading(true);
       const response = await api.delete("/api/user/delete-profile-image");
-      syncUpdatedProfile(response.data);
+      toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
     } finally {
@@ -148,7 +136,7 @@ const Profile = () => {
     try {
       setIsLoading(true);
       const response = await api.patch("/api/user/change-password", values);
-      syncUpdatedProfile(response.data, false);
+      toast.success(response.data.message);
       setOpenPasswordDialog(false);
       changePasswordForm.reset();
     } catch (error: any) {
@@ -173,8 +161,7 @@ const Profile = () => {
     try {
       setIsLoading(true);
       const response = await api.patch("/api/user/user-profile-setup", values);
-      syncUpdatedProfile(response.data);
-      profileUpdateForm.reset({ ...response.data.data });
+      toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
     } finally {
@@ -182,21 +169,16 @@ const Profile = () => {
     }
   };
 
-  const handleProfileUpdate = useEffectEvent(({ updatedDetails }: any) => {
-    setAuthUser(updatedDetails);
-    setUserInfo(updatedDetails);
-    setSelectedImage(updatedDetails?.image);
+  const handleProfileUpdate = useEffectEvent((updatedDetails: any) => {
+    setSelectedImage(updatedDetails.image);
     profileUpdateForm.reset({ ...updatedDetails });
-    toast.info("Your details have been updated!");
   });
 
   useEffect(() => {
-    if (!socket) return;
-
-    socket.on("after:profileupdate", handleProfileUpdate);
+    socket?.on("profile:update", handleProfileUpdate);
 
     return () => {
-      socket.off("after:profileupdate", handleProfileUpdate);
+      socket?.off("profile:update", handleProfileUpdate);
     };
   }, [socket]);
 
