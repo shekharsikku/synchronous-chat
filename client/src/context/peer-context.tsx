@@ -182,10 +182,10 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
     };
 
     /** Handling signaling for call request */
-    socket?.on("after:callrequest", handleCallingRequest);
+    socket?.on("after:call-request", handleCallingRequest);
     /** Cleanup for signaling request */
     return () => {
-      socket?.off("after:callrequest", handleCallingRequest);
+      socket?.off("after:call-request", handleCallingRequest);
     };
   }, [socket]);
 
@@ -268,7 +268,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
         to: remoteInfo?.uid,
         pid: localInfo?.pid,
       };
-      socket?.emit("before:callconnect", { callingActions });
+      socket?.emit("before:call-connect", { callingActions });
 
       if (action === "accept") {
         toast.info("Can't response on another call currently!");
@@ -338,7 +338,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
             to: remoteInfo?.uid,
             pid: localInfo?.pid,
           };
-          socket?.emit("before:callconnect", { callingActions });
+          socket?.emit("before:call-connect", { callingActions });
         })
         .catch((error) => {
           console.error("Error accessing media devices:", error.message);
@@ -356,7 +356,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
         to: remoteInfo?.uid,
         pid: localInfo?.pid,
       };
-      socket?.emit("before:callconnect", { callingActions });
+      socket?.emit("before:call-connect", { callingActions });
     }
   });
 
@@ -400,10 +400,10 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
     };
 
     /** Handling signaling for call request */
-    socket?.on("after:callconnect", handleCallingActions);
+    socket?.on("after:call-connect", handleCallingActions);
     /** Cleanup for signaling request */
     return () => {
-      socket?.off("after:callconnect", handleCallingActions);
+      socket?.off("after:call-connect", handleCallingActions);
     };
   }, [socket]);
 
@@ -436,7 +436,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       to: callingInfo?.uid,
       pid: localInfo?.pid,
     };
-    socket?.emit("before:calldisconnect", { callingActions });
+    socket?.emit("before:call-disconnect", { callingActions });
 
     /** Reset remote info state */
     setCallingDialog(false);
@@ -465,10 +465,10 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       toast.info(`Call disconnected from ${response.name}!`);
     };
     /** Handling signaling for call request */
-    socket?.on("after:calldisconnect", handleCallDisconnect);
+    socket?.on("after:call-disconnect", handleCallDisconnect);
     /** Cleanup for signaling request */
     return () => {
-      socket?.off("after:calldisconnect", handleCallDisconnect);
+      socket?.off("after:call-disconnect", handleCallDisconnect);
     };
   }, [socket]);
 
@@ -477,7 +477,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       to: callingInfo?.uid,
       mute: remoteMicOff,
     };
-    socket?.emit("before:muteaction", { microphoneAction });
+    socket?.emit("before:mute-action", { microphoneAction });
   }, [socket, callingInfo?.uid, remoteMicOff]);
 
   useEffect(() => {
@@ -485,10 +485,10 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       setRemoteMute(action.mute);
     };
 
-    socket?.on("after:muteaction", handleMicAction);
+    socket?.on("after:mute-action", handleMicAction);
 
     return () => {
-      socket?.off("after:muteaction", handleMicAction);
+      socket?.off("after:mute-action", handleMicAction);
     };
   }, [socket]);
 

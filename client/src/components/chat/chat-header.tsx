@@ -72,7 +72,7 @@ const ChatHeader = () => {
 
     setMediaType(type);
     setPendingRequest(true);
-    socket?.emit("before:callrequest", { callingDetails });
+    socket?.emit("before:call-request", { callingDetails });
   };
 
   return (
