@@ -2,16 +2,16 @@ import { CronJob } from "cron";
 import { User, Message } from "../models/index.js";
 import env from "../utils/env.js";
 
+const calculatePastDate = (daysAgo: number) => {
+  const taskDate = new Date();
+  taskDate.setDate(taskDate.getDate() - daysAgo);
+  return taskDate;
+};
+
 const jobs = new CronJob(
   "0 0 0 * * *",
   async () => {
     try {
-      const calculatePastDate = (daysAgo: number) => {
-        const taskDate = new Date();
-        taskDate.setDate(taskDate.getDate() - daysAgo);
-        return taskDate;
-      };
-
       const currentDate = new Date();
       const profileSetupExpiry = calculatePastDate(30);
       const messagesExpiryDate = calculatePastDate(60);
