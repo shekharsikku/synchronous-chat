@@ -5,7 +5,7 @@ import app from "./app.js";
 
 const server = createServer(app);
 
-const io = new Server(server, {
+export const io = new Server(server, {
   cors: {
     origin: env.CORS_ORIGIN,
     credentials: true,
@@ -14,7 +14,7 @@ const io = new Server(server, {
 
 const userSocketMap = new Map<string, Set<string>>();
 
-const getSocketId = (userId: string) => {
+export const getSocketId = (userId: string) => {
   const userSockets = userSocketMap.get(userId) || new Set<string>();
   return Array.from(userSockets);
 };
@@ -153,4 +153,4 @@ io.on("connection", (socket: Socket) => {
   });
 });
 
-export { io, server, getSocketId };
+export default server;
