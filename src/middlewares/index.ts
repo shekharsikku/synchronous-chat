@@ -135,7 +135,7 @@ const validate =
   (req: Request<{}, {}, T>, res: Response, next: NextFunction) => {
     try {
       req.body = schema.parse(req.body);
-      next();
+      return next();
     } catch (error: any) {
       if (error instanceof ZodError && error.name === "ZodError") {
         const errors = JSON.parse(error.message);

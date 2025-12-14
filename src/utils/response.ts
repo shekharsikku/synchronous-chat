@@ -19,16 +19,26 @@ type TypeResponse<T = any, E = any> = {
   error?: E;
 };
 
-const ErrorResponse = <E>(res: Response, code: number, message: string, error?: E) => {
+const ErrorResponse = <E = any>(
+  res: Response,
+  code: number,
+  message: string,
+  error?: E
+): Response<TypeResponse<undefined, E>> => {
   const response: TypeResponse<undefined, E> = { success: false, message };
   if (error !== undefined) response.error = error;
-  res.status(code).json(response);
+  return res.status(code).json(response);
 };
 
-const SuccessResponse = <T>(res: Response, code: number, message: string, data?: T) => {
+const SuccessResponse = <T = any>(
+  res: Response,
+  code: number,
+  message: string,
+  data?: T
+): Response<TypeResponse<T, undefined>> => {
   const response: TypeResponse<T, undefined> = { success: true, message };
   if (data !== undefined) response.data = data;
-  res.status(code).json(response);
+  return res.status(code).json(response);
 };
 
 export { HttpError, ErrorResponse, SuccessResponse };
