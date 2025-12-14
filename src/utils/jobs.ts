@@ -1,8 +1,8 @@
 import { CronJob } from "cron";
-import { User, Message, Conversation } from "../models/index.js";
+import { User, Message } from "../models/index.js";
 import env from "../utils/env.js";
 
-const job = new CronJob(
+const jobs = new CronJob(
   "0 0 0 * * *",
   async () => {
     try {
@@ -13,32 +13,29 @@ const job = new CronJob(
       };
 
       const currentDate = new Date();
-      const thirtyDaysAgo = calculatePastDate(30);
-      const sevenDaysAgo = calculatePastDate(7);
-      const fourteenDaysAgo = calculatePastDate(14);
+      const profileSetupExpiry = calculatePastDate(30);
+      const messagesExpiryDate = calculatePastDate(60);
 
-      const [authentication, profiles, messages, conversations] = await Promise.all([
+      const [authentication, profiles, messages] = await Promise.all([
         User.updateMany(
           { "authentication.expiry": { $lt: currentDate } },
           { $pull: { authentication: { expiry: { $lt: currentDate } } } }
         ),
-        User.deleteMany({ setup: false, createdAt: { $lt: sevenDaysAgo } }),
-        Message.deleteMany({ createdAt: { $lt: fourteenDaysAgo } }),
-        Conversation.deleteMany({ interaction: { $lt: thirtyDaysAgo } }),
+        User.deleteMany({ setup: false, createdAt: { $lt: profileSetupExpiry } }),
+        Message.deleteMany({ createdAt: { $lt: messagesExpiryDate } }),
       ]);
 
       if (env.isDev) {
         console.log("Result:", {
           authentication,
-          conversations,
-          messages,
           profiles,
+          messages,
         });
       }
     } catch (error: any) {
       console.log(`Error: ${error.message}`);
     } finally {
-      console.log(`Schedule: ${new Date().toString()}`);
+      console.log(`Schedule: ${new Date().toISOString()}`);
     }
   },
   null,
@@ -46,4 +43,4 @@ const job = new CronJob(
   "Asia/Kolkata"
 );
 
-export default job;
+export default jobs;
