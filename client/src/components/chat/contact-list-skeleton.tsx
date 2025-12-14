@@ -1,12 +1,10 @@
-const ContactListSkeleton = ({
-  animate,
-  count = 5,
-  status = false,
-}: {
+interface ContactListSkeletonProps {
   animate: "pulse" | "glow";
   count?: number;
   status?: boolean;
-}) => {
+}
+
+const ContactListSkeleton: React.FC<ContactListSkeletonProps> = ({ animate, count = 5, status = false }) => {
   return (
     <div className="flex flex-col gap-4">
       {Array.from({ length: count }).map((_, index) => (

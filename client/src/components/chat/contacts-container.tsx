@@ -16,13 +16,12 @@ import { usePeer, useSocket } from "@/lib/context";
 import { cn } from "@/lib/utils";
 import { type UserInfo, type GroupInfo, useChatStore } from "@/lib/zustand";
 
-const ContactsContainer = ({
-  lastChatUser,
-  setLastChatUser,
-}: {
+interface ContactsContainerProps {
   lastChatUser: string | null;
   setLastChatUser: any;
-}) => {
+}
+
+const ContactsContainer: React.FC<ContactsContainerProps> = ({ lastChatUser, setLastChatUser }) => {
   const { callingActive } = usePeer();
   const { onlineUsers } = useSocket();
   const { contacts, groups, fetching } = useContacts();
@@ -161,14 +160,13 @@ const ContactsContainer = ({
                   ) : (
                     <div className="flex flex-col gap-4">
                       {contacts?.map((contact: UserInfo) => (
-                        <Fragment key={contact._id}>
-                          <ContactElement
-                            contact={contact}
-                            selectedChatData={selectedChatData}
-                            onlineUsers={onlineUsers}
-                            onSelectContact={onSelectContact}
-                          />
-                        </Fragment>
+                        <ContactElement
+                          key={contact._id}
+                          contact={contact}
+                          selectedChatData={selectedChatData}
+                          onlineUsers={onlineUsers}
+                          onSelectContact={onSelectContact}
+                        />
                       ))}
                     </div>
                   )}
@@ -181,13 +179,12 @@ const ContactsContainer = ({
                   ) : (
                     <div className="flex flex-col gap-4">
                       {groups?.map((group: GroupInfo) => (
-                        <Fragment key={group._id}>
-                          <GroupElement
-                            group={group}
-                            selectedChatData={selectedChatData}
-                            onSelectGroup={onSelectGroup}
-                          />
-                        </Fragment>
+                        <GroupElement
+                          key={group._id}
+                          group={group}
+                          selectedChatData={selectedChatData}
+                          onSelectGroup={onSelectGroup}
+                        />
                       ))}
                     </div>
                   )}

@@ -2,16 +2,18 @@ import groupAvatar from "@/assets/group-avatar.webp";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, getAvatar } from "@/lib/utils";
 
-export const ContactElement = ({
-  contact,
-  selectedChatData,
-  onlineUsers,
-  onSelectContact,
-}: {
+interface ContactElementProps {
   contact: any;
   selectedChatData: any;
   onlineUsers: object;
   onSelectContact: (contact: any) => void;
+}
+
+export const ContactElement: React.FC<ContactElementProps> = ({
+  contact,
+  selectedChatData,
+  onlineUsers,
+  onSelectContact,
 }) => {
   return (
     <div
@@ -44,15 +46,13 @@ export const ContactElement = ({
   );
 };
 
-export const GroupElement = ({
-  group,
-  selectedChatData,
-  onSelectGroup,
-}: {
+interface GroupElementProps {
   group: any;
   selectedChatData: any;
   onSelectGroup: (group: any) => void;
-}) => {
+}
+
+export const GroupElement: React.FC<GroupElementProps> = ({ group, selectedChatData, onSelectGroup }) => {
   return (
     <div
       key={group?._id}

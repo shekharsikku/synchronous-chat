@@ -10,56 +10,52 @@ import { useMessages, useContacts } from "@/hooks";
 import { mergeRefs } from "@/lib/utils";
 import { type Message, useChatStore, useAuthStore } from "@/lib/zustand";
 
-const RenderMessages = React.memo(
-  ({
-    messages,
-    messageRefs,
-    getSender,
-  }: {
-    messages: Message[];
-    messageRefs: RefObject<Record<string, HTMLDivElement | null>>;
-    getSender: (sid: string) => string;
-  }) => {
-    let lastDate = "";
+interface RenderMessagesProps {
+  messages: Message[];
+  messageRefs: RefObject<Record<string, HTMLDivElement | null>>;
+  getSender: (sid: string) => string;
+}
 
-    const scrollMessage = (mid: string) => {
-      const element = messageRefs.current[mid];
+const RenderMessages: React.FC<RenderMessagesProps> = React.memo(({ messages, messageRefs, getSender }) => {
+  let lastDate = "";
 
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-        element.classList.add("shake");
-        setTimeout(() => element.classList.remove("shake"), 1500);
-      }
-    };
+  const scrollMessage = (mid: string) => {
+    const element = messageRefs.current[mid];
 
-    return messages.map((message) => {
-      const messageDate = moment(message.createdAt).format("YYYY-MM-DD");
-      const showDate = messageDate !== lastDate;
-      lastDate = messageDate;
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      element.classList.add("shake");
+      setTimeout(() => element.classList.remove("shake"), 1500);
+    }
+  };
 
-      return (
-        <div
-          key={message._id}
-          ref={(element) => {
-            if (element) messageRefs.current[message._id] = element;
-          }}
-          className="relative"
-        >
-          {showDate && (
-            <div className="text-center text-gray-500 dark:text-gray-100 py-4">
-              {moment(message.createdAt).isSame(moment(), "day")
-                ? "Today"
-                : moment(message.createdAt).isSame(moment().subtract(1, "day"), "day")
-                  ? "Yesterday"
-                  : moment(message.createdAt).format("LL")}
-            </div>
-          )}
-          <RenderDMMessages message={message} scrollMessage={scrollMessage} getSender={getSender} />
-        </div>
-      );
-    });
-  }
-);
+  return messages.map((message) => {
+    const messageDate = moment(message.createdAt).format("YYYY-MM-DD");
+    const showDate = messageDate !== lastDate;
+    lastDate = messageDate;
+
+    return (
+      <div
+        key={message._id}
+        ref={(element) => {
+          if (element) messageRefs.current[message._id] = element;
+        }}
+        className="relative"
+      >
+        {showDate && (
+          <div className="text-center text-gray-500 dark:text-gray-100 py-4">
+            {moment(message.createdAt).isSame(moment(), "day")
+              ? "Today"
+              : moment(message.createdAt).isSame(moment().subtract(1, "day"), "day")
+                ? "Yesterday"
+                : moment(message.createdAt).format("LL")}
+          </div>
+        )}
+        <RenderDMMessages message={message} scrollMessage={scrollMessage} getSender={getSender} />
+      </div>
+    );
+  });
+});
 
 const MessageContainer = () => {
   const { userInfo } = useAuthStore();

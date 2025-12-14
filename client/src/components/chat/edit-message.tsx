@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import {
@@ -17,13 +17,12 @@ import api from "@/lib/api";
 import { encryptMessage } from "@/lib/noble";
 import { useChatStore } from "@/lib/zustand";
 
-const EditMessage = ({
-  editMessageDialog,
-  setEditMessageDialog,
-}: {
+interface EditMessageProps {
   editMessageDialog: boolean;
   setEditMessageDialog: any;
-}) => {
+}
+
+const EditMessage: React.FC<EditMessageProps> = ({ editMessageDialog, setEditMessageDialog }) => {
   const { selectedChatData, messageForEdit, setEditDialog } = useChatStore();
   const [isLoading, setIsLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");

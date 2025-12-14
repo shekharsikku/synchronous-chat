@@ -34,15 +34,13 @@ import {
 } from "@/lib/utils";
 import { useChatStore, useAuthStore, type Message } from "@/lib/zustand";
 
-const RenderDMMessages = ({
-  message,
-  scrollMessage,
-  getSender,
-}: {
+interface RenderDMMessagesProps {
   message: Message;
   scrollMessage: (mid: string) => void;
   getSender: (sid: string) => string | undefined;
-}) => {
+}
+
+const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMessage, getSender }) => {
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
   const { plainText } = usePlainText();

@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { HiOutlineUsers } from "react-icons/hi2";
 import { toast } from "sonner";
@@ -183,15 +183,14 @@ const CreateGroup = () => {
             <ScrollArea className="min-h-20 overflow-y-auto scrollbar-hide">
               <div className="flex flex-col gap-1">
                 {contacts?.map((contact) => (
-                  <Fragment key={contact._id}>
-                    <ContactItem
-                      id={contact._id!}
-                      name={contact.name!}
-                      avatar={getAvatar(contact)}
-                      selected={selectedContacts.includes(contact._id!)}
-                      onToggle={handleSelectToggle}
-                    />
-                  </Fragment>
+                  <ContactItem
+                    key={contact._id}
+                    id={contact._id!}
+                    name={contact.name!}
+                    avatar={getAvatar(contact)}
+                    selected={selectedContacts.includes(contact._id!)}
+                    onToggle={handleSelectToggle}
+                  />
                 ))}
               </div>
             </ScrollArea>
