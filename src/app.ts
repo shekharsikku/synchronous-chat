@@ -11,7 +11,7 @@ import cors from "cors";
 import env from "./utils/env.js";
 import routers from "./routers/index.js";
 import { limiter } from "./middlewares/index.js";
-import { HttpError, ErrorResponse, SuccessResponse } from "./utils/index.js";
+import { HttpError, ErrorResponse, SuccessResponse } from "./utils/response.js";
 
 const app = express();
 

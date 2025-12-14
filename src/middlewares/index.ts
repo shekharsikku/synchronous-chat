@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import type { UserInterface } from "../interface/index.js";
 import { ZodError, type ZodType } from "zod";
 import type { Types } from "mongoose";
-import { HttpError, ErrorResponse } from "../utils/index.js";
+import { HttpError, ErrorResponse } from "../utils/response.js";
 import { generateSecret, generateAccess, generateRefresh, authorizeCookie, createUserInfo } from "../utils/helpers.js";
 import { User } from "../models/index.js";
 import { compactDecrypt, jwtVerify } from "jose";

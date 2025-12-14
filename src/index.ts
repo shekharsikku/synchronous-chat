@@ -1,7 +1,7 @@
 import { connect } from "mongoose";
-import { server } from "./socket.js";
-import job from "./utils/cron.js";
+import jobs from "./utils/jobs.js";
 import env from "./utils/env.js";
+import server from "./server.js";
 
 const uri = env.MONGODB_URI;
 const port = env.PORT;
@@ -20,8 +20,8 @@ const port = env.PORT;
     /** Database connection success log. */
     console.log("\nDatabase connection success!");
 
-    /** Starting cron job schedules. */
-    job.start();
+    /** Starting cron jobs schedules. */
+    jobs.start();
 
     /** Listening express/socket.io server */
     server.listen(port, () => {

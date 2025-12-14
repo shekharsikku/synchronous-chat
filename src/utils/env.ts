@@ -1,7 +1,5 @@
 import { cleanEnv, str, url, num, port } from "envalid";
-import { config } from "dotenv";
-
-config();
+import "dotenv/config";
 
 const env = cleanEnv(process.env, {
   CLOUDINARY_CLOUD_NAME: str(),

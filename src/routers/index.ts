@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { SuccessResponse } from "../utils/index.js";
+import { SuccessResponse } from "../utils/response.js";
 import { limiter } from "../middlewares/index.js";
 import AuthRouter from "./auth.js";
 import UserRouter from "./user.js";
@@ -18,7 +18,8 @@ router.use("/group", limiter(10, 500), GroupRouter);
 /** Just for server wake up from third party services */
 router.get("/wakeup", (req: Request, res: Response) => {
   const from = (req.query.from as string) || "Unknown";
-  return SuccessResponse(res, 200, `Wake up server by ${from}!`);
+  const timestamp = new Date().toISOString();
+  return SuccessResponse(res, 200, `Wake up server by ${from} at ${timestamp}!`);
 });
 
 export default router;

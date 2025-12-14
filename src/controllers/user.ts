@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import type { Profile, Password } from "../utils/schema.js";
 import { genSalt, hash, compare } from "bcryptjs";
-import { HttpError, ErrorResponse, SuccessResponse } from "../utils/index.js";
+import { HttpError, ErrorResponse, SuccessResponse } from "../utils/response.js";
 import { deleteImageByUrl, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { unlinkFilesWithExtensions, extensionsToDelete, folderPath } from "../utils/unlink.js";
 import { hasEmptyField, createUserInfo, generateAccess } from "../utils/helpers.js";
