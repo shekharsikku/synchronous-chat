@@ -10,7 +10,7 @@ import cors from "cors";
 import env from "./utils/env.js";
 import routers from "./routers/index.js";
 import { limiter } from "./middlewares/index.js";
-import { HttpError, ErrorResponse, SuccessResponse } from "./utils/index.js";
+import { HttpError, ErrorResponse, SuccessResponse } from "./utils/response.js";
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -59,7 +59,7 @@ app.all("*path", (_req, res) => {
         return SuccessResponse(res, 200, "Welcome to Synchronous Chat!");
     }
     else {
-        res.sendFile(join(__dirname, "../client/dist", "index.html"), {
+        return res.sendFile(join(__dirname, "../client/dist", "index.html"), {
             headers: {
                 "Cache-Control": "no-store, must-revalidate",
             },

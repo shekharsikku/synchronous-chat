@@ -128,6 +128,18 @@ Use this section to tell people about which versions of your project are current
 | 4.0.x   | :white_check_mark: |
 | < 4.0   | :x:                |
 
+```bash
+npm install express@latest
+```
+
+### **This project is built with - Mongoose v8**.
+
+Using earlier versions may cause unexpected issues.
+
+```bash
+npm install mongoose@8x
+```
+
 ### **Security Best Practices**
 
 - Use environment variables for sensitive data.

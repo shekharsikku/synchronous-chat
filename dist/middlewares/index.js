@@ -1,5 +1,5 @@
 import { ZodError } from "zod";
-import { HttpError, ErrorResponse } from "../utils/index.js";
+import { HttpError, ErrorResponse } from "../utils/response.js";
 import { generateSecret, generateAccess, generateRefresh, authorizeCookie, createUserInfo } from "../utils/helpers.js";
 import { User } from "../models/index.js";
 import { compactDecrypt, jwtVerify } from "jose";
@@ -105,7 +105,7 @@ const upload = multer({ storage });
 const validate = (schema) => (req, res, next) => {
     try {
         req.body = schema.parse(req.body);
-        next();
+        return next();
     }
     catch (error) {
         if (error instanceof ZodError && error.name === "ZodError") {

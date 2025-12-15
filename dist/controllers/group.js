@@ -1,6 +1,6 @@
-import { HttpError, SuccessResponse, ErrorResponse } from "../utils/index.js";
+import { HttpError, SuccessResponse, ErrorResponse } from "../utils/response.js";
 import { Group, Message, User, Conversation } from "../models/index.js";
-import { getSocketId, io } from "../socket.js";
+import { getSocketId, io } from "../server.js";
 import { Types } from "mongoose";
 const createGroup = async (req, res) => {
     try {
@@ -177,7 +177,7 @@ const groupMessage = async (req, res) => {
         io.to(socketIds).emit("conversation:updated", {
             _id: group,
             type: "group",
-            interaction: interaction,
+            interaction,
         });
         return SuccessResponse(res, 201, "Message sent successfully!", message);
     }

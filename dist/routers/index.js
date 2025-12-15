@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { SuccessResponse } from "../utils/index.js";
+import { SuccessResponse } from "../utils/response.js";
 import { limiter } from "../middlewares/index.js";
 import AuthRouter from "./auth.js";
 import UserRouter from "./user.js";
@@ -14,6 +14,7 @@ router.use("/message", limiter(10, 500), MessageRouter);
 router.use("/group", limiter(10, 500), GroupRouter);
 router.get("/wakeup", (req, res) => {
     const from = req.query.from || "Unknown";
-    return SuccessResponse(res, 200, `Wake up server by ${from}!`);
+    const timestamp = new Date().toISOString();
+    return SuccessResponse(res, 200, `Wake up server by ${from} at ${timestamp}!`);
 });
 export default router;

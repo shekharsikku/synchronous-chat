@@ -3,14 +3,14 @@ import { createServer } from "http";
 import env from "./utils/env.js";
 import app from "./app.js";
 const server = createServer(app);
-const io = new Server(server, {
+export const io = new Server(server, {
     cors: {
         origin: env.CORS_ORIGIN,
         credentials: true,
     },
 });
 const userSocketMap = new Map();
-const getSocketId = (userId) => {
+export const getSocketId = (userId) => {
     const userSockets = userSocketMap.get(userId) || new Set();
     return Array.from(userSockets);
 };
@@ -113,4 +113,4 @@ io.on("connection", (socket) => {
         }, {}));
     });
 });
-export { io, server, getSocketId };
+export default server;

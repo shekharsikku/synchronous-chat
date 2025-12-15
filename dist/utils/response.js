@@ -1,6 +1,5 @@
 class HttpError extends Error {
     code;
-    message;
     constructor(code, message, stack = "") {
         super(message);
         this.code = code;
@@ -8,16 +7,16 @@ class HttpError extends Error {
         this.stack = stack;
     }
 }
-const ErrorResponse = (res, code, message, error = null) => {
+const ErrorResponse = (res, code, message, error) => {
     const response = { success: false, message };
-    if (error)
+    if (error !== undefined)
         response.error = error;
-    res.status(code).json(response);
+    return res.status(code).json(response);
 };
-const SuccessResponse = (res, code, message, data = null) => {
+const SuccessResponse = (res, code, message, data) => {
     const response = { success: true, message };
-    if (data)
+    if (data !== undefined)
         response.data = data;
-    res.status(code).json(response);
+    return res.status(code).json(response);
 };
 export { HttpError, ErrorResponse, SuccessResponse };

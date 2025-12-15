@@ -1,7 +1,7 @@
 import { connect } from "mongoose";
-import { server } from "./socket.js";
-import job from "./utils/cron.js";
+import jobs from "./utils/jobs.js";
 import env from "./utils/env.js";
+import server from "./server.js";
 const uri = env.MONGODB_URI;
 const port = env.PORT;
 (async () => {
@@ -11,7 +11,7 @@ const port = env.PORT;
             throw new Error("Database connection error!");
         }
         console.log("\nDatabase connection success!");
-        job.start();
+        jobs.start();
         server.listen(port, () => {
             console.log(`Server running on port: ${port}\n`);
         });
