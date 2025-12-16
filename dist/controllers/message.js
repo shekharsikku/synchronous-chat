@@ -3,10 +3,11 @@ import { getSocketId, io } from "../server.js";
 import { translate } from "bing-translate-api";
 import { fetchMembers } from "./group.js";
 import { Message, Conversation, Group } from "../models/index.js";
+import { Types } from "mongoose";
 const sendMessage = async (req, res) => {
     try {
         const sender = req.user?._id;
-        const receiver = req.params.id;
+        const receiver = new Types.ObjectId(req.params.id);
         const { type, text, file, reply } = (await req.body);
         const message = await Message.create({
             sender: sender,
@@ -16,7 +17,7 @@ const sendMessage = async (req, res) => {
                 text: text,
                 file: file,
             },
-            reply: reply || null,
+            reply: reply && new Types.ObjectId(reply),
         });
         const interaction = new Date(Date.now());
         const socketEventInfo = [
@@ -115,7 +116,7 @@ const fetchMessages = async (req, res) => {
 };
 const messageActionsEvents = async (message, event) => {
     if (message.group) {
-        const members = await fetchMembers(message.group.toString());
+        const members = await fetchMembers(message.group);
         const socketIds = members.flatMap((member) => getSocketId(member)).filter(Boolean);
         io.to(socketIds).emit(event, message);
     }

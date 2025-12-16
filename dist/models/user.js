@@ -50,13 +50,12 @@ const UserSchema = new Schema({
 }, {
     timestamps: true,
 });
-UserSchema.pre("save", function (next) {
+UserSchema.pre("save", async function () {
     if (!this.username || this.username.trim() === "") {
         const localPart = this.email.split("@")[0].split(".")[0];
         const uniqueSuffix = Date.now().toString(36);
         this.username = `${localPart}_${uniqueSuffix}`;
     }
-    next();
 });
 const User = model("User", UserSchema);
 export default User;

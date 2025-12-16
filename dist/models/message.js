@@ -68,11 +68,10 @@ const MessageSchema = new Schema({
 }, {
     timestamps: true,
 });
-MessageSchema.pre("validate", function (next) {
+MessageSchema.pre("validate", async function () {
     if (!this.recipient && !this.group) {
-        return next(new Error("Either recipient or group must be provided!"));
+        throw new Error("Either recipient or group must be provided!");
     }
-    next();
 });
 MessageSchema.index({ group: 1, createdAt: -1 });
 MessageSchema.index({ sender: 1, recipient: 1, createdAt: -1 });

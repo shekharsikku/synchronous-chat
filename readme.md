@@ -132,12 +132,12 @@ Use this section to tell people about which versions of your project are current
 npm install express@latest
 ```
 
-### **This project is built with - Mongoose v8**.
+### **This project is built with - Mongoose v9**.
 
-Using earlier versions may cause unexpected issues.
+Using older versions may cause unexpected issues.
 
 ```bash
-npm install mongoose@8x
+npm install mongoose@latest
 ```
 
 ### **Security Best Practices**

@@ -23,7 +23,12 @@ const createGroup = async (req, res) => {
         if (existingUsers.length !== groupData.members.length) {
             throw new HttpError(400, "One or more members are invalid users!");
         }
-        const newGroup = await Group.create(groupData);
+        const newGroup = await Group.create({
+            name: groupData.name,
+            description: groupData.description,
+            admin: new Types.ObjectId(groupData.admin),
+            members: groupData.members.map((id) => new Types.ObjectId(id)),
+        });
         const socketIds = newGroup.members.flatMap((member) => getSocketId(member.toString())).filter(Boolean);
         io.to(socketIds).emit("group:created", {
             ...newGroup.toJSON(),
@@ -137,7 +142,7 @@ export const fetchMembers = async (gid) => {
 const groupMessage = async (req, res) => {
     try {
         const sender = req.user?._id;
-        const group = req.params.id;
+        const group = new Types.ObjectId(req.params.id);
         const { type, text, file, reply } = (await req.body);
         const interaction = new Date(Date.now());
         let [message, conversation] = await Promise.all([
@@ -149,7 +154,7 @@ const groupMessage = async (req, res) => {
                     text: text,
                     file: file,
                 },
-                reply: reply || null,
+                reply: reply && new Types.ObjectId(reply),
             }),
             Conversation.findOneAndUpdate({ participants: { $all: [group] } }, {
                 interaction: interaction,

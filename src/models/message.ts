@@ -75,11 +75,10 @@ const MessageSchema = new Schema<MessageInterface>(
 );
 
 /** Custom validation — must have either recipient or group */
-MessageSchema.pre("validate", function (next) {
+MessageSchema.pre("validate", async function () {
   if (!this.recipient && !this.group) {
-    return next(new Error("Either recipient or group must be provided!"));
+    throw new Error("Either recipient or group must be provided!");
   }
-  next();
 });
 
 /** Index for group messages */

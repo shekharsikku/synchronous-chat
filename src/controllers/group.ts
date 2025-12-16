@@ -33,7 +33,13 @@ const createGroup = async (req: Request<{}, {}, CreateGroupType>, res: Response)
       throw new HttpError(400, "One or more members are invalid users!");
     }
 
-    const newGroup = await Group.create(groupData);
+    const newGroup = await Group.create({
+      name: groupData.name,
+      description: groupData.description,
+      admin: new Types.ObjectId(groupData.admin),
+      members: groupData.members.map((id) => new Types.ObjectId(id)),
+    });
+
     const socketIds = newGroup.members.flatMap((member) => getSocketId(member.toString())).filter(Boolean);
 
     /** Notify to all members after group created */
@@ -170,7 +176,7 @@ const fetchGroups = async (req: Request, res: Response) => {
   }
 };
 
-export const fetchMembers = async (gid: string) => {
+export const fetchMembers = async (gid: Types.ObjectId) => {
   const group = await Group.findById(gid).select("-_id members").lean();
   return group?.members.map((id) => id.toString()) || [];
 };
@@ -178,7 +184,7 @@ export const fetchMembers = async (gid: string) => {
 const groupMessage = async (req: Request<{ id: string }>, res: Response) => {
   try {
     const sender = req.user?._id!;
-    const group = req.params.id;
+    const group = new Types.ObjectId(req.params.id);
     const { type, text, file, reply } = (await req.body) as MessageType;
 
     const interaction = new Date(Date.now());
@@ -192,7 +198,7 @@ const groupMessage = async (req: Request<{ id: string }>, res: Response) => {
           text: text,
           file: file,
         },
-        reply: reply || null,
+        reply: reply && new Types.ObjectId(reply),
       }),
       Conversation.findOneAndUpdate(
         { participants: { $all: [group] } },

@@ -56,7 +56,7 @@ const UserSchema = new Schema<UserInterface>(
   }
 );
 
-UserSchema.pre("save", function (next) {
+UserSchema.pre("save", async function () {
   if (!this.username || this.username.trim() === "") {
     /** Generate a temporary username by splitting email  */
     const localPart = this.email.split("@")[0].split(".")[0];
@@ -67,7 +67,6 @@ UserSchema.pre("save", function (next) {
     /** Use combination of temporary username and unique suffix */
     this.username = `${localPart}_${uniqueSuffix}`;
   }
-  next();
 });
 
 const User = model<UserInterface>("User", UserSchema);

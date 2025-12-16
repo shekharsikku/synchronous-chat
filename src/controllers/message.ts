@@ -6,11 +6,12 @@ import { getSocketId, io } from "../server.js";
 import { translate } from "bing-translate-api";
 import { fetchMembers } from "./group.js";
 import { Message, Conversation, Group } from "../models/index.js";
+import { Types } from "mongoose";
 
 const sendMessage = async (req: Request<{ id: string }>, res: Response) => {
   try {
     const sender = req.user?._id!;
-    const receiver = req.params.id;
+    const receiver = new Types.ObjectId(req.params.id);
     const { type, text, file, reply } = (await req.body) as MessageType;
 
     const message = await Message.create({
@@ -21,7 +22,7 @@ const sendMessage = async (req: Request<{ id: string }>, res: Response) => {
         text: text,
         file: file,
       },
-      reply: reply || null,
+      reply: reply && new Types.ObjectId(reply),
     });
 
     const interaction = new Date(Date.now());
@@ -142,7 +143,7 @@ const fetchMessages = async (req: Request<{ id: string }>, res: Response) => {
 
 const messageActionsEvents = async (message: MessageInterface, event: string) => {
   if (message.group) {
-    const members = await fetchMembers(message.group.toString());
+    const members = await fetchMembers(message.group);
     const socketIds = members.flatMap((member) => getSocketId(member)).filter(Boolean);
     io.to(socketIds).emit(event, message);
   } else {
