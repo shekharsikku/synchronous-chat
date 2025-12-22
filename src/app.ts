@@ -25,7 +25,13 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         imgSrc: ["'self'", "res.cloudinary.com", "data:", "https://cdn.jsdelivr.net"],
-        scriptSrc: ["'self'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-eval'",
+          "https://cdn.jsdelivr.net",
+          "https://unpkg.com",
+          "static.cloudflareinsights.com",
+        ],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         connectSrc: ["'self'", "wss://0.peerjs.com", "https://0.peerjs.com"],
