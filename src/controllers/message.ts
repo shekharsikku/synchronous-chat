@@ -283,7 +283,7 @@ const reactMessage = async (req: Request<{ id: string }, {}, { by: string; emoji
           },
         },
       ],
-      { new: true }
+      { new: true, updatePipeline: true }
     ).lean<MessageInterface>({ transform: (doc) => nullToUndefined(doc) });
 
     if (!message) {

@@ -230,7 +230,7 @@ const reactMessage = async (req, res) => {
                     },
                 },
             },
-        ], { new: true }).lean({ transform: (doc) => nullToUndefined(doc) });
+        ], { new: true, updatePipeline: true }).lean({ transform: (doc) => nullToUndefined(doc) });
         if (!message) {
             throw new HttpError(400, "Unable to react on this message or message not found!");
         }
