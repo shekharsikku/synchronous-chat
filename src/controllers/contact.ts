@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import { HttpError, SuccessResponse, ErrorResponse } from "../utils/response.js";
+import { HttpError, SuccessResponse, ErrorResponse } from "@utils/response.js";
 import { Types } from "mongoose";
-import { User, Conversation } from "../models/index.js";
+import { User, Conversation } from "@models/index.js";
 
 const searchContact = async (req: Request<{}, {}, {}, { search?: string }>, res: Response) => {
   try {

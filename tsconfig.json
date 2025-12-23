@@ -6,9 +6,6 @@
     "moduleResolution": "NodeNext",
     "moduleDetection": "force",
     "lib": ["ESNext"],
-    "baseUrl": ".",
-    "rootDir": "src",
-    "outDir": "dist",
     "allowJs": true,
     "resolveJsonModule": true,
     "incremental": true,
@@ -29,7 +26,24 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    /*  Path Alias & Base Url */
+    "rootDir": "src",
+    "outDir": "dist",
+    "baseUrl": "src",
+    "paths": {
+      "@src/*": ["*"],
+      "@models/*": ["models/*"],
+      "@routers/*": ["routers/*"],
+      "@controllers/*": ["controllers/*"],
+      "@middlewares/*": ["middlewares/*"],
+      "@utils/*": ["utils/*"],
+      "@interface/*": ["interface/*"]
+    }
+  },
+  "tsc-alias": {
+    "resolveFullPaths": true,
+    "verbose": false
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

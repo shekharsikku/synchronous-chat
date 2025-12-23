@@ -1,7 +1,7 @@
 import { Server, type Socket } from "socket.io";
 import { createServer } from "http";
-import env from "./utils/env.js";
-import app from "./app.js";
+import env from "@utils/env.js";
+import app from "@src/app.js";
 
 const server = createServer(app);
 

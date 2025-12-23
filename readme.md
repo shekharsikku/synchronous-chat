@@ -16,6 +16,8 @@ A real-time chat application built with the `MERN Stack, Socket.IO, Tailwind CSS
 
 - **State Manage** – Managed globally with React Context & Zustand.
 
+- **Data Caching** - Implements client side caching using React Query.
+
 - **Schema Validation** – Ensures data integrity with Zod on both client and server.
 
 - **Error Handling** – Robust error handling on both frontend and backend.
@@ -45,10 +47,10 @@ npm install && cd client && npm install
 **Environment Variables Setup**
 
 ```bash
-cp .env.sample .env
+cp .env.example .env
 ```
 
-Copy, `.env.sample` file to file name `.env` in the root directory and add the required values:
+Copy, `.env.example` file to file name `.env` in the root directory and add the required values:
 
 ```env
 CLOUDINARY_CLOUD_NAME=""

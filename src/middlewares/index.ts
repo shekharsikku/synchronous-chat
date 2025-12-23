@@ -1,14 +1,14 @@
 import type { NextFunction, Request, Response } from "express";
-import type { UserInterface } from "../interface/index.js";
+import type { UserInterface } from "@interface/index.js";
 import { ZodError, type ZodType } from "zod";
 import type { Types } from "mongoose";
-import { HttpError, ErrorResponse } from "../utils/response.js";
-import { generateSecret, generateAccess, generateRefresh, authorizeCookie, createUserInfo } from "../utils/helpers.js";
-import { User } from "../models/index.js";
+import { HttpError, ErrorResponse } from "@utils/response.js";
+import { generateSecret, generateAccess, generateRefresh, authorizeCookie, createUserInfo } from "@utils/helpers.js";
+import { User } from "@models/index.js";
 import { compactDecrypt, jwtVerify } from "jose";
 import { rateLimit } from "express-rate-limit";
 import { inflateSync } from "zlib";
-import env from "../utils/env.js";
+import env from "@utils/env.js";
 import multer from "multer";
 
 const authAccess = async (req: Request, res: Response, next: NextFunction): Promise<any> => {

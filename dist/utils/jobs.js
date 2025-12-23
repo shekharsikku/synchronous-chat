@@ -1,6 +1,6 @@
 import { CronJob } from "cron";
 import { User, Message } from "../models/index.js";
-import env from "../utils/env.js";
+import env from "./env.js";
 const calculatePastDate = (daysAgo) => {
     const taskDate = new Date();
     taskDate.setDate(taskDate.getDate() - daysAgo);

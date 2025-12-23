@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { authAccess, validate, limiter } from "../middlewares/index.js";
-import { MessageSchema, TranslateSchema } from "../utils/schema.js";
+import { authAccess, validate, limiter } from "@middlewares/index.js";
+import { MessageSchema, TranslateSchema } from "@utils/schema.js";
 import {
   deleteMessages,
   deleteMessage,
@@ -10,7 +10,7 @@ import {
   sendMessage,
   translateMessage,
   fetchMessages,
-} from "../controllers/message.js";
+} from "@controllers/message.js";
 
 const router = Router();
 

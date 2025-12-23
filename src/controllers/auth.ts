@@ -1,10 +1,10 @@
 import type { Request, Response } from "express";
-import type { SignUp, SignIn } from "../utils/schema.js";
+import type { SignUp, SignIn } from "@utils/schema.js";
 import { genSalt, hash, compare } from "bcryptjs";
-import { HttpError, ErrorResponse, SuccessResponse } from "../utils/response.js";
-import { generateAccess, generateRefresh, authorizeCookie, createUserInfo } from "../utils/helpers.js";
-import { User } from "../models/index.js";
-import env from "../utils/env.js";
+import { HttpError, ErrorResponse, SuccessResponse } from "@utils/response.js";
+import { generateAccess, generateRefresh, authorizeCookie, createUserInfo } from "@utils/helpers.js";
+import { User } from "@models/index.js";
+import env from "@utils/env.js";
 
 const signUpUser = async (req: Request<{}, {}, SignUp>, res: Response) => {
   try {

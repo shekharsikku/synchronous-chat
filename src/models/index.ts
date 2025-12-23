@@ -1,4 +1,4 @@
-export { default as User } from "./user.js";
-export { default as Message } from "./message.js";
-export { default as Conversation } from "./conversation.js";
-export { default as Group } from "./group.js";
+export { default as User } from "@models/user.js";
+export { default as Message } from "@models/message.js";
+export { default as Conversation } from "@models/conversation.js";
+export { default as Group } from "@models/group.js";

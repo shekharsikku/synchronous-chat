@@ -1,10 +1,10 @@
-import type { UserInterface } from "../interface/index.js";
+import type { UserInterface } from "@interface/index.js";
 import type { Response } from "express";
 import type { Types } from "mongoose";
 import { createSecretKey, createHash } from "crypto";
 import { CompactEncrypt, SignJWT } from "jose";
 import { deflateSync } from "zlib";
-import env from "../utils/env.js";
+import env from "@utils/env.js";
 
 const generateSecret = async () => {
   return createSecretKey(createHash("sha256").update(env.ACCESS_SECRET).digest());
