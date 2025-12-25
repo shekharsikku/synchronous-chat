@@ -10,8 +10,8 @@
     "dev:dev": "concurrently \"npm run dev\" \"npm run dev --prefix client\"",
     "build:build": "npm run build && npm run build --prefix client",
     "lint": "npm run lint --prefix client",
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "write": "prettier --write .",
+    "check": "prettier --check ."
   },
   "keywords": [],
   "author": "",
@@ -44,12 +44,12 @@
     "express-rate-limit": "^8.2.1",
     "helmet": "^8.1.0",
     "jose": "^6.1.3",
-    "mongoose": "^9.0.2",
+    "mongoose": "^9.1.1",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "peer": "^1.0.2",
     "request-ip": "^3.3.0",
-    "socket.io": "^4.8.2",
-    "zod": "^4.2.1"
+    "socket.io": "^4.8.3",
+    "zod": "^4.3.2"
   }
 }
