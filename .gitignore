@@ -1,21 +1,24 @@
-# node_modules
+# Node dependencies
 node_modules
 
-# editor directories
+# Editor directories
 .idea
 .vscode
+.DS_Store
+
+# Platform tooling
 .vercel
+.turbo
 
-# environment variables
+# Environment & secrets
 .env
+.env.*
+!.env.example
 
-# logs and other files
+# Logs & runtime artifacts
+*.txt
 *.log
-*.local
-*.development
-*.production
 *.tsbuildinfo
-vite-env.d.ts
 
-# other dir
-**/test
+# Vite env declaration file
+vite-env.d.ts

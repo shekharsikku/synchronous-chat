@@ -1,10 +1,24 @@
-# node_modules
+# Node dependencies
 node_modules
 
-# env files
+# Editor directories
+.idea
+.vscode
+.DS_Store
+
+# Platform tooling
+.vercel
+.turbo
+
+# Environment & secrets
 .env
 .env.*
 
-# dist, test dir
+# Logs & runtime artifacts
+*.txt
+*.log
+*.tsbuildinfo
+
+# Build artifacts
 **/dist
-**/test
+**/build
