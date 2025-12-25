@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
-import moment from "moment";
+import dayjs from "dayjs";
+import localizedFormat from "dayjs/plugin/localizedFormat";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
 
@@ -7,6 +8,38 @@ import femaleAvatar from "@/assets/female-avatar.webp";
 import maleAvatar from "@/assets/male-avatar.webp";
 import noAvatar from "@/assets/no-avatar.webp";
 import { type Message } from "@/lib/zustand";
+
+dayjs.extend(localizedFormat);
+
+export const formatUtcTimestamp = (timestamp: any) => {
+  return dayjs(timestamp).format("MMM DD, YYYY | h:mm A");
+};
+
+export const formatMsgTimestamp = (timestamp?: Date) => {
+  const createdAt = dayjs(timestamp);
+
+  const dateLabel = createdAt.isSame(dayjs(), "day")
+    ? "Today"
+    : createdAt.isSame(dayjs().subtract(1, "day"), "day")
+      ? "Yesterday"
+      : createdAt.format("LL");
+
+  const messageDate = createdAt.format("YYYY-MM-DD");
+
+  return { dateLabel, messageDate };
+};
+
+export const renderMsgTimestamp = (message: Message) => {
+  if (message.type === "deleted") {
+    return `Deleted at ${dayjs(message.deletedAt).format("LT")}`;
+  }
+
+  if (message.type === "edited") {
+    return `Edited at ${dayjs(message.updatedAt).format("LT")}`;
+  }
+
+  return dayjs(message.createdAt).format("LT");
+};
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -214,12 +247,6 @@ export const mergeRefs =
       }
     });
   };
-
-export const messageTimestamp = (message: Message) => {
-  if (message.type === "deleted") return `Deleted at ${moment(message.deletedAt).format("LT")}`;
-  if (message.type === "edited") return `Edited at ${moment(message.updatedAt).format("LT")}`;
-  return moment(message.createdAt).format("LT");
-};
 
 export const copyToClipboard = (text: string) => {
   try {

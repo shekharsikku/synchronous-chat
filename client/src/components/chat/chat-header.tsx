@@ -1,4 +1,3 @@
-import moment from "moment";
 import { useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import {
@@ -27,7 +26,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSocket, usePeer } from "@/lib/context";
-import { cn, languageOptions, getAvatar } from "@/lib/utils";
+import { cn, languageOptions, getAvatar, formatUtcTimestamp } from "@/lib/utils";
 import { useChatStore } from "@/lib/zustand";
 
 const ChatHeader = () => {
@@ -134,7 +133,7 @@ const ChatHeader = () => {
                 <GroupMembersList selectedChatData={selectedChatData} />
 
                 <p className="text-center text-xs md:text-sm tracking-wider text-gray-500 dark:text-gray-100">
-                  Created at: {moment(selectedChatData?.createdAt).format("MMM DD, YYYY | h:mm A")}
+                  Created at: {formatUtcTimestamp(selectedChatData?.createdAt)}
                 </p>
               </div>
             </DialogContent>
@@ -203,7 +202,7 @@ const ChatHeader = () => {
               </div>
               {/* Last Message Time */}
               <p className="text-center text-xs md:text-sm tracking-wider text-gray-500 dark:text-gray-100">
-                Last msg: {moment(selectedChatData?.interaction).format("MMM DD, YYYY | h:mm A")}
+                Last msg: {formatUtcTimestamp(selectedChatData?.interaction)}
               </p>
             </DialogContent>
           </Dialog>

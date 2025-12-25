@@ -28,7 +28,7 @@ import {
   mergeRefs,
   isValidUrl,
   checkImageType,
-  messageTimestamp,
+  renderMsgTimestamp,
   handleDownload,
   copyToClipboard,
 } from "@/lib/utils";
@@ -261,7 +261,7 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
         <span className="text-xs text-gray-700 dark:text-gray-300 mt-0.5">{`Sent by ${getSender(message.sender)}`}</span>
       )}
       {/* Message Timestamps */}
-      <span className="text-xs text-gray-600 dark:text-gray-200 mt-0.5">{messageTimestamp(message)}</span>
+      <span className="text-xs text-gray-600 dark:text-gray-200 mt-0.5">{renderMsgTimestamp(message)}</span>
       {/* Dialog for image extend view */}
       <Dialog open={imageViewExtend} onOpenChange={setImageViewExtend}>
         <DialogContent className="h-auto w-[90vw] lg:w-auto rounded-md select-none">

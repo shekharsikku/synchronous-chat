@@ -1,4 +1,3 @@
-import moment from "moment";
 import React, { useEffect, useRef, useState, useEffectEvent, type RefObject } from "react";
 import { HiOutlineArrowSmallDown } from "react-icons/hi2";
 import { useInView } from "react-intersection-observer";
@@ -7,7 +6,7 @@ import { MessageSkeleton } from "@/components/chat/message-skeleton";
 import { RenderDMMessages } from "@/components/chat/render-dm-messages";
 import { Button } from "@/components/ui/button";
 import { useMessages, useContacts } from "@/hooks";
-import { mergeRefs } from "@/lib/utils";
+import { mergeRefs, formatMsgTimestamp } from "@/lib/utils";
 import { type Message, useChatStore, useAuthStore } from "@/lib/zustand";
 
 interface RenderMessagesProps {
@@ -30,7 +29,8 @@ const RenderMessages: React.FC<RenderMessagesProps> = React.memo(({ messages, me
   };
 
   return messages.map((message) => {
-    const messageDate = moment(message.createdAt).format("YYYY-MM-DD");
+    const { dateLabel, messageDate } = formatMsgTimestamp(message.createdAt);
+
     const showDate = messageDate !== lastDate;
     lastDate = messageDate;
 
@@ -42,15 +42,7 @@ const RenderMessages: React.FC<RenderMessagesProps> = React.memo(({ messages, me
         }}
         className="relative"
       >
-        {showDate && (
-          <div className="text-center text-gray-500 dark:text-gray-100 py-4">
-            {moment(message.createdAt).isSame(moment(), "day")
-              ? "Today"
-              : moment(message.createdAt).isSame(moment().subtract(1, "day"), "day")
-                ? "Yesterday"
-                : moment(message.createdAt).format("LL")}
-          </div>
-        )}
+        {showDate && <div className="text-center text-gray-500 dark:text-gray-100 py-4">{dateLabel}</div>}
         <RenderDMMessages message={message} scrollMessage={scrollMessage} getSender={getSender} />
       </div>
     );
