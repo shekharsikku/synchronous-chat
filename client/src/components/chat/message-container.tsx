@@ -207,7 +207,9 @@ const MessageContainer = () => {
   }, [isFetchingNextPage, hasNextPage, fetchNextPage]);
 
   const getSender = (sid: string) => {
-    return contacts?.find((contact) => contact._id === sid)?.name ?? `${userInfo?.name ?? "You"}`;
+    if (sid === userInfo?._id) return userInfo.name ?? "You";
+    const senderName = contacts?.find((contact) => contact._id === sid)?.name;
+    return senderName ?? "Unknown";
   };
 
   return (
