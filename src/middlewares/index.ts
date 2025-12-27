@@ -3,7 +3,7 @@ import type { UserInterface } from "@interface/index.js";
 import { ZodError, type ZodType } from "zod";
 import type { Types } from "mongoose";
 import { HttpError, ErrorResponse } from "@utils/response.js";
-import { generateSecret, generateAccess, generateRefresh, authorizeCookie, createUserInfo } from "@utils/helpers.js";
+import { generateSecret, generateAccess, generateRefresh, createUserInfo, generateHash } from "@utils/helpers.js";
 import { User } from "@models/index.js";
 import { compactDecrypt, jwtVerify } from "jose";
 import { rateLimit } from "express-rate-limit";
@@ -30,7 +30,7 @@ const authAccess = async (req: Request, res: Response, next: NextFunction): Prom
     }
 
     req.user = accessPayload as UserInterface;
-    next();
+    return next();
   } catch (error: any) {
     return ErrorResponse(res, error.code || 500, error.message || "Error while auth access!");
   }
@@ -55,12 +55,12 @@ const authRefresh = async (req: Request, res: Response, next: NextFunction): Pro
       await User.updateOne(
         {
           authentication: {
-            $elemMatch: { _id: authorizeId, token: refreshToken },
+            $elemMatch: { _id: authorizeId },
           },
         },
         {
           $pull: {
-            authentication: { _id: authorizeId, token: refreshToken },
+            authentication: { _id: authorizeId },
           },
         }
       );
@@ -75,11 +75,12 @@ const authRefresh = async (req: Request, res: Response, next: NextFunction): Pro
     const userId = refreshPayload.uid as Types.ObjectId;
     const currentTime = Math.floor(Date.now() / 1000);
     const expiresAt = refreshPayload.exp ?? currentTime;
+    const hashedRefresh = await generateHash(refreshToken);
 
     const authFilter = {
       _id: userId,
       authentication: {
-        $elemMatch: { _id: authorizeId, token: refreshToken },
+        $elemMatch: { _id: authorizeId, token: hashedRefresh },
       },
     };
 
@@ -93,12 +94,13 @@ const authRefresh = async (req: Request, res: Response, next: NextFunction): Pro
     const shouldRotate = currentTime >= expiresAt - env.REFRESH_EXPIRY / 2;
 
     if (shouldRotate) {
-      const newRefreshToken = await generateRefresh(res, userId);
+      const newRefreshToken = await generateRefresh(res, userId, authorizeId);
+      const newHashedRefresh = await generateHash(newRefreshToken);
       const newRefreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
 
       const updatedResult = await User.updateOne(authFilter, {
         $set: {
-          "authentication.$.token": newRefreshToken,
+          "authentication.$.token": newHashedRefresh,
           "authentication.$.expiry": newRefreshExpiry,
         },
       });
@@ -106,8 +108,6 @@ const authRefresh = async (req: Request, res: Response, next: NextFunction): Pro
       if (updatedResult.modifiedCount === 0) {
         throw new HttpError(403, "Please, signin again to continue!");
       }
-
-      authorizeCookie(res, authorizeId);
     }
 
     await generateAccess(res, userInfo);

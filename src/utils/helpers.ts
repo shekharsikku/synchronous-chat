@@ -30,7 +30,7 @@ const generateAccess = async (res: Response, user?: UserInterface) => {
   return accessToken;
 };
 
-const generateRefresh = async (res: Response, uid: Types.ObjectId) => {
+const generateRefresh = async (res: Response, uid: Types.ObjectId, aid: Types.ObjectId) => {
   const refreshExpiry = env.REFRESH_EXPIRY;
   const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
 
@@ -47,18 +47,18 @@ const generateRefresh = async (res: Response, uid: Types.ObjectId) => {
     secure: env.isProd,
   });
 
-  return refreshToken;
-};
-
-const authorizeCookie = (res: Response, authId: string) => {
-  const authExpiry = env.REFRESH_EXPIRY;
-
-  res.cookie("current", authId, {
-    maxAge: authExpiry * 1000 * 2,
+  res.cookie("current", aid.toString(), {
+    maxAge: refreshExpiry * 1000 * 2,
     httpOnly: true,
     sameSite: "strict",
     secure: env.isProd,
   });
+
+  return refreshToken;
+};
+
+const generateHash = async (token: string) => {
+  return createHash("sha256").update(token).digest("hex");
 };
 
 const hasEmptyField = (fields: object) => {
@@ -85,4 +85,4 @@ const createUserInfo = (user: UserInterface) => {
   return userInfo as UserInterface;
 };
 
-export { generateSecret, generateAccess, generateRefresh, authorizeCookie, hasEmptyField, createUserInfo };
+export { generateSecret, generateAccess, generateRefresh, generateHash, hasEmptyField, createUserInfo };
