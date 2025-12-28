@@ -1,6 +1,7 @@
 import { genSalt, hash, compare } from "bcryptjs";
+import { Types } from "mongoose";
 import { HttpError, ErrorResponse, SuccessResponse } from "../utils/response.js";
-import { generateAccess, generateRefresh, authorizeCookie, createUserInfo } from "../utils/helpers.js";
+import { generateAccess, generateRefresh, createUserInfo, generateHash } from "../utils/helpers.js";
 import { User } from "../models/index.js";
 import env from "../utils/env.js";
 const signUpUser = async (req, res) => {
@@ -47,15 +48,16 @@ const signInUser = async (req, res) => {
         if (!userInfo.setup) {
             return SuccessResponse(res, 200, "Please, complete your profile!", userInfo);
         }
-        const refreshToken = await generateRefresh(res, userInfo._id);
+        const authorizeId = new Types.ObjectId();
+        const refreshToken = await generateRefresh(res, userInfo._id, authorizeId);
+        const hashedRefresh = await generateHash(refreshToken);
         const refreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
         existsUser.authentication?.push({
-            token: refreshToken,
+            _id: authorizeId,
+            token: hashedRefresh,
             expiry: refreshExpiry,
         });
-        const authorizeUser = await existsUser.save();
-        const authorizeId = authorizeUser.authentication?.find((auth) => auth.token === refreshToken)?._id;
-        authorizeCookie(res, authorizeId.toString());
+        await existsUser.save();
         return SuccessResponse(res, 200, "Signed in successfully!", userInfo);
     }
     catch (error) {
@@ -64,12 +66,11 @@ const signInUser = async (req, res) => {
 };
 const signOutUser = async (req, res) => {
     const requestUser = req.user;
-    const refreshToken = req.cookies.refresh;
     const authorizeId = req.cookies.current;
-    if (requestUser.setup && refreshToken && authorizeId) {
+    if (requestUser.setup && authorizeId) {
         await User.updateOne({ _id: requestUser._id }, {
             $pull: {
-                authentication: { _id: authorizeId, token: refreshToken },
+                authentication: { _id: authorizeId },
             },
         });
     }

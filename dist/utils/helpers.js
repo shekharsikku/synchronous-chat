@@ -20,7 +20,7 @@ const generateAccess = async (res, user) => {
     });
     return accessToken;
 };
-const generateRefresh = async (res, uid) => {
+const generateRefresh = async (res, uid, aid) => {
     const refreshExpiry = env.REFRESH_EXPIRY;
     const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
     const refreshToken = await new SignJWT({ uid: uid.toString() })
@@ -34,16 +34,16 @@ const generateRefresh = async (res, uid) => {
         sameSite: "strict",
         secure: env.isProd,
     });
-    return refreshToken;
-};
-const authorizeCookie = (res, authId) => {
-    const authExpiry = env.REFRESH_EXPIRY;
-    res.cookie("current", authId, {
-        maxAge: authExpiry * 1000 * 2,
+    res.cookie("current", aid.toString(), {
+        maxAge: refreshExpiry * 1000 * 2,
         httpOnly: true,
         sameSite: "strict",
         secure: env.isProd,
     });
+    return refreshToken;
+};
+const generateHash = async (token) => {
+    return createHash("sha256").update(token).digest("hex");
 };
 const hasEmptyField = (fields) => {
     return Object.values(fields).some((value) => value === "" || value === undefined || value === null);
@@ -66,4 +66,4 @@ const createUserInfo = (user) => {
     }
     return userInfo;
 };
-export { generateSecret, generateAccess, generateRefresh, authorizeCookie, hasEmptyField, createUserInfo };
+export { generateSecret, generateAccess, generateRefresh, generateHash, hasEmptyField, createUserInfo };

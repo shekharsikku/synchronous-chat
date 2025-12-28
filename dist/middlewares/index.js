@@ -1,6 +1,6 @@
 import { ZodError } from "zod";
 import { HttpError, ErrorResponse } from "../utils/response.js";
-import { generateSecret, generateAccess, generateRefresh, authorizeCookie, createUserInfo } from "../utils/helpers.js";
+import { generateSecret, generateAccess, generateRefresh, createUserInfo, generateHash } from "../utils/helpers.js";
 import { User } from "../models/index.js";
 import { compactDecrypt, jwtVerify } from "jose";
 import { rateLimit } from "express-rate-limit";
@@ -23,7 +23,7 @@ const authAccess = async (req, res, next) => {
             throw new HttpError(401, "Invalid or expired access request!");
         }
         req.user = accessPayload;
-        next();
+        return next();
     }
     catch (error) {
         return ErrorResponse(res, error.code || 500, error.message || "Error while auth access!");
@@ -44,11 +44,11 @@ const authRefresh = async (req, res, next) => {
         catch (error) {
             await User.updateOne({
                 authentication: {
-                    $elemMatch: { _id: authorizeId, token: refreshToken },
+                    $elemMatch: { _id: authorizeId },
                 },
             }, {
                 $pull: {
-                    authentication: { _id: authorizeId, token: refreshToken },
+                    authentication: { _id: authorizeId },
                 },
             });
             res.clearCookie("access");
@@ -59,10 +59,11 @@ const authRefresh = async (req, res, next) => {
         const userId = refreshPayload.uid;
         const currentTime = Math.floor(Date.now() / 1000);
         const expiresAt = refreshPayload.exp ?? currentTime;
+        const hashedRefresh = await generateHash(refreshToken);
         const authFilter = {
             _id: userId,
             authentication: {
-                $elemMatch: { _id: authorizeId, token: refreshToken },
+                $elemMatch: { _id: authorizeId, token: hashedRefresh },
             },
         };
         const requestUser = await User.findOne(authFilter);
@@ -72,18 +73,18 @@ const authRefresh = async (req, res, next) => {
         const userInfo = createUserInfo(requestUser);
         const shouldRotate = currentTime >= expiresAt - env.REFRESH_EXPIRY / 2;
         if (shouldRotate) {
-            const newRefreshToken = await generateRefresh(res, userId);
+            const newRefreshToken = await generateRefresh(res, userId, authorizeId);
+            const newHashedRefresh = await generateHash(newRefreshToken);
             const newRefreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
             const updatedResult = await User.updateOne(authFilter, {
                 $set: {
-                    "authentication.$.token": newRefreshToken,
+                    "authentication.$.token": newHashedRefresh,
                     "authentication.$.expiry": newRefreshExpiry,
                 },
             });
             if (updatedResult.modifiedCount === 0) {
                 throw new HttpError(403, "Please, signin again to continue!");
             }
-            authorizeCookie(res, authorizeId);
         }
         await generateAccess(res, userInfo);
         req.user = userInfo;
