@@ -1,3 +1,4 @@
+import { type UseQueryOptions, queryOptions } from "@tanstack/react-query";
 import { type ClassValue, clsx } from "clsx";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
@@ -7,7 +8,9 @@ import { twMerge } from "tailwind-merge";
 import femaleAvatar from "@/assets/female-avatar.webp";
 import maleAvatar from "@/assets/male-avatar.webp";
 import noAvatar from "@/assets/no-avatar.webp";
-import { type Message } from "@/lib/zustand";
+import api from "@/lib/api";
+
+import type { Message, UserInfo } from "@/lib/zustand";
 
 dayjs.extend(localizedFormat);
 
@@ -293,6 +296,19 @@ export const getAvatar = (userInfo: any) => {
   if (userInfo?.gender === "Female") return femaleAvatar;
 
   return noAvatar;
+};
+
+type ContactQueryOptions = Omit<UseQueryOptions<UserInfo, Error>, "queryKey" | "queryFn">;
+
+export const contactQuery = (id: string, options?: ContactQueryOptions) => {
+  return queryOptions({
+    queryKey: ["contact", id],
+    queryFn: async () => {
+      const response = await api.get(`/api/contact/fetch/${id}`);
+      return response.data.data;
+    },
+    ...options,
+  });
 };
 
 /*

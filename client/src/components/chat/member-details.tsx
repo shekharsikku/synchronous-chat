@@ -2,8 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 import { Badge } from "@/components/ui/badge";
-import api from "@/lib/api";
-import { cn, getAvatar } from "@/lib/utils";
+import { cn, getAvatar, contactQuery } from "@/lib/utils";
 
 import type { UserInfo } from "@/lib/zustand";
 
@@ -20,15 +19,12 @@ const MemberDetails: React.FC<GroupMembersDetails> = ({ contacts, userInfo, memb
 
   const cachedContact = useMemo(() => contacts?.find((cur) => cur._id === memberId), [contacts, memberId]);
 
-  const { data: fetchedContact } = useQuery({
-    queryKey: ["contact", memberId],
-    queryFn: async () => {
-      const res = await api.get(`/api/contact/fetch/${memberId}`);
-      return res.data.data as UserInfo;
-    },
-    enabled: !isYou && !cachedContact,
-    staleTime: 6 * 60 * 60 * 1000,
-  });
+  const { data: fetchedContact } = useQuery(
+    contactQuery(memberId, {
+      enabled: !isYou && !cachedContact,
+      staleTime: 6 * 60 * 60 * 1000,
+    })
+  );
 
   const details = useMemo(() => {
     if (isYou && userInfo) {

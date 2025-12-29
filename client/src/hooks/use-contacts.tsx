@@ -3,6 +3,7 @@ import { useEffect, useEffectEvent } from "react";
 
 import api from "@/lib/api";
 import { useSocket } from "@/lib/context";
+import { contactQuery } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/lib/zustand";
 
 import type { UserInfo, Message, GroupInfo } from "@/lib/zustand";
@@ -110,15 +111,12 @@ export const useContacts = () => {
 
       try {
         /** Use queryClient.fetchQuery to avoid duplicate API requests */
-        const newContact = await queryClient.fetchQuery({
-          queryKey: ["contact", chatKey] /** Unique query key per user */,
-          queryFn: async () => {
-            const response = await api.get(`/api/contact/fetch/${chatKey}`);
-            return response.data.data;
-          },
-          staleTime: 60 * 60 * 1000 /** Cache for 1 hour */,
-          gcTime: 2 * 60 * 60 * 1000,
-        });
+        const newContact = await queryClient.fetchQuery(
+          contactQuery(chatKey!, {
+            staleTime: 60 * 60 * 1000 /** Cache for 1 hour */,
+            gcTime: 2 * 60 * 60 * 1000,
+          })
+        );
 
         /** Update the contacts list with the new contact & Ensure no duplicates before updating the cache */
         queryClient.setQueryData<UserInfo[]>(["contacts", userInfo?._id], (contacts = []) => {
