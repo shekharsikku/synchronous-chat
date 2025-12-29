@@ -23,6 +23,7 @@ const generateAccess = async (res, user) => {
 const generateRefresh = async (res, uid, aid) => {
     const refreshExpiry = env.REFRESH_EXPIRY;
     const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
+    const currentAuthKey = `${uid.toString()}:${aid.toString()}`;
     const refreshToken = await new SignJWT({ uid: uid.toString() })
         .setProtectedHeader({ alg: "HS512" })
         .setIssuedAt()
@@ -34,7 +35,7 @@ const generateRefresh = async (res, uid, aid) => {
         sameSite: "strict",
         secure: env.isProd,
     });
-    res.cookie("current", aid.toString(), {
+    res.cookie("current", currentAuthKey, {
         maxAge: refreshExpiry * 1000 * 2,
         httpOnly: true,
         sameSite: "strict",

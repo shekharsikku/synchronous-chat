@@ -1,12 +1,43 @@
 import { inflateSync } from "node:zlib";
 import { rateLimit } from "express-rate-limit";
 import { compactDecrypt, jwtVerify } from "jose";
+import { Types } from "mongoose";
 import multer from "multer";
 import { ZodError } from "zod";
 import { User } from "../models/index.js";
 import env from "../utils/env.js";
 import { generateSecret, generateAccess, generateRefresh, createUserInfo, generateHash } from "../utils/helpers.js";
-import { HttpError, ErrorResponse } from "../utils/response.js";
+import { HttpError, ErrorResponse, SuccessResponse } from "../utils/response.js";
+const parseAuthKey = (authKey) => {
+    const [firstKey, secondKey] = authKey.split(":", 2);
+    if (!Types.ObjectId.isValid(firstKey) || !Types.ObjectId.isValid(secondKey)) {
+        throw new Error("Invalid authentication key!");
+    }
+    return { userId: new Types.ObjectId(firstKey), authId: new Types.ObjectId(secondKey) };
+};
+const revokeToken = async (res, authKey) => {
+    try {
+        const { userId, authId } = parseAuthKey(authKey);
+        await User.updateOne({
+            _id: userId,
+            authentication: {
+                $elemMatch: { _id: authId },
+            },
+        }, {
+            $pull: {
+                authentication: { _id: authId },
+            },
+        });
+    }
+    catch (error) {
+        console.error(`Error: ${error.message}`);
+    }
+    finally {
+        res.clearCookie("access");
+        res.clearCookie("refresh");
+        res.clearCookie("current");
+    }
+};
 const authAccess = async (req, res, next) => {
     try {
         const accessToken = req.cookies.access;
@@ -29,37 +60,39 @@ const authAccess = async (req, res, next) => {
         return ErrorResponse(res, error.code || 500, error.message || "Error while auth access!");
     }
 };
-const authRefresh = async (req, res, next) => {
+const authRefresh = async (req, res) => {
     try {
         const refreshToken = req.cookies.refresh;
-        const authorizeId = req.cookies.current;
-        if (!refreshToken || !authorizeId) {
+        const currentAuthKey = req.cookies.current;
+        if (!refreshToken || !currentAuthKey) {
             throw new HttpError(401, "Unauthorized refresh request!");
         }
+        let userId;
+        let authorizeId;
+        let hashedRefresh;
         let refreshPayload;
         try {
+            const parsedPayload = parseAuthKey(currentAuthKey);
+            authorizeId = parsedPayload.authId;
             const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
-            refreshPayload = (await jwtVerify(refreshToken, refreshSecret)).payload;
+            const [jwtResult, hashedToken] = await Promise.all([
+                jwtVerify(refreshToken, refreshSecret),
+                generateHash(refreshToken),
+            ]);
+            hashedRefresh = hashedToken;
+            refreshPayload = jwtResult.payload;
+            if (!Types.ObjectId.isValid(refreshPayload.uid) ||
+                !parsedPayload.userId.equals(new Types.ObjectId(refreshPayload.uid))) {
+                throw new Error("Refresh request mismatch!");
+            }
+            userId = parsedPayload.userId;
         }
         catch (_error) {
-            await User.updateOne({
-                authentication: {
-                    $elemMatch: { _id: authorizeId },
-                },
-            }, {
-                $pull: {
-                    authentication: { _id: authorizeId },
-                },
-            });
-            res.clearCookie("access");
-            res.clearCookie("refresh");
-            res.clearCookie("current");
+            await revokeToken(res, currentAuthKey);
             throw new HttpError(403, "Please, signin again to continue!");
         }
-        const userId = refreshPayload.uid;
         const currentTime = Math.floor(Date.now() / 1000);
         const expiresAt = refreshPayload.exp ?? currentTime;
-        const hashedRefresh = await generateHash(refreshToken);
         const authFilter = {
             _id: userId,
             authentication: {
@@ -83,12 +116,12 @@ const authRefresh = async (req, res, next) => {
                 },
             });
             if (updatedResult.modifiedCount === 0) {
+                await revokeToken(res, currentAuthKey);
                 throw new HttpError(403, "Please, signin again to continue!");
             }
         }
         await generateAccess(res, userInfo);
-        req.user = userInfo;
-        return next();
+        return SuccessResponse(res, 200, "Token refresh successfully!", userInfo);
     }
     catch (error) {
         return ErrorResponse(res, error.code || 500, error.message || "Error while token refresh!");
@@ -138,4 +171,4 @@ const limiter = (minute = 10, limit = 1000) => {
         },
     });
 };
-export { authAccess, authRefresh, upload, validate, delay, limiter };
+export { revokeToken, authAccess, authRefresh, upload, validate, delay, limiter };
