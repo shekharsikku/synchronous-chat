@@ -1,6 +1,7 @@
 import { genSalt, hash, compare } from "bcryptjs";
 import { Types } from "mongoose";
 
+import { revokeToken } from "#/middlewares/index.js";
 import { User } from "#/models/index.js";
 import env from "#/utils/env.js";
 import { generateAccess, generateRefresh, createUserInfo, generateHash } from "#/utils/helpers.js";
@@ -84,29 +85,13 @@ const signInUser = async (req: Request<{}, {}, SignIn>, res: Response) => {
 };
 
 const signOutUser = async (req: Request, res: Response) => {
-  const requestUser = req.user!;
-  const authorizeId = req.cookies.current;
+  const currentAuthKey = req.cookies.current;
 
-  if (requestUser.setup && authorizeId) {
-    await User.updateOne(
-      { _id: requestUser._id },
-      {
-        $pull: {
-          authentication: { _id: authorizeId },
-        },
-      }
-    );
+  if (currentAuthKey) {
+    await revokeToken(res, currentAuthKey);
   }
-
-  res.clearCookie("access");
-  res.clearCookie("refresh");
-  res.clearCookie("current");
 
   return SuccessResponse(res, 200, "Signed out successfully!");
 };
 
-const refreshAuth = async (req: Request, res: Response) => {
-  return SuccessResponse(res, 200, "Authentication refreshed!", req.user);
-};
-
-export { signUpUser, signInUser, signOutUser, refreshAuth };
+export { signUpUser, signInUser, signOutUser };
