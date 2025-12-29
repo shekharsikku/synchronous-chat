@@ -1,9 +1,9 @@
 import { genSalt, hash, compare } from "bcryptjs";
-import { HttpError, ErrorResponse, SuccessResponse } from "../utils/response.js";
-import { deleteImageByUrl, uploadOnCloudinary } from "../utils/cloudinary.js";
-import { unlinkFilesWithExtensions, extensionsToDelete, folderPath } from "../utils/unlink.js";
-import { hasEmptyField, createUserInfo, generateAccess } from "../utils/helpers.js";
 import { User } from "../models/index.js";
+import { deleteImageByUrl, uploadOnCloudinary } from "../utils/cloudinary.js";
+import { hasEmptyField, createUserInfo, generateAccess } from "../utils/helpers.js";
+import { HttpError, ErrorResponse, SuccessResponse } from "../utils/response.js";
+import { unlinkFilesWithExtensions, extensionsToDelete, folderPath } from "../utils/unlink.js";
 const profileSetup = async (req, res) => {
     try {
         const { name, username, gender, bio } = req.body;

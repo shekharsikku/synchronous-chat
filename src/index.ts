@@ -1,12 +1,13 @@
 import { connect } from "mongoose";
-import jobs from "@utils/jobs.js";
-import env from "@utils/env.js";
-import server from "@src/server.js";
+
+import server from "#/server.js";
+import env from "#/utils/env.js";
+import jobs from "#/utils/jobs.js";
 
 const uri = env.MONGODB_URI;
 const port = env.PORT;
 
-(async () => {
+void (async () => {
   try {
     /** Connection state returned by mongoose. */
     const { connection } = await connect(uri);

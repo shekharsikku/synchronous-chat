@@ -1,15 +1,18 @@
-import type { NextFunction, Request, Response } from "express";
-import type { UserInterface } from "@interface/index.js";
-import { ZodError, type ZodType } from "zod";
-import type { Types } from "mongoose";
-import { HttpError, ErrorResponse } from "@utils/response.js";
-import { generateSecret, generateAccess, generateRefresh, createUserInfo, generateHash } from "@utils/helpers.js";
-import { User } from "@models/index.js";
-import { compactDecrypt, jwtVerify } from "jose";
+import { inflateSync } from "node:zlib";
+
 import { rateLimit } from "express-rate-limit";
-import { inflateSync } from "zlib";
-import env from "@utils/env.js";
+import { compactDecrypt, jwtVerify } from "jose";
 import multer from "multer";
+import { ZodError, type ZodType } from "zod";
+
+import { User } from "#/models/index.js";
+import env from "#/utils/env.js";
+import { generateSecret, generateAccess, generateRefresh, createUserInfo, generateHash } from "#/utils/helpers.js";
+import { HttpError, ErrorResponse } from "#/utils/response.js";
+
+import type { UserInterface } from "#/interface/index.js";
+import type { NextFunction, Request, Response } from "express";
+import type { Types } from "mongoose";
 
 const authAccess = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
   try {
@@ -25,7 +28,7 @@ const authAccess = async (req: Request, res: Response, next: NextFunction): Prom
       const accessSecret = await generateSecret();
       const decrypted = await compactDecrypt(accessToken, accessSecret);
       accessPayload = JSON.parse(inflateSync(decrypted.plaintext).toString());
-    } catch (error: any) {
+    } catch (_error) {
       throw new HttpError(401, "Invalid or expired access request!");
     }
 
@@ -51,7 +54,7 @@ const authRefresh = async (req: Request, res: Response, next: NextFunction): Pro
       const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
 
       refreshPayload = (await jwtVerify(refreshToken, refreshSecret)).payload;
-    } catch (error: any) {
+    } catch (_error) {
       await User.updateOne(
         {
           authentication: {

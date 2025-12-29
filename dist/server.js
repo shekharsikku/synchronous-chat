@@ -1,7 +1,7 @@
+import { createServer } from "node:http";
 import { Server } from "socket.io";
-import { createServer } from "http";
-import env from "./utils/env.js";
 import app from "./app.js";
+import env from "./utils/env.js";
 const server = createServer(app);
 export const io = new Server(server, {
     cors: {

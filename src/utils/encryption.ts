@@ -1,4 +1,4 @@
-import { createHash, createCipheriv, createDecipheriv } from "crypto";
+import { createHash, createCipheriv, createDecipheriv } from "node:crypto";
 
 const generateKeyIv = (secret: string) => {
   const key = createHash("sha256").update(secret).digest("base64").substring(0, 32);

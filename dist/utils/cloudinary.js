@@ -1,7 +1,7 @@
+import { randomUUID } from "node:crypto";
+import { unlinkSync } from "node:fs";
 import { v2 as cloudinary } from "cloudinary";
-import { randomUUID } from "crypto";
-import env from "./env.js";
-import fs from "fs";
+import env from "../utils/env.js";
 cloudinary.config({
     cloud_name: env.CLOUDINARY_CLOUD_NAME,
     api_key: env.CLOUDINARY_API_KEY,
@@ -16,11 +16,11 @@ const uploadOnCloudinary = async (localFilePath) => {
             resource_type: "auto",
         });
         console.log(`File uploaded successfully: ${response.public_id}`);
-        fs.unlinkSync(localFilePath);
+        unlinkSync(localFilePath);
         return response;
     }
-    catch (error) {
-        fs.unlinkSync(localFilePath);
+    catch (_error) {
+        unlinkSync(localFilePath);
         return null;
     }
 };

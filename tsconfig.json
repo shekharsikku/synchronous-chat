@@ -1,44 +1,41 @@
 {
   "compilerOptions": {
-    /* Basic Options */
+    /* TypeScript Build Info & Build Output */
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tsbuildinfo",
+    "incremental": true,
+
+    /* Basic Options & Module Interop */
     "target": "ESNext",
+    "lib": ["ESNext"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "moduleDetection": "force",
-    "lib": ["ESNext"],
-    "allowJs": true,
-    "resolveJsonModule": true,
-    "incremental": true,
     "verbatimModuleSyntax": true,
-    /* Module & Interop Options */
-    "esModuleInterop": true,
+    "allowJs": true,
     "allowSyntheticDefaultImports": true,
-    /* Strict Type-Checking Options */
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+
+    /* Strict Type-Checking & Linting */
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "noImplicitReturns": true,
     "strictFunctionTypes": true,
     "strictPropertyInitialization": true,
-    /* Linting & Clean Code */
     "skipLibCheck": true,
     "removeComments": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
+
     /*  Path Alias & Base Url */
     "rootDir": "src",
     "outDir": "dist",
     "baseUrl": "src",
     "paths": {
-      "@src/*": ["*"],
-      "@models/*": ["models/*"],
-      "@routers/*": ["routers/*"],
-      "@controllers/*": ["controllers/*"],
-      "@middlewares/*": ["middlewares/*"],
-      "@utils/*": ["utils/*"],
-      "@interface/*": ["interface/*"]
+      "#/*": ["*"]
     }
   },
   "tsc-alias": {

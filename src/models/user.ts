@@ -1,5 +1,6 @@
-import type { UserInterface } from "@interface/index.js";
 import { Schema, model } from "mongoose";
+
+import type { UserInterface } from "#/interface/index.js";
 
 const UserSchema = new Schema<UserInterface>(
   {

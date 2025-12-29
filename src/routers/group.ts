@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { authAccess, validate, limiter } from "@middlewares/index.js";
-import { CreateGroupSchema, UpdateDetailsSchema, UpdateMembersSchema, MessageSchema } from "@utils/schema.js";
-import { createGroup, updateDetails, updateMembers, fetchGroups, groupMessage } from "@controllers/group.js";
+
+import { createGroup, updateDetails, updateMembers, fetchGroups, groupMessage } from "#/controllers/group.js";
+import { authAccess, validate, limiter } from "#/middlewares/index.js";
+import { CreateGroupSchema, UpdateDetailsSchema, UpdateMembersSchema, MessageSchema } from "#/utils/schema.js";
 
 const router = Router();
 

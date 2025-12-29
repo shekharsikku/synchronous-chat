@@ -1,7 +1,7 @@
 {
   "name": "synchronous-chat",
   "private": true,
-  "version": "3.0.0",
+  "version": "3.1.0",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -9,7 +9,8 @@
     "start": "node dist/index.js",
     "dev:dev": "concurrently \"npm run dev\" \"npm run dev --prefix client\"",
     "build:build": "npm run build && npm run build --prefix client",
-    "lint": "npm run lint --prefix client",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
     "write": "prettier --write .",
     "check": "prettier --check ."
   },
@@ -25,6 +26,11 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^25.0.3",
     "@types/request-ip": "^0.0.41",
+    "@typescript-eslint/eslint-plugin": "^8.51.0",
+    "@typescript-eslint/parser": "^8.51.0",
+    "eslint": "^9.39.2",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
     "prettier": "^3.7.4",
     "tsc-alias": "^1.8.16",
     "tsx": "^4.21.0",
@@ -50,6 +56,6 @@
     "peer": "^1.0.2",
     "request-ip": "^3.3.0",
     "socket.io": "^4.8.3",
-    "zod": "^4.3.2"
+    "zod": "^4.3.4"
   }
 }

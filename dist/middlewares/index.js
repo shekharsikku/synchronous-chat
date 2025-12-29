@@ -1,12 +1,12 @@
-import { ZodError } from "zod";
-import { HttpError, ErrorResponse } from "../utils/response.js";
-import { generateSecret, generateAccess, generateRefresh, createUserInfo, generateHash } from "../utils/helpers.js";
-import { User } from "../models/index.js";
-import { compactDecrypt, jwtVerify } from "jose";
+import { inflateSync } from "node:zlib";
 import { rateLimit } from "express-rate-limit";
-import { inflateSync } from "zlib";
-import env from "../utils/env.js";
+import { compactDecrypt, jwtVerify } from "jose";
 import multer from "multer";
+import { ZodError } from "zod";
+import { User } from "../models/index.js";
+import env from "../utils/env.js";
+import { generateSecret, generateAccess, generateRefresh, createUserInfo, generateHash } from "../utils/helpers.js";
+import { HttpError, ErrorResponse } from "../utils/response.js";
 const authAccess = async (req, res, next) => {
     try {
         const accessToken = req.cookies.access;
@@ -19,7 +19,7 @@ const authAccess = async (req, res, next) => {
             const decrypted = await compactDecrypt(accessToken, accessSecret);
             accessPayload = JSON.parse(inflateSync(decrypted.plaintext).toString());
         }
-        catch (error) {
+        catch (_error) {
             throw new HttpError(401, "Invalid or expired access request!");
         }
         req.user = accessPayload;
@@ -41,7 +41,7 @@ const authRefresh = async (req, res, next) => {
             const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
             refreshPayload = (await jwtVerify(refreshToken, refreshSecret)).payload;
         }
-        catch (error) {
+        catch (_error) {
             await User.updateOne({
                 authentication: {
                     $elemMatch: { _id: authorizeId },

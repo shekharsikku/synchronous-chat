@@ -1,5 +1,5 @@
-import { readdir, stat, unlink } from "fs";
-import { join, extname } from "path";
+import { readdir, stat, unlink } from "node:fs";
+import { join, extname } from "node:path";
 
 const folderPath = "./public/temp";
 

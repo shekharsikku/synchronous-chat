@@ -1,11 +1,13 @@
-import type { Request, Response } from "express";
-import type { SignUp, SignIn } from "@utils/schema.js";
 import { genSalt, hash, compare } from "bcryptjs";
 import { Types } from "mongoose";
-import { HttpError, ErrorResponse, SuccessResponse } from "@utils/response.js";
-import { generateAccess, generateRefresh, createUserInfo, generateHash } from "@utils/helpers.js";
-import { User } from "@models/index.js";
-import env from "@utils/env.js";
+
+import { User } from "#/models/index.js";
+import env from "#/utils/env.js";
+import { generateAccess, generateRefresh, createUserInfo, generateHash } from "#/utils/helpers.js";
+import { HttpError, ErrorResponse, SuccessResponse } from "#/utils/response.js";
+
+import type { SignUp, SignIn } from "#/utils/schema.js";
+import type { Request, Response } from "express";
 
 const signUpUser = async (req: Request<{}, {}, SignUp>, res: Response) => {
   try {

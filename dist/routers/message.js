@@ -1,7 +1,7 @@
 import { Router } from "express";
+import { deleteMessages, deleteMessage, reactMessage, editMessage, getMessages, sendMessage, translateMessage, fetchMessages, } from "../controllers/message.js";
 import { authAccess, validate, limiter } from "../middlewares/index.js";
 import { MessageSchema, TranslateSchema } from "../utils/schema.js";
-import { deleteMessages, deleteMessage, reactMessage, editMessage, getMessages, sendMessage, translateMessage, fetchMessages, } from "../controllers/message.js";
 const router = Router();
 router.get("/:id", limiter(1, 20), authAccess, getMessages);
 router.get("/fetch/:id", limiter(1, 60), authAccess, fetchMessages);

@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { ProfileSchema, PasswordSchema } from "@utils/schema.js";
-import { authAccess, upload, validate } from "@middlewares/index.js";
-import { profileSetup, updateImage, deleteImage, changePassword, userInformation } from "@controllers/user.js";
+
+import { profileSetup, updateImage, deleteImage, changePassword, userInformation } from "#/controllers/user.js";
+import { authAccess, upload, validate } from "#/middlewares/index.js";
+import { ProfileSchema, PasswordSchema } from "#/utils/schema.js";
 
 const router = Router();
 

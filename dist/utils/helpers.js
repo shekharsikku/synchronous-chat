@@ -1,7 +1,7 @@
-import { createSecretKey, createHash } from "crypto";
+import { createSecretKey, createHash } from "node:crypto";
+import { deflateSync } from "node:zlib";
 import { CompactEncrypt, SignJWT } from "jose";
-import { deflateSync } from "zlib";
-import env from "./env.js";
+import env from "../utils/env.js";
 const generateSecret = async () => {
     return createSecretKey(createHash("sha256").update(env.ACCESS_SECRET).digest());
 };

@@ -1,12 +1,14 @@
-import type { Request, Response } from "express";
-import type { MessageInterface } from "@interface/index.js";
-import type { Message as MessageType, Translate } from "@utils/schema.js";
-import { HttpError, SuccessResponse, ErrorResponse } from "@utils/response.js";
-import { getSocketId, io } from "@src/server.js";
 import { translate } from "bing-translate-api";
-import { fetchMembers } from "@controllers/group.js";
-import { Message, Conversation, Group } from "@models/index.js";
 import { Types } from "mongoose";
+
+import { fetchMembers } from "#/controllers/group.js";
+import { Message, Conversation, Group } from "#/models/index.js";
+import { getSocketId, io } from "#/server.js";
+import { HttpError, SuccessResponse, ErrorResponse } from "#/utils/response.js";
+
+import type { MessageInterface } from "#/interface/index.js";
+import type { Message as MessageType, Translate } from "#/utils/schema.js";
+import type { Request, Response } from "express";
 
 const sendMessage = async (req: Request<{ id: string }>, res: Response) => {
   try {

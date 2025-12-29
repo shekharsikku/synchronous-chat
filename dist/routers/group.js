@@ -1,7 +1,7 @@
 import { Router } from "express";
+import { createGroup, updateDetails, updateMembers, fetchGroups, groupMessage } from "../controllers/group.js";
 import { authAccess, validate, limiter } from "../middlewares/index.js";
 import { CreateGroupSchema, UpdateDetailsSchema, UpdateMembersSchema, MessageSchema } from "../utils/schema.js";
-import { createGroup, updateDetails, updateMembers, fetchGroups, groupMessage } from "../controllers/group.js";
 const router = Router();
 router.post("/create", limiter(10, 5), validate(CreateGroupSchema), authAccess, createGroup);
 router.patch("/update/:id/details", limiter(10, 10), validate(UpdateDetailsSchema), authAccess, updateDetails);

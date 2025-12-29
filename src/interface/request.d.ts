@@ -1,4 +1,4 @@
-import { UserInterface, TokenInterface } from "@interface/index.d.ts";
+import { UserInterface, TokenInterface } from "#/interface/index.d.ts";
 
 declare module "express" {
   interface Request {

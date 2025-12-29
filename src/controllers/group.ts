@@ -1,9 +1,11 @@
-import type { Request, Response } from "express";
-import type { CreateGroupType, UpdateDetailsType, UpdateMembersType, Message as MessageType } from "@utils/schema.js";
-import { HttpError, SuccessResponse, ErrorResponse } from "@utils/response.js";
-import { Group, Message, User, Conversation } from "@models/index.js";
-import { getSocketId, io } from "@src/server.js";
 import { Types } from "mongoose";
+
+import { Group, Message, User, Conversation } from "#/models/index.js";
+import { getSocketId, io } from "#/server.js";
+import { HttpError, SuccessResponse, ErrorResponse } from "#/utils/response.js";
+
+import type { CreateGroupType, UpdateDetailsType, UpdateMembersType, Message as MessageType } from "#/utils/schema.js";
+import type { Request, Response } from "express";
 
 const createGroup = async (req: Request<{}, {}, CreateGroupType>, res: Response) => {
   try {

@@ -19,6 +19,3 @@ node_modules
 *.txt
 *.log
 *.tsbuildinfo
-
-# Vite env declaration file
-vite-env.d.ts

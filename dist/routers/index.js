@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { SuccessResponse } from "../utils/response.js";
 import { limiter } from "../middlewares/index.js";
-import AuthRouter from "./auth.js";
-import UserRouter from "./user.js";
-import ContactRouter from "./contact.js";
-import MessageRouter from "./message.js";
-import GroupRouter from "./group.js";
+import AuthRouter from "../routers/auth.js";
+import ContactRouter from "../routers/contact.js";
+import GroupRouter from "../routers/group.js";
+import MessageRouter from "../routers/message.js";
+import UserRouter from "../routers/user.js";
+import { SuccessResponse } from "../utils/response.js";
 const router = Router();
 router.use("/auth", limiter(10, 10), AuthRouter);
 router.use("/user", limiter(10, 50), UserRouter);
