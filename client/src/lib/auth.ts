@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 import { useEffect, useEffectEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -12,7 +13,7 @@ const cookiesKey = import.meta.env.VITE_COOKIE_KEY;
 
 export const setAuthUser = (user: UserInfo) => {
   const data = encryptInfo(JSON.stringify(user), import.meta.env.VITE_ENCRYPTION);
-  Cookies.set(cookiesKey, data, { expires: 2, sameSite: "strict", secure: import.meta.env.PROD });
+  Cookies.set(cookiesKey, data, { expires: 1, sameSite: "strict", secure: import.meta.env.PROD });
 };
 
 export const getAuthUser = (): UserInfo | null => {
@@ -53,6 +54,7 @@ export const useAuthUser = () => {
 
 export const useSignOut = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { closeChat } = useChatStore();
   const { setUserInfo, setIsAuthenticated } = useAuthStore();
   const { disconnectCalling, callingActive } = usePeer();
@@ -66,6 +68,7 @@ export const useSignOut = () => {
       setUserInfo(null);
       closeChat();
       delAuthUser();
+      queryClient.clear();
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
