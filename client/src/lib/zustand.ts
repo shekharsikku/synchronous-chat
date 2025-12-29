@@ -93,11 +93,11 @@ export const useAuthStore = create<{
   },
 }));
 
-type chatType = "contact" | "group" | null;
+export type ChatType = "contact" | "group" | null;
 
 export const useChatStore = create<{
-  selectedChatType: chatType;
-  setSelectedChatType: (selectedChatType: chatType) => void;
+  selectedChatType: ChatType;
+  setSelectedChatType: (selectedChatType: ChatType) => void;
 
   selectedChatData: any;
   setSelectedChatData: (selectedChatData: any) => void;
@@ -134,7 +134,7 @@ export const useChatStore = create<{
   setMessageStats: (messages: Message[], selectedChatId: string) => void;
 }>((set) => ({
   selectedChatType: null,
-  setSelectedChatType: (selectedChatType: chatType) => set({ selectedChatType }),
+  setSelectedChatType: (selectedChatType: ChatType) => set({ selectedChatType }),
 
   selectedChatData: null,
   setSelectedChatData: (selectedChatData: any) => set({ selectedChatData }),

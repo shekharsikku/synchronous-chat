@@ -1,6 +1,5 @@
 import { Fragment, useEffect, useState } from "react";
 import { isDesktop } from "react-device-detect";
-import { useHotkeys } from "react-hotkeys-hook";
 
 import { AddNewChat } from "@/components/chat/add-new-chat";
 import { GroupElement, ContactElement } from "@/components/chat/contact-element";
@@ -14,14 +13,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useContacts } from "@/hooks";
 import { usePeer, useSocket } from "@/lib/context";
 import { cn } from "@/lib/utils";
-import { type UserInfo, type GroupInfo, useChatStore } from "@/lib/zustand";
+import { type UserInfo, type GroupInfo, type ChatType, useChatStore } from "@/lib/zustand";
 
-interface ContactsContainerProps {
-  lastChatUser: string | null;
-  setLastChatUser: any;
-}
-
-const ContactsContainer: React.FC<ContactsContainerProps> = ({ lastChatUser, setLastChatUser }) => {
+const ContactsContainer = () => {
   const { callingActive } = usePeer();
   const { onlineUsers } = useSocket();
   const { contacts, groups, fetching } = useContacts();
@@ -50,36 +44,9 @@ const ContactsContainer: React.FC<ContactsContainerProps> = ({ lastChatUser, set
     }
   }, [contacts, groups, currentTab]);
 
-  useHotkeys(
-    "ctrl+b",
-    () => {
-      if (lastChatUser) {
-        const lastChatData = allChats?.find((current) => {
-          return current._id === lastChatUser;
-        });
-        if (lastChatData) {
-          setSelectedChatType(lastChatData.type);
-          setSelectedChatData(lastChatData);
-        }
-      }
-    },
-    {
-      enabled: !!lastChatUser,
-      enableOnFormTags: ["input"],
-    }
-  );
-
-  const onSelectContact = (contact: any) => {
-    setSelectedChatType("contact");
-    setSelectedChatData(contact);
-    setLastChatUser(contact.username);
-    setReplyTo(null);
-  };
-
-  const onSelectGroup = (group: any) => {
-    setSelectedChatType("group");
-    setSelectedChatData(group);
-    setLastChatUser("");
+  const handleSelectChat = (chatType: ChatType, chatData: any) => {
+    setSelectedChatType(chatType);
+    setSelectedChatData(chatData);
     setReplyTo(null);
   };
 
@@ -138,13 +105,13 @@ const ContactsContainer: React.FC<ContactsContainerProps> = ({ lastChatUser, set
                               contact={current}
                               selectedChatData={selectedChatData}
                               onlineUsers={onlineUsers}
-                              onSelectContact={onSelectContact}
+                              handleSelectChat={handleSelectChat}
                             />
                           ) : (
                             <GroupElement
                               group={current}
                               selectedChatData={selectedChatData}
-                              onSelectGroup={onSelectGroup}
+                              handleSelectChat={handleSelectChat}
                             />
                           )}
                         </Fragment>
@@ -165,7 +132,7 @@ const ContactsContainer: React.FC<ContactsContainerProps> = ({ lastChatUser, set
                           contact={contact}
                           selectedChatData={selectedChatData}
                           onlineUsers={onlineUsers}
-                          onSelectContact={onSelectContact}
+                          handleSelectChat={handleSelectChat}
                         />
                       ))}
                     </div>
@@ -183,7 +150,7 @@ const ContactsContainer: React.FC<ContactsContainerProps> = ({ lastChatUser, set
                           key={group._id}
                           group={group}
                           selectedChatData={selectedChatData}
-                          onSelectGroup={onSelectGroup}
+                          handleSelectChat={handleSelectChat}
                         />
                       ))}
                     </div>

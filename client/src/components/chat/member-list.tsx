@@ -28,7 +28,7 @@ const GroupMembersList: React.FC<GroupMembersProps> = ({ selectedChatData }) => 
         <div className="flex flex-col gap-4">
           {sortedMembers.map((current: any) => (
             <MemberDetails
-              key={current?.id}
+              key={current}
               contacts={contacts}
               userInfo={userInfo!}
               memberId={current}

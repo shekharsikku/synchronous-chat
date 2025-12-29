@@ -1,19 +1,20 @@
 import groupAvatar from "@/assets/group-avatar.webp";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, getAvatar } from "@/lib/utils";
+import { type ChatType } from "@/lib/zustand";
 
 interface ContactElementProps {
   contact: any;
   selectedChatData: any;
   onlineUsers: object;
-  onSelectContact: (contact: any) => void;
+  handleSelectChat: (chatType: ChatType, chatData: any) => void;
 }
 
 export const ContactElement: React.FC<ContactElementProps> = ({
   contact,
   selectedChatData,
   onlineUsers,
-  onSelectContact,
+  handleSelectChat,
 }) => {
   return (
     <div
@@ -24,7 +25,7 @@ export const ContactElement: React.FC<ContactElementProps> = ({
           "bg-gray-100/80 dark:bg-gray-100/5 border-gray-300 dark:border-gray-700",
         contact?.setup === false && "disabled"
       )}
-      onClick={() => onSelectContact(contact)}
+      onClick={() => handleSelectChat("contact", contact)}
       role="button"
     >
       <div className="flex items-center gap-4">
@@ -49,10 +50,10 @@ export const ContactElement: React.FC<ContactElementProps> = ({
 interface GroupElementProps {
   group: any;
   selectedChatData: any;
-  onSelectGroup: (group: any) => void;
+  handleSelectChat: (chatType: ChatType, chatData: any) => void;
 }
 
-export const GroupElement: React.FC<GroupElementProps> = ({ group, selectedChatData, onSelectGroup }) => {
+export const GroupElement: React.FC<GroupElementProps> = ({ group, selectedChatData, handleSelectChat }) => {
   return (
     <div
       key={group?._id}
@@ -60,7 +61,7 @@ export const GroupElement: React.FC<GroupElementProps> = ({ group, selectedChatD
         "w-full flex items-center justify-between cursor-pointer transition-[transform,opacity,box-shadow] duration-0 rounded border py-2 px-4 xl:px-6 hover:transition-colors hover:duration-300 hover:bg-gray-100/80 dark:hover:bg-gray-100/5 dark:hover:border-gray-700",
         selectedChatData?._id === group._id && "bg-gray-100/80 dark:bg-gray-100/5 border-gray-300 dark:border-gray-700"
       )}
-      onClick={() => onSelectGroup(group)}
+      onClick={() => handleSelectChat("group", group)}
       role="button"
     >
       <div className="flex items-center gap-4">
