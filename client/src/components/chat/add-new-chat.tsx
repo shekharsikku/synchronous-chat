@@ -23,7 +23,7 @@ const AddNewChat = () => {
   const [searchedContacts, setSearchedContacts] = useState<UserInfo[]>([]);
   const [isFetching, setIsFetching] = useState(false);
 
-  useHotkeys("ctrl+i", () => setOpenNewChatModal((prev) => !prev), {
+  useHotkeys("ctrl+alt+n", () => setOpenNewChatModal((prev) => !prev), {
     enabled: !isFetching,
     enableOnFormTags: ["input"],
   });

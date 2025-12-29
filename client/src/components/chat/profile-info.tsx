@@ -1,3 +1,4 @@
+import { useHotkeys } from "react-hotkeys-hook";
 import {
   HiOutlineBellAlert,
   HiOutlineBellSlash,
@@ -22,6 +23,11 @@ const ProfileInfo = () => {
   const { theme, setTheme } = useTheme();
   const { isSoundAllow, setIsSoundAllow } = useChatStore();
   const { callingActive } = usePeer();
+
+  useHotkeys("ctrl+m", () => setIsSoundAllow(isSoundAllow ? false : true), {
+    enabled: !callingActive,
+    enableOnFormTags: ["input"],
+  });
 
   const handleProfileNavigate = () => {
     if (callingActive) {

@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useHotkeys } from "react-hotkeys-hook";
 import { HiOutlineUsers } from "react-icons/hi2";
 import { toast } from "sonner";
 import * as z from "zod";
@@ -102,6 +103,11 @@ const CreateGroup = () => {
       return updated;
     });
   };
+
+  useHotkeys("ctrl+alt+g", () => setGroupDialog(groupDialog ? false : true), {
+    enabled: !isPending,
+    enableOnFormTags: ["input"],
+  });
 
   return (
     <Dialog open={groupDialog} onOpenChange={setGroupDialog}>

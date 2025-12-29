@@ -33,7 +33,7 @@ const AuthRoute = ({
 const App = () => {
   const { theme, setTheme } = useTheme();
 
-  useHotkeys("ctrl+m", () => setTheme(theme === "light" ? "dark" : "light"), {
+  useHotkeys("ctrl+alt+t", () => setTheme(theme === "light" ? "dark" : "light"), {
     enabled: theme !== "system",
     enableOnFormTags: ["input", "textarea", "select"],
   });
