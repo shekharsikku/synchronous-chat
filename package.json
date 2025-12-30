@@ -1,8 +1,9 @@
 {
   "name": "synchronous-chat",
   "private": true,
-  "version": "3.1.0",
+  "version": "3.2.0",
   "type": "module",
+  "license": "MIT",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc --build --clean && tsc --build && tsc-alias",
@@ -14,9 +15,6 @@
     "write": "prettier --write .",
     "check": "prettier --check ."
   },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
   "devDependencies": {
     "@types/compression": "^1.8.1",
     "@types/cookie-parser": "^1.4.10",
@@ -53,7 +51,6 @@
     "mongoose": "^9.1.1",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
-    "peer": "^1.0.2",
     "request-ip": "^3.3.0",
     "socket.io": "^4.8.3",
     "zod": "^4.3.4"
