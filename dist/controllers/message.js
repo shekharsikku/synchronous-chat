@@ -45,7 +45,7 @@ const sendMessage = async (req, res) => {
                 interaction: interaction,
             });
         }
-        return SuccessResponse(res, 201, "Message sent successfully!", message);
+        return SuccessResponse(res, 201, "Message sent successfully!");
     }
     catch (error) {
         return ErrorResponse(res, error.code || 500, error.message || "Error while sending message!");
@@ -140,7 +140,7 @@ const deleteMessage = async (req, res) => {
             throw new HttpError(400, "You can't delete this message or message not found!");
         }
         await messageActionsEvents(message, "message:remove");
-        return SuccessResponse(res, 200, "Message deleted successfully!", message);
+        return SuccessResponse(res, 200, "Message deleted successfully!");
     }
     catch (error) {
         return ErrorResponse(res, error.code || 500, error.message || "Error while deleting message!");
@@ -162,7 +162,7 @@ const editMessage = async (req, res) => {
             throw new HttpError(400, "You can't edit this message or message not found!");
         }
         await messageActionsEvents(message, "message:edited");
-        return SuccessResponse(res, 200, "Message edited successfully!", message);
+        return SuccessResponse(res, 200, "Message edited successfully!");
     }
     catch (error) {
         return ErrorResponse(res, error.code || 500, error.message || "Error while editing message!");
@@ -235,7 +235,7 @@ const reactMessage = async (req, res) => {
             throw new HttpError(400, "Unable to react on this message or message not found!");
         }
         await messageActionsEvents(message, "message:reacted");
-        return SuccessResponse(res, 200, "Message reacted successfully!", message);
+        return SuccessResponse(res, 200, "Message reacted successfully!");
     }
     catch (error) {
         console.log({ error });

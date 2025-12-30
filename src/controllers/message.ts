@@ -65,7 +65,7 @@ const sendMessage = async (req: Request<{ id: string }>, res: Response) => {
       });
     }
 
-    return SuccessResponse(res, 201, "Message sent successfully!", message);
+    return SuccessResponse(res, 201, "Message sent successfully!");
   } catch (error: any) {
     return ErrorResponse(res, error.code || 500, error.message || "Error while sending message!");
   }
@@ -177,7 +177,7 @@ const deleteMessage = async (req: Request<{ id: string }>, res: Response) => {
 
     await messageActionsEvents(message, "message:remove");
 
-    return SuccessResponse(res, 200, "Message deleted successfully!", message);
+    return SuccessResponse(res, 200, "Message deleted successfully!");
   } catch (error: any) {
     return ErrorResponse(res, error.code || 500, error.message || "Error while deleting message!");
   }
@@ -208,7 +208,7 @@ const editMessage = async (req: Request<{ id: string }, {}, { text: string }>, r
 
     await messageActionsEvents(message, "message:edited");
 
-    return SuccessResponse(res, 200, "Message edited successfully!", message);
+    return SuccessResponse(res, 200, "Message edited successfully!");
   } catch (error: any) {
     return ErrorResponse(res, error.code || 500, error.message || "Error while editing message!");
   }
@@ -294,7 +294,7 @@ const reactMessage = async (req: Request<{ id: string }, {}, { by: string; emoji
 
     await messageActionsEvents(message, "message:reacted");
 
-    return SuccessResponse(res, 200, "Message reacted successfully!", message);
+    return SuccessResponse(res, 200, "Message reacted successfully!");
   } catch (error: any) {
     console.log({ error });
     return ErrorResponse(res, error.code || 500, error.message || "Error while reacting message!");

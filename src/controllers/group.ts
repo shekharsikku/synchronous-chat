@@ -52,7 +52,7 @@ const createGroup = async (req: Request<{}, {}, CreateGroupType>, res: Response)
 
     await Conversation.create({ participants: [newGroup._id], models: "Group" });
 
-    return SuccessResponse(res, 200, "Group created successfully!", newGroup);
+    return SuccessResponse(res, 200, "Group created successfully!");
   } catch (error: any) {
     return ErrorResponse(res, error.code || 500, error.message || "Error while creating group!");
   }
@@ -241,7 +241,7 @@ const groupMessage = async (req: Request<{ id: string }>, res: Response) => {
       interaction,
     });
 
-    return SuccessResponse(res, 201, "Message sent successfully!", message);
+    return SuccessResponse(res, 201, "Message sent successfully!");
   } catch (error: any) {
     return ErrorResponse(res, error.code || 500, error.message || "Error while changing group avatar!");
   }
