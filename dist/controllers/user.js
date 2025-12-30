@@ -1,9 +1,14 @@
 import { genSalt, hash, compare } from "bcryptjs";
 import { User } from "../models/index.js";
+import { getSocketId, io } from "../server.js";
 import { deleteImageByUrl, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { hasEmptyField, createUserInfo, generateAccess } from "../utils/helpers.js";
 import { HttpError, ErrorResponse, SuccessResponse } from "../utils/response.js";
 import { unlinkFilesWithExtensions, extensionsToDelete, folderPath } from "../utils/unlink.js";
+const profileUpdateEvents = async (userData) => {
+    const userSocketIds = getSocketId(userData._id?.toString());
+    io.to(userSocketIds).emit("profile:update", userData);
+};
 const profileSetup = async (req, res) => {
     try {
         const { name, username, gender, bio } = req.body;
@@ -30,7 +35,8 @@ const profileSetup = async (req, res) => {
             return SuccessResponse(res, 200, "Please, complete your profile!", userInfo);
         }
         await generateAccess(res, userInfo);
-        return SuccessResponse(res, 200, "Profile updated successfully!", userInfo);
+        await profileUpdateEvents(userInfo);
+        return SuccessResponse(res, 200, "Profile updated successfully!");
     }
     catch (error) {
         return ErrorResponse(res, error.code || 500, error.message || "Error while updating profile!");
@@ -58,7 +64,8 @@ const updateImage = async (req, res) => {
             await userProfile.save({ validateBeforeSave: true });
             const userInfo = createUserInfo(userProfile);
             await generateAccess(res, userInfo);
-            return SuccessResponse(res, 200, "Profile image updated successfully!", userInfo);
+            await profileUpdateEvents(userInfo);
+            return SuccessResponse(res, 200, "Profile image updated successfully!");
         }
         throw new HttpError(500, "Profile image not updated!");
     }
@@ -76,7 +83,8 @@ const deleteImage = async (req, res) => {
             await requestUser.save({ validateBeforeSave: true });
             const userInfo = createUserInfo(requestUser);
             await generateAccess(res, userInfo);
-            return SuccessResponse(res, 200, "Profile image deleted successfully!", userInfo);
+            await profileUpdateEvents(userInfo);
+            return SuccessResponse(res, 200, "Profile image deleted successfully!");
         }
         throw new HttpError(400, "Profile image not available!");
     }
@@ -103,7 +111,7 @@ const changePassword = async (req, res) => {
         await requestUser.save({ validateBeforeSave: true });
         const userInfo = createUserInfo(requestUser);
         await generateAccess(res, userInfo);
-        return SuccessResponse(res, 200, "Password changed successfully!", userInfo);
+        return SuccessResponse(res, 200, "Password changed successfully!");
     }
     catch (error) {
         return ErrorResponse(res, error.code || 500, error.message || "Error while changing password!");

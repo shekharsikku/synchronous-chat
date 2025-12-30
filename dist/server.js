@@ -55,33 +55,27 @@ io.on("connection", (socket) => {
             typing: false,
         });
     });
-    socket.on("before:profileupdate", ({ updatedDetails }) => {
-        const socketId = getSocketId(updatedDetails._id);
-        socket.to(socketId).emit("after:profileupdate", {
-            updatedDetails,
-        });
-    });
-    socket.on("before:callrequest", ({ callingDetails }) => {
+    socket.on("before:call-request", ({ callingDetails }) => {
         const socketId = getSocketId(callingDetails.to);
-        socket.to(socketId).emit("after:callrequest", {
+        socket.to(socketId).emit("after:call-request", {
             callingDetails,
         });
     });
-    socket.on("before:callconnect", ({ callingActions }) => {
+    socket.on("before:call-connect", ({ callingActions }) => {
         const socketId = getSocketId(callingActions.to);
-        socket.to(socketId).emit("after:callconnect", {
+        socket.to(socketId).emit("after:call-connect", {
             callingActions,
         });
     });
-    socket.on("before:calldisconnect", ({ callingActions }) => {
+    socket.on("before:call-disconnect", ({ callingActions }) => {
         const socketId = getSocketId(callingActions.to);
-        socket.to(socketId).emit("after:calldisconnect", {
+        socket.to(socketId).emit("after:call-disconnect", {
             callingActions,
         });
     });
-    socket.on("before:muteaction", ({ microphoneAction }) => {
+    socket.on("before:mute-action", ({ microphoneAction }) => {
         const socketId = getSocketId(microphoneAction.to);
-        socket.to(socketId).emit("after:muteaction", {
+        socket.to(socketId).emit("after:mute-action", {
             microphoneAction,
         });
     });

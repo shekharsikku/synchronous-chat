@@ -121,7 +121,7 @@ const authRefresh = async (req, res) => {
             }
         }
         await generateAccess(res, userInfo);
-        return SuccessResponse(res, 200, "Token refresh successfully!", userInfo);
+        return SuccessResponse(res, 200, "Token refreshed successfully!");
     }
     catch (error) {
         return ErrorResponse(res, error.code || 500, error.message || "Error while token refresh!");

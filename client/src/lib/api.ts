@@ -39,7 +39,7 @@ api.interceptors.response.use(
   async function (error: AxiosError) {
     const originalRequest = error.config as RetryRequestConfig;
 
-    if (originalRequest.url?.includes("/auth-refresh")) {
+    if (!originalRequest || originalRequest.url?.includes("/auth-refresh")) {
       return Promise.reject(error);
     }
 
@@ -49,7 +49,9 @@ api.interceptors.response.use(
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then(() => api(originalRequest));
+        })
+          .then(() => api(originalRequest))
+          .catch((err) => Promise.reject(err));
       }
 
       isRefreshing = true;
