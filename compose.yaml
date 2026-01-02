@@ -1,0 +1,44 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: turbo-db
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb-data:/data/db
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./apps/api
+    container_name: turbo-api
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongo
+    env_file:
+      - ./apps/api/.env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/temp
+      CORS_ORIGIN: http://localhost:3000
+      PORT: "4000"
+      NODE_ENV: production
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./apps/web
+      args:
+        VITE_SERVER_URL: http://localhost:4000
+        VITE_ENCRYPTION: secret@synchronouschat
+        VITE_SECRET_KEY: 93cc81590f9be1873592116ed942a99a
+        VITE_COOKIE_KEY: session
+    container_name: turbo-web
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  mongodb-data:

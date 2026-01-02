@@ -1,7 +1,7 @@
 # Node dependencies
 node_modules
 
-# Editor directories
+# Editor / OS files
 .idea
 .vscode
 .DS_Store
@@ -15,10 +15,15 @@ node_modules
 .env.*
 
 # Logs & runtime artifacts
-*.txt
 *.log
 *.tsbuildinfo
 
-# Build artifacts
+# Build / Test files 
 **/dist
 **/test
+
+# Workspace / Package lock files
+pnpm-workspace.yaml
+pnpm-lock.yaml
+package-lock.json
+bun.lock
