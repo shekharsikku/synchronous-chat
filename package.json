@@ -8,14 +8,14 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "start": "turbo run start",
+    "lint:fix": "turbo run lint:fix",
     "check": "prettier --check .",
     "write": "prettier --write ."
   },
   "devDependencies": {
     "prettier": "^3.7.4",
-    "turbo": "^2.7.2",
+    "turbo": "^2.7.3",
     "typescript": "^5.9.3"
   },
-  "packageManager": "pnpm@10.24.0"
+  "packageManager": "pnpm@10.27.0"
 }
