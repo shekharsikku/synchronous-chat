@@ -72,6 +72,12 @@ if (env.isDev) {
 } else {
   app.set("trust proxy", 1);
   app.use(morgan("tiny"));
+  app.use(
+    express.static(join(__dirname, "../client/dist"), {
+      maxAge: "30d",
+      immutable: true,
+    })
+  );
 }
 
 /** Request IP Address */
@@ -93,7 +99,11 @@ app.all("*path", (_req: Request, res: Response) => {
   if (env.isDev) {
     return SuccessResponse(res, 200, "Welcome to Synchronous Chat!");
   } else {
-    return res.redirect(env.CORS_ORIGIN);
+    return  res.sendFile(join(__dirname, "../client/dist", "index.html"), {
+      headers: {
+        "Cache-Control": "no-store, must-revalidate",
+      },
+    });
   }
 });
 

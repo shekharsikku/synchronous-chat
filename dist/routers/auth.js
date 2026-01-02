@@ -1,0 +1,10 @@
+import { Router } from "express";
+import { signUpUser, signInUser, signOutUser } from "../controllers/auth.js";
+import { authRefresh, validate } from "../middlewares/index.js";
+import { SignUpSchema, SignInSchema } from "../utils/schema.js";
+const router = Router();
+router.post("/sign-up", validate(SignUpSchema), signUpUser);
+router.post("/sign-in", validate(SignInSchema), signInUser);
+router.all("/sign-out", signOutUser);
+router.get("/auth-refresh", authRefresh);
+export default router;

@@ -1,13 +1,13 @@
 {
-  "name": "@synchronous/web",
+  "name": "synchronous-client",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint": "eslint . --ext ts,tsx",
+    "lint:fix": "eslint . --ext ts,tsx --fix"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

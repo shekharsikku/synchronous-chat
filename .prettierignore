@@ -20,10 +20,3 @@ node_modules
 
 # Build / Test files 
 **/dist
-**/test
-
-# Workspace / Package lock files
-pnpm-workspace.yaml
-pnpm-lock.yaml
-package-lock.json
-bun.lock

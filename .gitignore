@@ -20,5 +20,4 @@ node_modules
 *.tsbuildinfo
 
 # Build / Test files 
-**/dist
 **/test
