@@ -66,6 +66,9 @@ export const useAuthStore = create<{
   isAuthenticated: boolean;
   setIsAuthenticated: (isAuthenticated: boolean) => void;
 
+  isAuthResolved: boolean;
+  setIsAuthResolved: (isAuthResolved: boolean) => void;
+
   getUserInfo: () => Promise<UserInfo | null>;
 }>((set) => ({
   userInfo: null,
@@ -74,10 +77,13 @@ export const useAuthStore = create<{
   isAuthenticated: false,
   setIsAuthenticated: (isAuthenticated: boolean) => set({ isAuthenticated }),
 
+  isAuthResolved: false,
+  setIsAuthResolved: (isAuthResolved: boolean) => set({ isAuthResolved }),
+
   getUserInfo: async () => {
     try {
       const response = await api.get("/api/user/user-information");
-      const result = await response.data.data;
+      const result = response.data.data;
       set({
         userInfo: result,
         isAuthenticated: true,

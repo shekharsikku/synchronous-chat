@@ -1,33 +1,43 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
+import { Spinner } from "@/components/ui/spinner";
 import { useListeners } from "@/hooks";
 import { useAuthUser } from "@/lib/auth";
 import { useTheme } from "@/lib/context";
 import { Auth, Chat, Profile } from "@/pages";
 
+const RouteLayout = ({ route }: { route: "auth" | "chat" }) => {
+  const { isAuthenticated, userInfo, isAuthResolved } = useAuthUser();
+
+  if (!isAuthResolved) {
+    return (
+      <div className="h-screen w-screen grid place-content-center">
+        <Spinner className="size-8" />
+      </div>
+    );
+  }
+
+  if (route === "chat") {
+    if (!isAuthenticated || !userInfo) {
+      return <Navigate to="/auth" replace />;
+    }
+  }
+
+  if (route === "auth") {
+    if (isAuthenticated && userInfo?.setup) {
+      return <Navigate to="/chat" replace />;
+    }
+  }
+
+  return <Outlet />;
+};
+
 const RedirectRoute = () => {
   const { isAuthenticated, userInfo } = useAuthUser();
-  return isAuthenticated && userInfo ? <Navigate to="/chat" /> : <Navigate to="/auth" />;
-};
 
-const ProtectedRoute = ({
-  children,
-}: Readonly<{
-  children: ReactNode;
-}>) => {
-  const { isAuthenticated, userInfo } = useAuthUser();
-  return isAuthenticated && userInfo ? children : <Navigate to="/auth" />;
-};
-
-const AuthRoute = ({
-  children,
-}: Readonly<{
-  children: ReactNode;
-}>) => {
-  const { isAuthenticated, userInfo } = useAuthUser();
-  return isAuthenticated && userInfo?.setup ? <Navigate to="/chat" /> : children;
+  return <Navigate to={isAuthenticated && userInfo ? "/chat" : "/auth"} replace />;
 };
 
 const App = () => {
@@ -60,30 +70,15 @@ const App = () => {
 
   return (
     <Routes>
-      <Route
-        path="/auth"
-        element={
-          <AuthRoute>
-            <Auth />
-          </AuthRoute>
-        }
-      />
-      <Route
-        path="/chat"
-        element={
-          <ProtectedRoute>
-            <Chat />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
+      <Route element={<RouteLayout route="auth" />}>
+        <Route path="/auth" element={<Auth />} />
+      </Route>
+
+      <Route element={<RouteLayout route="chat" />}>
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/profile" element={<Profile />} />
+      </Route>
+
       <Route path="*" element={<RedirectRoute />} />
     </Routes>
   );

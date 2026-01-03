@@ -1,7 +1,5 @@
 import axios, { type AxiosError, type AxiosRequestConfig } from "axios";
 
-import { delAuthUser } from "@/lib/auth";
-
 interface RetryRequestConfig extends AxiosRequestConfig {
   _retry?: boolean;
 }
@@ -69,7 +67,6 @@ api.interceptors.response.use(
         processQueue(error, false);
 
         if (error.response?.status === 403) {
-          delAuthUser();
           window.location.href = "/auth";
         }
 

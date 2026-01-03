@@ -99,7 +99,7 @@ app.all("*path", (_req: Request, res: Response) => {
   if (env.isDev) {
     return SuccessResponse(res, 200, "Welcome to Synchronous Chat!");
   } else {
-    return  res.sendFile(join(__dirname, "../client/dist", "index.html"), {
+    return res.sendFile(join(__dirname, "../client/dist", "index.html"), {
       headers: {
         "Cache-Control": "no-store, must-revalidate",
       },

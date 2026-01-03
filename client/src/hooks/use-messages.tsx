@@ -17,7 +17,7 @@ export const useMessages = () => {
     queryKey: queryKey,
     queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams({
-        limit: pageParam ? "10" : "20",
+        limit: pageParam ? "20" : "10",
       });
 
       if (pageParam) params.append("before", pageParam);

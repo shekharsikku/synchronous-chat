@@ -11,7 +11,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import api from "@/lib/api";
-import { setAuthUser } from "@/lib/auth";
 import { signUpSchema, signInSchema } from "@/lib/schema";
 import { validateEmail, validateDummyEmail, cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/zustand";
@@ -86,7 +85,6 @@ const Auth = () => {
       const result = await response.data;
 
       if (result.success) {
-        setAuthUser(result.data);
         setUserInfo(result.data);
         setIsAuthenticated(true);
 
