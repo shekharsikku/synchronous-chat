@@ -49,7 +49,7 @@ export const useListeners = () => {
         cachedMessages = await queryClient.fetchInfiniteQuery({
           queryKey: chatQueryKey,
           queryFn: async ({ pageParam }) => {
-            const limit = pageParam ? 10 : 20;
+            const limit = pageParam ? 20 : 30;
             const response = await api.get(`/api/message/fetch/${chatKey}?limit=${limit}`);
             return response.data.data;
           },

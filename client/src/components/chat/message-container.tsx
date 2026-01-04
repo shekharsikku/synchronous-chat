@@ -191,8 +191,8 @@ const MessageContainer = () => {
       const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
       const scrollPosition = scrollTop / (scrollHeight - clientHeight);
 
-      /* Example: fetch when scrolled above 75% (i.e., closer to top) */
-      if (scrollPosition < 0.25 && !scrollLockedRef.current) {
+      /* Example: fetch when scrolled above 60% (i.e., closer to top 40%) */
+      if (scrollPosition < 0.4 && !scrollLockedRef.current) {
         scrollLockedRef.current = true;
         await fetchNextPage();
         setTimeout(() => (scrollLockedRef.current = false), 2000);
