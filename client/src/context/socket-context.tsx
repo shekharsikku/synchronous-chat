@@ -28,16 +28,15 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
         auth: { secretKey: secretKey },
       });
 
-      setSocket(socket);
-
       socket.on("connect", () => {
-        console.log("☑️ Connected to socket server!");
+        setSocket(socket);
         setIsConnected(true);
+        console.log("☑️ Connected to socket server!");
       });
 
       socket.on("disconnect", () => {
-        console.log("⚠️ Disconnected from socket server!");
         setIsConnected(false);
+        console.log("⚠️ Disconnected from socket server!");
       });
 
       socket.on("users:online", (onlineUsers) => {
@@ -45,7 +44,9 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
       });
 
       socket.on("connect_error", (error) => {
-        toast.error(error.message);
+        setIsConnected(false);
+        console.error(`❌ Socket error: ${error.message}`);
+        toast.error("Network unavailable or request aborted!");
       });
 
       return () => {
