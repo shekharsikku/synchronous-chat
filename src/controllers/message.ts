@@ -2,7 +2,7 @@ import { translate } from "bing-translate-api";
 import { Types } from "mongoose";
 
 import { fetchMembers } from "#/controllers/group.js";
-import { Message, Conversation, Group } from "#/models/index.js";
+import { Message, Conversation } from "#/models/index.js";
 import { getSocketId, io } from "#/server.js";
 import { HttpError, SuccessResponse, ErrorResponse } from "#/utils/response.js";
 
@@ -110,13 +110,7 @@ const fetchMessages = async (req: Request<{ id: string }>, res: Response) => {
     const sender = req.user?._id;
     const target = req.params.id;
     const { before, group, limit = 10 } = req.query;
-
-    let isGroup = (group as string) === "true" || false;
-
-    if (!before && !group) {
-      const exists = await Group.exists({ _id: target });
-      if (exists) isGroup = true;
-    }
+    const isGroup = (group as string) === "true" || false;
 
     const query: any = isGroup
       ? { group: target }

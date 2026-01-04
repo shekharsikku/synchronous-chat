@@ -15,7 +15,11 @@ export const useListeners = () => {
   const { socket } = useSocket();
   const { contacts } = useContacts();
   const { userInfo, setUserInfo } = useAuthStore();
-  const { selectedChatData, isSoundAllow } = useChatStore();
+  const { selectedChatData, isSoundAllow, allChats } = useChatStore();
+
+  const getCurrentChat = useEffectEvent((chatKey: string) => {
+    return allChats.find((current) => current._id === chatKey);
+  });
 
   const getSenderName = useEffectEvent((chatKey: string) => {
     return contacts?.find((contact) => contact._id === chatKey)?.name;
@@ -49,8 +53,16 @@ export const useListeners = () => {
         cachedMessages = await queryClient.fetchInfiniteQuery({
           queryKey: chatQueryKey,
           queryFn: async ({ pageParam }) => {
-            const limit = pageParam ? 20 : 30;
-            const response = await api.get(`/api/message/fetch/${chatKey}?limit=${limit}`);
+            const currChat = getCurrentChat(chatKey!);
+
+            const params = new URLSearchParams({
+              limit: pageParam ? "20" : "30",
+            });
+
+            if (pageParam) params.append("before", pageParam);
+            if (currChat.type === "group") params.append("group", "true");
+
+            const response = await api.get(`/api/message/fetch/${chatKey}?${params.toString()}`);
             return response.data.data;
           },
           initialPageParam: undefined,

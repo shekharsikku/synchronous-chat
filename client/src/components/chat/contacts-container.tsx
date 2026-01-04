@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useState, useEffectEvent } from "react";
 import { isDesktop } from "react-device-detect";
 
 import { AddNewChat } from "@/components/chat/add-new-chat";
@@ -19,30 +19,31 @@ const ContactsContainer = () => {
   const { callingActive } = usePeer();
   const { onlineUsers } = useSocket();
   const { contacts, groups, fetching } = useContacts();
-  const { selectedChatData, setSelectedChatType, setSelectedChatData, setReplyTo } = useChatStore();
+  const { selectedChatData, setSelectedChatType, setSelectedChatData, setReplyTo, allChats, setAllChats } =
+    useChatStore();
 
-  const [currentTab, setCurrentTab] = useState("all"); // <"all" | "chats" | "groups">
-  const [allChats, setAllChats] = useState<any[]>([]); // <UserInfo[] | GroupInfo[]>
+  const [currentTab, setCurrentTab] = useState("all");
 
-  useEffect(() => {
+  const handleChatSync = useEffectEvent((contacts?: UserInfo[], groups?: GroupInfo[]) => {
     if (!contacts?.length && !groups?.length) {
       setAllChats([]);
       return;
     }
 
-    if (currentTab === "all" && contacts && groups) {
-      /* Merge both and tag them with type (optional) */
-      let merged = [
-        ...contacts.map((c) => ({ ...c, type: "contact" })),
-        ...groups.map((g) => ({ ...g, type: "group" })),
-      ];
-
-      /* Sort by last interaction (descending) */
-      merged.sort((a, b) => new Date(b.interaction || 0).getTime() - new Date(a.interaction || 0).getTime());
+    if (contacts && groups) {
+      /* Merge both and tag them with type (optional) & Sort by last interaction (descending) */
+      const merged = [
+        ...contacts.map((contact) => ({ ...contact, type: "contact" })),
+        ...groups.map((group) => ({ ...group, type: "group" })),
+      ].sort((start, end) => new Date(end.interaction || 0).getTime() - new Date(start.interaction || 0).getTime());
 
       setAllChats(merged);
     }
-  }, [contacts, groups, currentTab]);
+  });
+
+  useEffect(() => {
+    handleChatSync(contacts, groups);
+  }, [contacts, groups]);
 
   const handleSelectChat = (chatType: ChatType, chatData: any) => {
     setSelectedChatType(chatType);
