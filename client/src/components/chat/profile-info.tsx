@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useSignOut } from "@/lib/auth";
+import { useSignOut } from "@/hooks";
 import { usePeer, useTheme } from "@/lib/context";
 import { getAvatar } from "@/lib/utils";
 import { useAuthStore, useChatStore } from "@/lib/zustand";

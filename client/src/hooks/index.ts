@@ -192,6 +192,7 @@ export const useMessageActions = () => {
   return { deleteSelectedMessage, handleEmojiReaction, translateMessage };
 };
 
+export { useAuthUser, useSignOut } from "@/hooks/use-auth";
 export { useContacts } from "@/hooks/use-contacts";
 export { useListeners } from "@/hooks/use-listeners";
 export { useMessages } from "@/hooks/use-messages";

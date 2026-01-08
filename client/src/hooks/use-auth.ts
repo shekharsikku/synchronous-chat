@@ -36,8 +36,8 @@ export const useSignOut = () => {
   const { setUserInfo, setIsAuthenticated } = useAuthStore();
   const { disconnectCalling, callingActive } = usePeer();
 
-  const handleSignOut = async (e: any) => {
-    e.preventDefault();
+  const handleSignOut = async (event: any) => {
+    event.preventDefault();
     if (callingActive) disconnectCalling();
     try {
       const response = await api.delete("/api/auth/sign-out");

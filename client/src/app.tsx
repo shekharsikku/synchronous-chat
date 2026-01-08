@@ -3,8 +3,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import { Spinner } from "@/components/ui/spinner";
-import { useListeners } from "@/hooks";
-import { useAuthUser } from "@/lib/auth";
+import { useListeners, useAuthUser } from "@/hooks";
 import { useTheme } from "@/lib/context";
 import { Auth, Chat, Profile } from "@/pages";
 
