@@ -3,9 +3,9 @@ import { HiOutlinePhoneXMark, HiOutlineSpeakerWave, HiOutlineSpeakerXMark } from
 import { LuMic, LuMicOff, LuAudioLines, LuAudioWaveform } from "react-icons/lu";
 import { continuousVisualizer } from "sound-visualizer";
 
+import { TooltipElement } from "@/components/chat/tooltip-element";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePeer } from "@/lib/context";
 import { formatTimer } from "@/lib/utils";
 
@@ -105,36 +105,29 @@ const StreamInfo = () => {
     <>
       <div className="h-bar border-t p-2">
         <div className="bg-gray-100/80 dark:bg-transparent rounded h-full w-full flex items-center justify-between px-4">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger className="focus:outline-none cursor-pointer" asChild>
-                <div
-                  className="flex flex-col justify-center px-1"
-                  onClick={() => setCallingDialog(true)}
-                  onMouseOver={() => setHoverInfo(true)}
-                  onMouseLeave={() => setHoverInfo(false)}
-                  role="button"
-                >
-                  <h5 className="flex gap-2 heading-name">
-                    <span>{displayName(localInfo?.name!)}</span>
-                    {hoverInfo ? (
-                      <LuAudioLines size={16} strokeWidth={1.5} className="mt-0.5" />
-                    ) : (
-                      <LuAudioWaveform size={16} strokeWidth={1.5} className="mt-0.5" />
-                    )}
-                    <span>{displayName(callingInfo?.name!)}</span>
-                  </h5>
-                  <p className="flex gap-1 heading-uname">
-                    <span>{mediaType === "video" ? "Video" : "Voice"} Connected</span>
-                    <span>{formatTimer(callTimer)}</span>
-                  </p>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <span className="tooltip-span">Call Info</span>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <TooltipElement content="Call Info" asChild>
+            <div
+              className="flex flex-col justify-center px-1"
+              onClick={() => setCallingDialog(true)}
+              onMouseOver={() => setHoverInfo(true)}
+              onMouseLeave={() => setHoverInfo(false)}
+              role="button"
+            >
+              <h5 className="flex gap-2 heading-name">
+                <span>{displayName(localInfo?.name!)}</span>
+                {hoverInfo ? (
+                  <LuAudioLines size={16} strokeWidth={1.5} className="mt-0.5" />
+                ) : (
+                  <LuAudioWaveform size={16} strokeWidth={1.5} className="mt-0.5" />
+                )}
+                <span>{displayName(callingInfo?.name!)}</span>
+              </h5>
+              <p className="flex gap-1 heading-uname">
+                <span>{mediaType === "video" ? "Video" : "Voice"} Connected</span>
+                <span>{formatTimer(callTimer)}</span>
+              </p>
+            </div>
+          </TooltipElement>
 
           <div className="hidden">
             <audio ref={localAudioRef} autoPlay muted />
@@ -142,51 +135,23 @@ const StreamInfo = () => {
           </div>
 
           <div className="flex gap-4 justify-end">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger className="focus:outline-none cursor-pointer">
-                  {remoteMicOff ? (
-                    <LuMicOff
-                      size={20}
-                      strokeWidth={1.5}
-                      onClick={() => setRemoteMicOff(false)}
-                      className="tooltip-icon"
-                    />
-                  ) : (
-                    <LuMic size={20} strokeWidth={1.5} onClick={() => setRemoteMicOff(true)} className="tooltip-icon" />
-                  )}
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span className="tooltip-span">{remoteMicOff ? "Mic On" : "Mic Off"}</span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger className="focus:outline-none cursor-pointer">
-                  {muteUser ? (
-                    <HiOutlineSpeakerXMark size={20} onClick={() => setMuteUser(false)} className="tooltip-icon" />
-                  ) : (
-                    <HiOutlineSpeakerWave size={20} onClick={() => setMuteUser(true)} className="tooltip-icon" />
-                  )}
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span className="tooltip-span">{muteUser ? "Voice On" : "Voice Off"}</span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger className="focus:outline-none cursor-pointer">
-                  <HiOutlinePhoneXMark size={18} onClick={disconnectCalling} className="tooltip-icon" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span className="tooltip-span">Disconnect</span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <TooltipElement content={remoteMicOff ? "Mic On" : "Mic Off"}>
+              {remoteMicOff ? (
+                <LuMicOff size={20} strokeWidth={1.5} onClick={() => setRemoteMicOff(false)} className="tooltip-icon" />
+              ) : (
+                <LuMic size={20} strokeWidth={1.5} onClick={() => setRemoteMicOff(true)} className="tooltip-icon" />
+              )}
+            </TooltipElement>
+            <TooltipElement content={muteUser ? "Voice On" : "Voice Off"}>
+              {muteUser ? (
+                <HiOutlineSpeakerXMark size={20} onClick={() => setMuteUser(false)} className="tooltip-icon" />
+              ) : (
+                <HiOutlineSpeakerWave size={20} onClick={() => setMuteUser(true)} className="tooltip-icon" />
+              )}
+            </TooltipElement>
+            <TooltipElement content="Disconnect">
+              <HiOutlinePhoneXMark size={18} onClick={disconnectCalling} className="tooltip-icon" />
+            </TooltipElement>
           </div>
         </div>
       </div>

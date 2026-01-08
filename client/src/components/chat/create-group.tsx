@@ -6,6 +6,7 @@ import { HiOutlineUsers } from "react-icons/hi2";
 import { toast } from "sonner";
 import * as z from "zod";
 
+import { TooltipElement } from "@/components/chat/tooltip-element";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,7 +14,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useContacts } from "@/hooks";
 import api from "@/lib/api";
 import { createGroupSchema } from "@/lib/schema";
@@ -111,16 +111,9 @@ const CreateGroup = () => {
 
   return (
     <Dialog open={groupDialog} onOpenChange={setGroupDialog}>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger className="focus:outline-none cursor-pointer">
-            <HiOutlineUsers onClick={() => setGroupDialog(true)} size={18} className="tooltip-icon" />
-          </TooltipTrigger>
-          <TooltipContent>
-            <span className="tooltip-span">New Group</span>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <TooltipElement content="New Group">
+        <HiOutlineUsers onClick={() => setGroupDialog(true)} size={18} className="tooltip-icon" />
+      </TooltipElement>
 
       <DialogContent
         onInteractOutside={(e) => e.preventDefault()}

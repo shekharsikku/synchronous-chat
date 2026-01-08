@@ -17,10 +17,10 @@ import { LuReply } from "react-icons/lu";
 import { useInView } from "react-intersection-observer";
 
 import { EditMessage } from "@/components/chat/edit-message";
+import { TooltipElement } from "@/components/chat/tooltip-element";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useDisableAnimations, useLastMinutes, usePlainText, useReplyMessage, useMessageActions } from "@/hooks";
 import { useSocket } from "@/lib/context";
 import {
@@ -139,23 +139,17 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
                   )}
                 >
                   {/* Message Reply */}
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger
-                        className={cn("focus:outline-none cursor-pointer", !isSender && "order-last")}
-                        onClick={() => setReplyTo(message)}
-                      >
-                        {isSender ? (
-                          <HiMiniArrowUturnLeft className="tooltip-icon hover:scale-125 transition-transform duration-200" />
-                        ) : (
-                          <HiMiniArrowUturnRight className="tooltip-icon hover:scale-125 transition-transform duration-200" />
-                        )}
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <span className="tooltip-span">Reply</span>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <TooltipElement
+                    content="Reply"
+                    onClick={() => setReplyTo(message)}
+                    classNames={!isSender ? "order-last" : undefined}
+                  >
+                    {isSender ? (
+                      <HiMiniArrowUturnLeft className="tooltip-icon hover:scale-125 transition-transform duration-200" />
+                    ) : (
+                      <HiMiniArrowUturnRight className="tooltip-icon hover:scale-125 transition-transform duration-200" />
+                    )}
+                  </TooltipElement>
                   {/* Emoji Reaction */}
                   {["👍", "❤️", "😂", "😲", "💯"].map((emoji) => (
                     <button

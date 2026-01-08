@@ -10,8 +10,8 @@ import {
 } from "react-icons/hi2";
 import { toast } from "sonner";
 
+import { TooltipElement } from "@/components/chat/tooltip-element";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useClipboard } from "@/hooks";
 import api from "@/lib/api";
 import { useSocket, useTheme } from "@/lib/context";
@@ -237,20 +237,9 @@ const MessageBar = () => {
     <footer className="h-bar w-full border-t flex items-center justify-center p-2">
       <div className="w-full flex rounded items-center justify-center gap-4 bg-gray-100/80 dark:bg-transparent px-4 h-full">
         <div className="flex gap-4 relative">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger className="focus:outline-none cursor-pointer" disabled={isSending}>
-                <HiOutlineFaceSmile
-                  size={20}
-                  onClick={() => setEmojiPicker((prev) => !prev)}
-                  className="tooltip-icon"
-                />
-              </TooltipTrigger>
-              <TooltipContent>
-                <span className="tooltip-span">Emojis</span>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <TooltipElement content="Emojis" disabled={isSending}>
+            <HiOutlineFaceSmile size={20} onClick={() => setEmojiPicker((prev) => !prev)} className="tooltip-icon" />
+          </TooltipElement>
 
           {emojiPicker && (
             <div className="absolute bottom-20 -left-2.5 sm:-left-1.5 md:left-0" ref={emojiRef}>
@@ -264,16 +253,9 @@ const MessageBar = () => {
             </div>
           )}
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger className="focus:outline-none cursor-pointer" disabled={isSending}>
-                <HiOutlineLink size={20} onClick={handleAttachClick} className="tooltip-icon" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <span className="tooltip-span">Attach</span>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <TooltipElement content="Attach" disabled={isSending}>
+            <HiOutlineLink size={20} onClick={handleAttachClick} className="tooltip-icon" />
+          </TooltipElement>
         </div>
 
         <input
@@ -310,30 +292,17 @@ const MessageBar = () => {
 
         {message && (
           <div className="flex gap-4">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger className="focus:outline-none cursor-pointer" disabled={isSending}>
-                  {selectedImage ? (
-                    <HiOutlineXMark size={20} onClick={() => handleClearMessage()} className="tooltip-icon" />
-                  ) : (
-                    <HiOutlineBackspace size={20} onClick={() => handleClearMessage()} className="tooltip-icon" />
-                  )}
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span className="tooltip-span">{selectedImage ? "Remove" : "Clear"}</span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger className="focus:outline-none cursor-pointer" disabled={isSending}>
-                  <HiOutlinePaperAirplane size={20} onClick={handleSendMessage} className="tooltip-icon" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span className="tooltip-span">Send</span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <TooltipElement content={selectedImage ? "Remove" : "Clear"} disabled={isSending}>
+              {selectedImage ? (
+                <HiOutlineXMark size={20} onClick={() => handleClearMessage()} className="tooltip-icon" />
+              ) : (
+                <HiOutlineBackspace size={20} onClick={() => handleClearMessage()} className="tooltip-icon" />
+              )}
+            </TooltipElement>
+
+            <TooltipElement content="Send" disabled={isSending}>
+              <HiOutlinePaperAirplane size={20} onClick={handleSendMessage} className="tooltip-icon" />
+            </TooltipElement>
           </div>
         )}
       </div>

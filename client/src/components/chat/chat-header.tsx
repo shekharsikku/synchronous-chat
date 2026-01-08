@@ -12,6 +12,7 @@ import { toast } from "sonner";
 
 import groupAvatar from "@/assets/group-avatar.webp";
 import { GroupMembersList } from "@/components/chat/member-list";
+import { TooltipElement } from "@/components/chat/tooltip-element";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
@@ -24,7 +25,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSocket, usePeer } from "@/lib/context";
 import { cn, languageOptions, getAvatar, formatUtcTimestamp } from "@/lib/utils";
 import { useChatStore } from "@/lib/zustand";
@@ -80,31 +80,24 @@ const ChatHeader = () => {
       <div className="h-full w-full rounded flex items-center justify-between px-4 bg-gray-100/80 dark:bg-transparent">
         <div className="flex gap-4 items-center justify-center">
           {selectedChatType === "group" && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger className="focus:outline-none" asChild>
-                  <Avatar
-                    className="size-9 rounded-full overflow-hidden cursor-pointer border-2"
-                    onClick={() => setOpenGroupInfoModal(true)}
-                  >
-                    <AvatarImage
-                      src={selectedChatData.avatar || groupAvatar}
-                      alt="avatar"
-                      className="object-cover size-full"
-                    />
-                    <AvatarFallback
-                      className={`uppercase h-full w-full text-xl border text-center font-medium 
+            <TooltipElement content="Group Info" asChild>
+              <Avatar
+                className="size-9 rounded-full overflow-hidden cursor-pointer border-2"
+                onClick={() => setOpenGroupInfoModal(true)}
+              >
+                <AvatarImage
+                  src={selectedChatData.avatar || groupAvatar}
+                  alt="avatar"
+                  className="object-cover size-full"
+                />
+                <AvatarFallback
+                  className={`uppercase h-full w-full text-xl border text-center font-medium 
                   transition-all duration-300 bg-[#06d6a02a] text-[#06d6a0] border-[#06d6a0bb`}
-                    >
-                      {selectedChatData?.name.charAt(0) ?? ""}
-                    </AvatarFallback>
-                  </Avatar>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span className="tooltip-span">Group Info</span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                >
+                  {selectedChatData?.name.charAt(0) ?? ""}
+                </AvatarFallback>
+              </Avatar>
+            </TooltipElement>
           )}
 
           <Dialog open={openGroupInfoModal} onOpenChange={setOpenGroupInfoModal}>
@@ -140,28 +133,20 @@ const ChatHeader = () => {
           </Dialog>
 
           {selectedChatType === "contact" && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger className="focus:outline-none" asChild>
-                  <Avatar
-                    className="size-9 rounded-full overflow-hidden cursor-pointer border-2"
-                    onClick={() => setOpenUserInfoModal(true)}
-                  >
-                    <AvatarImage src={userAvatar} alt="profile" className="object-cover size-full" />
-                    <AvatarFallback
-                      className={`uppercase h-full w-full text-xl border text-center font-medium 
+            <TooltipElement content="Chat Info" asChild>
+              <Avatar
+                className="size-9 rounded-full overflow-hidden cursor-pointer border-2"
+                onClick={() => setOpenUserInfoModal(true)}
+              >
+                <AvatarImage src={userAvatar} alt="profile" className="object-cover size-full" />
+                <AvatarFallback
+                  className={`uppercase h-full w-full text-xl border text-center font-medium 
                       transition-all duration-300 bg-[#06d6a02a] text-[#06d6a0] border-[#06d6a0bb`}
-                    >
-                      {(selectedChatData?.name || selectedChatData?.username || selectedChatData?.email).charAt(0) ??
-                        ""}
-                    </AvatarFallback>
-                  </Avatar>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span className="tooltip-span">Chat Info</span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                >
+                  {(selectedChatData?.name || selectedChatData?.username || selectedChatData?.email).charAt(0) ?? ""}
+                </AvatarFallback>
+              </Avatar>
+            </TooltipElement>
           )}
 
           {/* Dialog for show user information */}
@@ -246,83 +231,44 @@ const ChatHeader = () => {
           {selectedChatType === "contact" && isCurrentlyOnline && (
             <>
               {callingActive && callingInfo?.uid === selectedChatData?._id ? (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger className="focus:outline-none cursor-pointer">
-                      <LuAudioLines
-                        size={20}
-                        strokeWidth={1.5}
-                        onClick={() => setCallingDialog(true)}
-                        className="tooltip-icon"
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <span className="tooltip-span">Call Info</span>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <TooltipElement content="Call Info">
+                  <LuAudioLines
+                    size={20}
+                    strokeWidth={1.5}
+                    onClick={() => setCallingDialog(true)}
+                    className="tooltip-icon"
+                  />
+                </TooltipElement>
               ) : (
                 <>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger className="focus:outline-none cursor-pointer" disabled={pendingRequest}>
-                        <HiOutlineShare
-                          size={18}
-                          onClick={() => setOpenPeerShareModal(true)}
-                          className="tooltip-icon"
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <span className="tooltip-span">Peer Share</span>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger className="focus:outline-none cursor-pointer" disabled={pendingRequest}>
-                        <HiOutlineVideoCamera
-                          size={20}
-                          onClick={() => requestVoiceCalling(selectedChatData?._id!, "video")}
-                          className="tooltip-icon"
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <span className="tooltip-span">Video Call</span>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger className="focus:outline-none cursor-pointer" disabled={pendingRequest}>
-                        <HiOutlinePhone
-                          size={18}
-                          onClick={() => requestVoiceCalling(selectedChatData?._id!, "audio")}
-                          className="tooltip-icon"
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <span className="tooltip-span">Voice Call</span>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <TooltipElement content="Peer Share" disabled={pendingRequest}>
+                    <HiOutlineShare size={18} onClick={() => setOpenPeerShareModal(true)} className="tooltip-icon" />
+                  </TooltipElement>
+                  <TooltipElement content="Video Call" disabled={pendingRequest}>
+                    <HiOutlineVideoCamera
+                      size={20}
+                      onClick={() => requestVoiceCalling(selectedChatData?._id!, "video")}
+                      className="tooltip-icon"
+                    />
+                  </TooltipElement>
+                  <TooltipElement content="Voice Call" disabled={pendingRequest}>
+                    <HiOutlinePhone
+                      size={18}
+                      onClick={() => requestVoiceCalling(selectedChatData?._id!, "audio")}
+                      className="tooltip-icon"
+                    />
+                  </TooltipElement>
                 </>
               )}
             </>
           )}
           {/* Translate Language */}
           <DropdownMenu>
-            <TooltipProvider>
-              <Tooltip>
-                <DropdownMenuTrigger asChild className={cn(import.meta.env.PROD && "hidden")}>
-                  <TooltipTrigger className="focus:outline-none cursor-pointer">
-                    <HiOutlineLanguage size={18} className="tooltip-icon" />
-                  </TooltipTrigger>
-                </DropdownMenuTrigger>
-                <TooltipContent>
-                  <span className="tooltip-span">Translate</span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <TooltipElement content="Translate">
+              <DropdownMenuTrigger asChild className={cn(import.meta.env.PROD && "hidden")}>
+                <HiOutlineLanguage size={18} className="tooltip-icon" />
+              </DropdownMenuTrigger>
+            </TooltipElement>
             <DropdownMenuContent className="w-36 mt-4 mr-6 bg-background">
               <DropdownMenuLabel>Select Language</DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -343,16 +289,9 @@ const ChatHeader = () => {
             </DropdownMenuContent>
           </DropdownMenu>
           {/* Close Chat */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger className="focus:outline-none cursor-pointer">
-                <HiOutlineXMark size={20} onClick={closeChat} className="tooltip-icon" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <span className="tooltip-span">Close</span>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <TooltipElement content="Close">
+            <HiOutlineXMark size={20} onClick={closeChat} className="tooltip-icon" />
+          </TooltipElement>
         </div>
       </div>
     </header>

@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import * as z from "zod";
 
+import { TooltipElement } from "@/components/chat/tooltip-element";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,7 +39,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useSignOut } from "@/hooks";
 import api from "@/lib/api";
 import { useSocket } from "@/lib/context";
@@ -254,49 +254,26 @@ const Profile = () => {
             />
           </div>
           <div className="hidden lg:flex gap-6 w-full items-center justify-center">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger className="focus:outline-none cursor-pointer" asChild>
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    onClick={() => navigate("/chat")}
-                    disabled={isLoading || !userInfo?.setup}
-                  >
-                    <HiOutlineChatBubbleLeftRight size={20} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span className="tooltip-span">Chat Messages</span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger className="focus:outline-none cursor-pointer" asChild>
-                  <Button size="sm" className="w-full" onClick={() => setOpenPasswordDialog(true)} disabled={isLoading}>
-                    <HiOutlineKey size={20} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span className="tooltip-span">Change Password</span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger className="focus:outline-none cursor-pointer" asChild>
-                  <Button size="sm" className="w-full" onClick={handleSignOut} disabled={isLoading}>
-                    <HiOutlineArrowRightOnRectangle size={20} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span className="tooltip-span">Sign Out</span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <TooltipElement content="Chat Messages" asChild>
+              <Button
+                size="sm"
+                className="w-full"
+                onClick={() => navigate("/chat")}
+                disabled={isLoading || !userInfo?.setup}
+              >
+                <HiOutlineChatBubbleLeftRight size={20} />
+              </Button>
+            </TooltipElement>
+            <TooltipElement content="Change Password" asChild>
+              <Button size="sm" className="w-full" onClick={() => setOpenPasswordDialog(true)} disabled={isLoading}>
+                <HiOutlineKey size={20} />
+              </Button>
+            </TooltipElement>
+            <TooltipElement content="Sign Out" asChild>
+              <Button size="sm" className="w-full" onClick={handleSignOut} disabled={isLoading}>
+                <HiOutlineArrowRightOnRectangle size={20} />
+              </Button>
+            </TooltipElement>
           </div>
         </div>
 
@@ -383,50 +360,26 @@ const Profile = () => {
             </form>
           </Form>
           <div className="lg:hidden flex gap-4 md:gap-6 w-full items-center justify-center mt-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger className="focus:outline-none cursor-pointer" asChild>
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    onClick={() => navigate("/chat")}
-                    disabled={isLoading || !userInfo?.setup}
-                  >
-                    <HiOutlineChatBubbleLeftRight size={20} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span className="tooltip-span">Chat Messages</span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger className="focus:outline-none cursor-pointer" asChild>
-                  <Button size="sm" className="w-full" onClick={() => setOpenPasswordDialog(true)} disabled={isLoading}>
-                    {" "}
-                    <HiOutlineKey size={20} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span className="tooltip-span">Change Password</span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger className="focus:outline-none cursor-pointer" asChild>
-                  <Button size="sm" className="w-full" onClick={handleSignOut} disabled={isLoading}>
-                    <HiOutlineArrowRightOnRectangle size={20} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span className="tooltip-span">Sign Out</span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <TooltipElement content="Chat Messages" asChild>
+              <Button
+                size="sm"
+                className="w-full"
+                onClick={() => navigate("/chat")}
+                disabled={isLoading || !userInfo?.setup}
+              >
+                <HiOutlineChatBubbleLeftRight size={20} />
+              </Button>
+            </TooltipElement>
+            <TooltipElement content="Change Password" asChild>
+              <Button size="sm" className="w-full" onClick={() => setOpenPasswordDialog(true)} disabled={isLoading}>
+                <HiOutlineKey size={20} />
+              </Button>
+            </TooltipElement>
+            <TooltipElement content="Sign Out" asChild>
+              <Button size="sm" className="w-full" onClick={handleSignOut} disabled={isLoading}>
+                <HiOutlineArrowRightOnRectangle size={20} />
+              </Button>
+            </TooltipElement>
           </div>
         </div>
       </div>

@@ -4,11 +4,11 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { HiOutlineUserPlus } from "react-icons/hi2";
 
 import { ContactListSkeleton } from "@/components/chat/contact-list-skeleton";
+import { TooltipElement } from "@/components/chat/tooltip-element";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useDebounce, useContacts } from "@/hooks";
 import api from "@/lib/api";
 import { getAvatar } from "@/lib/utils";
@@ -74,16 +74,10 @@ const AddNewChat = () => {
 
   return (
     <Dialog open={openNewChatModal} onOpenChange={setOpenNewChatModal}>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger className="focus:outline-none cursor-pointer">
-            <HiOutlineUserPlus onClick={() => setOpenNewChatModal(true)} size={18} className="tooltip-icon" />
-          </TooltipTrigger>
-          <TooltipContent>
-            <span className="tooltip-span">New Chat</span>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <TooltipElement content="New Chat">
+        <HiOutlineUserPlus onClick={() => setOpenNewChatModal(true)} size={18} className="tooltip-icon" />
+      </TooltipElement>
+
       <DialogContent
         onInteractOutside={(e) => e.preventDefault()}
         className="h-96 w-80 md:w-96 flex flex-col rounded-md select-none"

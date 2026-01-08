@@ -1,6 +1,6 @@
 import { HiOutlineXMark, HiOutlineSlash } from "react-icons/hi2";
 
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipElement } from "@/components/chat/tooltip-element";
 import { usePlainText } from "@/hooks";
 import { cn } from "@/lib/utils";
 import { useChatStore } from "@/lib/zustand";
@@ -30,17 +30,9 @@ const MessagePreview = () => {
             </>
           )}
         </div>
-
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger className="focus:outline-none cursor-pointer" disabled={undefined}>
-              <HiOutlineXMark size={20} onClick={() => setReplyTo(null)} className="tooltip-icon" />
-            </TooltipTrigger>
-            <TooltipContent>
-              <span className="tooltip-span">Cancel</span>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <TooltipElement content="Cancel">
+          <HiOutlineXMark size={20} onClick={() => setReplyTo(null)} className="tooltip-icon" />
+        </TooltipElement>
       </div>
     </div>
   );
