@@ -3,6 +3,7 @@ import { isDesktop, isMobile } from "react-device-detect";
 import {
   HiOutlineFaceSmile,
   HiOutlineLink,
+  HiOutlineXMark,
   HiOutlinePaperAirplane,
   HiOutlineBackspace,
   HiOutlineClipboardDocumentCheck,
@@ -38,6 +39,7 @@ const MessageBar = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [emojiPicker, setEmojiPicker] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<any | null>(null);
 
   useEffect(() => {
     if (!inputRef.current || isMobile) return;
@@ -97,36 +99,44 @@ const MessageBar = () => {
     }
   };
 
-  const [selectedImage, setSelectedImage] = useState<any | null>(null);
+  const handleClearMessage = (reply = false) => {
+    reply && setReplyTo(null);
+    setMessage("");
+    setSelectedImage(null);
+  };
 
   const handleAttachChange = async (event: ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
 
-    /** Size is 9 MB and converted into Bytes */
-    const maxBytesAllow = 9 * 1024 * 1024;
+    /** Size is 6 MB and converted into Bytes */
+    const maxBytesAllow = 6 * 1024 * 1024;
 
     try {
       const imageFile = event.target.files?.[0];
+      if (!imageFile) return;
 
-      if (imageFile) {
-        setMessage(`file::${imageFile?.name}`);
-
-        if (imageFile.size > maxBytesAllow) {
-          setMessage("");
-          toast.info("File size exceeds the max limit!");
-          return;
-        }
-
-        const base64 = await convertToBase64(imageFile);
-        setSelectedImage(base64);
+      if (!imageFile.type.startsWith("image/")) {
+        toast.info("Only image files are allowed!");
+        return;
       }
-    } catch (_error: any) {
-      console.log(`Error while attaching file!`);
+
+      if (imageFile.size > maxBytesAllow) {
+        event.target.value = "";
+        toast.info("File size exceeds the max limit!");
+        return;
+      }
+
+      const base64 = await convertToBase64(imageFile);
+      setSelectedImage(base64);
+      setMessage(imageFile?.name);
+      event.target.value = "";
+    } catch (error: any) {
+      console.error(`Error while attaching file: ${error.message}`);
     }
   };
 
   const handleSendMessage = async () => {
-    if (isSending || message === "") return;
+    if (isSending || message === "" || !selectedChatData?._id) return;
     setIsSending(true);
 
     try {
@@ -141,7 +151,7 @@ const MessageBar = () => {
       }
 
       if (replyTo) messageData.reply = replyTo._id;
-      if (selectedImage) setMessage((prev) => `${prev}::Sending...`);
+      if (selectedImage) setMessage("Sending...");
 
       if (selectedChatType === "contact") {
         await api.post(`/api/message/send/${selectedChatData?._id}`, messageData);
@@ -151,9 +161,7 @@ const MessageBar = () => {
         await api.post(`/api/group/message/send/${selectedChatData?._id}`, messageData);
       }
 
-      setMessage("");
-      setReplyTo(null);
-      setSelectedImage(null);
+      handleClearMessage(!!replyTo);
     } catch (error: any) {
       toast.error(error.response.data.message);
     } finally {
@@ -268,7 +276,15 @@ const MessageBar = () => {
           </TooltipProvider>
         </div>
 
-        <input type="file" id="file-input" className="hidden" ref={fileRef} onChange={handleAttachChange} />
+        <input
+          type="file"
+          id="file-input"
+          className="hidden"
+          ref={fileRef}
+          accept="image/*"
+          onChange={handleAttachChange}
+        />
+        {selectedImage && <img src={selectedImage} alt="image-preview" className="size-12 object-cover rounded" />}
 
         <ContextMenu>
           <ContextMenuTrigger asChild>
@@ -297,17 +313,14 @@ const MessageBar = () => {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger className="focus:outline-none cursor-pointer" disabled={isSending}>
-                  <HiOutlineBackspace
-                    size={20}
-                    onClick={() => {
-                      setMessage("");
-                      setSelectedImage(null);
-                    }}
-                    className="tooltip-icon"
-                  />
+                  {selectedImage ? (
+                    <HiOutlineXMark size={20} onClick={() => handleClearMessage()} className="tooltip-icon" />
+                  ) : (
+                    <HiOutlineBackspace size={20} onClick={() => handleClearMessage()} className="tooltip-icon" />
+                  )}
                 </TooltipTrigger>
                 <TooltipContent>
-                  <span className="tooltip-span">Clear</span>
+                  <span className="tooltip-span">{selectedImage ? "Remove" : "Clear"}</span>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

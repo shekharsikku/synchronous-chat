@@ -52,7 +52,7 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
   const [translated, setTranslated] = useState("");
 
   const { ref: inViewRef, inView } = useInView({
-    threshold: 0.3,
+    threshold: 0.2,
     delay: 100,
   });
 

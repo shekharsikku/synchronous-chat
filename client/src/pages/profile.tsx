@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useRef, useEffect, useEffectEvent } from "react";
+import { useState, useRef, useEffect, useEffectEvent, ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import {
   HiOutlineCloudArrowUp,
@@ -39,8 +39,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { useSignOut } from "@/hooks";
 import api from "@/lib/api";
-import { useSignOut } from "@/lib/auth";
 import { useSocket } from "@/lib/context";
 import { changePasswordSchema, profileUpdateSchema, genders } from "@/lib/schema";
 import { useAuthStore } from "@/lib/zustand";
@@ -60,36 +60,47 @@ const Profile = () => {
   const [openImageDeletionModal, setOpenImageDeletionModal] = useState(false);
   const [imageUpdateFormData, setImageUpdateFormData] = useState<any | null>(null);
 
-  const handleImageSelectClick = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    return () => {
+      if (selectedImage?.startsWith("blob:")) {
+        URL.revokeObjectURL(selectedImage);
+      }
+    };
+  }, [selectedImage]);
+
+  const handleImageSelectClick = async (event: ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
 
-    const inputTarget = event.target;
-    const imageFile = inputTarget.files?.[0];
-    const maxBytesAllow = 5 * 1024 * 1024; // Size in MB
+    /** Size is 3 MB and converted into Bytes */
+    const maxBytesAllow = 3 * 1024 * 1024;
 
-    if (!imageFile) {
-      toast.error("Please, select image file to update!");
-      return;
-    }
+    try {
+      const imageFile = event.target.files?.[0];
+      if (!imageFile) return;
 
-    if (imageFile.size > maxBytesAllow) {
-      inputTarget.value = "";
-      setSelectedImage(userInfo?.image);
-      toast.info("File size exceeds the max limit!");
-      return;
-    }
+      if (!imageFile.type.startsWith("image/")) {
+        toast.info("Only image files are allowed!");
+        return;
+      }
 
-    const formData = new FormData();
-    formData.append("profile-image", imageFile);
+      if (imageFile.size > maxBytesAllow) {
+        event.target.value = "";
+        setSelectedImage(userInfo?.image);
+        toast.info("File size exceeds the max limit!");
+        return;
+      }
 
-    const fileReader = new FileReader();
-    fileReader.onload = () => setSelectedImage(fileReader.result as string);
-    fileReader.readAsDataURL(imageFile);
+      const previewUrl = URL.createObjectURL(imageFile);
+      setSelectedImage(previewUrl);
 
-    if (formData) {
+      const formData = new FormData();
+      formData.append("profile-image", imageFile);
+
       setImageUpdateFormData(formData);
       setOpenConfirmationModal(true);
-      inputTarget.value = "";
+      event.target.value = "";
+    } catch (error: any) {
+      console.error(`Error while selecting file: ${error.message}`);
     }
   };
 
@@ -222,10 +233,11 @@ const Profile = () => {
             </ContextMenu>
             <input
               type="file"
+              id="profile-image"
               ref={fileInputRef}
               name="profileImage"
               onChange={handleImageSelectClick}
-              accept=".png, .jpg, .jpeg, .svg, .webp"
+              accept=".png, .jpg, .jpeg, .webp"
               className="hidden"
             />
           </div>

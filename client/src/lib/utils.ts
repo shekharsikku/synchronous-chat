@@ -49,17 +49,11 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const convertToBase64 = (file: File) => {
-  return new Promise((resolve, reject) => {
+  return new Promise<string | ArrayBuffer | null>((resolve, reject) => {
     const fileReader = new FileReader();
     fileReader.readAsDataURL(file);
-
-    fileReader.onload = () => {
-      resolve(fileReader.result);
-    };
-
-    fileReader.onerror = (error) => {
-      reject(error);
-    };
+    fileReader.onload = () => resolve(fileReader.result);
+    fileReader.onerror = (error) => reject(error);
   });
 };
 
