@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import compression from "compression";
@@ -7,6 +8,7 @@ import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 import requestIp from "request-ip";
+import { parse } from "yaml";
 import { limiter } from "./middlewares/index.js";
 import routers from "./routers/index.js";
 import env from "./utils/env.js";
@@ -14,23 +16,9 @@ import { HttpError, ErrorResponse, SuccessResponse } from "./utils/response.js";
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const { directives } = parse(readFileSync(join(__dirname, "../public/csp.yaml"), "utf-8"));
 app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            imgSrc: ["'self'", "res.cloudinary.com", "data:", "https://cdn.jsdelivr.net"],
-            scriptSrc: [
-                "'self'",
-                "'unsafe-eval'",
-                "https://cdn.jsdelivr.net",
-                "https://unpkg.com",
-                "static.cloudflareinsights.com",
-            ],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            connectSrc: ["'self'", "wss://0.peerjs.com", "https://0.peerjs.com"],
-        },
-    },
+    contentSecurityPolicy: { directives },
 }));
 app.use(cors({
     origin: env.CORS_ORIGIN,
