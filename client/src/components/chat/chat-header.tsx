@@ -264,7 +264,7 @@ const ChatHeader = () => {
           )}
           {/* Translate Language */}
           <DropdownMenu>
-            <TooltipElement content="Translate">
+            <TooltipElement content="Translate" asChild>
               <DropdownMenuTrigger asChild className={cn(import.meta.env.PROD && "hidden")}>
                 <HiOutlineLanguage size={18} className="tooltip-icon" />
               </DropdownMenuTrigger>
