@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, type ChangeEvent, type KeyboardEventHandler } from "react";
+import React, { useState, useEffect, useRef, type ChangeEvent, type KeyboardEventHandler, useEffectEvent } from "react";
 import { isDesktop, isMobile } from "react-device-detect";
 import {
   HiOutlineFaceSmile,
@@ -197,6 +197,8 @@ const MessageBar = () => {
   }, [socket, userInfo?._id, selectedChatData?._id, selectedChatType, setIsPartnerTyping]);
 
   const handleTyping = () => {
+    if (!selectedChatData?._id || !userInfo?._id) return;
+
     if (!isTyping) {
       setIsTyping(true);
       socket?.emit("typing:start", {
@@ -215,15 +217,32 @@ const MessageBar = () => {
         selectedUser: selectedChatData?._id,
         currentUser: userInfo?._id,
       });
-    }, 2500);
+    }, 2000);
   };
 
+  const handleTypingBlur = () => {
+    if (!isTyping) return;
+    if (!selectedChatData?._id || !userInfo?._id) return;
+
+    setIsTyping(false);
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+
+    socket?.emit("typing:stop", {
+      selectedUser: selectedChatData?._id,
+      currentUser: userInfo?._id,
+    });
+  };
+
+  const stopTypingEffect = useEffectEvent(() => {
+    handleTypingBlur();
+  });
+
   useEffect(() => {
-    return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-    };
+    return () => stopTypingEffect();
   }, []);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -277,6 +296,7 @@ const MessageBar = () => {
               autoComplete="off"
               value={message}
               onChange={handleChange}
+              onBlur={handleTypingBlur}
               className="w-full px-1 py-2 bg-transparent border-none outline-none text-sm tracking-wider"
               disabled={!!(selectedImage && message !== "") || editDialog || isSending}
               ref={inputRef}
