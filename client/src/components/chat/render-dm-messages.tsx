@@ -124,7 +124,12 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
               {/* For file message type */}
               {message?.content?.type === "file" &&
                 (checkImageType(message?.content?.file!) ? (
-                  <img src={message?.content?.file} alt="Image file" className="h-auto max-h-60 w-auto rounded" />
+                  <img
+                    src={message?.content?.file}
+                    loading="lazy"
+                    alt="Image file"
+                    className="h-auto max-h-60 w-auto rounded"
+                  />
                 ) : (
                   <span className="flex items-center gap-1 text-base">
                     <HiOutlineDocumentArrowDown size={16} /> Download this file to view it.
