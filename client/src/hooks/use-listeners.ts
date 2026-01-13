@@ -11,18 +11,52 @@ import { useAuthStore, useChatStore, type GroupInfo, type Message, type UserInfo
 export const useListeners = () => {
   const queryClient = useQueryClient();
   const messageListeners = useRef(false);
+  const notificationAudio = useRef<HTMLAudioElement | null>(null);
 
   const { socket } = useSocket();
   const { contacts } = useContacts();
   const { userInfo, setUserInfo } = useAuthStore();
   const { selectedChatData, isSoundAllow, allChats } = useChatStore();
 
+  useEffect(() => {
+    notificationAudio.current = new Audio(notificationSound);
+    notificationAudio.current.volume = 0.25;
+  }, []);
+
+  const triggerNotificationAlert = useEffectEvent((message: Message, chatKey: string) => {
+    const isRecipient = message.recipient === userInfo?._id;
+    const isDifferent = message.sender !== selectedChatData?._id;
+
+    /** Trigger Notification Alert */
+    if (isRecipient && isDifferent && isSoundAllow && notificationAudio.current) {
+      void notificationAudio.current?.play();
+    }
+
+    /** Show Browser Notification */
+    if (Notification.permission === "granted" && !selectedChatData?._id) {
+      const senderName = contacts?.find((contact) => contact._id === chatKey)?.name;
+
+      if (senderName) {
+        const notification = new Notification(`You have a message from ${senderName}`, {
+          icon: notificationIcon,
+        });
+
+        /** Auto-close notification after 5 seconds (optional) */
+        setTimeout(() => notification.close(), 5000);
+      }
+    }
+  });
+
   const getCurrentChat = useEffectEvent((chatKey: string) => {
     return allChats.find((current) => current._id === chatKey);
   });
 
-  const getSenderName = useEffectEvent((chatKey: string) => {
-    return contacts?.find((contact) => contact._id === chatKey)?.name;
+  const getChatKey = useEffectEvent((message: Message) => {
+    if (message.group) {
+      return message.group;
+    } else {
+      return userInfo?._id === message.sender ? message.recipient : message.sender;
+    }
   });
 
   const handleProfileUpdate = useEffectEvent((updatedProfile: UserInfo) => {
@@ -35,14 +69,7 @@ export const useListeners = () => {
     if (!socket) return;
 
     const handleMessageReceive = async (message: Message) => {
-      let chatKey: string | undefined = undefined;
-
-      if (message.group) {
-        chatKey = message.group;
-      } else {
-        chatKey = userInfo?._id === message.sender ? message.recipient : message.sender;
-      }
-
+      const chatKey = getChatKey(message);
       const chatQueryKey = ["messages", userInfo?._id, chatKey];
 
       /** Check if messages are already cached */
@@ -95,36 +122,12 @@ export const useListeners = () => {
         };
       });
 
-      /** Show Browser Notification */
-      if (Notification.permission === "granted" && !selectedChatData?._id) {
-        const senderName = getSenderName(chatKey!);
-
-        if (senderName) {
-          const notification = new Notification(`You have a message from ${senderName}`, {
-            icon: notificationIcon,
-          });
-
-          /** Auto-close notification after 5 seconds (optional) */
-          setTimeout(() => notification.close(), 5000);
-        }
-      }
-
-      if (message.recipient === userInfo?._id && message.sender !== selectedChatData?._id && isSoundAllow) {
-        const sound = new Audio(notificationSound);
-        sound.volume = 0.25;
-        void sound.play();
-      }
+      /** Show browser notification & sound alert */
+      triggerNotificationAlert(message, chatKey!);
     };
 
     const handleMessageUpdate = (message: Message) => {
-      let chatKey: string | undefined = undefined;
-
-      if (message.group) {
-        chatKey = message.group;
-      } else {
-        chatKey = userInfo?._id === message.sender ? message.recipient : message.sender;
-      }
-
+      const chatKey = getChatKey(message);
       const chatQueryKey = ["messages", userInfo?._id, chatKey];
 
       queryClient.setQueryData<InfiniteData<Message[]>>(chatQueryKey, (existing) => {
@@ -142,12 +145,14 @@ export const useListeners = () => {
     };
 
     const handleGroupCreate = (newGroup: GroupInfo) => {
-      if (newGroup.members && newGroup.members.some((member) => member === userInfo?._id)) {
-        queryClient.setQueryData(["groups", userInfo?._id], (older: GroupInfo[] | undefined) => [
-          ...(older || []),
-          { ...newGroup },
-        ]);
-      }
+      if (!userInfo?._id || !newGroup.members?.includes(userInfo._id)) return;
+
+      queryClient.setQueryData<GroupInfo[]>(["groups", userInfo?._id], (older = []) => {
+        const exists = older.some((group) => group._id === newGroup._id);
+        if (exists) return older;
+
+        return [newGroup, ...older];
+      });
     };
 
     const events: [string, (...args: any[]) => void][] = [
@@ -168,5 +173,5 @@ export const useListeners = () => {
       events.forEach(([event, handler]) => socket.off(event, handler));
       messageListeners.current = false;
     };
-  }, [socket, queryClient, userInfo?._id, selectedChatData?._id, isSoundAllow]);
+  }, [socket, queryClient, userInfo?._id, selectedChatData?._id]);
 };
