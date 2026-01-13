@@ -15,17 +15,45 @@ interface RenderMessagesProps {
   getSender: (sid: string) => string;
 }
 
+/**
+ * Scrolls the target element into view and highlights it once it becomes visible.
+ *
+ * Uses IntersectionObserver to ensure the highlight animation triggers
+ * only after the element actually enters the viewport — important for
+ * older messages that require scrolling.
+ *
+ * The highlight is applied once and automatically removed after a short delay.
+ */
+const highlightWhenVisible = (element: HTMLElement) => {
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        /** Prevent re-triggering if already highlighted */
+        if (!element.classList.contains("shake")) {
+          element.classList.add("shake");
+        }
+        /** Remove highlight after animation completes */
+        setTimeout(() => {
+          element.classList.remove("shake");
+        }, 1000);
+
+        observer.disconnect();
+      }
+    },
+    { threshold: 0.8 }
+  );
+  /** Start observing before scrolling to avoid missing the visibility event */
+  observer.observe(element);
+  /** Smoothly scroll that current message into view */
+  element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+};
+
 const RenderMessages: React.FC<RenderMessagesProps> = React.memo(({ messages, messageRefs, getSender }) => {
   let lastDate = "";
 
   const scrollMessage = (mid: string) => {
     const element = messageRefs.current[mid];
-
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-      element.classList.add("shake");
-      setTimeout(() => element.classList.remove("shake"), 1500);
-    }
+    if (element) highlightWhenVisible(element);
   };
 
   return messages.map((message) => {
