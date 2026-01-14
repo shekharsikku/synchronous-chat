@@ -8,6 +8,12 @@ import { useChatStore, useAuthStore } from "@/lib/zustand";
 
 import type { UserInfo, Message, GroupInfo } from "@/lib/zustand";
 
+interface InteractionDetails {
+  _id: string;
+  type: "contact" | "group";
+  interaction: string;
+}
+
 const fetchContacts = async (): Promise<UserInfo[]> => {
   const response = await api.get("/api/contact/fetch");
   return response.data.data;
@@ -16,6 +22,20 @@ const fetchContacts = async (): Promise<UserInfo[]> => {
 const fetchGroups = async (): Promise<GroupInfo[]> => {
   const response = await api.get("/api/group/fetch");
   return response.data.data;
+};
+
+const updateSortInteraction = (older: UserInfo[] | GroupInfo[], details: InteractionDetails) => {
+  if (older[0]?._id === details._id) {
+    return [{ ...older[0], interaction: details.interaction }, ...older.slice(1)];
+  }
+
+  const index = older.findIndex((cur) => cur._id === details._id);
+
+  if (index === -1) return older;
+
+  const current = { ...older[index], interaction: details.interaction };
+
+  return [current, ...older.slice(0, index), ...older.slice(index + 1)];
 };
 
 export const useContacts = () => {
@@ -44,48 +64,35 @@ export const useContacts = () => {
     ...COMMON_QUERY_OPTIONS,
   });
 
-  const updateChatInteraction = useEffectEvent((data: any) => {
-    if (selectedChatData && selectedChatData._id === data._id) {
+  const updateChatInteraction = useEffectEvent((details: InteractionDetails) => {
+    if (selectedChatData && selectedChatData._id === details._id) {
       setSelectedChatData({
         ...selectedChatData,
-        interaction: data.interaction,
+        interaction: details.interaction,
       });
     }
   });
 
   /** Update contact interaction (socket event) */
   useEffect(() => {
-    const handleConversationUpdate = (data: any) => {
-      if (data.type === "contact") {
-        queryClient.setQueryData<UserInfo[]>(["contacts", userInfo?._id], (older: UserInfo[] | undefined) => {
-          if (!older) return [];
+    const handleConversationUpdate = (details: InteractionDetails) => {
+      if (!userInfo?._id) return;
 
-          /** Update interaction time */
-          const updated = older.map((current) => {
-            return current._id === data._id ? { ...current, interaction: data.interaction } : current;
-          });
+      const queryMap = {
+        contact: ["contacts", userInfo._id] as const,
+        group: ["groups", userInfo._id] as const,
+      };
 
-          /** Sort by latest interaction */
-          return updated.sort((a, b) => new Date(b.interaction).getTime() - new Date(a.interaction).getTime());
-        });
-      }
+      const queryKey = queryMap[details.type];
 
-      if (data.type === "group") {
-        queryClient.setQueryData<GroupInfo[]>(["groups", userInfo?._id], (older: GroupInfo[] | undefined) => {
-          if (!older) return [];
+      if (!queryKey) return;
 
-          /** Update interaction time */
-          const updated = older.map((current) => {
-            return current._id === data._id ? { ...current, interaction: data.interaction } : current;
-          });
-
-          /** Sort by latest interaction */
-          return updated.sort((a, b) => new Date(b.interaction).getTime() - new Date(a.interaction).getTime());
-        });
-      }
+      queryClient.setQueryData<UserInfo[] | GroupInfo[]>(queryKey, (older = []) => {
+        return updateSortInteraction(older, details);
+      });
 
       /** Update interacting contact if necessary */
-      updateChatInteraction(data);
+      updateChatInteraction(details);
     };
 
     socket?.on("conversation:updated", handleConversationUpdate);
@@ -93,7 +100,7 @@ export const useContacts = () => {
     return () => {
       socket?.off("conversation:updated", handleConversationUpdate);
     };
-  }, [socket, userInfo?._id, selectedChatData?._id, queryClient]);
+  }, [socket, userInfo?._id, queryClient]);
 
   useEffect(() => {
     const handleMessagesContact = async (message: Message) => {
@@ -102,12 +109,10 @@ export const useContacts = () => {
       const chatKey = userInfo?._id === message.sender ? message.recipient : message.sender;
 
       /** Get the latest contacts from the cache */
-      const cachedContacts = queryClient.getQueryData<UserInfo[]>(["contacts", userInfo?._id]) || [];
+      const cachedContacts = queryClient.getQueryData<UserInfo[]>(["contacts", userInfo?._id]) ?? [];
 
       /** If the user is already in the contact list, don't fetch */
-      if (cachedContacts.some((contact) => contact._id === chatKey)) {
-        return;
-      }
+      if (cachedContacts.some((contact) => contact._id === chatKey)) return;
 
       try {
         /** Use queryClient.fetchQuery to avoid duplicate API requests */
