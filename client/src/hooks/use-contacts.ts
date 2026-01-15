@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useEffectEvent } from "react";
+import { useEffect, useEffectEvent, useMemo } from "react";
 
 import api from "@/lib/api";
 import { useSocket } from "@/lib/context";
@@ -45,23 +45,33 @@ export const useContacts = () => {
   const { userInfo } = useAuthStore();
   const { selectedChatData, setSelectedChatData } = useChatStore();
 
+  /** Query key for both contacts and groups */
+  const queryMap = useMemo(() => {
+    return {
+      contact: ["contacts", userInfo?._id] as const,
+      group: ["groups", userInfo?._id] as const,
+    };
+  }, [userInfo?._id]);
+
   /** Query and caching of contacts and groups for 8 hour */
-  const COMMON_QUERY_OPTIONS = {
-    staleTime: 8 * 60 * 60 * 1000,
-    gcTime: 12 * 60 * 60 * 1000,
-    enabled: !!userInfo?._id,
-  };
+  const queryOptions = useMemo(() => {
+    return {
+      staleTime: 8 * 60 * 60 * 1000,
+      gcTime: 12 * 60 * 60 * 1000,
+      enabled: !!userInfo?._id,
+    };
+  }, [userInfo?._id]);
 
   const { data: contacts, isFetching: ctsFetching } = useQuery({
-    queryKey: ["contacts", userInfo?._id],
+    queryKey: queryMap["contact"],
     queryFn: fetchContacts,
-    ...COMMON_QUERY_OPTIONS,
+    ...queryOptions,
   });
 
   const { data: groups, isFetching: gpsFetching } = useQuery({
-    queryKey: ["groups", userInfo?._id],
+    queryKey: queryMap["group"],
     queryFn: fetchGroups,
-    ...COMMON_QUERY_OPTIONS,
+    ...queryOptions,
   });
 
   const updateChatInteraction = useEffectEvent((details: InteractionDetails) => {
@@ -77,11 +87,6 @@ export const useContacts = () => {
   useEffect(() => {
     const handleConversationUpdate = (details: InteractionDetails) => {
       if (!userInfo?._id) return;
-
-      const queryMap = {
-        contact: ["contacts", userInfo._id] as const,
-        group: ["groups", userInfo._id] as const,
-      };
 
       const queryKey = queryMap[details.type];
 
@@ -100,7 +105,7 @@ export const useContacts = () => {
     return () => {
       socket?.off("conversation:updated", handleConversationUpdate);
     };
-  }, [socket, userInfo?._id, queryClient]);
+  }, [socket, userInfo?._id, queryMap, queryClient]);
 
   useEffect(() => {
     const handleMessagesContact = async (message: Message) => {
