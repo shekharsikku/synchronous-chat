@@ -14,6 +14,12 @@ import api from "@/lib/api";
 import { getAvatar } from "@/lib/utils";
 import { useAuthStore, useChatStore, type UserInfo } from "@/lib/zustand";
 
+const EXCLUDED_KEYS = new Set(["setup", "createdAt", "updatedAt", "__v"]);
+
+const cleanContact = (contact: UserInfo) => {
+  return Object.fromEntries(Object.entries(contact).filter(([key]) => !EXCLUDED_KEYS.has(key))) as UserInfo;
+};
+
 const AddNewChat = () => {
   const queryClient = useQueryClient();
   const { contacts } = useContacts();
@@ -29,26 +35,23 @@ const AddNewChat = () => {
   });
 
   const searchContacts = useDebounce(async (searchTerm: string) => {
-    if (searchTerm.length > 3) {
-      try {
-        setIsFetching(true);
-
-        const newContact = await queryClient.fetchQuery({
-          queryKey: ["search", searchTerm],
-          queryFn: async () => {
-            const response = await api.get(`api/contact/search?search=${searchTerm}`);
-            return response.data.data;
-          },
-          staleTime: 60 * 60 * 1000, // Cache for 1 hour
-          gcTime: 2 * 60 * 60 * 1000,
-        });
-
-        setSearchedContacts(newContact);
-      } catch (_error: any) {
-        setSearchedContacts([]);
-      } finally {
-        setTimeout(() => setIsFetching(false), 500);
-      }
+    if (searchTerm.trim().length < 3) return;
+    try {
+      setIsFetching(true);
+      const newContact = await queryClient.fetchQuery({
+        queryKey: ["search", searchTerm],
+        queryFn: async () => {
+          const response = await api.get(`api/contact/search?search=${searchTerm}`);
+          return response.data.data;
+        },
+        staleTime: 60 * 60 * 1000, // Cache for 1 hour
+        gcTime: 2 * 60 * 60 * 1000,
+      });
+      setSearchedContacts(newContact);
+    } catch (_error: any) {
+      setSearchedContacts([]);
+    } finally {
+      setTimeout(() => setIsFetching(false), 500);
     }
   }, 1500);
 
@@ -58,18 +61,11 @@ const AddNewChat = () => {
     setSelectedChatType("contact");
     setSelectedChatData(contact);
 
-    if (!contacts || contacts.some((obj) => obj._id === contact._id)) return;
+    if (!userInfo?._id || contacts?.some((obj) => obj._id === contact._id)) return;
 
-    const selected = { ...contact, interaction: new Date().toISOString() };
+    const cleaned = cleanContact({ ...contact, interaction: new Date().toISOString() });
 
-    const cleaned = Object.fromEntries(
-      Object.entries(selected).filter(([key]) => !["setup", "createdAt", "updatedAt", "__v"].includes(key))
-    );
-
-    queryClient.setQueryData(["contacts", userInfo?._id], (older: UserInfo[] | undefined) => [
-      ...(older || []),
-      { ...cleaned },
-    ]);
+    queryClient.setQueryData<UserInfo[]>(["contacts", userInfo?._id], (older = []) => [...older, cleaned]);
   };
 
   return (
