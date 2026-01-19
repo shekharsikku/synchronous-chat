@@ -17,11 +17,6 @@ interface UserInterface extends Document {
   }[];
 }
 
-interface TokenInterface {
-  access?: string;
-  refresh?: string;
-}
-
 interface ConversationInterface extends Document {
   _id?: Types.ObjectId;
   participants: Types.ObjectId[];
@@ -55,4 +50,16 @@ interface GroupInterface extends Document {
   avatar?: string | null;
   admin: Types.ObjectId;
   members: Types.ObjectId[];
+}
+
+declare module "express" {
+  interface Request {
+    user?: UserInterface;
+  }
+}
+
+declare module "jose" {
+  interface JWTPayload {
+    uid?: string;
+  }
 }

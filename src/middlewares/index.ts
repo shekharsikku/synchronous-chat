@@ -87,7 +87,7 @@ const authRefresh = async (req: Request, res: Response) => {
     let userId: Types.ObjectId;
     let authorizeId: Types.ObjectId;
     let hashedRefresh: string;
-    let refreshPayload: { uid: string; exp?: number };
+    let refreshPayload: { uid?: string; exp?: number };
 
     try {
       const parsedPayload = parseAuthKey(currentAuthKey);
@@ -101,10 +101,10 @@ const authRefresh = async (req: Request, res: Response) => {
       ]);
 
       hashedRefresh = hashedToken;
-      refreshPayload = jwtResult.payload as any;
+      refreshPayload = jwtResult.payload;
 
       if (
-        !Types.ObjectId.isValid(refreshPayload.uid) ||
+        !Types.ObjectId.isValid(refreshPayload.uid!) ||
         !parsedPayload.userId.equals(new Types.ObjectId(refreshPayload.uid))
       ) {
         throw new Error("Refresh request mismatch!");
