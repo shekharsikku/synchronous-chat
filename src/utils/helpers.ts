@@ -33,7 +33,7 @@ const generateAccess = async (res: Response, user?: UserInterface) => {
   return accessToken;
 };
 
-const generateRefresh = async (res: Response, uid: Types.ObjectId, aid: Types.ObjectId) => {
+const generateRefresh = async (res: Response, uid: Types.ObjectId, aid: Types.ObjectId, jti: string) => {
   const refreshExpiry = env.REFRESH_EXPIRY;
   const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
   const currentAuthKey = `${uid.toString()}:${aid.toString()}`;
@@ -42,6 +42,7 @@ const generateRefresh = async (res: Response, uid: Types.ObjectId, aid: Types.Ob
     .setProtectedHeader({ alg: "HS512" })
     .setIssuedAt()
     .setExpirationTime(`${refreshExpiry}sec`)
+    .setJti(jti)
     .sign(refreshSecret);
 
   res.cookie("refresh", refreshToken, {

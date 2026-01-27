@@ -8,7 +8,12 @@ type ThemeProps = {
   defaultTheme?: Theme;
 };
 
-const ThemeProvider = ({ children, storageKey = "theme", defaultTheme = "system", ...props }: ThemeProps) => {
+const ThemeProvider = ({
+  children,
+  storageKey = "synchronous_theme",
+  defaultTheme = "system",
+  ...props
+}: ThemeProps) => {
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(storageKey) as Theme) || defaultTheme);
 
   useEffect(() => {
@@ -18,7 +23,6 @@ const ThemeProvider = ({ children, storageKey = "theme", defaultTheme = "system"
 
     if (theme === "system") {
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-
       rootElement.classList.add(systemTheme);
       return;
     }

@@ -5,6 +5,7 @@ import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { Spinner } from "@/components/ui/spinner";
 import { useListeners, useAuthUser } from "@/hooks";
 import { useTheme } from "@/lib/context";
+import { getDeviceId } from "@/lib/utils";
 import { Auth, Chat, Profile } from "@/pages";
 
 const RouteLayout = ({ route }: { route: "auth" | "chat" }) => {
@@ -48,6 +49,12 @@ const App = () => {
   });
 
   useEffect(() => {
+    const deviceId = getDeviceId();
+
+    if (import.meta.env.DEV) {
+      console.log(`🆔 Device ID: ${deviceId}`);
+    }
+
     if (Notification.permission === "default") {
       void Notification.requestPermission();
     }

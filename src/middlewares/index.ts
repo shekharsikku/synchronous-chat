@@ -77,6 +77,7 @@ const authAccess = async (req: Request, res: Response, next: NextFunction): Prom
 
 const authRefresh = async (req: Request, res: Response) => {
   try {
+    const deviceId = req.headers["x-device-id"] as string;
     const refreshToken = req.cookies.refresh;
     const currentAuthKey = req.cookies.current;
 
@@ -87,7 +88,7 @@ const authRefresh = async (req: Request, res: Response) => {
     let userId: Types.ObjectId;
     let authorizeId: Types.ObjectId;
     let hashedRefresh: string;
-    let refreshPayload: { uid?: string; exp?: number };
+    let refreshExpiry: number | undefined;
 
     try {
       const parsedPayload = parseAuthKey(currentAuthKey);
@@ -101,11 +102,12 @@ const authRefresh = async (req: Request, res: Response) => {
       ]);
 
       hashedRefresh = hashedToken;
-      refreshPayload = jwtResult.payload;
+      refreshExpiry = jwtResult.payload.exp;
 
       if (
-        !Types.ObjectId.isValid(refreshPayload.uid!) ||
-        !parsedPayload.userId.equals(new Types.ObjectId(refreshPayload.uid))
+        !Types.ObjectId.isValid(jwtResult.payload.uid!) ||
+        !parsedPayload.userId.equals(new Types.ObjectId(jwtResult.payload.uid)) ||
+        jwtResult.payload.jti !== deviceId
       ) {
         throw new Error("Refresh request mismatch!");
       }
@@ -117,7 +119,7 @@ const authRefresh = async (req: Request, res: Response) => {
     }
 
     const currentTime = Math.floor(Date.now() / 1000);
-    const expiresAt = refreshPayload.exp ?? currentTime;
+    const expiresAt = refreshExpiry ?? currentTime;
 
     const authFilter = {
       _id: userId,
@@ -136,7 +138,7 @@ const authRefresh = async (req: Request, res: Response) => {
     const shouldRotate = currentTime >= expiresAt - env.REFRESH_EXPIRY / 2;
 
     if (shouldRotate) {
-      const newRefreshToken = await generateRefresh(res, userId, authorizeId);
+      const newRefreshToken = await generateRefresh(res, userId, authorizeId, deviceId);
       const newHashedRefresh = await generateHash(newRefreshToken);
       const newRefreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
 

@@ -33,6 +33,7 @@ const signUpUser = async (req: Request<{}, {}, SignUp>, res: Response) => {
 
 const signInUser = async (req: Request<{}, {}, SignIn>, res: Response) => {
   try {
+    const deviceId = req.headers["x-device-id"] as string;
     const { email, password, username } = req.body;
     const conditions = [];
 
@@ -66,7 +67,7 @@ const signInUser = async (req: Request<{}, {}, SignIn>, res: Response) => {
     }
 
     const authorizeId = new Types.ObjectId();
-    const refreshToken = await generateRefresh(res, userInfo._id!, authorizeId);
+    const refreshToken = await generateRefresh(res, userInfo._id!, authorizeId, deviceId);
     const hashedRefresh = await generateHash(refreshToken);
     const refreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
 

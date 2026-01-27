@@ -1,5 +1,7 @@
 import axios, { type AxiosError, type AxiosRequestConfig } from "axios";
 
+import { getDeviceId } from "@/lib/utils";
+
 interface RetryRequestConfig extends AxiosRequestConfig {
   _retry?: boolean;
 }
@@ -29,6 +31,32 @@ const auth = axios.create({
   baseURL: serverUrl,
   withCredentials: true,
 });
+
+auth.interceptors.request.use(
+  (config) => {
+    const deviceId = getDeviceId();
+
+    if (deviceId) {
+      config.headers["X-Device-Id"] = deviceId;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+api.interceptors.request.use(
+  (config) => {
+    const deviceId = getDeviceId();
+
+    if (deviceId) {
+      config.headers["X-Device-Id"] = deviceId;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 api.interceptors.response.use(
   function (response) {
