@@ -92,6 +92,10 @@ const signOutUser = async (req: Request, res: Response) => {
     await revokeToken(res, currentAuthKey);
   }
 
+  res.clearCookie("access");
+  res.clearCookie("refresh");
+  res.clearCookie("current");
+
   return SuccessResponse(res, 200, "Signed out successfully!");
 };
 

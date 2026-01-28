@@ -24,7 +24,7 @@ const parseAuthKey = (authKey: any) => {
   return { userId: new Types.ObjectId(firstKey), authId: new Types.ObjectId(secondKey) };
 };
 
-const revokeToken = async (res: Response, authKey: any) => {
+export const revokeToken = async (res: Response, authKey: any) => {
   try {
     const { userId, authId } = parseAuthKey(authKey);
 
@@ -50,7 +50,7 @@ const revokeToken = async (res: Response, authKey: any) => {
   }
 };
 
-const authAccess = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+export const authAccess = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const accessToken = req.cookies.access;
 
@@ -75,7 +75,7 @@ const authAccess = async (req: Request, res: Response, next: NextFunction): Prom
   }
 };
 
-const authRefresh = async (req: Request, res: Response) => {
+export const authRefresh = async (req: Request, res: Response) => {
   try {
     const deviceId = req.headers["x-device-id"] as string;
     const refreshToken = req.cookies.refresh;
@@ -163,6 +163,22 @@ const authRefresh = async (req: Request, res: Response) => {
   }
 };
 
+export const authEvents = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const accessToken = req.cookies.access;
+    if (!accessToken) return res.sendStatus(401);
+
+    const accessSecret = await generateSecret();
+    const decryptedAccess = await compactDecrypt(accessToken, accessSecret);
+    const accessPayload = JSON.parse(inflateSync(decryptedAccess.plaintext).toString());
+
+    req.user = accessPayload as UserInterface;
+    return next();
+  } catch {
+    return res.sendStatus(401);
+  }
+};
+
 const storage = multer.diskStorage({
   destination: function (_req, _file, cb) {
     cb(null, "./public/temp");
@@ -172,9 +188,11 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+/** Multer File Uploader */
+export const upload = multer({ storage });
 
-const validate =
+/** Zod Schema Validator */
+export const validate =
   <T>(schema: ZodType<T>) =>
   (req: Request<{}, {}, T>, res: Response, next: NextFunction) => {
     try {
@@ -189,16 +207,8 @@ const validate =
     }
   };
 
-const delay = (milliseconds: number) => {
-  return async (_req: Request, _res: Response, next: NextFunction) => {
-    await new Promise((resolve) => setTimeout(resolve, milliseconds));
-    console.log(`Delay api by ${milliseconds}ms.`);
-    next();
-  };
-};
-
 /** Rate Limiter */
-const limiter = (minute = 10, limit = 1000) => {
+export const limiter = (minute = 10, limit = 1000) => {
   return rateLimit({
     windowMs: minute * 60 * 1000,
     limit: limit,
@@ -213,5 +223,3 @@ const limiter = (minute = 10, limit = 1000) => {
     },
   });
 };
-
-export { revokeToken, authAccess, authRefresh, upload, validate, delay, limiter };
