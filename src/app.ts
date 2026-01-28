@@ -75,7 +75,16 @@ app.use(requestIp.mw());
 app.use(cookieParser(env.COOKIES_SECRET));
 
 /** Body Compression */
-app.use(compression());
+app.use(
+  compression({
+    filter: (req: Request, res: Response) => {
+      if (req.headers.accept === "text/event-stream") {
+        return false;
+      }
+      return compression.filter(req, res);
+    },
+  })
+);
 
 /** Public Static Assets */
 app.use("/public/temp", express.static(join(__dirname, "../public/temp")));
