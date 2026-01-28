@@ -194,5 +194,6 @@ export const useMessageActions = () => {
 
 export { useAuthUser, useSignOut } from "@/hooks/use-auth";
 export { useContacts } from "@/hooks/use-contacts";
+export { useEvents } from "@/hooks/use-events";
 export { useListeners } from "@/hooks/use-listeners";
 export { useMessages } from "@/hooks/use-messages";

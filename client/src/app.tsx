@@ -3,7 +3,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import { Spinner } from "@/components/ui/spinner";
-import { useListeners, useAuthUser } from "@/hooks";
+import { useListeners, useAuthUser, useEvents } from "@/hooks";
 import { useTheme } from "@/lib/context";
 import { getDeviceId } from "@/lib/utils";
 import { Auth, Chat, Profile } from "@/pages";
@@ -72,7 +72,11 @@ const App = () => {
     };
   }, []);
 
+  /** Hook for handling socket.io events. */
   useListeners();
+
+  /** Hook for handling server side events. */
+  useEvents();
 
   return (
     <Routes>
