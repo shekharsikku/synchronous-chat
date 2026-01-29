@@ -1,5 +1,14 @@
-import React, { useState, useEffect, useRef, type ChangeEvent, type KeyboardEventHandler, useEffectEvent } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  type ChangeEvent,
+  type KeyboardEventHandler,
+  useEffectEvent,
+  useCallback,
+} from "react";
 import { isDesktop, isMobile } from "react-device-detect";
+import { useDropzone } from "react-dropzone";
 import {
   HiOutlineFaceSmile,
   HiOutlineLink,
@@ -89,6 +98,48 @@ const MessageBar = () => {
     };
   }, [emojiRef]);
 
+  const handleImageFile = async (imageFile: File) => {
+    /** Size is 6 MB and converted into Bytes */
+    const maxBytesAllow = 6 * 1024 * 1024;
+
+    if (!imageFile.type.startsWith("image/")) {
+      toast.info("Only image files are allowed!");
+      return;
+    }
+
+    if (imageFile.size > maxBytesAllow) {
+      toast.info("File size exceeds the max limit!");
+      return;
+    }
+
+    try {
+      const base64 = await convertToBase64(imageFile);
+      setSelectedImage(base64);
+      setMessage(imageFile?.name);
+    } catch (error: any) {
+      console.error(`Error while attaching file: ${error.message}`);
+    }
+  };
+
+  const handleDrop = useCallback(
+    async (acceptedFiles: File[]) => {
+      const imageFile = acceptedFiles[0];
+      if (!imageFile || isSending || editDialog) return;
+
+      await handleImageFile(imageFile);
+    },
+    [isSending, editDialog]
+  );
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop: handleDrop,
+    noClick: true,
+    noKeyboard: true,
+    accept: {
+      "image/*": [],
+    },
+  });
+
   const handleAddEmoji = (emoji: EmojiClickData) => {
     setMessage((msg) => msg + emoji.emoji);
   };
@@ -108,31 +159,12 @@ const MessageBar = () => {
   const handleAttachChange = async (event: ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
 
-    /** Size is 6 MB and converted into Bytes */
-    const maxBytesAllow = 6 * 1024 * 1024;
+    const imageFile = event.target.files?.[0];
+    if (!imageFile) return;
 
-    try {
-      const imageFile = event.target.files?.[0];
-      if (!imageFile) return;
+    await handleImageFile(imageFile);
 
-      if (!imageFile.type.startsWith("image/")) {
-        toast.info("Only image files are allowed!");
-        return;
-      }
-
-      if (imageFile.size > maxBytesAllow) {
-        event.target.value = "";
-        toast.info("File size exceeds the max limit!");
-        return;
-      }
-
-      const base64 = await convertToBase64(imageFile);
-      setSelectedImage(base64);
-      setMessage(imageFile?.name);
-      event.target.value = "";
-    } catch (error: any) {
-      console.error(`Error while attaching file: ${error.message}`);
-    }
+    event.target.value = "";
   };
 
   const handleSendMessage = async () => {
@@ -254,7 +286,12 @@ const MessageBar = () => {
 
   return (
     <footer className="h-bar w-full border-t flex items-center justify-center p-2">
-      <div className="w-full flex rounded items-center justify-center gap-4 bg-gray-100/80 dark:bg-transparent px-4 h-full">
+      <div
+        className="w-full flex rounded items-center justify-center gap-4 bg-gray-100/80 dark:bg-transparent px-4 h-full"
+        {...getRootProps()}
+      >
+        <input {...getInputProps()} />
+
         <div className="flex gap-4 relative">
           <TooltipElement content="Emojis" disabled={isSending}>
             <HiOutlineFaceSmile size={20} onClick={() => setEmojiPicker((prev) => !prev)} className="tooltip-icon" />
