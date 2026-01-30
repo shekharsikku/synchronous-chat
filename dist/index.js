@@ -1,7 +1,7 @@
 import { connect } from "mongoose";
 import server from "./server.js";
+import jobs from "./services/jobs.js";
 import env from "./utils/env.js";
-import jobs from "./utils/jobs.js";
 const uri = env.MONGODB_URI;
 const port = env.PORT;
 void (async () => {

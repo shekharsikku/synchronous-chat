@@ -23,6 +23,7 @@ const signUpUser = async (req, res) => {
 };
 const signInUser = async (req, res) => {
     try {
+        const deviceId = req.headers["x-device-id"];
         const { email, password, username } = req.body;
         const conditions = [];
         if (email) {
@@ -50,7 +51,7 @@ const signInUser = async (req, res) => {
             return SuccessResponse(res, 200, "Please, complete your profile!", userInfo);
         }
         const authorizeId = new Types.ObjectId();
-        const refreshToken = await generateRefresh(res, userInfo._id, authorizeId);
+        const refreshToken = await generateRefresh(res, userInfo._id, authorizeId, deviceId);
         const hashedRefresh = await generateHash(refreshToken);
         const refreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
         existsUser.authentication?.push({
@@ -70,6 +71,9 @@ const signOutUser = async (req, res) => {
     if (currentAuthKey) {
         await revokeToken(res, currentAuthKey);
     }
+    res.clearCookie("access");
+    res.clearCookie("refresh");
+    res.clearCookie("current");
     return SuccessResponse(res, 200, "Signed out successfully!");
 };
 export { signUpUser, signInUser, signOutUser };

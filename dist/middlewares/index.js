@@ -15,7 +15,7 @@ const parseAuthKey = (authKey) => {
     }
     return { userId: new Types.ObjectId(firstKey), authId: new Types.ObjectId(secondKey) };
 };
-const revokeToken = async (res, authKey) => {
+export const revokeToken = async (res, authKey) => {
     try {
         const { userId, authId } = parseAuthKey(authKey);
         await User.updateOne({
@@ -38,7 +38,7 @@ const revokeToken = async (res, authKey) => {
         res.clearCookie("current");
     }
 };
-const authAccess = async (req, res, next) => {
+export const authAccess = async (req, res, next) => {
     try {
         const accessToken = req.cookies.access;
         if (!accessToken) {
@@ -60,8 +60,9 @@ const authAccess = async (req, res, next) => {
         return ErrorResponse(res, error.code || 500, error.message || "Error while auth access!");
     }
 };
-const authRefresh = async (req, res) => {
+export const authRefresh = async (req, res) => {
     try {
+        const deviceId = req.headers["x-device-id"];
         const refreshToken = req.cookies.refresh;
         const currentAuthKey = req.cookies.current;
         if (!refreshToken || !currentAuthKey) {
@@ -70,7 +71,7 @@ const authRefresh = async (req, res) => {
         let userId;
         let authorizeId;
         let hashedRefresh;
-        let refreshPayload;
+        let refreshExpiry;
         try {
             const parsedPayload = parseAuthKey(currentAuthKey);
             authorizeId = parsedPayload.authId;
@@ -80,9 +81,10 @@ const authRefresh = async (req, res) => {
                 generateHash(refreshToken),
             ]);
             hashedRefresh = hashedToken;
-            refreshPayload = jwtResult.payload;
-            if (!Types.ObjectId.isValid(refreshPayload.uid) ||
-                !parsedPayload.userId.equals(new Types.ObjectId(refreshPayload.uid))) {
+            refreshExpiry = jwtResult.payload.exp;
+            if (!Types.ObjectId.isValid(jwtResult.payload.uid) ||
+                !parsedPayload.userId.equals(new Types.ObjectId(jwtResult.payload.uid)) ||
+                jwtResult.payload.jti !== deviceId) {
                 throw new Error("Refresh request mismatch!");
             }
             userId = parsedPayload.userId;
@@ -92,7 +94,7 @@ const authRefresh = async (req, res) => {
             throw new HttpError(403, "Please, signin again to continue!");
         }
         const currentTime = Math.floor(Date.now() / 1000);
-        const expiresAt = refreshPayload.exp ?? currentTime;
+        const expiresAt = refreshExpiry ?? currentTime;
         const authFilter = {
             _id: userId,
             authentication: {
@@ -106,7 +108,7 @@ const authRefresh = async (req, res) => {
         const userInfo = createUserInfo(requestUser);
         const shouldRotate = currentTime >= expiresAt - env.REFRESH_EXPIRY / 2;
         if (shouldRotate) {
-            const newRefreshToken = await generateRefresh(res, userId, authorizeId);
+            const newRefreshToken = await generateRefresh(res, userId, authorizeId, deviceId);
             const newHashedRefresh = await generateHash(newRefreshToken);
             const newRefreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
             const updatedResult = await User.updateOne(authFilter, {
@@ -127,6 +129,21 @@ const authRefresh = async (req, res) => {
         return ErrorResponse(res, error.code || 500, error.message || "Error while token refresh!");
     }
 };
+export const authEvents = async (req, res, next) => {
+    try {
+        const accessToken = req.cookies.access;
+        if (!accessToken)
+            return res.sendStatus(401);
+        const accessSecret = await generateSecret();
+        const decryptedAccess = await compactDecrypt(accessToken, accessSecret);
+        const accessPayload = JSON.parse(inflateSync(decryptedAccess.plaintext).toString());
+        req.user = accessPayload;
+        return next();
+    }
+    catch {
+        return res.sendStatus(401);
+    }
+};
 const storage = multer.diskStorage({
     destination: function (_req, _file, cb) {
         cb(null, "./public/temp");
@@ -135,8 +152,8 @@ const storage = multer.diskStorage({
         cb(null, file.originalname);
     },
 });
-const upload = multer({ storage });
-const validate = (schema) => (req, res, next) => {
+export const upload = multer({ storage });
+export const validate = (schema) => (req, res, next) => {
     try {
         req.body = schema.parse(req.body);
         return next();
@@ -149,14 +166,7 @@ const validate = (schema) => (req, res, next) => {
         return ErrorResponse(res, 400, "Validation error occurred!", error);
     }
 };
-const delay = (milliseconds) => {
-    return async (_req, _res, next) => {
-        await new Promise((resolve) => setTimeout(resolve, milliseconds));
-        console.log(`Delay api by ${milliseconds}ms.`);
-        next();
-    };
-};
-const limiter = (minute = 10, limit = 1000) => {
+export const limiter = (minute = 10, limit = 1000) => {
     return rateLimit({
         windowMs: minute * 60 * 1000,
         limit: limit,
@@ -171,4 +181,3 @@ const limiter = (minute = 10, limit = 1000) => {
         },
     });
 };
-export { revokeToken, authAccess, authRefresh, upload, validate, delay, limiter };

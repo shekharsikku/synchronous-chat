@@ -1,6 +1,7 @@
 import { genSalt, hash, compare } from "bcryptjs";
 import { User } from "../models/index.js";
 import { getSocketId, io } from "../server.js";
+import { eventsService } from "../services/events.js";
 import { deleteImageByUrl, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { hasEmptyField, createUserInfo, generateAccess } from "../utils/helpers.js";
 import { HttpError, ErrorResponse, SuccessResponse } from "../utils/response.js";
@@ -19,6 +20,7 @@ const profileSetup = async (req, res) => {
                 throw new HttpError(409, "Username already exists!");
             }
         }
+        const wasSetup = requestUser?.setup;
         const userDetails = { name, username, gender, bio, setup: false };
         const isCompleted = !hasEmptyField({ name, username, gender });
         if (isCompleted) {
@@ -31,8 +33,11 @@ const profileSetup = async (req, res) => {
             throw new HttpError(400, "Profile setup not completed!");
         }
         const userInfo = createUserInfo(updatedProfile);
+        if (!wasSetup && userInfo.setup) {
+            eventsService.send(requestUser._id.toString(), "profile-setup-complete", userInfo);
+        }
         if (!userInfo.setup) {
-            return SuccessResponse(res, 200, "Please, complete your profile!", userInfo);
+            return SuccessResponse(res, 200, "Please, complete your profile!");
         }
         await generateAccess(res, userInfo);
         await profileUpdateEvents(userInfo);

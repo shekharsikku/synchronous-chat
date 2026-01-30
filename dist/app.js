@@ -45,7 +45,14 @@ else {
 }
 app.use(requestIp.mw());
 app.use(cookieParser(env.COOKIES_SECRET));
-app.use(compression());
+app.use(compression({
+    filter: (req, res) => {
+        if (req.headers.accept === "text/event-stream") {
+            return false;
+        }
+        return compression.filter(req, res);
+    },
+}));
 app.use("/public/temp", express.static(join(__dirname, "../public/temp")));
 app.use("/api", limiter(), routers);
 app.all("*path", (_req, res) => {

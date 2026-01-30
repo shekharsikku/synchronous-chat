@@ -1,14 +1,14 @@
 import tseslint from "@typescript-eslint/eslint-plugin";
 import tsParser from "@typescript-eslint/parser";
-import { defineConfig } from "eslint/config";
+import { defineConfig, globalIgnores } from "eslint/config";
 import importPlugin from "eslint-plugin-import";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 
 export default defineConfig([
+  globalIgnores(["dist", "node_modules", "vite.config.*", "eslint.config.*", "**/components/ui/**"]),
   {
     files: ["**/*.{ts,tsx,js,jsx}"],
-    ignores: ["dist/**", "build/**", "node_modules/**", "vite.config.*", "eslint.config.*", "src/components/ui/**"],
     languageOptions: {
       parser: tsParser,
       parserOptions: {

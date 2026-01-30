@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 import { resolve } from "path";
-import viteReact from "@vitejs/plugin-react-swc";
+import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import viteTsConfigPaths from "vite-tsconfig-paths";
 
@@ -10,7 +10,11 @@ export default defineConfig({
       projects: ["./tsconfig.json"],
     }),
     tailwindcss(),
-    viteReact(),
+    viteReact({
+      babel: {
+        plugins: [["babel-plugin-react-compiler"]],
+      },
+    }),
   ],
   resolve: {
     alias: {

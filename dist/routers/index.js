@@ -1,10 +1,11 @@
 import { Router } from "express";
-import { limiter } from "../middlewares/index.js";
+import { authEvents, limiter } from "../middlewares/index.js";
 import AuthRouter from "../routers/auth.js";
 import ContactRouter from "../routers/contact.js";
 import GroupRouter from "../routers/group.js";
 import MessageRouter from "../routers/message.js";
 import UserRouter from "../routers/user.js";
+import { connectEvents } from "../services/events.js";
 import { SuccessResponse } from "../utils/response.js";
 const router = Router();
 router.use("/auth", limiter(10, 10), AuthRouter);
@@ -17,4 +18,5 @@ router.get("/wakeup", (req, res) => {
     const timestamp = new Date().toISOString();
     return SuccessResponse(res, 200, `Wake up server by ${from} at ${timestamp}!`);
 });
+router.get("/events", authEvents, connectEvents);
 export default router;
