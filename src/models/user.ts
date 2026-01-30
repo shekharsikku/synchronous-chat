@@ -60,7 +60,7 @@ const UserSchema = new Schema<UserInterface>(
 UserSchema.pre("save", async function () {
   if (!this.username || this.username.trim() === "") {
     /** Generate a temporary username by splitting email  */
-    const localPart = this.email.split("@")[0].split(".")[0];
+    const localPart = this.email.split("@")[0]?.split(".")[0];
 
     /** Unique suffix according to current timestamp  */
     const uniqueSuffix = Date.now().toString(36);

@@ -18,7 +18,7 @@ const searchContact = async (req: Request<{}, {}, {}, { search?: string }>, res:
 
     const contacts = await User.find({
       $and: [
-        { _id: { $ne: req.user?._id } },
+        { _id: { $ne: req.user?._id! } },
         { setup: true },
         { $or: [{ name: regex }, { username: regex }, { email: regex }] },
       ],
@@ -39,7 +39,7 @@ const searchContact = async (req: Request<{}, {}, {}, { search?: string }>, res:
 const availableContact = async (req: Request, res: Response) => {
   try {
     const contacts = await User.find({
-      _id: { $ne: req.user?._id },
+      _id: { $ne: req.user?._id! },
       setup: true,
     })
       .select("-setup -createdAt -updatedAt -__v")
