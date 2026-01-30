@@ -185,13 +185,7 @@ const MessageBar = () => {
       if (replyTo) messageData.reply = replyTo._id;
       if (selectedImage) setMessage("Sending...");
 
-      if (selectedChatType === "contact") {
-        await api.post(`/api/message/send/${selectedChatData?._id}`, messageData);
-      }
-
-      if (selectedChatType === "group") {
-        await api.post(`/api/group/message/send/${selectedChatData?._id}`, messageData);
-      }
+      await api.post(`/api/message/send/${selectedChatData?._id}?type=${selectedChatType}`, messageData);
 
       handleClearMessage(!!replyTo);
     } catch (error: any) {
@@ -335,7 +329,7 @@ const MessageBar = () => {
               onChange={handleChange}
               onBlur={handleTypingBlur}
               className="w-full px-1 py-2 bg-transparent border-none outline-none text-sm tracking-wider"
-              disabled={!!(selectedImage && message !== "") || editDialog || isSending}
+              readOnly={!!(selectedImage && message !== "") || editDialog || isSending}
               ref={inputRef}
               onKeyDown={handleEnterKeyDown}
             />

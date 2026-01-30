@@ -161,10 +161,9 @@ export const useMessageActions = () => {
     }
   };
 
-  const handleEmojiReaction = async (id: string, uid: string, emoji: string) => {
+  const handleEmojiReaction = async (id: string, emoji: string) => {
     try {
       await api.patch(`/api/message/react/${id}`, {
-        by: uid,
         emoji,
       });
     } catch (error: any) {

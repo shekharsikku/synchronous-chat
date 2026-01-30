@@ -10,61 +10,98 @@ import type { MessageInterface } from "#/interfaces/index.js";
 import type { Message as MessageType, Translate } from "#/utils/schema.js";
 import type { Request, Response } from "express";
 
-const sendMessage = async (req: Request<{ id: string }>, res: Response) => {
+export const sendMessage = async (req: Request<{ id: string }, {}, MessageType, { type?: string }>, res: Response) => {
   try {
-    const sender = req.user?._id!;
-    const receiver = new Types.ObjectId(req.params.id);
-    const { type, text, file, reply } = (await req.body) as MessageType;
+    const senderId = req.user?._id!;
+    const receiverId = new Types.ObjectId(req.params.id);
+    const isGroup = req.query.type === "group";
+    const { type, text, file, reply } = req.body;
 
-    const message = await Message.create({
-      sender: sender,
-      recipient: receiver,
-      content: {
-        type: type,
-        text: text,
-        file: file,
-      },
-      reply: reply && new Types.ObjectId(reply),
-    });
+    const content: {
+      type: "text" | "file";
+      text?: string;
+      file?: string;
+    } = { type };
 
-    const interaction = new Date(Date.now());
-    const socketEventInfo = [
-      { userId: message.sender.toString(), targetId: message.recipient?.toString()! },
-      { userId: message.recipient?.toString()!, targetId: message.sender.toString() },
-    ];
+    if (type === "text" && text) content.text = text;
+    if (type === "file" && file) content.file = file;
 
-    for (const { userId, targetId } of socketEventInfo) {
-      const userSocketIds = getSocketId(userId);
+    const interaction = new Date();
 
-      if (userSocketIds.length > 0) {
-        /** for update new message */
-        io.to(userSocketIds).emit("message:receive", message);
+    let [message, conversation] = await Promise.all([
+      Message.create({
+        sender: senderId,
+        ...(isGroup ? { group: receiverId } : { recipient: receiverId }),
+        content: content,
+        ...(reply && { reply: new Types.ObjectId(reply) }),
+      }),
+      Conversation.findOneAndUpdate(
+        {
+          participants: isGroup ? { $size: 1, $all: [receiverId] } : { $all: [senderId, receiverId] },
+          models: isGroup ? "Group" : "User",
+        },
+        { interaction: interaction },
+        { new: true }
+      ),
+    ]);
 
-        /** for update last chat contact */
-        io.to(userSocketIds).emit("conversation:updated", {
-          _id: targetId,
-          type: "contact",
-          interaction,
-        });
-      }
-    }
-
-    let conversation = await Conversation.findOneAndUpdate(
-      { participants: { $all: [sender, receiver] } },
-      {
-        interaction: interaction,
-      },
-      { new: true }
-    );
+    let members: string[] = [];
 
     if (!conversation) {
       conversation = await Conversation.create({
-        participants: [sender, receiver],
-        models: "User",
+        participants: isGroup ? [receiverId] : [senderId, receiverId],
+        models: isGroup ? "Group" : "User",
         interaction: interaction,
       });
+
+      if (isGroup) {
+        members = await fetchMembers(receiverId);
+      }
     }
 
+    if (isGroup) {
+      if (!members.length && conversation) {
+        const populated = await conversation.populate("participants");
+        members = (populated.participants?.[0] as any)?.members ?? [];
+      }
+
+      if (!members.length) {
+        members = await fetchMembers(receiverId);
+      }
+
+      const socketIds = members.flatMap((member) => getSocketId(member)).filter(Boolean);
+
+      /** for update new message */
+      io.to(socketIds).emit("message:receive", message);
+
+      /** for update last chat contact */
+      io.to(socketIds).emit("conversation:updated", {
+        _id: receiverId,
+        type: "group",
+        interaction,
+      });
+    } else {
+      const socketEventInfo = [
+        { userId: message.sender.toString(), targetId: message.recipient?.toString()! },
+        { userId: message.recipient?.toString()!, targetId: message.sender.toString() },
+      ];
+
+      for (const { userId, targetId } of socketEventInfo) {
+        const userSocketIds = getSocketId(userId);
+
+        if (userSocketIds.length > 0) {
+          /** for update new message */
+          io.to(userSocketIds).emit("message:receive", message);
+
+          /** for update last chat contact */
+          io.to(userSocketIds).emit("conversation:updated", {
+            _id: targetId,
+            type: "contact",
+            interaction,
+          });
+        }
+      }
+    }
     return SuccessResponse(res, 201, "Message sent successfully!");
   } catch (error: any) {
     return ErrorResponse(res, error.code || 500, error.message || "Error while sending message!");
@@ -80,11 +117,11 @@ const nullToUndefined = (obj: Record<string, any>) => {
   return obj;
 };
 
-const getMessages = async (req: Request<{ id: string }>, res: Response) => {
+export const getMessages = async (req: Request<{ id: string }, {}, {}, { group?: string }>, res: Response) => {
   try {
-    const sender = req.user?._id;
+    const sender = req.user?._id!;
     const target = req.params.id;
-    const isGroup = (req.query.group as string) === "true" || false;
+    const isGroup = req.query.group === "true";
 
     const query = isGroup
       ? { group: target }
@@ -105,12 +142,15 @@ const getMessages = async (req: Request<{ id: string }>, res: Response) => {
   }
 };
 
-const fetchMessages = async (req: Request<{ id: string }>, res: Response) => {
+export const fetchMessages = async (
+  req: Request<{ id: string }, {}, {}, { before?: string; group?: string; limit?: number }>,
+  res: Response
+) => {
   try {
     const sender = req.user?._id;
     const target = req.params.id;
     const { before, group, limit = 10 } = req.query;
-    const isGroup = (group as string) === "true" || false;
+    const isGroup = group === "true";
 
     const query: any = isGroup
       ? { group: target }
@@ -122,12 +162,12 @@ const fetchMessages = async (req: Request<{ id: string }>, res: Response) => {
         };
 
     if (before) {
-      query.createdAt = { $lt: new Date(before as string) };
+      query.createdAt = { $lt: new Date(before) };
     }
 
     const messages = await Message.find(query)
       .sort({ createdAt: -1 })
-      .limit(limit as number)
+      .limit(limit)
       .lean({ transform: (doc) => nullToUndefined(doc) });
 
     /* Reverse to show oldest → newest in UI */
@@ -150,9 +190,9 @@ const messageActionsEvents = async (message: MessageInterface, event: string) =>
   }
 };
 
-const deleteMessage = async (req: Request<{ id: string }>, res: Response) => {
+export const deleteMessage = async (req: Request<{ id: string }>, res: Response) => {
   try {
-    const uid = req.user?._id;
+    const uid = req.user?._id!;
     const mid = req.params.id;
 
     const message = await Message.findOneAndUpdate(
@@ -177,9 +217,9 @@ const deleteMessage = async (req: Request<{ id: string }>, res: Response) => {
   }
 };
 
-const editMessage = async (req: Request<{ id: string }, {}, { text: string }>, res: Response) => {
+export const editMessage = async (req: Request<{ id: string }, {}, { text: string }>, res: Response) => {
   try {
-    const uid = req.user?._id;
+    const uid = req.user?._id!;
     const mid = req.params.id;
     const { text } = req.body;
 
@@ -208,12 +248,13 @@ const editMessage = async (req: Request<{ id: string }, {}, { text: string }>, r
   }
 };
 
-const reactMessage = async (req: Request<{ id: string }, {}, { by: string; emoji: string }>, res: Response) => {
+export const reactMessage = async (req: Request<{ id: string }, {}, { emoji: string }>, res: Response) => {
   try {
+    const by = req.user?._id!;
     const mid = req.params.id;
-    const { by, emoji } = req.body;
+    const { emoji } = req.body;
 
-    if (!by || !emoji) {
+    if (!emoji) {
       throw new HttpError(400, "Emoji is required for reacting!");
     }
 
@@ -295,9 +336,9 @@ const reactMessage = async (req: Request<{ id: string }, {}, { by: string; emoji
   }
 };
 
-const deleteMessages = async (req: Request, res: Response) => {
+export const deleteMessages = async (req: Request, res: Response) => {
   try {
-    const uid = req.user?._id;
+    const uid = req.user?._id!;
     const before = Number(req.query.before ?? 1) * 24;
 
     const hoursAgo = new Date();
@@ -314,7 +355,7 @@ const deleteMessages = async (req: Request, res: Response) => {
   }
 };
 
-const translateMessage = async (req: Request<{}, {}, Translate>, res: Response) => {
+export const translateMessage = async (req: Request<{}, {}, Translate>, res: Response) => {
   try {
     const { message, language } = req.body;
 
@@ -332,15 +373,4 @@ const translateMessage = async (req: Request<{}, {}, Translate>, res: Response) 
   } catch (error: any) {
     return ErrorResponse(res, error.code || 500, error.message || "Error while translating message!");
   }
-};
-
-export {
-  sendMessage,
-  getMessages,
-  editMessage,
-  reactMessage,
-  deleteMessage,
-  deleteMessages,
-  translateMessage,
-  fetchMessages,
 };

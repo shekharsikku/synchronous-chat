@@ -108,7 +108,7 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
               ? "bg-gray-200 border-gray-300 dark:bg-gray-200/5 dark:hover:bg-gray-200/10"
               : "bg-gray-100 border-gray-200 dark:bg-gray-100/5 dark:hover:bg-gray-100/10"
           )}
-          onDoubleClick={() => handleEmojiReaction(message._id, userInfo?._id!, "❤️")}
+          onDoubleClick={() => handleEmojiReaction(message._id, "❤️")}
         >
           {/* Right click here */}
           {message.type === "deleted" ? (
@@ -160,7 +160,7 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
                     <button
                       key={emoji}
                       className="hover:scale-125 transition-transform duration-200"
-                      onClick={() => handleEmojiReaction(message._id, userInfo?._id!, emoji)}
+                      onClick={() => handleEmojiReaction(message._id, emoji)}
                     >
                       {emoji}
                     </button>
