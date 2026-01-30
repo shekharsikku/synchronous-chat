@@ -2,7 +2,7 @@ import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { useEffect, useRef, useEffectEvent } from "react";
 
 import notificationIcon from "@/assets/favicon.ico";
-import notificationSound from "@/assets/sound/message-alert.mp3";
+import notificationSound from "@/assets/sounds/message-alert.mp3";
 import { useContacts } from "@/hooks";
 import api from "@/lib/api";
 import { useSocket } from "@/lib/context";

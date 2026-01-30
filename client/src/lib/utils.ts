@@ -5,9 +5,7 @@ import localizedFormat from "dayjs/plugin/localizedFormat";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
 
-import femaleAvatar from "@/assets/female-avatar.webp";
-import maleAvatar from "@/assets/male-avatar.webp";
-import noAvatar from "@/assets/no-avatar.webp";
+import { noAvatar, maleAvatar, femaleAvatar } from "@/assets/images";
 import api from "@/lib/api";
 
 import type { Message, UserInfo } from "@/lib/zustand";

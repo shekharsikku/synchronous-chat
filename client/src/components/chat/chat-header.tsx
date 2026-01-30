@@ -10,7 +10,7 @@ import {
 import { LuAudioLines } from "react-icons/lu";
 import { toast } from "sonner";
 
-import groupAvatar from "@/assets/group-avatar.webp";
+import { groupAvatar } from "@/assets/images";
 import { GroupMembersList } from "@/components/chat/member-list";
 import { TooltipElement } from "@/components/chat/tooltip-element";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
