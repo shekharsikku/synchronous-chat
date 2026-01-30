@@ -1,13 +1,13 @@
 import { Types } from "mongoose";
 
-import { Group, Message, User, Conversation } from "#/models/index.js";
+import { Group, User, Conversation } from "#/models/index.js";
 import { getSocketId, io } from "#/server.js";
 import { HttpError, SuccessResponse, ErrorResponse } from "#/utils/response.js";
 
-import type { CreateGroupType, UpdateDetailsType, UpdateMembersType, Message as MessageType } from "#/utils/schema.js";
+import type { CreateGroup, UpdateDetails, UpdateMembers } from "#/utils/schema.js";
 import type { Request, Response } from "express";
 
-const createGroup = async (req: Request<{}, {}, CreateGroupType>, res: Response) => {
+export const createGroup = async (req: Request<{}, {}, CreateGroup>, res: Response) => {
   try {
     const groupData = req.body;
     const reqUser = req.user?._id;
@@ -58,11 +58,11 @@ const createGroup = async (req: Request<{}, {}, CreateGroupType>, res: Response)
   }
 };
 
-const updateDetails = async (req: Request<{ id: string }, {}, UpdateDetailsType>, res: Response) => {
+export const updateDetails = async (req: Request<{ id: string }, {}, UpdateDetails>, res: Response) => {
   try {
     const groupId = req.params.id;
     const updateData = req.body;
-    const reqUser = req.user?._id;
+    const reqUser = req.user?._id!;
 
     if (updateData.name) {
       const existingGroup = await Group.exists({ name: updateData.name, admin: reqUser, _id: { $ne: groupId } });
@@ -88,11 +88,11 @@ const updateDetails = async (req: Request<{ id: string }, {}, UpdateDetailsType>
   }
 };
 
-const updateMembers = async (req: Request<{ id: string }, {}, UpdateMembersType>, res: Response) => {
+export const updateMembers = async (req: Request<{ id: string }, {}, UpdateMembers>, res: Response) => {
   try {
     const groupId = req.params.id;
     const { add, remove } = req.body;
-    const reqUser = req.user?._id;
+    const reqUser = req.user?._id!;
 
     if (!add?.length && !remove?.length) {
       throw new HttpError(400, "Provide at least one member to add or remove!");
@@ -131,14 +131,7 @@ const updateMembers = async (req: Request<{ id: string }, {}, UpdateMembersType>
   }
 };
 
-// const removeAvatar = (req: Request, res: Response) => {
-//   try {
-//   } catch (error: any) {
-//     return ErrorResponse(res, error.code || 500, error.message || "Error while removing group avatar!");
-//   }
-// };
-
-const fetchGroups = async (req: Request, res: Response) => {
+export const fetchGroups = async (req: Request, res: Response) => {
   try {
     const uid = new Types.ObjectId(req.user?._id);
 
@@ -182,69 +175,3 @@ export const fetchMembers = async (gid: Types.ObjectId) => {
   const group = await Group.findById(gid).select("-_id members").lean();
   return group?.members.map((id) => id.toString()) || [];
 };
-
-const groupMessage = async (req: Request<{ id: string }>, res: Response) => {
-  try {
-    const sender = req.user?._id!;
-    const group = new Types.ObjectId(req.params.id);
-    const { type, text, file, reply } = (await req.body) as MessageType;
-
-    const interaction = new Date(Date.now());
-
-    let [message, conversation] = await Promise.all([
-      Message.create({
-        sender: sender,
-        group: group,
-        content: {
-          type: type,
-          text: text,
-          file: file,
-        },
-        reply: reply && new Types.ObjectId(reply),
-      }),
-      Conversation.findOneAndUpdate(
-        { participants: { $all: [group] } },
-        {
-          interaction: interaction,
-        },
-        { new: true }
-      ).populate("participants"),
-    ]);
-
-    let members: string[] = [];
-
-    /* If no conversation, create one and fetch members manually */
-    if (!conversation) {
-      [conversation, members] = await Promise.all([
-        Conversation.create({
-          participants: [group],
-          models: "Group",
-          interaction: interaction,
-        }),
-        fetchMembers(group),
-      ]);
-    } else if (!members && conversation.models === "Group") {
-      members = (conversation.participants?.[0] as any).members || [];
-    } else {
-      members = await fetchMembers(group);
-    }
-
-    const socketIds = members.flatMap((member) => getSocketId(member)).filter(Boolean);
-
-    /** for update new message */
-    io.to(socketIds).emit("message:receive", message);
-
-    /** for update last chat contact */
-    io.to(socketIds).emit("conversation:updated", {
-      _id: group,
-      type: "group",
-      interaction,
-    });
-
-    return SuccessResponse(res, 201, "Message sent successfully!");
-  } catch (error: any) {
-    return ErrorResponse(res, error.code || 500, error.message || "Error while changing group avatar!");
-  }
-};
-
-export { createGroup, updateDetails, updateMembers, fetchGroups, groupMessage };
