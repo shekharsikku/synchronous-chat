@@ -5,7 +5,7 @@ import { CompactEncrypt, SignJWT } from "jose";
 
 import env from "#/utils/env.js";
 
-import type { UserInterface } from "#/interface/index.js";
+import type { UserInterface } from "#/interfaces/index.js";
 import type { Response } from "express";
 import type { Types } from "mongoose";
 

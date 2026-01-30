@@ -15,7 +15,7 @@ import { MessageSchema, TranslateSchema } from "#/utils/schema.js";
 
 const router = Router();
 
-router.get("/:id", limiter(1, 20), authAccess, getMessages);
+router.get("/:id", limiter(1, 60), authAccess, getMessages);
 router.get("/fetch/:id", limiter(1, 60), authAccess, fetchMessages);
 router.post("/send/:id", limiter(1, 100), authAccess, validate(MessageSchema), sendMessage);
 router.patch("/edit/:id", limiter(1, 20), authAccess, editMessage);

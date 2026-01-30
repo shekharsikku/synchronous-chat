@@ -11,7 +11,7 @@ import env from "#/utils/env.js";
 import { generateSecret, generateAccess, generateRefresh, createUserInfo, generateHash } from "#/utils/helpers.js";
 import { HttpError, ErrorResponse, SuccessResponse } from "#/utils/response.js";
 
-import type { UserInterface } from "#/interface/index.js";
+import type { UserInterface } from "#/interfaces/index.js";
 import type { NextFunction, Request, Response } from "express";
 
 const parseAuthKey = (authKey: any) => {

@@ -6,7 +6,7 @@ import { Message, Conversation } from "#/models/index.js";
 import { getSocketId, io } from "#/server.js";
 import { HttpError, SuccessResponse, ErrorResponse } from "#/utils/response.js";
 
-import type { MessageInterface } from "#/interface/index.js";
+import type { MessageInterface } from "#/interfaces/index.js";
 import type { Message as MessageType, Translate } from "#/utils/schema.js";
 import type { Request, Response } from "express";
 

@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 
-import type { GroupInterface } from "#/interface/index.js";
+import type { GroupInterface } from "#/interfaces/index.js";
 
 const GroupSchema = new Schema<GroupInterface>(
   {

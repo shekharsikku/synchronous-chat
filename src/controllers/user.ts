@@ -8,7 +8,7 @@ import { hasEmptyField, createUserInfo, generateAccess } from "#/utils/helpers.j
 import { HttpError, ErrorResponse, SuccessResponse } from "#/utils/response.js";
 import { unlinkFilesWithExtensions, extensionsToDelete, folderPath } from "#/utils/unlink.js";
 
-import type { UserInterface } from "#/interface/index.js";
+import type { UserInterface } from "#/interfaces/index.js";
 import type { Profile, Password } from "#/utils/schema.js";
 import type { Request, Response } from "express";
 

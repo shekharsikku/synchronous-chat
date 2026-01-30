@@ -11,9 +11,9 @@ import { SuccessResponse } from "#/utils/response.js";
 
 const router = Router();
 
-router.use("/auth", limiter(10, 10), AuthRouter);
-router.use("/user", limiter(10, 50), UserRouter);
-router.use("/contact", limiter(10, 50), ContactRouter);
+router.use("/auth", limiter(10, 100), AuthRouter);
+router.use("/user", limiter(10, 100), UserRouter);
+router.use("/contact", limiter(10, 100), ContactRouter);
 router.use("/message", limiter(10, 500), MessageRouter);
 router.use("/group", limiter(10, 500), GroupRouter);
 
