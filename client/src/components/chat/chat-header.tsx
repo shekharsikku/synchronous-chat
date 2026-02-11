@@ -143,7 +143,7 @@ const ChatHeader = () => {
                   className={`uppercase h-full w-full text-xl border text-center font-medium 
                       transition-all duration-300 bg-[#06d6a02a] text-[#06d6a0] border-[#06d6a0bb`}
                 >
-                  {(selectedChatData?.name || selectedChatData?.username || selectedChatData?.email).charAt(0) ?? ""}
+                  {(selectedChatData?.name || selectedChatData?.username || selectedChatData?.email)?.charAt(0) ?? ""}
                 </AvatarFallback>
               </Avatar>
             </TooltipElement>

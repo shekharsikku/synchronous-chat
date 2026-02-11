@@ -151,7 +151,7 @@ const MessageBar = () => {
   };
 
   const handleClearMessage = (reply = false) => {
-    reply && setReplyTo(null);
+    if (reply) setReplyTo(null);
     setMessage("");
     setSelectedImage(null);
   };
@@ -273,7 +273,7 @@ const MessageBar = () => {
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setMessage(event.target.value);
-    selectedChatType === "contact" && handleTyping();
+    if (selectedChatType === "contact") handleTyping();
   };
 
   const { pasteFromClipboard } = useClipboard(inputRef, setMessage);

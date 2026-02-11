@@ -247,7 +247,7 @@ export const copyToClipboard = (text: string) => {
   try {
     void navigator.clipboard.writeText(text);
     toast.info("Message copied to clipboard!");
-  } catch (_error) {
+  } catch {
     toast.error("Failed to copy message!");
   }
 };

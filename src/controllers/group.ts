@@ -65,7 +65,11 @@ export const updateDetails = async (req: Request<{ id: string }, {}, UpdateDetai
     const reqUser = req.user?._id!;
 
     if (updateData.name) {
-      const existingGroup = await Group.exists({ name: updateData.name, admin: reqUser, _id: { $ne: groupId } });
+      const existingGroup = await Group.exists({
+        name: updateData.name,
+        admin: reqUser,
+        _id: { $ne: groupId },
+      });
 
       if (existingGroup) {
         throw new HttpError(400, "You already have another group with this name!");
@@ -119,7 +123,16 @@ export const updateMembers = async (req: Request<{ id: string }, {}, UpdateMembe
     if (add.length) updateOps.$addToSet = { members: { $each: add } };
     if (remove.length) updateOps.$pull = { members: { $in: remove } };
 
-    const updatedGroup = await Group.findOneAndUpdate({ _id: groupId, admin: reqUser }, updateOps, { new: true });
+    const updatedGroup = await Group.findOneAndUpdate(
+      {
+        _id: groupId,
+        admin: reqUser,
+      },
+      updateOps,
+      {
+        new: true,
+      }
+    );
 
     if (!updatedGroup) {
       throw new HttpError(404, "Group not found or you are not authorized!");

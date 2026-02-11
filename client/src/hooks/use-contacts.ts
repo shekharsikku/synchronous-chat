@@ -134,7 +134,7 @@ export const useContacts = () => {
           return [{ ...newContact, interaction: new Date().toISOString() }, ...uniqueContacts];
         });
       } catch (error: any) {
-        import.meta.env.DEV && console.error("Failed to fetch contact:", error.message);
+        if (import.meta.env.DEV) console.error("Failed to fetch contact:", error.message);
       }
     };
 

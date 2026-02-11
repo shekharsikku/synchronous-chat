@@ -14,8 +14,8 @@ export const useEvents = () => {
   const updateUserInfo = useEffectEvent((updatedProfile: UserInfo) => {
     if (updatedProfile._id === userInfo?._id) {
       setUserInfo(updatedProfile);
-      updatedProfile.setup && navigate("/chat");
-      import.meta.env.DEV && console.log("👍 Profile setup completed!");
+      if (updatedProfile.setup) navigate("/chat");
+      if (import.meta.env.DEV) console.log("👍 Profile setup completed!");
     }
   });
 

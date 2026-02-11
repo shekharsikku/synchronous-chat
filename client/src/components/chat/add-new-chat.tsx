@@ -48,7 +48,7 @@ const AddNewChat = () => {
         gcTime: 2 * 60 * 60 * 1000,
       });
       setSearchedContacts(newContact);
-    } catch (_error: any) {
+    } catch {
       setSearchedContacts([]);
     } finally {
       setTimeout(() => setIsFetching(false), 500);

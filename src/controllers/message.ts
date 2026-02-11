@@ -282,7 +282,9 @@ export const reactMessage = async (req: Request<{ id: string }, {}, { emoji: str
                         $cond: [
                           { $eq: [{ $size: "$$existing" }, 0] },
                           // { $concatArrays: ["$content.reactions", [{ by, emoji }]] }, // add new
-                          { $concatArrays: [{ $ifNull: ["$content.reactions", []] }, [{ by, emoji }]] },
+                          {
+                            $concatArrays: [{ $ifNull: ["$content.reactions", []] }, [{ by, emoji }]],
+                          },
                           {
                             $map: {
                               // input: "$content.reactions",
@@ -290,7 +292,9 @@ export const reactMessage = async (req: Request<{ id: string }, {}, { emoji: str
                               as: "r",
                               in: {
                                 $cond: [
-                                  { $and: [{ $eq: ["$$r.by", by] }, { $eq: ["$$r.emoji", emoji] }] },
+                                  {
+                                    $and: [{ $eq: ["$$r.by", by] }, { $eq: ["$$r.emoji", emoji] }],
+                                  },
                                   "$$REMOVE", // remove same emoji
                                   { $cond: [{ $eq: ["$$r.by", by] }, { by, emoji }, "$$r"] }, // update emoji
                                 ],

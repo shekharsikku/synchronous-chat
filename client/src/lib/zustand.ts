@@ -89,7 +89,7 @@ export const useAuthStore = create<{
         isAuthenticated: true,
       });
       return result;
-    } catch (_error: any) {
+    } catch {
       set({
         userInfo: null,
         isAuthenticated: false,

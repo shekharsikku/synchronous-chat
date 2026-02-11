@@ -105,8 +105,8 @@ export const usePlainText = () => {
       }
 
       return decryptMessage(message?.content?.text!, messageKey);
-    } catch (_error) {
-      import.meta.env.DEV && console.log("Plain text decryption failed!");
+    } catch {
+      if (import.meta.env.DEV) console.log("Plain text decryption failed!");
       return "Decryption Error!";
     }
   };
@@ -182,9 +182,9 @@ export const useMessageActions = () => {
         language,
       });
       setTranslated(response.data.data);
-    } catch (_error: any) {
+    } catch {
       setTranslated("");
-      import.meta.env.DEV && console.log("Language translation error!");
+      if (import.meta.env.DEV) console.log("Language translation error!");
     }
   };
 

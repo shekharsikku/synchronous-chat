@@ -13,7 +13,7 @@ import type { Profile, Password } from "#/utils/schema.js";
 import type { Request, Response } from "express";
 
 const profileUpdateEvents = async (userData: UserInterface) => {
-  const userSocketIds = getSocketId(userData._id!?.toString());
+  const userSocketIds = getSocketId(userData._id.toString());
   io.to(userSocketIds).emit("profile:update", userData);
 };
 
