@@ -15,8 +15,8 @@ export const getSocketId = (userId) => {
     return Array.from(userSockets);
 };
 io.use((socket, next) => {
-    const secretKey = socket.handshake.auth.secretKey;
-    if (secretKey !== env.SOCKET_SECRET) {
+    const publicKey = socket.handshake.auth.publicKey;
+    if (publicKey !== env.SOCKET_PUBLIC) {
         console.log(`Unauthorized socket attempt: ${socket.handshake.address}`);
         return next(new Error("Unauthorized socket connection!"));
     }

@@ -4,46 +4,73 @@ import { fetchMembers } from "../controllers/group.js";
 import { Message, Conversation } from "../models/index.js";
 import { getSocketId, io } from "../server.js";
 import { HttpError, SuccessResponse, ErrorResponse } from "../utils/response.js";
-const sendMessage = async (req, res) => {
+export const sendMessage = async (req, res) => {
     try {
-        const sender = req.user?._id;
-        const receiver = new Types.ObjectId(req.params.id);
-        const { type, text, file, reply } = (await req.body);
-        const message = await Message.create({
-            sender: sender,
-            recipient: receiver,
-            content: {
-                type: type,
-                text: text,
-                file: file,
-            },
-            reply: reply && new Types.ObjectId(reply),
-        });
-        const interaction = new Date(Date.now());
-        const socketEventInfo = [
-            { userId: message.sender.toString(), targetId: message.recipient?.toString() },
-            { userId: message.recipient?.toString(), targetId: message.sender.toString() },
-        ];
-        for (const { userId, targetId } of socketEventInfo) {
-            const userSocketIds = getSocketId(userId);
-            if (userSocketIds.length > 0) {
-                io.to(userSocketIds).emit("message:receive", message);
-                io.to(userSocketIds).emit("conversation:updated", {
-                    _id: targetId,
-                    type: "contact",
-                    interaction,
-                });
-            }
-        }
-        let conversation = await Conversation.findOneAndUpdate({ participants: { $all: [sender, receiver] } }, {
-            interaction: interaction,
-        }, { new: true });
+        const senderId = req.user?._id;
+        const receiverId = new Types.ObjectId(req.params.id);
+        const isGroup = req.query.type === "group";
+        const { type, text, file, reply } = req.body;
+        const content = { type };
+        if (type === "text" && text)
+            content.text = text;
+        if (type === "file" && file)
+            content.file = file;
+        const interaction = new Date();
+        let [message, conversation] = await Promise.all([
+            Message.create({
+                sender: senderId,
+                ...(isGroup ? { group: receiverId } : { recipient: receiverId }),
+                content: content,
+                ...(reply && { reply: new Types.ObjectId(reply) }),
+            }),
+            Conversation.findOneAndUpdate({
+                participants: isGroup ? { $size: 1, $all: [receiverId] } : { $all: [senderId, receiverId] },
+                models: isGroup ? "Group" : "User",
+            }, { interaction: interaction }, { returnDocument: "after" }),
+        ]);
+        let members = [];
         if (!conversation) {
             conversation = await Conversation.create({
-                participants: [sender, receiver],
-                models: "User",
+                participants: isGroup ? [receiverId] : [senderId, receiverId],
+                models: isGroup ? "Group" : "User",
                 interaction: interaction,
             });
+            if (isGroup) {
+                members = await fetchMembers(receiverId);
+            }
+        }
+        if (isGroup) {
+            if (!members.length && conversation) {
+                const populated = await conversation.populate("participants");
+                members = populated.participants?.[0]?.members ?? [];
+            }
+            if (!members.length) {
+                members = await fetchMembers(receiverId);
+            }
+            const socketIds = members.flatMap((member) => getSocketId(member)).filter(Boolean);
+            io.to(socketIds).emit("message:receive", message);
+            io.to(socketIds).emit("conversation:updated", {
+                _id: receiverId,
+                type: "group",
+                interaction,
+            });
+        }
+        else {
+            const socketEventInfo = [
+                { userId: message.sender.toString(), targetId: message.recipient?.toString() },
+                { userId: message.recipient?.toString(), targetId: message.sender.toString() },
+            ];
+            for (const { userId, targetId } of socketEventInfo) {
+                const userSocketIds = getSocketId(userId);
+                if (userSocketIds.length > 0) {
+                    io.to(userSocketIds).emit("message:receive", message);
+                    io.to(userSocketIds).emit("conversation:updated", {
+                        _id: targetId,
+                        type: "contact",
+                        interaction,
+                    });
+                }
+            }
         }
         return SuccessResponse(res, 201, "Message sent successfully!");
     }
@@ -60,11 +87,11 @@ const nullToUndefined = (obj) => {
     }
     return obj;
 };
-const getMessages = async (req, res) => {
+export const getMessages = async (req, res) => {
     try {
         const sender = req.user?._id;
         const target = req.params.id;
-        const isGroup = req.query.group === "true" || false;
+        const isGroup = req.query.group === "true";
         const query = isGroup
             ? { group: target }
             : {
@@ -82,12 +109,12 @@ const getMessages = async (req, res) => {
         return ErrorResponse(res, error.code || 500, error.message || "Error while fetching messages!");
     }
 };
-const fetchMessages = async (req, res) => {
+export const fetchMessages = async (req, res) => {
     try {
         const sender = req.user?._id;
         const target = req.params.id;
         const { before, group, limit = 10 } = req.query;
-        const isGroup = group === "true" || false;
+        const isGroup = group === "true";
         const query = isGroup
             ? { group: target }
             : {
@@ -122,7 +149,7 @@ const messageActionsEvents = async (message, event) => {
         io.to(socketIds).emit(event, message);
     }
 };
-const deleteMessage = async (req, res) => {
+export const deleteMessage = async (req, res) => {
     try {
         const uid = req.user?._id;
         const mid = req.params.id;
@@ -130,7 +157,7 @@ const deleteMessage = async (req, res) => {
             type: "deleted",
             deletedAt: new Date(),
             $unset: { content: 1 },
-        }, { new: true }).lean({ transform: (doc) => nullToUndefined(doc) });
+        }, { returnDocument: "after" }).lean({ transform: (doc) => nullToUndefined(doc) });
         if (!message) {
             throw new HttpError(400, "You can't delete this message or message not found!");
         }
@@ -141,7 +168,7 @@ const deleteMessage = async (req, res) => {
         return ErrorResponse(res, error.code || 500, error.message || "Error while deleting message!");
     }
 };
-const editMessage = async (req, res) => {
+export const editMessage = async (req, res) => {
     try {
         const uid = req.user?._id;
         const mid = req.params.id;
@@ -152,7 +179,7 @@ const editMessage = async (req, res) => {
         const message = await Message.findOneAndUpdate({ _id: mid, sender: uid, "content.type": "text" }, {
             type: "edited",
             "content.text": text,
-        }, { new: true }).lean({ transform: (doc) => nullToUndefined(doc) });
+        }, { returnDocument: "after" }).lean({ transform: (doc) => nullToUndefined(doc) });
         if (!message) {
             throw new HttpError(400, "You can't edit this message or message not found!");
         }
@@ -163,11 +190,12 @@ const editMessage = async (req, res) => {
         return ErrorResponse(res, error.code || 500, error.message || "Error while editing message!");
     }
 };
-const reactMessage = async (req, res) => {
+export const reactMessage = async (req, res) => {
     try {
+        const by = req.user?._id;
         const mid = req.params.id;
-        const { by, emoji } = req.body;
-        if (!by || !emoji) {
+        const { emoji } = req.body;
+        if (!emoji) {
             throw new HttpError(400, "Emoji is required for reacting!");
         }
         const message = await Message.findOneAndUpdate({ _id: mid }, [
@@ -190,14 +218,18 @@ const reactMessage = async (req, res) => {
                                         updated: {
                                             $cond: [
                                                 { $eq: [{ $size: "$$existing" }, 0] },
-                                                { $concatArrays: [{ $ifNull: ["$content.reactions", []] }, [{ by, emoji }]] },
+                                                {
+                                                    $concatArrays: [{ $ifNull: ["$content.reactions", []] }, [{ by, emoji }]],
+                                                },
                                                 {
                                                     $map: {
                                                         input: { $ifNull: ["$content.reactions", []] },
                                                         as: "r",
                                                         in: {
                                                             $cond: [
-                                                                { $and: [{ $eq: ["$$r.by", by] }, { $eq: ["$$r.emoji", emoji] }] },
+                                                                {
+                                                                    $and: [{ $eq: ["$$r.by", by] }, { $eq: ["$$r.emoji", emoji] }],
+                                                                },
                                                                 "$$REMOVE",
                                                                 { $cond: [{ $eq: ["$$r.by", by] }, { by, emoji }, "$$r"] },
                                                             ],
@@ -225,7 +257,7 @@ const reactMessage = async (req, res) => {
                     },
                 },
             },
-        ], { new: true, updatePipeline: true }).lean({ transform: (doc) => nullToUndefined(doc) });
+        ], { returnDocument: "after", updatePipeline: true }).lean({ transform: (doc) => nullToUndefined(doc) });
         if (!message) {
             throw new HttpError(400, "Unable to react on this message or message not found!");
         }
@@ -237,7 +269,7 @@ const reactMessage = async (req, res) => {
         return ErrorResponse(res, error.code || 500, error.message || "Error while reacting message!");
     }
 };
-const deleteMessages = async (req, res) => {
+export const deleteMessages = async (req, res) => {
     try {
         const uid = req.user?._id;
         const before = Number(req.query.before ?? 1) * 24;
@@ -253,7 +285,7 @@ const deleteMessages = async (req, res) => {
         return ErrorResponse(res, error.code || 500, error.message || "Error while deleting messages!");
     }
 };
-const translateMessage = async (req, res) => {
+export const translateMessage = async (req, res) => {
     try {
         const { message, language } = req.body;
         if (!message || !language) {
@@ -269,4 +301,3 @@ const translateMessage = async (req, res) => {
         return ErrorResponse(res, error.code || 500, error.message || "Error while translating message!");
     }
 };
-export { sendMessage, getMessages, editMessage, reactMessage, deleteMessage, deleteMessages, translateMessage, fetchMessages, };

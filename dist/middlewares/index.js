@@ -50,7 +50,7 @@ export const authAccess = async (req, res, next) => {
             const decrypted = await compactDecrypt(accessToken, accessSecret);
             accessPayload = JSON.parse(inflateSync(decrypted.plaintext).toString());
         }
-        catch (_error) {
+        catch {
             throw new HttpError(401, "Invalid or expired access request!");
         }
         req.user = accessPayload;
@@ -89,7 +89,7 @@ export const authRefresh = async (req, res) => {
             }
             userId = parsedPayload.userId;
         }
-        catch (_error) {
+        catch {
             await revokeToken(res, currentAuthKey);
             throw new HttpError(403, "Please, signin again to continue!");
         }

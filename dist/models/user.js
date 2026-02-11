@@ -52,7 +52,7 @@ const UserSchema = new Schema({
 });
 UserSchema.pre("save", async function () {
     if (!this.username || this.username.trim() === "") {
-        const localPart = this.email.split("@")[0].split(".")[0];
+        const localPart = this.email.split("@")[0]?.split(".")[0];
         const uniqueSuffix = Date.now().toString(36);
         this.username = `${localPart}_${uniqueSuffix}`;
     }

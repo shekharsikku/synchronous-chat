@@ -1,8 +1,8 @@
 import { Types } from "mongoose";
-import { Group, Message, User, Conversation } from "../models/index.js";
+import { Group, User, Conversation } from "../models/index.js";
 import { getSocketId, io } from "../server.js";
 import { HttpError, SuccessResponse, ErrorResponse } from "../utils/response.js";
-const createGroup = async (req, res) => {
+export const createGroup = async (req, res) => {
     try {
         const groupData = req.body;
         const reqUser = req.user?._id;
@@ -34,25 +34,32 @@ const createGroup = async (req, res) => {
             ...newGroup.toJSON(),
             interaction: new Date().toISOString(),
         });
-        await Conversation.create({ participants: [newGroup._id], models: "Group" });
+        await Conversation.create({
+            participants: [newGroup._id],
+            models: "Group",
+        });
         return SuccessResponse(res, 200, "Group created successfully!");
     }
     catch (error) {
         return ErrorResponse(res, error.code || 500, error.message || "Error while creating group!");
     }
 };
-const updateDetails = async (req, res) => {
+export const updateDetails = async (req, res) => {
     try {
         const groupId = req.params.id;
         const updateData = req.body;
         const reqUser = req.user?._id;
         if (updateData.name) {
-            const existingGroup = await Group.exists({ name: updateData.name, admin: reqUser, _id: { $ne: groupId } });
+            const existingGroup = await Group.exists({
+                name: updateData.name,
+                admin: reqUser,
+                _id: { $ne: groupId },
+            });
             if (existingGroup) {
                 throw new HttpError(400, "You already have another group with this name!");
             }
         }
-        const updatedGroup = await Group.findOneAndUpdate({ _id: groupId, admin: reqUser }, { $set: updateData }, { new: true });
+        const updatedGroup = await Group.findOneAndUpdate({ _id: groupId, admin: reqUser }, { $set: updateData }, { returnDocument: "after" });
         if (!updatedGroup) {
             throw new HttpError(404, "Group not found or you are not authorized!");
         }
@@ -62,7 +69,7 @@ const updateDetails = async (req, res) => {
         return ErrorResponse(res, error.code || 500, error.message || "Error while updating group details!");
     }
 };
-const updateMembers = async (req, res) => {
+export const updateMembers = async (req, res) => {
     try {
         const groupId = req.params.id;
         const { add, remove } = req.body;
@@ -75,7 +82,9 @@ const updateMembers = async (req, res) => {
         }
         const updateMembers = [...add, ...remove];
         if (updateMembers.length > 0) {
-            const existingUsers = await User.find({ _id: { $in: updateMembers } }).select("_id");
+            const existingUsers = await User.find({
+                _id: { $in: updateMembers },
+            }).select("_id");
             const validUserIds = existingUsers.map((cur) => cur._id.toString());
             const invalidIds = updateMembers.filter((cur) => !validUserIds.includes(cur));
             if (invalidIds.length > 0) {
@@ -87,7 +96,9 @@ const updateMembers = async (req, res) => {
             updateOps.$addToSet = { members: { $each: add } };
         if (remove.length)
             updateOps.$pull = { members: { $in: remove } };
-        const updatedGroup = await Group.findOneAndUpdate({ _id: groupId, admin: reqUser }, updateOps, { new: true });
+        const updatedGroup = await Group.findOneAndUpdate({ _id: groupId, admin: reqUser }, updateOps, {
+            returnDocument: "after",
+        });
         if (!updatedGroup) {
             throw new HttpError(404, "Group not found or you are not authorized!");
         }
@@ -97,7 +108,7 @@ const updateMembers = async (req, res) => {
         return ErrorResponse(res, error.code || 500, error.message || "Error while updating group member!");
     }
 };
-const fetchGroups = async (req, res) => {
+export const fetchGroups = async (req, res) => {
     try {
         const uid = new Types.ObjectId(req.user?._id);
         const groups = await Group.aggregate([
@@ -139,55 +150,3 @@ export const fetchMembers = async (gid) => {
     const group = await Group.findById(gid).select("-_id members").lean();
     return group?.members.map((id) => id.toString()) || [];
 };
-const groupMessage = async (req, res) => {
-    try {
-        const sender = req.user?._id;
-        const group = new Types.ObjectId(req.params.id);
-        const { type, text, file, reply } = (await req.body);
-        const interaction = new Date(Date.now());
-        let [message, conversation] = await Promise.all([
-            Message.create({
-                sender: sender,
-                group: group,
-                content: {
-                    type: type,
-                    text: text,
-                    file: file,
-                },
-                reply: reply && new Types.ObjectId(reply),
-            }),
-            Conversation.findOneAndUpdate({ participants: { $all: [group] } }, {
-                interaction: interaction,
-            }, { new: true }).populate("participants"),
-        ]);
-        let members = [];
-        if (!conversation) {
-            [conversation, members] = await Promise.all([
-                Conversation.create({
-                    participants: [group],
-                    models: "Group",
-                    interaction: interaction,
-                }),
-                fetchMembers(group),
-            ]);
-        }
-        else if (!members && conversation.models === "Group") {
-            members = (conversation.participants?.[0]).members || [];
-        }
-        else {
-            members = await fetchMembers(group);
-        }
-        const socketIds = members.flatMap((member) => getSocketId(member)).filter(Boolean);
-        io.to(socketIds).emit("message:receive", message);
-        io.to(socketIds).emit("conversation:updated", {
-            _id: group,
-            type: "group",
-            interaction,
-        });
-        return SuccessResponse(res, 201, "Message sent successfully!");
-    }
-    catch (error) {
-        return ErrorResponse(res, error.code || 500, error.message || "Error while changing group avatar!");
-    }
-};
-export { createGroup, updateDetails, updateMembers, fetchGroups, groupMessage };

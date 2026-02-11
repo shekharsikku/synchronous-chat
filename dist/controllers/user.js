@@ -7,7 +7,7 @@ import { hasEmptyField, createUserInfo, generateAccess } from "../utils/helpers.
 import { HttpError, ErrorResponse, SuccessResponse } from "../utils/response.js";
 import { unlinkFilesWithExtensions, extensionsToDelete, folderPath } from "../utils/unlink.js";
 const profileUpdateEvents = async (userData) => {
-    const userSocketIds = getSocketId(userData._id?.toString());
+    const userSocketIds = getSocketId(userData._id.toString());
     io.to(userSocketIds).emit("profile:update", userData);
 };
 const profileSetup = async (req, res) => {
