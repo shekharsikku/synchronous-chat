@@ -41,7 +41,7 @@ export const sendMessage = async (req: Request<{ id: string }, {}, MessageType, 
           models: isGroup ? "Group" : "User",
         },
         { interaction: interaction },
-        { new: true }
+        { returnDocument: "after" }
       ),
     ]);
 
@@ -202,7 +202,7 @@ export const deleteMessage = async (req: Request<{ id: string }>, res: Response)
         deletedAt: new Date(),
         $unset: { content: 1 },
       },
-      { new: true }
+      { returnDocument: "after" }
     ).lean<MessageInterface>({ transform: (doc) => nullToUndefined(doc) });
 
     if (!message) {
@@ -233,7 +233,7 @@ export const editMessage = async (req: Request<{ id: string }, {}, { text: strin
         type: "edited",
         "content.text": text,
       },
-      { new: true }
+      { returnDocument: "after" }
     ).lean<MessageInterface>({ transform: (doc) => nullToUndefined(doc) });
 
     if (!message) {
@@ -324,7 +324,7 @@ export const reactMessage = async (req: Request<{ id: string }, {}, { emoji: str
           },
         },
       ],
-      { new: true, updatePipeline: true }
+      { returnDocument: "after", updatePipeline: true }
     ).lean<MessageInterface>({ transform: (doc) => nullToUndefined(doc) });
 
     if (!message) {

@@ -50,7 +50,10 @@ export const createGroup = async (req: Request<{}, {}, CreateGroup>, res: Respon
       interaction: new Date().toISOString(),
     });
 
-    await Conversation.create({ participants: [newGroup._id], models: "Group" });
+    await Conversation.create({
+      participants: [newGroup._id],
+      models: "Group",
+    });
 
     return SuccessResponse(res, 200, "Group created successfully!");
   } catch (error: any) {
@@ -79,7 +82,7 @@ export const updateDetails = async (req: Request<{ id: string }, {}, UpdateDetai
     const updatedGroup = await Group.findOneAndUpdate(
       { _id: groupId, admin: reqUser },
       { $set: updateData },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     if (!updatedGroup) {
@@ -109,7 +112,10 @@ export const updateMembers = async (req: Request<{ id: string }, {}, UpdateMembe
     const updateMembers = [...add, ...remove];
 
     if (updateMembers.length > 0) {
-      const existingUsers = await User.find({ _id: { $in: updateMembers } }).select("_id");
+      const existingUsers = await User.find({
+        _id: { $in: updateMembers },
+      }).select("_id");
+
       const validUserIds = existingUsers.map((cur) => cur._id.toString());
       const invalidIds = updateMembers.filter((cur) => !validUserIds.includes(cur));
 
@@ -123,16 +129,9 @@ export const updateMembers = async (req: Request<{ id: string }, {}, UpdateMembe
     if (add.length) updateOps.$addToSet = { members: { $each: add } };
     if (remove.length) updateOps.$pull = { members: { $in: remove } };
 
-    const updatedGroup = await Group.findOneAndUpdate(
-      {
-        _id: groupId,
-        admin: reqUser,
-      },
-      updateOps,
-      {
-        new: true,
-      }
-    );
+    const updatedGroup = await Group.findOneAndUpdate({ _id: groupId, admin: reqUser }, updateOps, {
+      returnDocument: "after",
+    });
 
     if (!updatedGroup) {
       throw new HttpError(404, "Group not found or you are not authorized!");
