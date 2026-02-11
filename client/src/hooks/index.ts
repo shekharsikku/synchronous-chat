@@ -3,6 +3,7 @@ import { Socket } from "socket.io-client";
 import { toast } from "sonner";
 
 import api from "@/lib/api";
+import env from "@/lib/env";
 import { decryptMessage } from "@/lib/noble";
 import { useAuthStore, useChatStore, type Message } from "@/lib/zustand";
 
@@ -106,7 +107,7 @@ export const usePlainText = () => {
 
       return decryptMessage(message?.content?.text!, messageKey);
     } catch {
-      if (import.meta.env.DEV) console.log("Plain text decryption failed!");
+      if (env.isDev) console.log("Plain text decryption failed!");
       return "Decryption Error!";
     }
   };
@@ -184,7 +185,7 @@ export const useMessageActions = () => {
       setTranslated(response.data.data);
     } catch {
       setTranslated("");
-      if (import.meta.env.DEV) console.log("Language translation error!");
+      if (env.isDev) console.log("Language translation error!");
     }
   };
 

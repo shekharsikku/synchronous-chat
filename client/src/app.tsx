@@ -5,6 +5,7 @@ import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { Spinner } from "@/components/ui/spinner";
 import { useListeners, useAuthUser, useEvents } from "@/hooks";
 import { useTheme } from "@/lib/context";
+import env from "@/lib/env";
 import { getDeviceId } from "@/lib/utils";
 import { Auth, Chat, Profile } from "@/pages";
 
@@ -51,7 +52,7 @@ const App = () => {
   useEffect(() => {
     const deviceId = getDeviceId();
 
-    if (import.meta.env.DEV) {
+    if (env.isDev) {
       console.log(`🆔 Device ID: ${deviceId}`);
     }
 
@@ -60,7 +61,7 @@ const App = () => {
     }
 
     const disableRightClick = (event: MouseEvent) => {
-      if (import.meta.env.PROD) {
+      if (env.isProd) {
         event.preventDefault();
       }
     };

@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import api from "@/lib/api";
+import env from "@/lib/env";
 import { signUpSchema, signInSchema } from "@/lib/schema";
 import { validateEmail, validateDummyEmail, cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/zustand";
@@ -88,7 +89,7 @@ const Auth = () => {
         setUserInfo(result.data);
         setIsAuthenticated(true);
 
-        if (result.data.setup && import.meta.env.DEV) {
+        if (result.data.setup && env.isDev) {
           const deleted = await api.delete("/api/message/delete");
           console.log({ result: deleted.data });
         }

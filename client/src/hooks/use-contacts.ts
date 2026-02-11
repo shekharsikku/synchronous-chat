@@ -3,6 +3,7 @@ import { useEffect, useEffectEvent, useMemo } from "react";
 
 import api from "@/lib/api";
 import { useSocket } from "@/lib/context";
+import env from "@/lib/env";
 import { contactQuery } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/lib/zustand";
 
@@ -134,7 +135,7 @@ export const useContacts = () => {
           return [{ ...newContact, interaction: new Date().toISOString() }, ...uniqueContacts];
         });
       } catch (error: any) {
-        if (import.meta.env.DEV) console.error("Failed to fetch contact:", error.message);
+        if (env.isDev) console.error("Failed to fetch contact:", error.message);
       }
     };
 

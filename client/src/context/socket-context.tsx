@@ -3,10 +3,8 @@ import io, { Socket } from "socket.io-client";
 import { toast } from "sonner";
 
 import { SocketContext } from "@/lib/context";
+import env from "@/lib/env";
 import { useAuthStore } from "@/lib/zustand";
-
-const serverUrl = import.meta.env.VITE_SERVER_URL;
-const secretKey = import.meta.env.VITE_SECRET_KEY;
 
 const SocketProvider = ({ children }: { children: ReactNode }) => {
   const { userInfo } = useAuthStore();
@@ -22,10 +20,10 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (userInfo?.setup) {
-      const socket = io(serverUrl, {
+      const socket = io(env.serverUrl, {
         withCredentials: true,
         query: { userId: userInfo._id },
-        auth: { secretKey: secretKey },
+        auth: { publicKey: env.publicKey },
       });
 
       socket.on("connect", () => {

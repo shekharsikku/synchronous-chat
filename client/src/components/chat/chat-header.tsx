@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSocket, usePeer } from "@/lib/context";
+import env from "@/lib/env";
 import { cn, languageOptions, getAvatar, formatUtcTimestamp } from "@/lib/utils";
 import { useChatStore } from "@/lib/zustand";
 
@@ -265,7 +266,7 @@ const ChatHeader = () => {
           {/* Translate Language */}
           <DropdownMenu>
             <TooltipElement content="Translate" asChild>
-              <DropdownMenuTrigger asChild className={cn(import.meta.env.PROD && "hidden")}>
+              <DropdownMenuTrigger asChild className={cn(env.isProd && "hidden")}>
                 <HiOutlineLanguage size={18} className="tooltip-icon" />
               </DropdownMenuTrigger>
             </TooltipElement>

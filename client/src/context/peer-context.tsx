@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { PeerShare } from "@/components/chat";
 import { useSocket, PeerContext, type PeerInformation, type ResponseActions } from "@/lib/context";
+import env from "@/lib/env";
 import { useAuthStore } from "@/lib/zustand";
 
 const PeerProvider = ({ children }: { children: ReactNode }) => {
@@ -79,7 +80,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
         peer.on("open", (id) => {
           console.log("✅ Peer connected successfully!");
 
-          if (import.meta.env.DEV) {
+          if (env.isDev) {
             console.log("🆔 Peer ID:", id);
           }
 

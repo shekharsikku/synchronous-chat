@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 
 import { usePeer } from "@/lib/context";
+import env from "@/lib/env";
 import { useChatStore } from "@/lib/zustand";
 
 const DraggableVideo = () => {
@@ -131,7 +132,7 @@ const DraggableVideo = () => {
         </div>
       </div>
 
-      {!selectedChatData && import.meta.env.DEV && (
+      {!selectedChatData && env.isDev && (
         <>
           {/* Position Info */}
           <div className="fixed top-2 right-2 bg-background backdrop-blur-sm rounded p-4 shadow-2xl dark:shadow-black/80">

@@ -7,6 +7,7 @@ import { TooltipElement } from "@/components/chat/tooltip-element";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { usePeer } from "@/lib/context";
+import env from "@/lib/env";
 import { formatTimer } from "@/lib/utils";
 
 const StreamInfo = () => {
@@ -181,7 +182,7 @@ const StreamInfo = () => {
               <span>{callingInfo?.name}</span>
             </h2>
 
-            <div className={`${import.meta.env.PROD ? "hidden" : "w-full flex flex-col gap-2"}`}>
+            <div className={`${env.isProd ? "hidden" : "w-full flex flex-col gap-2"}`}>
               <p className="text-sm font-medium">
                 Local uid:{" "}
                 <span className="text-xs text-gray-500 dark:text-gray-200 font-normal">{localInfo?.uid}</span>

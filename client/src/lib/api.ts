@@ -1,5 +1,6 @@
 import axios, { type AxiosError, type AxiosRequestConfig } from "axios";
 
+import env from "@/lib/env";
 import { getDeviceId } from "@/lib/utils";
 
 interface RetryRequestConfig extends AxiosRequestConfig {
@@ -24,15 +25,13 @@ const processQueue = (error: any, refreshed = false) => {
   failedQueue = [];
 };
 
-const serverUrl = import.meta.env.VITE_SERVER_URL;
-
 const api = axios.create({
-  baseURL: serverUrl,
+  baseURL: env.serverUrl,
   withCredentials: true,
 });
 
 const auth = axios.create({
-  baseURL: serverUrl,
+  baseURL: env.serverUrl,
   withCredentials: true,
 });
 

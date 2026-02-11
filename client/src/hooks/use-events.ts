@@ -1,9 +1,8 @@
 import { useEffect, useRef, useEffectEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
+import env from "@/lib/env";
 import { useAuthStore, type UserInfo } from "@/lib/zustand";
-
-const serverUrl = import.meta.env.VITE_SERVER_URL;
 
 export const useEvents = () => {
   const navigate = useNavigate();
@@ -15,7 +14,7 @@ export const useEvents = () => {
     if (updatedProfile._id === userInfo?._id) {
       setUserInfo(updatedProfile);
       if (updatedProfile.setup) navigate("/chat");
-      if (import.meta.env.DEV) console.log("👍 Profile setup completed!");
+      if (env.isDev) console.log("👍 Profile setup completed!");
     }
   });
 
@@ -30,7 +29,7 @@ export const useEvents = () => {
 
     connectedUserIdRef.current = userInfo._id;
 
-    const eventSource = new EventSource(`${serverUrl}/api/events`, {
+    const eventSource = new EventSource(`${env.serverUrl}/api/events`, {
       withCredentials: true,
     });
 
