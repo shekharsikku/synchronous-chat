@@ -1,5 +1,5 @@
 import { type DataConnection } from "peerjs";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useReducer, useCallback, useRef, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { HiOutlineInformationCircle, HiOutlineDocumentText, HiOutlineXMark } from "react-icons/hi2";
 import { toast } from "sonner";
@@ -20,7 +20,78 @@ import { usePeer, useSocket } from "@/lib/context";
 import { formatSize, handleDownload } from "@/lib/utils";
 import { useChatStore } from "@/lib/zustand";
 
-const ShareStatus = ({ status }: { status: any }) => {
+type PeerShareStatus = "pending" | "connecting" | "connected" | "sending" | "receiving" | "completed" | "disconnected";
+
+type IncomingFileInfo = {
+  file: string;
+  size: string | number;
+};
+
+type PeerShareState = {
+  selectedFile: File | null;
+  peerShareModalOpen: boolean;
+  disableShareActions: boolean;
+  peerShareStatus: PeerShareStatus;
+  incomingFileInfo: IncomingFileInfo | null;
+};
+
+type PeerShareAction =
+  | { type: "SELECT_FILE"; file: File | null }
+  | { type: "OPEN_MODAL"; payload?: boolean }
+  | { type: "SET_STATUS"; status: PeerShareStatus }
+  | { type: "SET_DISABLE_ACTIONS"; payload: boolean }
+  | { type: "SET_INCOMING_FILE"; payload: IncomingFileInfo | null }
+  | { type: "RESET_SESSION" };
+
+const initialPeerShareState: PeerShareState = {
+  selectedFile: null,
+  peerShareModalOpen: false,
+  disableShareActions: false,
+  peerShareStatus: "pending",
+  incomingFileInfo: null,
+};
+
+function peerShareReducer(state: PeerShareState, action: PeerShareAction): PeerShareState {
+  switch (action.type) {
+    case "SELECT_FILE":
+      return {
+        ...state,
+        selectedFile: action.file,
+      };
+
+    case "OPEN_MODAL":
+      return {
+        ...state,
+        peerShareModalOpen: action.payload ?? !state.peerShareModalOpen,
+      };
+
+    case "SET_STATUS":
+      return {
+        ...state,
+        peerShareStatus: action.status,
+      };
+
+    case "SET_DISABLE_ACTIONS":
+      return {
+        ...state,
+        disableShareActions: action.payload,
+      };
+
+    case "SET_INCOMING_FILE":
+      return {
+        ...state,
+        incomingFileInfo: action.payload,
+      };
+
+    case "RESET_SESSION":
+      return initialPeerShareState;
+
+    default:
+      return state;
+  }
+}
+
+const ShareStatus = ({ status }: { status: PeerShareStatus }) => {
   return (
     <div className="flex items-center justify-start">
       <span className="text-sm text-gray-500">
@@ -43,25 +114,16 @@ const PeerShare = () => {
 
   const senderConfirmRef = useRef<HTMLButtonElement | null>(null);
   const receiverConfirmRef = useRef<HTMLButtonElement | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [openPeerRequestModal, setOpenPeerRequestModal] = useState(false);
-  const [disableShareActions, setDisableShareActions] = useState(false);
 
-  const [peerShareRequestStatus, setPeerShareRequestStatus] = useState<
-    "pending" | "connecting" | "connected" | "sending" | "receiving" | "completed" | "disconnected"
-  >("pending");
-
-  const [incomingFileInfo, setIncomingFileInfo] = useState<{
-    file: string;
-    size: string | number;
-  } | null>(null);
+  const [{ selectedFile, peerShareModalOpen, incomingFileInfo, peerShareStatus, disableShareActions }, dispatch] =
+    useReducer(peerShareReducer, initialPeerShareState);
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       const file = acceptedFiles[0] || null;
-      setSelectedFile(file);
+      dispatch({ type: "SELECT_FILE", file: file });
     },
-    [selectedFile] // eslint-disable-line react-hooks/exhaustive-deps
+    [selectedFile]
   );
 
   const maxFileSize = 512 * 1024 * 1024;
@@ -76,8 +138,8 @@ const PeerShare = () => {
 
   const unselectFile = (event: any) => {
     event.stopPropagation();
-    setSelectedFile(null);
-    setPeerShareRequestStatus("disconnected");
+    dispatch({ type: "SELECT_FILE", file: null });
+    dispatch({ type: "SET_STATUS", status: "disconnected" });
   };
 
   /** Sender who create file share request */
@@ -99,8 +161,8 @@ const PeerShare = () => {
       size: formatSize(file?.size),
     };
 
-    setDisableShareActions(true);
-    setPeerShareRequestStatus("pending");
+    dispatch({ type: "SET_DISABLE_ACTIONS", payload: true });
+    dispatch({ type: "SET_STATUS", status: "pending" });
     socket?.emit("before:share-request", { shareInfo });
     toast.info("Waiting for response from receiver!");
   };
@@ -113,13 +175,10 @@ const PeerShare = () => {
         name: shareInfo.name,
         pid: shareInfo.pid,
       });
-      setIncomingFileInfo({
-        file: shareInfo.file,
-        size: shareInfo.size,
-      });
 
-      setPeerShareRequestStatus("pending");
-      setOpenPeerRequestModal(true);
+      dispatch({ type: "SET_INCOMING_FILE", payload: { file: shareInfo.file, size: shareInfo.size } });
+      dispatch({ type: "SET_STATUS", status: "pending" });
+      dispatch({ type: "OPEN_MODAL", payload: true });
       toast.info(`${shareInfo.name} is requesting to send file!`);
     };
 
@@ -128,7 +187,7 @@ const PeerShare = () => {
     return () => {
       socket?.off("after:share-request", handleShareRequest);
     };
-  }, [socket]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [socket]);
 
   /** Response accept/reject from receiver side for file share */
   const responseShareRequest = (action: "accept" | "reject") => {
@@ -143,11 +202,11 @@ const PeerShare = () => {
     if (action === "reject") {
       delete shareInfo.pid;
       setRemoteInfo(null);
-      setIncomingFileInfo(null);
+      dispatch({ type: "SET_INCOMING_FILE", payload: null });
     }
 
     if (action === "accept") {
-      setDisableShareActions(true);
+      dispatch({ type: "SET_DISABLE_ACTIONS", payload: true });
     }
 
     socket?.emit("before:file-request", { shareInfo });
@@ -157,10 +216,10 @@ const PeerShare = () => {
   useEffect(() => {
     const handleShareRequest = ({ shareInfo }: { shareInfo: any }) => {
       if (shareInfo.res === "reject") {
-        setSelectedFile(null);
         setOpenPeerShareModal(false);
-        setDisableShareActions(false);
-        setPeerShareRequestStatus("disconnected");
+        dispatch({ type: "SELECT_FILE", file: null });
+        dispatch({ type: "SET_DISABLE_ACTIONS", payload: false });
+        dispatch({ type: "SET_STATUS", status: "disconnected" });
         toast.info(`${shareInfo.name} rejected to receive file!`);
         return;
       }
@@ -172,24 +231,24 @@ const PeerShare = () => {
           pid: shareInfo.pid,
         });
 
-        setPeerShareRequestStatus("connecting");
+        dispatch({ type: "SET_STATUS", status: "connecting" });
         const remotePeer = peerRef?.current?.connect(shareInfo?.pid);
 
         if (!remotePeer) {
-          setPeerShareRequestStatus("disconnected");
+          dispatch({ type: "SET_STATUS", status: "disconnected" });
           toast.error("Unable to connect with receiver peer!");
           return;
         }
 
         remotePeer?.on("open", () => {
-          setPeerShareRequestStatus("connected");
+          dispatch({ type: "SET_STATUS", status: "connected" });
           console.log("✅ Connected to receiver peer!");
 
           if (file) {
             const reader = new FileReader();
 
             reader.onload = (event) => {
-              setPeerShareRequestStatus("sending");
+              dispatch({ type: "SET_STATUS", status: "sending" });
               const fileData = event.target?.result;
 
               remotePeer.send({
@@ -214,20 +273,20 @@ const PeerShare = () => {
 
             setTimeout(() => {
               setRemoteInfo(null);
-              setSelectedFile(null);
+              dispatch({ type: "SELECT_FILE", file: null });
               toast.info("File has been sent successfully!");
             }, 2000);
           }
         });
 
         remotePeer.on("error", (err) => {
-          setPeerShareRequestStatus("disconnected");
+          dispatch({ type: "SET_STATUS", status: "disconnected" });
           console.error("❌ Peer connection error:", err.message);
         });
 
         remotePeer.on("close", () => {
-          setDisableShareActions(false);
-          setPeerShareRequestStatus("disconnected");
+          dispatch({ type: "SET_DISABLE_ACTIONS", payload: false });
+          dispatch({ type: "SET_STATUS", status: "disconnected" });
         });
       }
     };
@@ -237,7 +296,7 @@ const PeerShare = () => {
     return () => {
       socket?.off("after:file-request", handleShareRequest);
     };
-  }, [socket, file]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [socket, file]);
 
   useEffect(() => {
     if (!peerRef?.current) return;
@@ -245,7 +304,7 @@ const PeerShare = () => {
     const peerConn = peerRef.current;
 
     const handleConnection = (conn: DataConnection) => {
-      setPeerShareRequestStatus("receiving");
+      dispatch({ type: "SET_STATUS", status: "receiving" });
       console.log("✅ Connected to sender peer!");
 
       conn.on("data", (data: any) => {
@@ -257,9 +316,9 @@ const PeerShare = () => {
           conn.send({ type: "completed" });
 
           setRemoteInfo(null);
-          setIncomingFileInfo(null);
-          setDisableShareActions(false);
-          setPeerShareRequestStatus("completed");
+          dispatch({ type: "SET_INCOMING_FILE", payload: null });
+          dispatch({ type: "SET_DISABLE_ACTIONS", payload: false });
+          dispatch({ type: "SET_STATUS", status: "completed" });
           receiverConfirmRef.current?.click();
 
           setTimeout(() => {
@@ -275,7 +334,7 @@ const PeerShare = () => {
     return () => {
       peerConn.off("connection", handleConnection);
     };
-  }, [peerRef?.current]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [peerRef?.current]);
 
   return (
     <>
@@ -296,7 +355,11 @@ const PeerShare = () => {
 
               <div className="space-y-4 cursor-pointer">
                 {file ? (
-                  <div className="flex items-center justify-between p-3 rounded" onClick={(e) => e.stopPropagation()}>
+                  <div
+                    className="flex items-center justify-between p-3 rounded"
+                    role="button"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <HiOutlineDocumentText size={20} />
 
                     <div className="w-full flex items-center justify-center">
@@ -334,7 +397,7 @@ const PeerShare = () => {
           </div>
 
           {/** File Sharing Status */}
-          <ShareStatus status={peerShareRequestStatus} />
+          <ShareStatus status={peerShareStatus} />
 
           <AlertDialogFooter>
             <AlertDialogCancel onClick={unselectFile} disabled={disableShareActions}>
@@ -351,7 +414,7 @@ const PeerShare = () => {
       </AlertDialog>
 
       {/* Alert Dialog to receiver for handle request for file receive*/}
-      <AlertDialog open={openPeerRequestModal} onOpenChange={setOpenPeerRequestModal}>
+      <AlertDialog open={peerShareModalOpen} onOpenChange={(open) => dispatch({ type: "OPEN_MODAL", payload: open })}>
         <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
         <AlertDialogContent className="w-96 rounded-md shadow-lg transition-all hover:shadow-2xl select-none">
           <AlertDialogHeader>
@@ -373,7 +436,7 @@ const PeerShare = () => {
           </div>
 
           {/** File Sharing Status */}
-          <ShareStatus status={peerShareRequestStatus} />
+          <ShareStatus status={peerShareStatus} />
 
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => responseShareRequest("reject")} disabled={disableShareActions}>

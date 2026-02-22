@@ -81,8 +81,8 @@ const DraggableVideo = () => {
     if (isDragging) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
-      document.addEventListener("touchmove", handleTouchMove);
-      document.addEventListener("touchend", handleTouchEnd);
+      document.addEventListener("touchmove", handleTouchMove, { passive: true });
+      document.addEventListener("touchend", handleTouchEnd, { passive: true });
     }
 
     return () => {
@@ -91,7 +91,7 @@ const DraggableVideo = () => {
       document.removeEventListener("touchmove", handleTouchMove);
       document.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [isDragging]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isDragging]);
 
   // Custom methods and states and video ref for calling interactions
   const { localVideoRef, remoteVideoRef, muteUser, remoteMute } = usePeer();
@@ -113,6 +113,7 @@ const DraggableVideo = () => {
         }}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
+        role="grid"
       >
         <div className="w-full h-full relative rounded-md aspect-video bg-transparent">
           <video

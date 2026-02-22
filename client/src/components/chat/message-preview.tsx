@@ -9,6 +9,10 @@ const MessagePreview = () => {
   const { plainText } = usePlainText();
   const { replyTo, setReplyTo, selectedChatData } = useChatStore();
 
+  const isReplyingToSelf = !!replyTo && !!selectedChatData && replyTo.sender === selectedChatData._id;
+  const replyName = isReplyingToSelf ? selectedChatData?.name : "Yourself";
+  const previewText = replyTo?.content?.type === "text" ? plainText(replyTo) : "📎Attachment";
+
   return (
     <div
       className={cn(
@@ -20,12 +24,10 @@ const MessagePreview = () => {
         <div className="flex items-center">
           {replyTo && (
             <>
-              <span className="text-sm font-medium">
-                Replying to {replyTo?.sender === selectedChatData?._id ? `${selectedChatData?.name}` : "Yourself"}
-              </span>
+              <span className="text-sm font-medium">Replying to {replyName}</span>
               <HiOutlineSlash size={20} />
               <span className="text-sm max-w-44 md:max-w-72 lg:max-w-96 inline-block align-middle truncate">
-                {replyTo?.content?.type === "text" ? plainText(replyTo) : "📎Attachment"}
+                {previewText}
               </span>
             </>
           )}

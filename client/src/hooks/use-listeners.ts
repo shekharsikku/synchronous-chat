@@ -87,7 +87,7 @@ export const useListeners = () => {
             });
 
             if (pageParam) params.append("before", pageParam);
-            if (currChat.type === "group") params.append("group", "true");
+            if (currChat?.type === "group") params.append("group", "true");
 
             const response = await api.get(`/api/message/fetch/${chatKey}?${params.toString()}`);
             return response.data.data;

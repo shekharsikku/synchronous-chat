@@ -4,17 +4,15 @@ import { Socket } from "socket.io-client";
 
 import type { Dispatch, SetStateAction, RefObject } from "react";
 
-export interface SocketInterface {
+export type SocketState = {
   socket: Socket | null;
   isConnected: boolean;
-  onlineUsers: object;
-}
+  onlineUsers: Record<string, any>;
+};
 
-export const SocketContext = createContext<SocketInterface | undefined>(undefined);
+export const SocketContext = createContext<SocketState | undefined>(undefined);
 
-/** Custom hook for use socket.io context in app */
-
-export const useSocket = (): SocketInterface => {
+export const useSocket = (): SocketState => {
   const context = useContext(SocketContext);
   if (!context) {
     throw new Error("useSocket must be used within a SocketProvider");

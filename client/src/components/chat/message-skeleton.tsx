@@ -1,11 +1,22 @@
+import { useMemo } from "react";
+import { cn } from "@/lib/utils";
+
 const MessageSkeleton = ({ count }: { count: number }) => {
+  const items = useMemo(
+    () =>
+      Array.from({ length: count }, (_, index) => ({
+        key: `skeleton-${count}-${index}`,
+        idx: index,
+      })),
+    [count]
+  );
+
   return (
     <div className="flex flex-col gap-4 transition-all duration-300">
-      {[...Array(count)].map((_, i) => (
+      {items.map(({ key, idx: i }) => (
         <div
-          key={i}
-          className={`flex-1 flex-col gap-4
-          ${i % 2 === 0 ? "justify-start" : "justify-end"} ${i % 2 === 0 ? "lg:ml-2" : "lg:mr-2"}`}
+          key={key}
+          className={cn("flex-1 flex-col gap-4", i % 2 === 0 ? "justify-start lg:ml-2" : "justify-end lg:mr-2")}
         >
           <div
             className={`border border-gray-200 p-3 rounded-sm my-2 cursor-default glow bg-linear-to-r 

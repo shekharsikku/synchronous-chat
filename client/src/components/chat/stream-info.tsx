@@ -46,24 +46,21 @@ const StreamInfo = () => {
 
   /** Call timer */
   useEffect(() => {
-    if (callingActive) {
-      /** Start the timer */
-      timerRef.current = setInterval(() => {
-        setCallTimer((prevTimer) => prevTimer + 1);
-      }, 1000);
-    } else {
-      /** Stop and reset the timer when the call is not accepted */
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
+    if (!callingActive) {
       setCallTimer(0);
+      return;
     }
+
+    /** Start the timer */
+    timerRef.current = setInterval(() => {
+      setCallTimer((prevTimer) => prevTimer + 1);
+    }, 1000);
 
     /** Cleanup on component unmount or call end */
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     };
   }, [callingActive]);

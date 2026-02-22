@@ -1,5 +1,5 @@
 import React, {
-  useState,
+  useReducer,
   useEffect,
   useRef,
   type ChangeEvent,
@@ -32,6 +32,59 @@ import type { EmojiClickData, Theme } from "emoji-picker-react";
 
 const EmojiPicker = React.lazy(() => import("emoji-picker-react"));
 
+type MessageInputState = {
+  message: string;
+  isTyping: boolean;
+  isSending: boolean;
+  emojiPicker: boolean;
+  selectedImage: any;
+};
+
+type MessageInputAction =
+  | { type: "SET_MESSAGE"; payload: string }
+  | { type: "APPEND_EMOJI"; payload: string }
+  | { type: "SET_TYPING"; payload: boolean }
+  | { type: "SET_SENDING"; payload: boolean }
+  | { type: "TOGGLE_EMOJI" }
+  | { type: "SET_IMAGE"; payload: any }
+  | { type: "RESET" };
+
+const initialMessageInputState: MessageInputState = {
+  message: "",
+  isTyping: false,
+  isSending: false,
+  emojiPicker: false,
+  selectedImage: null,
+};
+
+function messageInputReducer(state: MessageInputState, action: MessageInputAction): MessageInputState {
+  switch (action.type) {
+    case "SET_MESSAGE":
+      return { ...state, message: action.payload };
+
+    case "APPEND_EMOJI":
+      return { ...state, message: state.message + action.payload };
+
+    case "SET_TYPING":
+      return { ...state, isTyping: action.payload };
+
+    case "SET_SENDING":
+      return { ...state, isSending: action.payload };
+
+    case "TOGGLE_EMOJI":
+      return { ...state, emojiPicker: !state.emojiPicker };
+
+    case "SET_IMAGE":
+      return { ...state, selectedImage: action.payload };
+
+    case "RESET":
+      return initialMessageInputState;
+
+    default:
+      return state;
+  }
+}
+
 const MessageBar = () => {
   const { theme } = useTheme();
   const { socket } = useSocket();
@@ -44,11 +97,10 @@ const MessageBar = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [message, setMessage] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const [emojiPicker, setEmojiPicker] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<any | null>(null);
+  const [{ message, isTyping, isSending, emojiPicker, selectedImage }, dispatch] = useReducer(
+    messageInputReducer,
+    initialMessageInputState
+  );
 
   useEffect(() => {
     if (!inputRef.current || isMobile) return;
@@ -87,7 +139,7 @@ const MessageBar = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (emojiRef.current && !emojiRef.current.contains(event.target as Node)) {
-        setEmojiPicker((prev) => !prev);
+        dispatch({ type: "TOGGLE_EMOJI" });
       }
     };
 
@@ -98,7 +150,7 @@ const MessageBar = () => {
     };
   }, [emojiRef]);
 
-  const handleImageFile = async (imageFile: File) => {
+  const handleImageFile = useCallback(async (imageFile: File) => {
     /** Size is 6 MB and converted into Bytes */
     const maxBytesAllow = 6 * 1024 * 1024;
 
@@ -114,12 +166,12 @@ const MessageBar = () => {
 
     try {
       const base64 = await convertToBase64(imageFile);
-      setSelectedImage(base64);
-      setMessage(imageFile?.name);
+      dispatch({ type: "SET_IMAGE", payload: base64 });
+      dispatch({ type: "SET_MESSAGE", payload: imageFile.name });
     } catch (error: any) {
       console.error(`Error while attaching file: ${error.message}`);
     }
-  };
+  }, []);
 
   const handleDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -128,20 +180,21 @@ const MessageBar = () => {
 
       await handleImageFile(imageFile);
     },
-    [isSending, editDialog]
+    [isSending, editDialog, handleImageFile]
   );
 
   const { getRootProps, getInputProps } = useDropzone({
     onDrop: handleDrop,
     noClick: true,
     noKeyboard: true,
-    accept: {
-      "image/*": [],
-    },
+    accept: { "image/*": [] },
   });
 
   const handleAddEmoji = (emoji: EmojiClickData) => {
-    setMessage((msg) => msg + emoji.emoji);
+    dispatch({
+      type: "APPEND_EMOJI",
+      payload: emoji.emoji,
+    });
   };
 
   const handleAttachClick = () => {
@@ -152,8 +205,8 @@ const MessageBar = () => {
 
   const handleClearMessage = (reply = false) => {
     if (reply) setReplyTo(null);
-    setMessage("");
-    setSelectedImage(null);
+    dispatch({ type: "SET_MESSAGE", payload: "" });
+    dispatch({ type: "SET_IMAGE", payload: null });
   };
 
   const handleAttachChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -169,30 +222,34 @@ const MessageBar = () => {
 
   const handleSendMessage = async () => {
     if (isSending || message === "" || !selectedChatData?._id) return;
-    setIsSending(true);
+    dispatch({ type: "SET_SENDING", payload: true });
+
+    const chatId = selectedChatData._id;
+    const isFile = !!selectedImage;
+
+    const messageData: MessageData = {
+      type: isFile ? "file" : "text",
+    };
+
+    if (isFile && message !== "") {
+      messageData.file = selectedImage;
+    } else {
+      messageData.text = encryptMessage(message, chatId);
+    }
+
+    if (replyTo) messageData.reply = replyTo._id;
 
     try {
-      const messageData: MessageData = {
-        type: selectedImage ? "file" : "text",
-      };
+      if (selectedImage) dispatch({ type: "SET_MESSAGE", payload: "Sending..." });
 
-      if (selectedImage && message !== "") {
-        messageData.file = selectedImage;
-      } else {
-        messageData.text = encryptMessage(message, selectedChatData?._id!);
-      }
-
-      if (replyTo) messageData.reply = replyTo._id;
-      if (selectedImage) setMessage("Sending...");
-
-      await api.post(`/api/message/send/${selectedChatData?._id}?type=${selectedChatType}`, messageData);
+      await api.post(`/api/message/send/${chatId}?type=${selectedChatType}`, messageData);
 
       handleClearMessage(!!replyTo);
     } catch (error: any) {
-      toast.error(error.response.data.message);
-    } finally {
-      setIsSending(false);
+      toast.error(error.response.data.message ?? "Failed to send message");
     }
+
+    dispatch({ type: "SET_SENDING", payload: false });
   };
 
   const handleEnterKeyDown: KeyboardEventHandler<HTMLInputElement> = (e) => {
@@ -226,7 +283,8 @@ const MessageBar = () => {
     if (!selectedChatData?._id || !userInfo?._id) return;
 
     if (!isTyping) {
-      setIsTyping(true);
+      dispatch({ type: "SET_TYPING", payload: true });
+
       socket?.emit("typing:start", {
         selectedUser: selectedChatData?._id,
         currentUser: userInfo?._id,
@@ -238,7 +296,8 @@ const MessageBar = () => {
     }
 
     typingTimeoutRef.current = setTimeout(() => {
-      setIsTyping(false);
+      dispatch({ type: "SET_TYPING", payload: false });
+
       socket?.emit("typing:stop", {
         selectedUser: selectedChatData?._id,
         currentUser: userInfo?._id,
@@ -250,7 +309,7 @@ const MessageBar = () => {
     if (!isTyping) return;
     if (!selectedChatData?._id || !userInfo?._id) return;
 
-    setIsTyping(false);
+    dispatch({ type: "SET_TYPING", payload: false });
 
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
@@ -272,11 +331,25 @@ const MessageBar = () => {
   }, []);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setMessage(event.target.value);
+    dispatch({ type: "SET_MESSAGE", payload: event.target.value });
     if (selectedChatType === "contact") handleTyping();
   };
 
-  const { pasteFromClipboard } = useClipboard(inputRef, setMessage);
+  const pasteMessage = (value: string | ((prev: string) => string)) => {
+    if (typeof value === "function") {
+      dispatch({
+        type: "SET_MESSAGE",
+        payload: value(message),
+      });
+    } else {
+      dispatch({
+        type: "SET_MESSAGE",
+        payload: value,
+      });
+    }
+  };
+
+  const { pasteFromClipboard } = useClipboard(inputRef, pasteMessage);
 
   return (
     <footer className="h-bar w-full border-t flex items-center justify-center p-2">
@@ -288,7 +361,7 @@ const MessageBar = () => {
 
         <div className="flex gap-4 relative">
           <TooltipElement content="Emojis" disabled={isSending}>
-            <HiOutlineFaceSmile size={20} onClick={() => setEmojiPicker((prev) => !prev)} className="tooltip-icon" />
+            <HiOutlineFaceSmile size={20} onClick={() => dispatch({ type: "TOGGLE_EMOJI" })} className="tooltip-icon" />
           </TooltipElement>
 
           {emojiPicker && (

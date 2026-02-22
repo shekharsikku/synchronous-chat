@@ -25,7 +25,7 @@ interface SignInInterface {
 const Auth = () => {
   const navigate = useNavigate();
   const { setIsAuthenticated, setUserInfo } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, setIsPending] = useState(false);
 
   /** Hookform Zod Resolver - SignUp */
   const signUpForm = useForm<z.infer<typeof signUpSchema>>({
@@ -45,16 +45,17 @@ const Auth = () => {
       return;
     }
 
+    setIsPending(true);
+
     try {
-      setIsLoading(true);
       const response = await api.post("/api/auth/sign-up", values);
       toast.success(response.data.message);
       signUpForm.reset();
     } catch (error: any) {
       toast.error(error.response.data.message);
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsPending(false);
   };
 
   /** Hookform Zod Resolver - SignIn */
@@ -67,48 +68,51 @@ const Auth = () => {
   });
 
   const signInSubmit = async (values: z.infer<typeof signInSchema>) => {
+    setIsPending(true);
+
+    const details: SignInInterface = {
+      password: values.password,
+    };
+
+    const isEmail = validateEmail(values.credential);
+
+    if (isEmail) {
+      details.email = values.credential;
+    } else {
+      details.username = values.credential;
+    }
+
     try {
-      setIsLoading(true);
+      const { data: result } = await api.post("/api/auth/sign-in", details);
 
-      const details: SignInInterface = {
-        password: values.password,
-      };
-
-      const isEmail = validateEmail(values.credential);
-
-      if (isEmail) {
-        details.email = values.credential;
-      } else {
-        details.username = values.credential;
+      if (!result.success) {
+        toast.error("Sign in failed!");
+        return;
       }
 
-      const response = await api.post("/api/auth/sign-in", details);
-      const result = await response.data;
+      setUserInfo(result.data);
+      setIsAuthenticated(true);
 
-      if (result.success) {
-        setUserInfo(result.data);
-        setIsAuthenticated(true);
-
-        if (result.data.setup && env.isDev) {
-          const deleted = await api.delete("/api/message/delete");
-          console.log({ result: deleted.data });
-        }
+      if (result.data.setup && env.isDev) {
+        const deleted = await api.delete("/api/message/delete");
+        console.log({ result: deleted.data });
       }
+
+      const redirectPath = result.data?.setup ? "/chat" : "/profile";
 
       if (result.data.setup) {
         toast.success(result.message);
-        navigate("/chat", { replace: true });
       } else {
         toast.info(result.message);
-        navigate("/profile", { replace: true });
       }
 
+      navigate(redirectPath, { replace: true });
       signInForm.reset();
     } catch (error: any) {
       toast.error(error.response.data.message);
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsPending(false);
   };
 
   return (
@@ -160,7 +164,6 @@ const Auth = () => {
                                 type="text"
                                 placeholder="Email or Username"
                                 autoComplete="off"
-                                autoFocus
                                 {...field}
                               />
                             </FormControl>
@@ -194,7 +197,7 @@ const Auth = () => {
                       className="w-full cursor-pointer font-semibold mt-1"
                       size="lg"
                       type="submit"
-                      disabled={isLoading}
+                      disabled={isPending}
                     >
                       Sign In
                     </Button>
@@ -271,7 +274,7 @@ const Auth = () => {
                       className="w-full cursor-pointer font-semibold mt-1"
                       size="lg"
                       type="submit"
-                      disabled={isLoading}
+                      disabled={isPending}
                     >
                       Sign Up
                     </Button>

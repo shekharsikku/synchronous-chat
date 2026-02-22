@@ -117,7 +117,7 @@ export const usePlainText = () => {
 
 export const useClipboard = (
   inputRef: RefObject<HTMLInputElement | null>,
-  setMessage: Dispatch<SetStateAction<string>>
+  pasteMessage: (value: string | ((prev: string) => string)) => void
 ) => {
   const pasteFromClipboard = async () => {
     try {
@@ -131,7 +131,7 @@ export const useClipboard = (
         const value = element.value.substring(0, start) + text + element.value.substring(end);
 
         element.value = value;
-        setMessage(value);
+        pasteMessage(value);
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             element.setSelectionRange(start + text.length, start + text.length);

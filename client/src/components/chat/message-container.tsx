@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useEffectEvent, type RefObject } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState, useEffectEvent, type RefObject } from "react";
 import { HiOutlineArrowSmallDown } from "react-icons/hi2";
 import { useInView } from "react-intersection-observer";
 
@@ -108,12 +108,14 @@ const MessageContainer = () => {
     });
   };
 
+  const pages = data?.pages;
+
   /** Flatten + dedupe messages */
   const messages: Message[] = React.useMemo(() => {
-    if (!data?.pages) return [];
+    if (!pages) return [];
 
     /** Create a flattened array with pages of message */
-    const flattened = [...data.pages].reverse().flat();
+    const flattened = [...pages].reverse().flat();
 
     /* Optional: dedupe by _id while preserving order */
     const seen = new Set<string>();
@@ -123,13 +125,15 @@ const MessageContainer = () => {
       seen.add(msg._id);
       return true;
     });
-  }, [data?.pages]);
+  }, [pages]);
 
   /** Skeleton count — only calc once */
-  useEffect(() => {
+  useLayoutEffect(() => {
     const scrollHeight = scrollSectionRef.current?.clientHeight ?? 800;
     setSkeletonCount(Math.ceil(scrollHeight / 90));
+  }, []);
 
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const element = scrollSectionRef.current;
       if (!element) return;
@@ -227,7 +231,7 @@ const MessageContainer = () => {
       }
     };
 
-    scrollContainer.addEventListener("scroll", handleScrollFetch);
+    scrollContainer.addEventListener("scroll", handleScrollFetch, { passive: true });
 
     return () => {
       scrollContainer.removeEventListener("scroll", handleScrollFetch);

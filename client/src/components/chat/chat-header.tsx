@@ -113,6 +113,7 @@ const ChatHeader = () => {
                   <div className="size-max">
                     <img
                       src={selectedChatData.avatar || groupAvatar}
+                      alt="Group Avatar"
                       className="size-16 md:size-20 rounded-full border-4 border-white object-cover shadow-lg transition-all"
                     />
                   </div>

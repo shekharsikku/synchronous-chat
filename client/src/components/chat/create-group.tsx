@@ -76,8 +76,9 @@ const CreateGroup = () => {
       return;
     }
 
+    setIsPending(true);
+
     try {
-      setIsPending(true);
       const response = await api.post("api/group/create", values);
 
       if (response.data.success) {
@@ -91,9 +92,9 @@ const CreateGroup = () => {
       }
     } catch (error: any) {
       toast.error(error.response.data.message);
-    } finally {
-      setIsPending(false);
     }
+
+    setIsPending(false);
   };
 
   const handleSelectToggle = (id: string) => {

@@ -80,6 +80,7 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
               isSender ? "bg-gray-100 dark:bg-gray-100/5" : "bg-gray-50 dark:bg-gray-50/5"
             )}
             onClick={() => scrollMessage(replyMessage._id)}
+            role="button"
           >
             {replyMessage.type === "deleted" ? (
               <span className="flex items-center gap-1 italic">

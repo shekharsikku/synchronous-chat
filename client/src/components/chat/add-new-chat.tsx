@@ -36,8 +36,9 @@ const AddNewChat = () => {
 
   const searchContacts = useDebounce(async (searchTerm: string) => {
     if (searchTerm.trim().length < 3) return;
+    setIsFetching(true);
+
     try {
-      setIsFetching(true);
       const newContact = await queryClient.fetchQuery({
         queryKey: ["search", searchTerm],
         queryFn: async () => {
@@ -50,9 +51,9 @@ const AddNewChat = () => {
       setSearchedContacts(newContact);
     } catch {
       setSearchedContacts([]);
-    } finally {
-      setTimeout(() => setIsFetching(false), 500);
     }
+
+    setTimeout(() => setIsFetching(false), 500);
   }, 1500);
 
   const selectNewContact = (contact: UserInfo) => {

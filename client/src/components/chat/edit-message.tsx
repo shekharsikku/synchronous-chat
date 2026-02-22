@@ -34,18 +34,21 @@ const EditMessage: React.FC<EditMessageProps> = ({ editMessageDialog, setEditMes
   }, [messageForEdit]);
 
   const editSelectedMessage = async () => {
+    if (!selectedChatData) return;
     setIsLoading(true);
+
     try {
+      const encryptedText = encryptMessage(newMessage, selectedChatData._id);
       const response = await api.patch(`/api/message/edit/${messageForEdit.id}`, {
-        text: encryptMessage(newMessage, selectedChatData?._id!),
+        text: encryptedText,
       });
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
-    } finally {
-      setEditDialog(false);
-      setIsLoading(false);
     }
+
+    setEditDialog(false);
+    setIsLoading(false);
   };
 
   return (
