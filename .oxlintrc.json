@@ -38,5 +38,5 @@
     "builtin": true
   },
   "globals": {},
-  "ignorePatterns": ["node_modules", "dist", "test"]
+  "ignorePatterns": ["node_modules", ".idea", ".vscode", ".env", ".env.*", "**/dist", "**/test"]
 }
