@@ -138,9 +138,6 @@ export const useChatStore = create<{
 
   messageStats: { sent: number; received: number };
   setMessageStats: (messages: Message[], selectedChatId: string) => void;
-
-  allChats: any[];
-  setAllChats: (allChats: any[]) => void;
 }>((set) => ({
   selectedChatType: null,
   setSelectedChatType: (selectedChatType: ChatType) => set({ selectedChatType }),
@@ -202,7 +199,4 @@ export const useChatStore = create<{
 
     set({ messageStats: { sent, received } });
   },
-
-  allChats: [],
-  setAllChats: (allChats: any[]) => set({ allChats }),
 }));

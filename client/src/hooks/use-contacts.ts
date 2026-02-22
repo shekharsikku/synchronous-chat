@@ -75,6 +75,19 @@ export const useContacts = () => {
     ...queryOptions,
   });
 
+  const allChats = useMemo(() => {
+    const merged = [
+      ...(contacts ?? []).map((contact) => ({ ...contact, type: "contact" as const })),
+      ...(groups ?? []).map((group) => ({ ...group, type: "group" as const })),
+    ];
+
+    return merged.sort((currentChat, nextChat) => {
+      const currentTime = currentChat.interaction ? Date.parse(currentChat.interaction) : 0;
+      const nextTime = nextChat.interaction ? Date.parse(nextChat.interaction) : 0;
+      return nextTime - currentTime;
+    });
+  }, [contacts, groups]);
+
   const updateChatInteraction = useEffectEvent((details: InteractionDetails) => {
     if (selectedChatData && selectedChatData._id === details._id) {
       setSelectedChatData({
@@ -146,5 +159,5 @@ export const useContacts = () => {
     };
   }, [socket, userInfo?._id, queryClient]);
 
-  return { contacts, groups, fetching: ctsFetching || gpsFetching };
+  return { contacts, groups, allChats, fetching: ctsFetching || gpsFetching };
 };

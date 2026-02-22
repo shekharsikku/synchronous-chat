@@ -14,9 +14,9 @@ export const useListeners = () => {
   const notificationAudio = useRef<HTMLAudioElement | null>(null);
 
   const { socket } = useSocket();
-  const { contacts } = useContacts();
+  const { contacts, allChats } = useContacts();
   const { userInfo, setUserInfo } = useAuthStore();
-  const { selectedChatData, isSoundAllow, allChats } = useChatStore();
+  const { selectedChatData, isSoundAllow } = useChatStore();
 
   useEffect(() => {
     notificationAudio.current = new Audio(notificationSound);
