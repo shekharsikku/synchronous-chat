@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useContacts } from "@/hooks";
 import { usePeer, useSocket } from "@/lib/context";
 import { cn } from "@/lib/utils";
-import { type UserInfo, type GroupInfo, type ChatType, useChatStore } from "@/lib/zustand";
+import { useChatStore } from "@/lib/zustand";
 
 const ContactsContainer = () => {
   const { callingActive } = usePeer();

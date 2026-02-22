@@ -7,7 +7,7 @@ import { RenderDMMessages } from "@/components/chat/render-dm-messages";
 import { Button } from "@/components/ui/button";
 import { useMessages, useContacts } from "@/hooks";
 import { mergeRefs, formatMsgTimestamp } from "@/lib/utils";
-import { type Message, useChatStore, useAuthStore } from "@/lib/zustand";
+import { useChatStore, useAuthStore } from "@/lib/zustand";
 
 interface RenderMessagesProps {
   messages: Message[];

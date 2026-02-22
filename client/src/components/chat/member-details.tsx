@@ -4,8 +4,6 @@ import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn, getAvatar, contactQuery } from "@/lib/utils";
 
-import type { UserInfo } from "@/lib/zustand";
-
 interface GroupMembersDetails {
   contacts?: UserInfo[];
   userInfo: UserInfo;

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import api from "@/lib/api";
 import env from "@/lib/env";
 import { decryptMessage } from "@/lib/noble";
-import { useAuthStore, useChatStore, type Message } from "@/lib/zustand";
+import { useAuthStore, useChatStore } from "@/lib/zustand";
 
 import type { RefObject, SetStateAction, Dispatch } from "react";
 

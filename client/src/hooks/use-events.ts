@@ -2,7 +2,7 @@ import { useEffect, useRef, useEffectEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
 import env from "@/lib/env";
-import { useAuthStore, type UserInfo } from "@/lib/zustand";
+import { useAuthStore } from "@/lib/zustand";
 
 export const useEvents = () => {
   const navigate = useNavigate();

@@ -8,15 +8,13 @@ import { twMerge } from "tailwind-merge";
 import { noAvatar, maleAvatar, femaleAvatar } from "@/assets/images";
 import api from "@/lib/api";
 
-import type { Message, UserInfo } from "@/lib/zustand";
-
 dayjs.extend(localizedFormat);
 
-export const formatUtcTimestamp = (timestamp: any) => {
+export const formatUtcTimestamp = (timestamp: TimeStamp) => {
   return dayjs(timestamp).format("MMM DD, YYYY | h:mm A");
 };
 
-export const formatMsgTimestamp = (timestamp?: Date) => {
+export const formatMsgTimestamp = (timestamp?: TimeStamp) => {
   const createdAt = dayjs(timestamp);
 
   const dateLabel = createdAt.isSame(dayjs(), "day")
@@ -196,11 +194,11 @@ export const languageOptions = [
   },
 ];
 
-export const countMessages = (messages: any, selectedChat: any) => {
+export const countMessages = (messages: Message[], selectedChat: any) => {
   let sent = 0;
   let received = 0;
 
-  messages.forEach((message: any) => {
+  messages.forEach((message: Message) => {
     if (message.sender === selectedChat._id) {
       received += 1;
     } else if (message.recipient === selectedChat._id) {

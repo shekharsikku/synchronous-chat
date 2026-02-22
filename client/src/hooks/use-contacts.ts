@@ -7,7 +7,7 @@ import env from "@/lib/env";
 import { contactQuery } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/lib/zustand";
 
-import type { UserInfo, Message, GroupInfo } from "@/lib/zustand";
+// import type { UserInfo, Message, GroupInfo } from "@/lib/zustand";
 
 interface InteractionDetails {
   _id: string;
@@ -82,8 +82,8 @@ export const useContacts = () => {
     ];
 
     return merged.sort((currentChat, nextChat) => {
-      const currentTime = currentChat.interaction ? Date.parse(currentChat.interaction) : 0;
-      const nextTime = nextChat.interaction ? Date.parse(nextChat.interaction) : 0;
+      const currentTime = currentChat.interaction ? Date.parse(currentChat.interaction.toString()) : 0;
+      const nextTime = nextChat.interaction ? Date.parse(nextChat.interaction.toString()) : 0;
       return nextTime - currentTime;
     });
   }, [contacts, groups]);

@@ -26,7 +26,7 @@ import api from "@/lib/api";
 import { useSocket, useTheme } from "@/lib/context";
 import { encryptMessage } from "@/lib/noble";
 import { convertToBase64 } from "@/lib/utils";
-import { useChatStore, useAuthStore, type MessageData } from "@/lib/zustand";
+import { useChatStore, useAuthStore } from "@/lib/zustand";
 
 import type { EmojiClickData, Theme } from "emoji-picker-react";
 

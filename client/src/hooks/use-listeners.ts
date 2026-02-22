@@ -6,7 +6,7 @@ import notificationSound from "@/assets/sounds/message-alert.mp3";
 import { useContacts } from "@/hooks";
 import api from "@/lib/api";
 import { useSocket } from "@/lib/context";
-import { useAuthStore, useChatStore, type GroupInfo, type Message, type UserInfo } from "@/lib/zustand";
+import { useAuthStore, useChatStore } from "@/lib/zustand";
 
 export const useListeners = () => {
   const queryClient = useQueryClient();

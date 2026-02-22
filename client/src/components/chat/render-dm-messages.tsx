@@ -32,7 +32,7 @@ import {
   handleDownload,
   copyToClipboard,
 } from "@/lib/utils";
-import { useChatStore, useAuthStore, type Message } from "@/lib/zustand";
+import { useChatStore, useAuthStore } from "@/lib/zustand";
 
 interface RenderDMMessagesProps {
   message: Message;

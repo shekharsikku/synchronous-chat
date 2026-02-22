@@ -43,7 +43,7 @@ import { useSignOut } from "@/hooks";
 import api from "@/lib/api";
 import { useSocket } from "@/lib/context";
 import { changePasswordSchema, profileUpdateSchema, genders } from "@/lib/schema";
-import { useAuthStore, UserInfo } from "@/lib/zustand";
+import { useAuthStore } from "@/lib/zustand";
 
 type ProfileState = {
   isLoading: boolean;

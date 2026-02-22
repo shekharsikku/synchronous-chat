@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDebounce, useContacts } from "@/hooks";
 import api from "@/lib/api";
 import { getAvatar } from "@/lib/utils";
-import { useAuthStore, useChatStore, type UserInfo } from "@/lib/zustand";
+import { useAuthStore, useChatStore } from "@/lib/zustand";
 
 const EXCLUDED_KEYS = new Set(["setup", "createdAt", "updatedAt", "__v"]);
 

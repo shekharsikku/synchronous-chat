@@ -1,7 +1,6 @@
 import { groupAvatar } from "@/assets/images";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, getAvatar } from "@/lib/utils";
-import { type ChatType } from "@/lib/zustand";
 
 interface ContactElementProps {
   contact: any;
