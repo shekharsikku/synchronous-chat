@@ -16,8 +16,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { usePeer, useSocket } from "@/lib/context";
-import { formatSize, handleDownload } from "@/lib/utils";
+import { formatSize, handleDownload, displayFileName } from "@/lib/utils";
 import { useChatStore } from "@/lib/zustand";
 
 type PeerShareStatus = "pending" | "connecting" | "connected" | "sending" | "receiving" | "completed" | "disconnected";
@@ -33,6 +34,7 @@ type PeerShareState = {
   disableShareActions: boolean;
   peerShareStatus: PeerShareStatus;
   incomingFileInfo: IncomingFileInfo | null;
+  progressPercentage: number;
 };
 
 type PeerShareAction =
@@ -41,6 +43,7 @@ type PeerShareAction =
   | { type: "SET_STATUS"; status: PeerShareStatus }
   | { type: "SET_DISABLE_ACTIONS"; payload: boolean }
   | { type: "SET_INCOMING_FILE"; payload: IncomingFileInfo | null }
+  | { type: "SET_PROGRESS"; progress: number }
   | { type: "RESET_SESSION" };
 
 const initialPeerShareState: PeerShareState = {
@@ -49,6 +52,7 @@ const initialPeerShareState: PeerShareState = {
   disableShareActions: false,
   peerShareStatus: "pending",
   incomingFileInfo: null,
+  progressPercentage: 0,
 };
 
 function peerShareReducer(state: PeerShareState, action: PeerShareAction): PeerShareState {
@@ -83,6 +87,12 @@ function peerShareReducer(state: PeerShareState, action: PeerShareAction): PeerS
         incomingFileInfo: action.payload,
       };
 
+    case "SET_PROGRESS":
+      return {
+        ...state,
+        progressPercentage: action.progress,
+      };
+
     case "RESET_SESSION":
       return initialPeerShareState;
 
@@ -91,21 +101,32 @@ function peerShareReducer(state: PeerShareState, action: PeerShareAction): PeerS
   }
 }
 
-const ShareStatus = ({ status }: { status: PeerShareStatus }) => {
+const ShareStatusProgress = ({ status, progress }: { status: PeerShareStatus; progress: number }) => {
   return (
-    <div className="flex items-center justify-start">
-      <span className="text-sm text-gray-500">
-        {status === "pending" && "⏳ Pending..."}
-        {status === "connecting" && "🔗 Connecting..."}
-        {status === "connected" && "✅ Connected"}
-        {status === "sending" && "🚀 Sending..."}
-        {status === "receiving" && "📲 Receiving..."}
-        {status === "completed" && "☑️ Completed"}
-        {status === "disconnected" && "❌ Disconnected"}
-      </span>
-    </div>
+    <>
+      {["receiving", "sending"].includes(status) && <Progress value={progress ?? 0} className="h-1.5 w-full" />}
+
+      <div className="flex items-center justify-between px-0.5">
+        <span className="text-sm text-gray-900 dark:text-gray-200 font-medium">
+          {status === "pending" && "⏳ Pending..."}
+          {status === "connecting" && "🔗 Connecting..."}
+          {status === "connected" && "✅ Connected"}
+          {status === "sending" && "🚀 Sending..."}
+          {status === "receiving" && "📲 Receiving..."}
+          {status === "completed" && "☑️ Completed"}
+          {status === "disconnected" && "❌ Disconnected"}
+        </span>
+
+        {progress > 0 && (
+          <span className="text-sm text-gray-900 dark:text-gray-200 font-medium tracking-wide">{progress}%</span>
+        )}
+      </div>
+    </>
   );
 };
+
+const maxFileSize = 512 * 1024 * 1024; // 512MB
+const maxChunkSize = 256 * 1024; // 256KB
 
 const PeerShare = () => {
   const { socket } = useSocket();
@@ -114,19 +135,22 @@ const PeerShare = () => {
 
   const senderConfirmRef = useRef<HTMLButtonElement | null>(null);
   const receiverConfirmRef = useRef<HTMLButtonElement | null>(null);
+  const cleanupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [{ selectedFile, peerShareModalOpen, incomingFileInfo, peerShareStatus, disableShareActions }, dispatch] =
-    useReducer(peerShareReducer, initialPeerShareState);
+  const [state, dispatch] = useReducer(peerShareReducer, initialPeerShareState);
+  const {
+    selectedFile,
+    peerShareModalOpen,
+    incomingFileInfo,
+    peerShareStatus,
+    disableShareActions,
+    progressPercentage,
+  } = state;
 
-  const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      const file = acceptedFiles[0] || null;
-      dispatch({ type: "SELECT_FILE", file: file });
-    },
-    [selectedFile]
-  );
-
-  const maxFileSize = 512 * 1024 * 1024;
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const file = acceptedFiles[0] || null;
+    dispatch({ type: "SELECT_FILE", file: file });
+  }, []);
 
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
@@ -157,8 +181,8 @@ const PeerShare = () => {
       name: localInfo?.name,
       pid: localInfo?.pid,
       to: selectedChatData?._id,
-      file: file?.name,
-      size: formatSize(file?.size),
+      file: file.name,
+      size: formatSize(file.size),
     };
 
     dispatch({ type: "SET_DISABLE_ACTIONS", payload: true });
@@ -245,37 +269,63 @@ const PeerShare = () => {
           console.log("✅ Connected to receiver peer!");
 
           if (file) {
-            const reader = new FileReader();
+            let offset = 0;
 
-            reader.onload = (event) => {
-              dispatch({ type: "SET_STATUS", status: "sending" });
-              const fileData = event.target?.result;
+            const sendChunk = () => {
+              const slice = file.slice(offset, offset + maxChunkSize);
+              const reader = new FileReader();
 
-              remotePeer.send({
-                type: "file",
-                name: file?.name,
-                size: file?.size,
-                mime: file?.type,
-                file: fileData,
-              });
+              reader.onload = (event) => {
+                const chunk = event.target?.result as ArrayBuffer;
+
+                if (!chunk) {
+                  toast.info("FIle chunk is not available to send!");
+                  return;
+                }
+
+                if (offset === 0) {
+                  remotePeer.send({
+                    type: "meta",
+                    name: file.name,
+                    size: file.size,
+                    mime: file.type,
+                  });
+
+                  dispatch({ type: "SET_STATUS", status: "sending" });
+                }
+
+                remotePeer.send({ type: "chunk", chunk });
+                offset += chunk.byteLength;
+
+                if (offset < file.size) {
+                  sendChunk(); // send next chunk
+                } else {
+                  remotePeer.send({ type: "done" });
+                }
+              };
+
+              reader.readAsArrayBuffer(slice);
             };
 
-            reader.readAsArrayBuffer(file);
+            sendChunk();
           }
         });
 
         remotePeer.on("data", (data: any) => {
+          if (data.type === "progress" && file) {
+            const progress = Math.floor((data.received / file.size) * 100);
+            dispatch({ type: "SET_PROGRESS", progress: progress });
+          }
+
           if (data.type === "completed") {
-            console.log("☑️ Closing connection from receiver peer!");
+            setRemoteInfo(null);
+            dispatch({ type: "SELECT_FILE", file: null });
+            dispatch({ type: "SET_STATUS", status: "completed" });
+            dispatch({ type: "SET_PROGRESS", progress: 100 });
 
             senderConfirmRef.current?.click();
             remotePeer.close();
-
-            setTimeout(() => {
-              setRemoteInfo(null);
-              dispatch({ type: "SELECT_FILE", file: null });
-              toast.info("File has been sent successfully!");
-            }, 2000);
+            toast.info("File has been sent successfully!");
           }
         });
 
@@ -287,6 +337,8 @@ const PeerShare = () => {
         remotePeer.on("close", () => {
           dispatch({ type: "SET_DISABLE_ACTIONS", payload: false });
           dispatch({ type: "SET_STATUS", status: "disconnected" });
+          dispatch({ type: "SET_PROGRESS", progress: 0 });
+          console.log("☑️ Closing connection from receiver peer!");
         });
       }
     };
@@ -307,25 +359,59 @@ const PeerShare = () => {
       dispatch({ type: "SET_STATUS", status: "receiving" });
       console.log("✅ Connected to sender peer!");
 
-      conn.on("data", (data: any) => {
-        if (data.type === "file") {
-          const blob = new Blob([data.file], { type: data.mime });
+      let receivedBuffers: ArrayBuffer[] = [];
+      let receivedSize = 0;
+      let fileMeta: any = null;
+
+      conn.on("data", async (data: any) => {
+        if (!fileMeta && data.type === "meta") {
+          fileMeta = {
+            name: data.name,
+            size: data.size,
+            mime: data.mime,
+          };
+        }
+
+        if (fileMeta && data.type === "chunk") {
+          receivedBuffers.push(data.chunk);
+          receivedSize += data.chunk.byteLength;
+
+          conn.send({ type: "progress", received: receivedSize });
+
+          const progress = Math.floor((receivedSize / fileMeta.size) * 100);
+          dispatch({ type: "SET_PROGRESS", progress: progress });
+        }
+
+        if (data.type === "done") {
+          if (!fileMeta) return;
+
+          const blob = new Blob(receivedBuffers, { type: fileMeta.mime });
           const url = URL.createObjectURL(blob);
 
-          handleDownload(url, data.name);
+          handleDownload(url, fileMeta.name);
           conn.send({ type: "completed" });
 
           setRemoteInfo(null);
           dispatch({ type: "SET_INCOMING_FILE", payload: null });
-          dispatch({ type: "SET_DISABLE_ACTIONS", payload: false });
           dispatch({ type: "SET_STATUS", status: "completed" });
-          receiverConfirmRef.current?.click();
+          dispatch({ type: "SET_PROGRESS", progress: 100 });
 
-          setTimeout(() => {
-            URL.revokeObjectURL(url);
-            toast.info("File has been received successfully!");
-          }, 2000);
+          receiverConfirmRef.current?.click();
+          toast.info("File has been received successfully!");
+
+          receivedBuffers = [];
+          receivedSize = 0;
+          fileMeta = null;
+
+          cleanupTimeoutRef.current = setTimeout(() => URL.revokeObjectURL(url), 2000);
         }
+      });
+
+      conn.on("close", () => {
+        dispatch({ type: "SET_DISABLE_ACTIONS", payload: false });
+        dispatch({ type: "SET_STATUS", status: "disconnected" });
+        dispatch({ type: "SET_PROGRESS", progress: 0 });
+        console.log("☑️ Closing connection from sender peer!");
       });
     };
 
@@ -336,6 +422,14 @@ const PeerShare = () => {
     };
   }, [peerRef?.current]);
 
+  useEffect(() => {
+    return () => {
+      if (cleanupTimeoutRef.current) {
+        clearTimeout(cleanupTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <>
       {/* Alert Dialog for select file and request to receiver */}
@@ -345,7 +439,7 @@ const PeerShare = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Peer Share</AlertDialogTitle>
             <AlertDialogDescription>
-              Share files of any size directly directly from your browser.
+              Share files of size approx 1/2 GB directly directly from your browser.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -365,7 +459,7 @@ const PeerShare = () => {
                     <div className="w-full flex items-center justify-center">
                       <div>
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate max-w-xs">
-                          {file.name.split(".")[0].substring(0, 25) + "..."}
+                          {displayFileName(file.name)}
                         </p>
                         <p className="text-xs text-gray-500">{formatSize(file.size)}</p>
                       </div>
@@ -396,8 +490,8 @@ const PeerShare = () => {
             </div>
           </div>
 
-          {/** File Sharing Status */}
-          <ShareStatus status={peerShareStatus} />
+          {/** File Sharing Status & Progress */}
+          <ShareStatusProgress status={peerShareStatus} progress={progressPercentage} />
 
           <AlertDialogFooter>
             <AlertDialogCancel onClick={unselectFile} disabled={disableShareActions}>
@@ -420,7 +514,7 @@ const PeerShare = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Peer Share</AlertDialogTitle>
             <AlertDialogDescription>
-              Share files of any size directly directly from your browser.
+              Share files of size approx 1/2 GB directly directly from your browser.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -428,15 +522,15 @@ const PeerShare = () => {
             <div className="w-full flex items-center py-3 justify-center">
               <div>
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate max-w-xs">
-                  {incomingFileInfo?.file.split(".")[0].substring(0, 25) + "..."}
+                  {displayFileName(incomingFileInfo?.file!)}
                 </p>
                 <p className="text-xs text-gray-500">{incomingFileInfo?.size}</p>
               </div>
             </div>
           </div>
 
-          {/** File Sharing Status */}
-          <ShareStatus status={peerShareStatus} />
+          {/** File Sharing Status & Progress */}
+          <ShareStatusProgress status={peerShareStatus} progress={progressPercentage} />
 
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => responseShareRequest("reject")} disabled={disableShareActions}>

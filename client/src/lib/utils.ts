@@ -312,6 +312,22 @@ export function getDeviceId() {
   return deviceId;
 }
 
+export const displayFileName = (filename: string, maxLength = 20) => {
+  if (!filename) return "";
+
+  const lastDotIndex = filename.lastIndexOf(".");
+
+  if (lastDotIndex === -1) {
+    return filename.length > maxLength ? filename.substring(0, maxLength) + "..." : filename;
+  }
+
+  const name = filename.substring(0, lastDotIndex);
+  const ext = filename.substring(lastDotIndex); // includes "."
+  const truncatedName = name.length > maxLength ? name.substring(0, maxLength) + "..." : name;
+
+  return truncatedName + ext;
+};
+
 /*
 
 import CryptoJS from "crypto-js";
