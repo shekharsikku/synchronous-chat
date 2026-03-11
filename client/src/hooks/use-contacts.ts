@@ -7,8 +7,6 @@ import env from "@/lib/env";
 import { contactQuery } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/lib/zustand";
 
-// import type { UserInfo, Message, GroupInfo } from "@/lib/zustand";
-
 interface InteractionDetails {
   _id: string;
   type: "contact" | "group";

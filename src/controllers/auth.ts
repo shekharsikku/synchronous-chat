@@ -4,7 +4,7 @@ import { Types } from "mongoose";
 import { revokeToken } from "#/middlewares/index.js";
 import { User } from "#/models/index.js";
 import env from "#/utils/env.js";
-import { generateAccess, generateRefresh, createUserInfo, generateHash } from "#/utils/helpers.js";
+import { cookieOptions, generateAccess, generateRefresh, createUserInfo, generateHash } from "#/utils/helpers.js";
 import { HttpError, ErrorResponse, SuccessResponse } from "#/utils/response.js";
 
 import type { SignUp, SignIn } from "#/utils/schema.js";
@@ -92,9 +92,9 @@ const signOutUser = async (req: Request, res: Response) => {
     await revokeToken(res, currentAuthKey);
   }
 
-  res.clearCookie("access");
-  res.clearCookie("refresh");
-  res.clearCookie("current");
+  res.clearCookie("access", cookieOptions);
+  res.clearCookie("refresh", cookieOptions);
+  res.clearCookie("current", cookieOptions);
 
   return SuccessResponse(res, 200, "Signed out successfully!");
 };

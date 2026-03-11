@@ -5,15 +5,22 @@ import { CompactEncrypt, SignJWT } from "jose";
 
 import env from "#/utils/env.js";
 
+import type { CookieOptions } from "express";
 import type { UserInterface } from "#/interfaces/index.js";
 import type { Response } from "express";
 import type { Types } from "mongoose";
 
-const generateSecret = async () => {
+export const generateSecret = async () => {
   return createSecretKey(createHash("sha256").update(env.ACCESS_SECRET).digest());
 };
 
-const generateAccess = async (res: Response, user?: UserInterface) => {
+export const cookieOptions: CookieOptions = {
+  httpOnly: true,
+  sameSite: "none" as const,
+  secure: env.isProd,
+};
+
+export const generateAccess = async (res: Response, user?: UserInterface) => {
   const accessExpiry = env.ACCESS_EXPIRY;
 
   const accessPayload = deflateSync(JSON.stringify(user));
@@ -25,15 +32,13 @@ const generateAccess = async (res: Response, user?: UserInterface) => {
 
   res.cookie("access", accessToken, {
     maxAge: accessExpiry * 1000,
-    httpOnly: true,
-    sameSite: "strict",
-    secure: env.isProd,
+    ...cookieOptions,
   });
 
   return accessToken;
 };
 
-const generateRefresh = async (res: Response, uid: Types.ObjectId, aid: Types.ObjectId, jti: string) => {
+export const generateRefresh = async (res: Response, uid: Types.ObjectId, aid: Types.ObjectId, jti: string) => {
   const refreshExpiry = env.REFRESH_EXPIRY;
   const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
   const currentAuthKey = `${uid.toString()}:${aid.toString()}`;
@@ -47,30 +52,26 @@ const generateRefresh = async (res: Response, uid: Types.ObjectId, aid: Types.Ob
 
   res.cookie("refresh", refreshToken, {
     maxAge: refreshExpiry * 1000 * 2,
-    httpOnly: true,
-    sameSite: "strict",
-    secure: env.isProd,
+    ...cookieOptions,
   });
 
   res.cookie("current", currentAuthKey, {
     maxAge: refreshExpiry * 1000 * 2,
-    httpOnly: true,
-    sameSite: "strict",
-    secure: env.isProd,
+    ...cookieOptions,
   });
 
   return refreshToken;
 };
 
-const generateHash = async (token: string) => {
+export const generateHash = async (token: string) => {
   return createHash("sha256").update(token).digest("hex");
 };
 
-const hasEmptyField = (fields: object) => {
+export const hasEmptyField = (fields: object) => {
   return Object.values(fields).some((value) => value === "" || value === undefined || value === null);
 };
 
-const createUserInfo = (user: UserInterface) => {
+export const createUserInfo = (user: UserInterface) => {
   let userInfo;
 
   if (user.setup) {
@@ -89,5 +90,3 @@ const createUserInfo = (user: UserInterface) => {
 
   return userInfo as UserInterface;
 };
-
-export { generateSecret, generateAccess, generateRefresh, generateHash, hasEmptyField, createUserInfo };
