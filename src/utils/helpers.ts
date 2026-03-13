@@ -5,9 +5,8 @@ import { CompactEncrypt, SignJWT } from "jose";
 
 import env from "#/utils/env.js";
 
-import type { CookieOptions } from "express";
 import type { UserInterface } from "#/interfaces/index.js";
-import type { Response } from "express";
+import type { CookieOptions, Response } from "express";
 import type { Types } from "mongoose";
 
 export const generateSecret = async () => {
@@ -16,7 +15,7 @@ export const generateSecret = async () => {
 
 export const cookieOptions: CookieOptions = {
   httpOnly: true,
-  sameSite: "none" as const,
+  sameSite: "strict" as const,
   secure: env.isProd,
 };
 
