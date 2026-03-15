@@ -16,17 +16,6 @@ import { groupAvatar } from "@/assets/images";
 import { GroupMembersList, GroupMemberManage } from "@/components/chat/member-list";
 import { RenderActionIcon } from "@/components/chat/render-action-icon";
 import { TooltipElement } from "@/components/chat/tooltip-element";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -42,6 +31,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { UploadActionDialog } from "@/components/chat/upload-action-dialog";
 import { useContacts, useImageSelector, useGroupUpdate } from "@/hooks";
 import api from "@/lib/api";
 import env from "@/lib/env";
@@ -645,68 +635,28 @@ const ChatHeader = () => {
             </DialogContent>
           </Dialog>
 
-          {/* Dialog for avatar update confirmation */}
-          <AlertDialog
-            open={avatarState.isConfirmOpen}
-            onOpenChange={(open) => avatarDispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: open })}
-          >
-            <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
-            <AlertDialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl select-none">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="text-start">Update group avatar?</AlertDialogTitle>
-                <AlertDialogDescription className="text-start dark:text-gray-300">
-                  Update group avatar for better user interactions!
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel
-                  disabled={isUpdatePending}
-                  onClick={() => {
-                    avatarDispatch({ type: "RESET_AVATAR_STATE" });
-                    avatarDispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: false });
-                  }}
-                >
-                  Cancel
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  disabled={isUpdatePending}
-                  onClick={() => handleAvatarUpload(avatarState.imageFormData)}
-                >
-                  Update
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-          {/* Dialog for avatar delete confirmation */}
-          <AlertDialog
-            open={avatarState.isDeleteOpen}
-            onOpenChange={(open) => avatarDispatch({ type: "TOGGLE_DELETION_MODAL", payload: open })}
-          >
-            <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
-            <AlertDialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl select-none">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="text-start">Delete group avatar?</AlertDialogTitle>
-                <AlertDialogDescription className="text-start dark:text-gray-300">
-                  Are you sure to delete group avatar?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel
-                  disabled={isUpdatePending}
-                  onClick={() => {
-                    avatarDispatch({ type: "RESET_AVATAR_STATE" });
-                    avatarDispatch({ type: "TOGGLE_DELETION_MODAL", payload: false });
-                  }}
-                >
-                  Cancel
-                </AlertDialogCancel>
-                <AlertDialogAction disabled={isUpdatePending} onClick={handleAvatarDelete}>
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {/* Dialog for avatar update/delete confirmation */}
+          <UploadActionDialog
+            isConfirmOpen={avatarState.isConfirmOpen}
+            onConfirmChange={(open) => avatarDispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: open })}
+            confirmTitle="Update group avatar?"
+            confirmDesc="Update group avatar for better user interactions!"
+            onUploadCancel={() => {
+              avatarDispatch({ type: "RESET_AVATAR_STATE" });
+              avatarDispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: false });
+            }}
+            onUploadConfirm={() => handleAvatarUpload(avatarState.imageFormData)}
+            isUpdatePending={isUpdatePending}
+            isDeleteOpen={avatarState.isDeleteOpen}
+            onDeleteChange={(open) => avatarDispatch({ type: "TOGGLE_DELETION_MODAL", payload: open })}
+            deleteTitle="Delete group avatar?"
+            deleteDesc="Are you sure to delete group avatar?"
+            onDeleteCancel={() => {
+              avatarDispatch({ type: "RESET_AVATAR_STATE" });
+              avatarDispatch({ type: "TOGGLE_DELETION_MODAL", payload: false });
+            }}
+            onDeleteConfirm={handleAvatarDelete}
+          />
 
           {/* Voice & Video Stream Info */}
           {selectedChatType === "contact" && isCurrentlyOnline && (

@@ -13,17 +13,6 @@ import { toast } from "sonner";
 import * as z from "zod";
 
 import { TooltipElement } from "@/components/chat/tooltip-element";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
@@ -39,6 +28,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UploadActionDialog } from "@/components/chat/upload-action-dialog";
 import { useSignOut, useImageSelector } from "@/hooks";
 import api from "@/lib/api";
 import { useSocket } from "@/lib/context";
@@ -517,65 +507,28 @@ const Profile = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog for image update confirmation */}
-      <AlertDialog
-        open={isConfirmOpen}
-        onOpenChange={(open) => dispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: open })}
-      >
-        <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
-        <AlertDialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl select-none">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-start">Update profile image?</AlertDialogTitle>
-            <AlertDialogDescription className="text-start dark:text-gray-300">
-              Update your profile image for better user interactions!
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              disabled={isUpdating}
-              onClick={() => {
-                dispatch({ type: "RESET_IMAGE_STATE" });
-                dispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: false });
-              }}
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction disabled={isUpdating} onClick={() => updateProfileImage(imageFormData)}>
-              Update
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Dialog for image delete confirmation */}
-      <AlertDialog
-        open={isDeleteOpen}
-        onOpenChange={(open) => dispatch({ type: "TOGGLE_DELETION_MODAL", payload: open })}
-      >
-        <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
-        <AlertDialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl select-none">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-start">Delete profile image?</AlertDialogTitle>
-            <AlertDialogDescription className="text-start dark:text-gray-300">
-              Are you sure to delete profile image?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              disabled={isUpdating}
-              onClick={() => {
-                dispatch({ type: "RESET_IMAGE_STATE" });
-                dispatch({ type: "TOGGLE_DELETION_MODAL", payload: false });
-              }}
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction disabled={isUpdating} onClick={handleImageDeleteClick}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Dialog for image update/delete confirmation */}
+      <UploadActionDialog
+        isConfirmOpen={isConfirmOpen}
+        onConfirmChange={(open) => dispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: open })}
+        confirmTitle="Update profile image?"
+        confirmDesc="Update profile image for better user interactions!"
+        onUploadCancel={() => {
+          dispatch({ type: "RESET_IMAGE_STATE" });
+          dispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: false });
+        }}
+        onUploadConfirm={() => updateProfileImage(imageFormData)}
+        isUpdatePending={isUpdating}
+        isDeleteOpen={isDeleteOpen}
+        onDeleteChange={(open) => dispatch({ type: "TOGGLE_DELETION_MODAL", payload: open })}
+        deleteTitle="Delete profile image?"
+        deleteDesc="Are you sure to delete profile image?"
+        onDeleteCancel={() => {
+          dispatch({ type: "RESET_IMAGE_STATE" });
+          dispatch({ type: "TOGGLE_DELETION_MODAL", payload: false });
+        }}
+        onDeleteConfirm={handleImageDeleteClick}
+      />
     </main>
   );
 };
