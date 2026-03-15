@@ -1,9 +1,11 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useCallback, useRef, useState, ChangeEvent } from "react";
 import { Socket } from "socket.io-client";
 import { toast } from "sonner";
 
 import api from "@/lib/api";
 import env from "@/lib/env";
+import { useSocket } from "@/lib/context";
 import { decryptMessage } from "@/lib/noble";
 import { useAuthStore, useChatStore } from "@/lib/zustand";
 
@@ -235,6 +237,26 @@ export const useImageSelector = ({ formKey, onSuccess, onError }: UseImageSelect
   };
 
   return { handleImageSelect };
+};
+
+export const useGroupUpdate = () => {
+  const queryClient = useQueryClient();
+  const { socket } = useSocket();
+  const { userInfo } = useAuthStore();
+  const { setSelectedChatData } = useChatStore();
+
+  const handleGroupUpdate = (updatedData: GroupInfo) => {
+    const updatedGroup = { ...updatedData, interaction: new Date().toISOString() };
+
+    queryClient.setQueryData<GroupInfo[]>(["groups", userInfo?._id], (older = []) => {
+      return older.map((group) => (group._id === updatedGroup._id ? updatedGroup : group));
+    });
+
+    setSelectedChatData(updatedGroup);
+    socket?.emit("before:group-update", { updatedGroup });
+  };
+
+  return { handleGroupUpdate };
 };
 
 export { useAuthUser, useSignOut } from "@/hooks/use-auth";

@@ -16,7 +16,7 @@ export const useListeners = () => {
   const { socket } = useSocket();
   const { contacts, allChats } = useContacts();
   const { userInfo, setUserInfo } = useAuthStore();
-  const { selectedChatData, isSoundAllow } = useChatStore();
+  const { selectedChatData, setSelectedChatData, isSoundAllow } = useChatStore();
 
   useEffect(() => {
     notificationAudio.current = new Audio(notificationSound);
@@ -155,6 +155,16 @@ export const useListeners = () => {
       });
     };
 
+    const handleGroupUpdate = (updatedGroup: GroupInfo) => {
+      queryClient.setQueryData<GroupInfo[]>(["groups", userInfo?._id], (older = []) => {
+        return older.map((group) => (group._id === updatedGroup._id ? updatedGroup : group));
+      });
+
+      if (selectedChatData && selectedChatData._id === updatedGroup._id) {
+        setSelectedChatData(updatedGroup);
+      }
+    };
+
     const events: [string, (...args: any[]) => void][] = [
       ["message:receive", handleMessageReceive],
       ["message:remove", handleMessageUpdate],
@@ -162,6 +172,7 @@ export const useListeners = () => {
       ["message:reacted", handleMessageUpdate],
       ["group:created", handleGroupCreate],
       ["profile:update", handleProfileUpdate],
+      ["after:group-update", handleGroupUpdate],
     ];
 
     if (!messageListeners.current) {

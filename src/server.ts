@@ -125,6 +125,15 @@ io.on("connection", (socket: Socket) => {
     });
   });
 
+  socket.on("before:group-update", ({ updatedGroup }) => {
+    const socketIds = updatedGroup.members
+      .filter((member: string) => member !== updatedGroup.admin)
+      .flatMap((userId: string) => getSocketId(userId))
+      .filter(Boolean);
+
+    socket.to(socketIds).emit("after:group-update", { ...updatedGroup });
+  });
+
   socket.on("disconnect", () => {
     for (const [userId, sockets] of userSocketMap.entries()) {
       if (sockets.has(socket.id)) {
