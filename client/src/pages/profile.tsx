@@ -46,56 +46,54 @@ import { changePasswordSchema, profileUpdateSchema, genders } from "@/lib/schema
 import { useAuthStore } from "@/lib/zustand";
 
 type ProfileState = {
-  isLoading: boolean;
-  selectedImage: string | undefined;
-  isPasswordOpen: boolean;
+  isUpdating: boolean;
+  selectedImage: string | null;
+  imageFormData: FormData | null;
   isConfirmOpen: boolean;
   isDeleteOpen: boolean;
-  imageFormData: FormData | null;
+  isPasswordOpen: boolean;
 };
 
 type ProfileAction =
-  | { type: "SET_LOADING"; payload: boolean }
-  | { type: "SET_SELECTED_IMAGE"; payload: string | undefined }
-  | { type: "TOGGLE_PASSWORD_DIALOG"; payload?: boolean }
-  | { type: "TOGGLE_CONFIRMATION_MODAL"; payload?: boolean }
-  | { type: "TOGGLE_IMAGE_DELETE_MODAL"; payload?: boolean }
+  | { type: "SET_UPDATING"; payload: boolean }
+  | { type: "SET_SELECTED_IMAGE"; payload: string | null }
   | { type: "SET_IMAGE_FORM_DATA"; payload: FormData | null }
-  | { type: "RESET"; payload: any };
+  | { type: "TOGGLE_CONFIRMATION_MODAL"; payload?: boolean }
+  | { type: "TOGGLE_DELETION_MODAL"; payload?: boolean }
+  | { type: "TOGGLE_PASSWORD_DIALOG"; payload?: boolean }
+  | { type: "RESET_IMAGE_STATE" };
 
-const initialState = (userInfo: UserInfo | null): ProfileState => {
-  return {
-    isLoading: false,
-    selectedImage: userInfo?.image,
-    isPasswordOpen: false,
-    isConfirmOpen: false,
-    isDeleteOpen: false,
-    imageFormData: null,
-  };
+const initialState = {
+  isUpdating: false,
+  selectedImage: null,
+  imageFormData: null,
+  isConfirmOpen: false,
+  isDeleteOpen: false,
+  isPasswordOpen: false,
 };
 
 function profileReducer(state: ProfileState, action: ProfileAction): ProfileState {
   switch (action.type) {
-    case "SET_LOADING":
-      return { ...state, isLoading: action.payload };
+    case "SET_UPDATING":
+      return { ...state, isUpdating: action.payload };
 
     case "SET_SELECTED_IMAGE":
       return { ...state, selectedImage: action.payload };
 
-    case "TOGGLE_PASSWORD_DIALOG":
-      return { ...state, isPasswordOpen: action.payload ?? !state.isPasswordOpen };
+    case "SET_IMAGE_FORM_DATA":
+      return { ...state, imageFormData: action.payload };
 
     case "TOGGLE_CONFIRMATION_MODAL":
       return { ...state, isConfirmOpen: action.payload ?? !state.isConfirmOpen };
 
-    case "TOGGLE_IMAGE_DELETE_MODAL":
+    case "TOGGLE_DELETION_MODAL":
       return { ...state, isDeleteOpen: action.payload ?? !state.isDeleteOpen };
 
-    case "SET_IMAGE_FORM_DATA":
-      return { ...state, imageFormData: action.payload };
+    case "TOGGLE_PASSWORD_DIALOG":
+      return { ...state, isPasswordOpen: action.payload ?? !state.isPasswordOpen };
 
-    case "RESET":
-      return action.payload;
+    case "RESET_IMAGE_STATE":
+      return { ...state, selectedImage: null, imageFormData: null };
 
     default:
       return state;
@@ -110,12 +108,12 @@ const Profile = () => {
   const { handleSignOut } = useSignOut();
   const { userInfo } = useAuthStore();
 
-  const [{ isLoading, selectedImage, isPasswordOpen, isConfirmOpen, isDeleteOpen, imageFormData }, dispatch] =
-    useReducer(profileReducer, userInfo, initialState);
+  const [{ isUpdating, selectedImage, imageFormData, isPasswordOpen, isConfirmOpen, isDeleteOpen }, dispatch] =
+    useReducer(profileReducer, initialState);
 
   useEffect(() => {
     return () => {
-      if (selectedImage?.startsWith("blob:")) {
+      if (selectedImage) {
         URL.revokeObjectURL(selectedImage);
       }
     };
@@ -129,19 +127,17 @@ const Profile = () => {
       dispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: true });
     },
     onError: () => {
-      dispatch({
-        type: "SET_SELECTED_IMAGE",
-        payload: userInfo?.image,
-      });
+      dispatch({ type: "RESET_IMAGE_STATE" });
+      dispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: false });
     },
   });
 
   const updateProfileImage = async (formData: FormData | null) => {
     if (!formData) return;
-    dispatch({ type: "SET_LOADING", payload: true });
+    dispatch({ type: "SET_UPDATING", payload: true });
 
     try {
-      const response = await api.patch("/api/user/update-profile-image", formData, {
+      const response = await api.patch("/api/user/profile-image", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       toast.success(response.data.message);
@@ -149,23 +145,24 @@ const Profile = () => {
       toast.error(error.response.data.message);
     }
 
-    dispatch({ type: "SET_IMAGE_FORM_DATA", payload: null });
+    dispatch({ type: "RESET_IMAGE_STATE" });
     dispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: false });
-    dispatch({ type: "SET_LOADING", payload: false });
+    dispatch({ type: "SET_UPDATING", payload: false });
   };
 
   const handleImageDeleteClick = async () => {
-    dispatch({ type: "SET_LOADING", payload: true });
+    dispatch({ type: "SET_UPDATING", payload: true });
 
     try {
-      const response = await api.delete("/api/user/delete-profile-image");
+      const response = await api.delete("/api/user/profile-image");
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
     }
 
-    dispatch({ type: "TOGGLE_IMAGE_DELETE_MODAL", payload: false });
-    dispatch({ type: "SET_LOADING", payload: false });
+    dispatch({ type: "RESET_IMAGE_STATE" });
+    dispatch({ type: "TOGGLE_DELETION_MODAL", payload: false });
+    dispatch({ type: "SET_UPDATING", payload: false });
   };
 
   /**  Hookform Zod Resolver - Change Password */
@@ -179,18 +176,18 @@ const Profile = () => {
   });
 
   const changePasswordSubmit = async (values: z.infer<typeof changePasswordSchema>) => {
-    dispatch({ type: "SET_LOADING", payload: true });
+    dispatch({ type: "SET_UPDATING", payload: true });
 
     try {
       const response = await api.patch("/api/user/change-password", values);
       toast.success(response.data.message);
-      dispatch({ type: "TOGGLE_PASSWORD_DIALOG", payload: false });
       changePasswordForm.reset();
     } catch (error: any) {
       toast.error(error.response.data.message);
     }
 
-    dispatch({ type: "SET_LOADING", payload: false });
+    dispatch({ type: "TOGGLE_PASSWORD_DIALOG", payload: false });
+    dispatch({ type: "SET_UPDATING", payload: false });
   };
 
   /**  Hookform Zod Resolver - Profile Update */
@@ -205,20 +202,19 @@ const Profile = () => {
   });
 
   const profileUpdateSubmit = async (values: z.infer<typeof profileUpdateSchema>) => {
-    dispatch({ type: "SET_LOADING", payload: true });
+    dispatch({ type: "SET_UPDATING", payload: true });
 
     try {
-      const response = await api.patch("/api/user/user-profile-setup", values);
+      const response = await api.patch("/api/user/profile-setup", values);
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
     }
 
-    dispatch({ type: "SET_LOADING", payload: false });
+    dispatch({ type: "SET_UPDATING", payload: false });
   };
 
   const handleProfileUpdate = useEffectEvent((updatedDetails: any) => {
-    dispatch({ type: "SET_SELECTED_IMAGE", payload: updatedDetails.image });
     profileUpdateForm.reset({ ...updatedDetails });
   });
 
@@ -238,21 +234,16 @@ const Profile = () => {
             <h2 className="text-3xl font-extrabold xl:text-4xl">Welcome User!</h2>
             <p className="text-sm sm:text-base text-center text-gray-700 dark:text-gray-300">Let's get you set up!</p>
           </div>
-          <div
-            className="hidden size-36 xl:size-40 relative lg:flex items-center justify-center
-           rounded-full border-2 border-gray-100 dark:border-gray-700 hover:border-3"
-          >
+          <div className="hidden size-36 xl:size-40 relative lg:flex items-center justify-center">
             <ContextMenu>
-              <ContextMenuTrigger className="w-full h-full">
-                <Avatar className="h-full w-full rounded-full overflow-hidden">
+              <ContextMenuTrigger className="size-full">
+                <Avatar className="size-full rounded-full overflow-hidden">
                   <AvatarImage
                     src={selectedImage || userInfo?.image}
                     alt="profile"
                     className="object-cover size-full"
                   />
-                  <AvatarFallback
-                    className={`uppercase size-full text-5xl border text-center font-bold transition-all hover:bg-black/90 bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb] dark:bg-transparent`}
-                  >
+                  <AvatarFallback className="uppercase size-full text-5xl border-2 text-center font-bold transition-all bg-gray-50 dark:bg-transparent hover:bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]">
                     {(userInfo?.name ?? userInfo?.username ?? userInfo?.email)?.charAt(0) ?? ""}
                   </AvatarFallback>
                 </Avatar>
@@ -261,7 +252,7 @@ const Profile = () => {
                 {userInfo?.image && (
                   <ContextMenuItem
                     className="flex gap-2"
-                    onClick={() => dispatch({ type: "TOGGLE_IMAGE_DELETE_MODAL", payload: true })}
+                    onClick={() => dispatch({ type: "TOGGLE_DELETION_MODAL", payload: true })}
                   >
                     <HiOutlineTrash size={16} className="text-neutral-600 dark:text-neutral-100" /> Delete
                   </ContextMenuItem>
@@ -299,7 +290,7 @@ const Profile = () => {
                 size="sm"
                 className="w-full"
                 onClick={() => navigate("/chat")}
-                disabled={isLoading || !userInfo?.setup}
+                disabled={isUpdating || !userInfo?.setup}
               >
                 <HiOutlineChatBubbleLeftRight size={20} />
               </Button>
@@ -309,13 +300,13 @@ const Profile = () => {
                 size="sm"
                 className="w-full"
                 onClick={() => dispatch({ type: "TOGGLE_PASSWORD_DIALOG", payload: true })}
-                disabled={isLoading}
+                disabled={isUpdating}
               >
                 <HiOutlineKey size={20} />
               </Button>
             </TooltipElement>
             <TooltipElement content="Sign Out" asChild>
-              <Button size="sm" className="w-full" onClick={handleSignOut} disabled={isLoading}>
+              <Button size="sm" className="w-full" onClick={handleSignOut} disabled={isUpdating}>
                 <HiOutlineArrowRightOnRectangle size={20} />
               </Button>
             </TooltipElement>
@@ -399,7 +390,7 @@ const Profile = () => {
                   </FormItem>
                 )}
               />
-              <Button type="submit" size="lg" className="w-full cursor-pointer mt-2 lg:mt-1" disabled={isLoading}>
+              <Button type="submit" size="lg" className="w-full cursor-pointer mt-2 lg:mt-1" disabled={isUpdating}>
                 Save Changes
               </Button>
             </form>
@@ -410,7 +401,7 @@ const Profile = () => {
                 size="sm"
                 className="w-full"
                 onClick={() => navigate("/chat")}
-                disabled={isLoading || !userInfo?.setup}
+                disabled={isUpdating || !userInfo?.setup}
               >
                 <HiOutlineChatBubbleLeftRight size={20} />
               </Button>
@@ -420,13 +411,13 @@ const Profile = () => {
                 size="sm"
                 className="w-full"
                 onClick={() => dispatch({ type: "TOGGLE_PASSWORD_DIALOG", payload: true })}
-                disabled={isLoading}
+                disabled={isUpdating}
               >
                 <HiOutlineKey size={20} />
               </Button>
             </TooltipElement>
             <TooltipElement content="Sign Out" asChild>
-              <Button size="sm" className="w-full" onClick={handleSignOut} disabled={isLoading}>
+              <Button size="sm" className="w-full" onClick={handleSignOut} disabled={isUpdating}>
                 <HiOutlineArrowRightOnRectangle size={20} />
               </Button>
             </TooltipElement>
@@ -509,7 +500,7 @@ const Profile = () => {
                 <Button
                   variant="outline"
                   className="w-full"
-                  disabled={isLoading}
+                  disabled={isUpdating}
                   onClick={() => {
                     changePasswordForm.reset();
                     dispatch({ type: "TOGGLE_PASSWORD_DIALOG", payload: false });
@@ -517,7 +508,7 @@ const Profile = () => {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full" disabled={isUpdating}>
                   Confirm
                 </Button>
               </DialogFooter>
@@ -541,16 +532,15 @@ const Profile = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel
-              disabled={isLoading}
+              disabled={isUpdating}
               onClick={() => {
-                dispatch({ type: "SET_IMAGE_FORM_DATA", payload: null });
+                dispatch({ type: "RESET_IMAGE_STATE" });
                 dispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: false });
-                dispatch({ type: "SET_SELECTED_IMAGE", payload: userInfo?.image });
               }}
             >
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction disabled={isLoading} onClick={() => updateProfileImage(imageFormData)}>
+            <AlertDialogAction disabled={isUpdating} onClick={() => updateProfileImage(imageFormData)}>
               Update
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -560,7 +550,7 @@ const Profile = () => {
       {/* Dialog for image delete confirmation */}
       <AlertDialog
         open={isDeleteOpen}
-        onOpenChange={(open) => dispatch({ type: "TOGGLE_IMAGE_DELETE_MODAL", payload: open })}
+        onOpenChange={(open) => dispatch({ type: "TOGGLE_DELETION_MODAL", payload: open })}
       >
         <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
         <AlertDialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl select-none">
@@ -572,12 +562,15 @@ const Profile = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel
-              disabled={isLoading}
-              onClick={() => dispatch({ type: "TOGGLE_IMAGE_DELETE_MODAL", payload: false })}
+              disabled={isUpdating}
+              onClick={() => {
+                dispatch({ type: "RESET_IMAGE_STATE" });
+                dispatch({ type: "TOGGLE_DELETION_MODAL", payload: false });
+              }}
             >
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction disabled={isLoading} onClick={handleImageDeleteClick}>
+            <AlertDialogAction disabled={isUpdating} onClick={handleImageDeleteClick}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
