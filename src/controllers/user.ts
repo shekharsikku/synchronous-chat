@@ -67,37 +67,38 @@ const profileSetup = async (req: Request<{}, {}, Profile>, res: Response) => {
 
 const updateImage = async (req: Request, res: Response) => {
   try {
-    const requestUser = req.user;
     const imagePath = req.file?.path;
+    const requestUser = req.user?._id!;
 
     if (!imagePath) {
       throw new HttpError(400, "Profile image file required!");
     }
 
-    const [uploadImage, userProfile] = await Promise.all([
-      uploadOnCloudinary(imagePath),
-      User.findById(requestUser?._id),
-    ]);
+    const userProfile = await User.findById(requestUser);
 
-    if (!uploadImage || !uploadImage.secure_url) {
+    if (!userProfile) {
+      throw new HttpError(404, "Can't get current user profile!");
+    }
+
+    const uploadImage = await uploadOnCloudinary(imagePath);
+
+    if (!uploadImage?.secure_url) {
       throw new HttpError(500, "Error while uploading profile image!");
     }
 
-    if (userProfile && userProfile.image !== "") {
-      await deleteImageByUrl(userProfile.image!);
+    if (userProfile?.image) {
+      await deleteImageByUrl(userProfile.image);
     }
 
-    if (userProfile && uploadImage.secure_url) {
-      userProfile.image = uploadImage.secure_url;
-      await userProfile.save({ validateBeforeSave: true });
+    userProfile.image = uploadImage.secure_url;
+    await userProfile.save({ validateBeforeSave: false });
 
-      const userInfo = createUserInfo(userProfile);
-      await generateAccess(res, userInfo);
-      await profileUpdateEvents(userInfo);
+    const userInfo = createUserInfo(userProfile);
 
-      return SuccessResponse(res, 200, "Profile image updated successfully!");
-    }
-    throw new HttpError(500, "Profile image not updated!");
+    await generateAccess(res, userInfo);
+    await profileUpdateEvents(userInfo);
+
+    return SuccessResponse(res, 200, "Profile image updated successfully!");
   } catch (error: any) {
     unlinkFilesWithExtensions(folderPath, extensionsToDelete);
     return ErrorResponse(res, error.code || 500, error.message || "Error while updating profile image!");
@@ -106,21 +107,29 @@ const updateImage = async (req: Request, res: Response) => {
 
 const deleteImage = async (req: Request, res: Response) => {
   try {
-    const requestUser = await User.findById(req.user?._id);
+    const requestUser = req.user?._id!;
 
-    if (requestUser && requestUser.image !== "") {
-      await deleteImageByUrl(requestUser.image!);
+    const userProfile = await User.findById(requestUser);
 
-      requestUser.image = "";
-      await requestUser.save({ validateBeforeSave: true });
-
-      const userInfo = createUserInfo(requestUser);
-      await generateAccess(res, userInfo);
-      await profileUpdateEvents(userInfo);
-
-      return SuccessResponse(res, 200, "Profile image deleted successfully!");
+    if (!userProfile) {
+      throw new HttpError(404, "Can't get current user profile!");
     }
-    throw new HttpError(400, "Profile image not available!");
+
+    if (!userProfile.image) {
+      throw new HttpError(400, "Profile image not available!");
+    }
+
+    await deleteImageByUrl(userProfile.image);
+
+    userProfile.image = null;
+    await userProfile.save({ validateBeforeSave: false });
+
+    const userInfo = createUserInfo(userProfile);
+
+    await generateAccess(res, userInfo);
+    await profileUpdateEvents(userInfo);
+
+    return SuccessResponse(res, 200, "Profile image deleted successfully!");
   } catch (error: any) {
     return ErrorResponse(res, error.code || 500, error.message || "Error while deleting profile image!");
   }
