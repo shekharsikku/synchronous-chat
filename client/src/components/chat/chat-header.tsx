@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState, useReducer, ChangeEvent, useRef } from "react";
+import { isDesktop } from "react-device-detect";
 import { useHotkeys } from "react-hotkeys-hook";
 import {
   HiOutlinePhone,
@@ -6,8 +8,9 @@ import {
   HiOutlineLanguage,
   HiOutlineVideoCamera,
   HiOutlineShare,
+  HiOutlineBackspace,
 } from "react-icons/hi2";
-import { LuAudioLines } from "react-icons/lu";
+import { LuPencilLine, LuInfo, LuCheck, LuAudioLines } from "react-icons/lu";
 import { toast } from "sonner";
 
 import { groupAvatar } from "@/assets/images";
@@ -24,18 +27,74 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+// import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useSocket, usePeer } from "@/lib/context";
+import { Spinner } from "@/components/ui/spinner";
+import { useContacts } from "@/hooks";
+import api from "@/lib/api";
 import env from "@/lib/env";
+import { useSocket, usePeer } from "@/lib/context";
 import { cn, languageOptions, getAvatar, formatUtcTimestamp } from "@/lib/utils";
-import { useChatStore } from "@/lib/zustand";
+import { useAuthStore, useChatStore } from "@/lib/zustand";
+
+type DetailsState = {
+  name: string;
+  description: string;
+};
+
+type DetailsAction =
+  | { type: "UPDATE_FIELD"; field: "name" | "description"; value: string }
+  | { type: "SET_DATA"; payload: { name: string; description: string } }
+  | { type: "RESET_FORM" };
+
+const initialState = (groupDetails: GroupInfo): DetailsState => {
+  return {
+    name: groupDetails.name || "",
+    description: groupDetails.description || "",
+  };
+};
+
+function detailsReducer(state: DetailsState, action: DetailsAction) {
+  switch (action.type) {
+    case "UPDATE_FIELD":
+      return { ...state, [action.field]: action.value };
+
+    case "SET_DATA":
+      return { ...state, name: action.payload.name, description: action.payload.description };
+
+    case "RESET_FORM":
+      return { ...state, name: "", description: "" };
+
+    default:
+      return state;
+  }
+}
 
 const ChatHeader = () => {
-  const { selectedChatData, selectedChatType, closeChat, isPartnerTyping, language, setLanguage, messageStats } =
-    useChatStore();
+  const queryClient = useQueryClient();
+  const { userInfo } = useAuthStore();
+  const {
+    selectedChatData,
+    setSelectedChatData,
+    selectedChatType,
+    closeChat,
+    isPartnerTyping,
+    language,
+    setLanguage,
+    messageStats,
+    groupSettingDialog,
+    setGroupSettingDialog,
+  } = useChatStore();
+  const { groups } = useContacts();
+  const userAvatar = getAvatar(selectedChatData);
+  const refForNameInput = useRef<HTMLInputElement>(null);
   const [openUserInfoModal, setOpenUserInfoModal] = useState(false);
   const [openGroupInfoModal, setOpenGroupInfoModal] = useState(false);
-  const userAvatar = getAvatar(selectedChatData);
+  const [inputReadOnlyEnable, setInputReadOnlyEnable] = useState(true);
+  const [isUpdatePending, setIsUpdatePending] = useState(false);
+  const [state, dispatch] = useReducer(detailsReducer, selectedChatData, initialState);
 
   useHotkeys("ctrl+q", () => closeChat(), {
     enabled: !!selectedChatData,
@@ -74,6 +133,90 @@ const ChatHeader = () => {
     setMediaType(type);
     setPendingRequest(true);
     socket?.emit("before:call-request", { callingDetails });
+  };
+
+  const handleDetailsChange = (event: ChangeEvent<HTMLInputElement>) => {
+    event.preventDefault();
+    dispatch({
+      type: "UPDATE_FIELD",
+      field: event.target.name as "name" | "description",
+      value: event.target.value,
+    });
+  };
+
+  const handleDetailsSubmit = async () => {
+    const nameAlreadyExists = groups?.some((group) => group.name === state.name && group._id !== selectedChatData?._id);
+
+    if (nameAlreadyExists) {
+      toast.info("Group with this name already exists!");
+      return;
+    }
+
+    setIsUpdatePending(true);
+
+    try {
+      const response = await api.patch(`/api/group/update/${selectedChatData._id}/details`, state);
+      const updatedGroup: GroupInfo = { ...response.data.data, interaction: new Date().toISOString() };
+
+      queryClient.setQueryData<GroupInfo[]>(["groups", userInfo?._id], (older = []) => {
+        return older.map((group) => (group._id === updatedGroup._id ? updatedGroup : group));
+      });
+
+      setSelectedChatData(updatedGroup);
+      toast.success(response.data.message);
+    } catch (error: any) {
+      toast.error(error.response.data.message);
+    }
+
+    setInputReadOnlyEnable(true);
+    setIsUpdatePending(false);
+  };
+
+  const renderActionIcon = () => {
+    const isInvalid = !state.name || !state.description;
+    const isUnchanged = state.name === selectedChatData?.name && state.description === selectedChatData?.description;
+
+    if (isUpdatePending) return <Spinner className="size-4" />;
+
+    if (inputReadOnlyEnable) {
+      return (
+        <TooltipElement content="Change Details">
+          <LuPencilLine
+            size={16}
+            className="tooltip-icon"
+            onClick={() => {
+              setInputReadOnlyEnable(false);
+              refForNameInput.current?.focus();
+            }}
+          />
+        </TooltipElement>
+      );
+    }
+
+    if (!isInvalid && !isUnchanged) {
+      return (
+        <TooltipElement content="Save Details">
+          <LuCheck size={16} className="tooltip-icon" onClick={handleDetailsSubmit} />
+        </TooltipElement>
+      );
+    }
+
+    if (isUnchanged) {
+      return (
+        <TooltipElement content="Clear Details">
+          <HiOutlineBackspace
+            size={16}
+            className="tooltip-icon"
+            onClick={() => {
+              dispatch({ type: "RESET_FORM" });
+              refForNameInput.current?.focus();
+            }}
+          />
+        </TooltipElement>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -229,6 +372,96 @@ const ChatHeader = () => {
         </div>
 
         <div className="flex items-center justify-center gap-4">
+          {/* Group Info & Setting */}
+          {selectedChatType === "group" && selectedChatData.admin === userInfo?._id && isDesktop && (
+            <TooltipElement content="More Info">
+              <LuInfo
+                size={18}
+                strokeWidth={1.5}
+                className="tooltip-icon"
+                onClick={() => setGroupSettingDialog(true)}
+              />
+            </TooltipElement>
+          )}
+
+          <Dialog
+            open={groupSettingDialog}
+            onOpenChange={(open) => {
+              setGroupSettingDialog(open);
+              setInputReadOnlyEnable(true);
+              dispatch({
+                type: "SET_DATA",
+                payload: { name: selectedChatData?.name, description: selectedChatData?.description },
+              });
+            }}
+          >
+            <DialogContent
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onInteractOutside={(e) => e.preventDefault()}
+              className="w-120 md:w-160 lg:w-200 h-max rounded-md shadow-lg transition-all hover:shadow-2xl p-6 select-none"
+            >
+              <DialogHeader className="hidden">
+                <DialogTitle></DialogTitle>
+                <DialogDescription></DialogDescription>
+              </DialogHeader>
+
+              <div className="w-full flex flex-col gap-4">
+                <div className="w-full flex justify-between gap-4">
+                  <div className="h-full w-2/6 p-5">
+                    <img
+                      src={selectedChatData.avatar || groupAvatar}
+                      alt="Group Avatar"
+                      className="size-full rounded-full border-4 border-white object-cover shadow-lg transition-all"
+                    />
+                  </div>
+
+                  <div className="w-4/6 flex justify-center gap-1.5 pt-2 relative">
+                    <div className="w-full flex flex-col gap-3">
+                      <div className="space-y-2">
+                        <Label>Name</Label>
+                        <Input
+                          type="text"
+                          id="group-name-inp"
+                          name="name"
+                          placeholder="Group Name"
+                          value={state.name}
+                          autoComplete="off"
+                          onChange={handleDetailsChange}
+                          readOnly={inputReadOnlyEnable}
+                          ref={refForNameInput}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Description</Label>
+                        <Input
+                          type="text"
+                          id="group-desc-inp"
+                          name="description"
+                          placeholder="Group Description"
+                          value={state.description}
+                          autoComplete="off"
+                          onChange={handleDetailsChange}
+                          readOnly={inputReadOnlyEnable}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="absolute -top-2 right-5 flex items-center w-4 justify-center">
+                      {renderActionIcon()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <GroupMembersList selectedChatData={selectedChatData} />
+
+              <p className="text-center text-xs md:text-sm tracking-wider text-gray-500 dark:text-gray-100">
+                Created at: {formatUtcTimestamp(selectedChatData?.createdAt)}
+              </p>
+            </DialogContent>
+          </Dialog>
+
           {/* Voice & Video Stream Info */}
           {selectedChatType === "contact" && isCurrentlyOnline && (
             <>

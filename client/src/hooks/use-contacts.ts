@@ -73,7 +73,7 @@ export const useContacts = () => {
     ...queryOptions,
   });
 
-  const allChats = useMemo(() => {
+  const allChats = useMemo<AllChatItem[]>(() => {
     const merged = [
       ...(contacts ?? []).map((contact) => ({ ...contact, type: "contact" as const })),
       ...(groups ?? []).map((group) => ({ ...group, type: "group" as const })),

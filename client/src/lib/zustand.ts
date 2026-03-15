@@ -92,4 +92,7 @@ export const useChatStore = create<ChatStore>((set) => ({
 
     set({ messageStats: { sent, received } });
   },
+
+  groupSettingDialog: false,
+  setGroupSettingDialog: (groupSettingDialog: boolean) => set({ groupSettingDialog }),
 }));

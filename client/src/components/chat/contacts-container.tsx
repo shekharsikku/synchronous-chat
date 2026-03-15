@@ -23,9 +23,11 @@ const ContactsContainer = () => {
 
   const [currentTab, setCurrentTab] = useState("all");
 
-  const handleSelectChat = (chatType: ChatType, chatData: any) => {
+  const handleSelectChat = (chatType: ChatType, chatData: AllChatItem) => {
+    // oxlint-disable-next-line no-unused-vars
+    const { type, ...cleanData } = chatData;
     setSelectedChatType(chatType);
-    setSelectedChatData(chatData);
+    setSelectedChatData(cleanData);
     setReplyTo(null);
   };
 

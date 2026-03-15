@@ -68,6 +68,7 @@ interface AuthStore {
 }
 
 type ChatType = "contact" | "group" | null;
+type AllChatItem = (UserInfo & { type: "contact" }) | (GroupInfo & { type: "group" });
 
 interface ChatStore {
   selectedChatType: ChatType;
@@ -94,4 +95,6 @@ interface ChatStore {
   setReplyTo: (replyTo: Message | null) => void;
   messageStats: { sent: number; received: number };
   setMessageStats: (messages: Message[], selectedChatId: string) => void;
+  groupSettingDialog: boolean;
+  setGroupSettingDialog: (editDialog: boolean) => void;
 }

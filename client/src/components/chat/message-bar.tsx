@@ -89,8 +89,16 @@ const MessageBar = () => {
   const { theme } = useTheme();
   const { socket } = useSocket();
   const { userInfo } = useAuthStore();
-  const { selectedChatType, selectedChatData, setIsPartnerTyping, editDialog, replyTo, setReplyTo, groupDialog } =
-    useChatStore();
+  const {
+    selectedChatType,
+    selectedChatData,
+    setIsPartnerTyping,
+    editDialog,
+    replyTo,
+    setReplyTo,
+    groupDialog,
+    groupSettingDialog,
+  } = useChatStore();
 
   const emojiRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -114,7 +122,10 @@ const MessageBar = () => {
     const handleSpaceEscapeKeyDown = (event: KeyboardEvent) => {
       const activeElement = document.activeElement as HTMLElement;
 
-      if ((editDialog || groupDialog) && (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA")) {
+      if (
+        (editDialog || groupDialog || groupSettingDialog) &&
+        (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA")
+      ) {
         return;
       }
 
@@ -134,7 +145,7 @@ const MessageBar = () => {
     return () => {
       document.removeEventListener("keydown", handleSpaceEscapeKeyDown);
     };
-  }, [editDialog, groupDialog]);
+  }, [editDialog, groupDialog, groupSettingDialog]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
