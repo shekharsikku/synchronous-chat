@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useReducer, useRef, useEffect, useEffectEvent, ChangeEvent } from "react";
+import { useReducer, useRef, useEffect, useEffectEvent } from "react";
 import { useForm } from "react-hook-form";
 import {
   HiOutlineCloudArrowUp,
@@ -39,7 +39,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useSignOut } from "@/hooks";
+import { useSignOut, useImageSelector } from "@/hooks";
 import api from "@/lib/api";
 import { useSocket } from "@/lib/context";
 import { changePasswordSchema, profileUpdateSchema, genders } from "@/lib/schema";
@@ -121,44 +121,20 @@ const Profile = () => {
     };
   }, [selectedImage]);
 
-  const handleImageSelectClick = async (event: ChangeEvent<HTMLInputElement>) => {
-    event.preventDefault();
-
-    /** Size is 3 MB and converted into Bytes */
-    const maxBytesAllow = 3 * 1024 * 1024;
-
-    const input = event.target;
-    const files = input.files;
-
-    if (!files || files.length === 0) return;
-
-    const imageFile = files[0];
-
-    if (!imageFile.type.startsWith("image/")) {
-      toast.info("Only image files are allowed!");
-      return;
-    }
-
-    if (imageFile.size > maxBytesAllow) {
-      input.value = "";
-      dispatch({ type: "SET_SELECTED_IMAGE", payload: userInfo?.image });
-      toast.info("File size exceeds the max limit!");
-      return;
-    }
-
-    const previewUrl = URL.createObjectURL(imageFile);
-    const formData = new FormData();
-    formData.append("profile-image", imageFile);
-
-    try {
+  const { handleImageSelect } = useImageSelector({
+    formKey: "profile-image",
+    onSuccess: (previewUrl, formData) => {
       dispatch({ type: "SET_SELECTED_IMAGE", payload: previewUrl });
       dispatch({ type: "SET_IMAGE_FORM_DATA", payload: formData });
       dispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: true });
-      input.value = "";
-    } catch (error: any) {
-      console.error(`Error while selecting file: ${error.message ?? "Unknown error"}`);
-    }
-  };
+    },
+    onError: () => {
+      dispatch({
+        type: "SET_SELECTED_IMAGE",
+        payload: userInfo?.image,
+      });
+    },
+  });
 
   const updateProfileImage = async (formData: FormData | null) => {
     if (!formData) return;
@@ -300,7 +276,7 @@ const Profile = () => {
               id="profile-image"
               ref={fileInputRef}
               name="profileImage"
-              onChange={handleImageSelectClick}
+              onChange={handleImageSelect}
               accept=".png, .jpg, .jpeg, .webp"
               className="hidden"
             />

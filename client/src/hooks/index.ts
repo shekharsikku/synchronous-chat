@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef, useState } from "react";
+import { useEffect, useCallback, useRef, useState, ChangeEvent } from "react";
 import { Socket } from "socket.io-client";
 import { toast } from "sonner";
 
@@ -190,6 +190,51 @@ export const useMessageActions = () => {
   };
 
   return { deleteSelectedMessage, handleEmojiReaction, translateMessage };
+};
+
+type UseImageSelectorOptions = {
+  formKey: string;
+  onSuccess?: (previewUrl: string, formData: FormData) => void;
+  onError?: (message: string) => void;
+};
+
+export const useImageSelector = ({ formKey, onSuccess, onError }: UseImageSelectorOptions) => {
+  /** Size is 3 MB and converted into Bytes */
+  const maxBytesAllow = 3 * 1024 * 1024;
+
+  const handleImageSelect = (event: ChangeEvent<HTMLInputElement>) => {
+    event.preventDefault();
+
+    const input = event.target;
+    const files = input.files;
+
+    if (!files || files.length === 0) return;
+
+    const imageFile = files[0];
+
+    if (!imageFile.type.startsWith("image/")) {
+      const message = "Only image files are allowed!";
+      toast.info(message);
+      onError?.(message);
+      return;
+    }
+
+    if (imageFile.size > maxBytesAllow) {
+      input.value = "";
+      const message = "File size exceeds the 3MB limit!";
+      toast.info(message);
+      onError?.(message);
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(imageFile);
+    const formData = new FormData();
+    formData.append(formKey, imageFile);
+    onSuccess?.(previewUrl, formData);
+    input.value = "";
+  };
+
+  return { handleImageSelect };
 };
 
 export { useAuthUser, useSignOut } from "@/hooks/use-auth";
