@@ -1,5 +1,4 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { useState, useReducer, ChangeEvent, useRef } from "react";
+import { useState, useReducer, ChangeEvent, useRef, useEffect } from "react";
 import { isDesktop } from "react-device-detect";
 import { useHotkeys } from "react-hotkeys-hook";
 import {
@@ -9,6 +8,8 @@ import {
   HiOutlineVideoCamera,
   HiOutlineShare,
   HiOutlineBackspace,
+  HiOutlineTrash,
+  HiOutlineCloudArrowUp,
 } from "react-icons/hi2";
 import { LuPencilLine, LuInfo, LuCheck, LuAudioLines } from "react-icons/lu";
 import { toast } from "sonner";
@@ -16,7 +17,19 @@ import { toast } from "sonner";
 import { groupAvatar } from "@/assets/images";
 import { GroupMembersList } from "@/components/chat/member-list";
 import { TooltipElement } from "@/components/chat/tooltip-element";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -32,7 +45,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
-import { useContacts } from "@/hooks";
+import { useContacts, useImageSelector, useGroupUpdate } from "@/hooks";
 import api from "@/lib/api";
 import env from "@/lib/env";
 import { useSocket, usePeer } from "@/lib/context";
@@ -49,7 +62,7 @@ type DetailsAction =
   | { type: "SET_DATA"; payload: { name: string; description: string } }
   | { type: "RESET_FORM" };
 
-const initialState = (groupDetails: GroupInfo): DetailsState => {
+const initialDetails = (groupDetails: GroupInfo): DetailsState => {
   return {
     name: groupDetails.name || "",
     description: groupDetails.description || "",
@@ -72,12 +85,53 @@ function detailsReducer(state: DetailsState, action: DetailsAction) {
   }
 }
 
+type AvatarState = {
+  selectedImage: string | null;
+  imageFormData: FormData | null;
+  isConfirmOpen: boolean;
+  isDeleteOpen: boolean;
+};
+
+type AvatarAction =
+  | { type: "SET_SELECTED_IMAGE"; payload: string | null }
+  | { type: "SET_IMAGE_FORM_DATA"; payload: FormData | null }
+  | { type: "TOGGLE_CONFIRMATION_MODAL"; payload?: boolean }
+  | { type: "TOGGLE_DELETION_MODAL"; payload?: boolean }
+  | { type: "RESET_AVATAR_STATE" };
+
+const initialAvatar = {
+  selectedImage: null,
+  imageFormData: null,
+  isConfirmOpen: false,
+  isDeleteOpen: false,
+};
+
+function avatarReducer(state: AvatarState, action: AvatarAction) {
+  switch (action.type) {
+    case "TOGGLE_CONFIRMATION_MODAL":
+      return { ...state, isConfirmOpen: action.payload ?? !state.isConfirmOpen };
+
+    case "TOGGLE_DELETION_MODAL":
+      return { ...state, isDeleteOpen: action.payload ?? !state.isDeleteOpen };
+
+    case "SET_SELECTED_IMAGE":
+      return { ...state, selectedImage: action.payload };
+
+    case "SET_IMAGE_FORM_DATA":
+      return { ...state, imageFormData: action.payload };
+
+    case "RESET_AVATAR_STATE":
+      return { ...state, selectedImage: null, imageFormData: null };
+
+    default:
+      return state;
+  }
+}
+
 const ChatHeader = () => {
-  const queryClient = useQueryClient();
   const { userInfo } = useAuthStore();
   const {
     selectedChatData,
-    setSelectedChatData,
     selectedChatType,
     closeChat,
     isPartnerTyping,
@@ -88,13 +142,16 @@ const ChatHeader = () => {
     setGroupSettingDialog,
   } = useChatStore();
   const { groups } = useContacts();
+  const { handleGroupUpdate } = useGroupUpdate();
   const userAvatar = getAvatar(selectedChatData);
   const refForNameInput = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [openUserInfoModal, setOpenUserInfoModal] = useState(false);
   const [openGroupInfoModal, setOpenGroupInfoModal] = useState(false);
   const [inputReadOnlyEnable, setInputReadOnlyEnable] = useState(true);
   const [isUpdatePending, setIsUpdatePending] = useState(false);
-  const [state, dispatch] = useReducer(detailsReducer, selectedChatData, initialState);
+  const [detailsState, detailsDispatch] = useReducer(detailsReducer, selectedChatData, initialDetails);
+  const [avatarState, avatarDispatch] = useReducer(avatarReducer, initialAvatar);
 
   useHotkeys("ctrl+q", () => closeChat(), {
     enabled: !!selectedChatData,
@@ -137,7 +194,7 @@ const ChatHeader = () => {
 
   const handleDetailsChange = (event: ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
-    dispatch({
+    detailsDispatch({
       type: "UPDATE_FIELD",
       field: event.target.name as "name" | "description",
       value: event.target.value,
@@ -145,7 +202,9 @@ const ChatHeader = () => {
   };
 
   const handleDetailsSubmit = async () => {
-    const nameAlreadyExists = groups?.some((group) => group.name === state.name && group._id !== selectedChatData?._id);
+    const nameAlreadyExists = groups?.some((group) => {
+      return group.name === detailsState.name && group._id !== selectedChatData?._id;
+    });
 
     if (nameAlreadyExists) {
       toast.info("Group with this name already exists!");
@@ -155,14 +214,8 @@ const ChatHeader = () => {
     setIsUpdatePending(true);
 
     try {
-      const response = await api.patch(`/api/group/update/${selectedChatData._id}/details`, state);
-      const updatedGroup: GroupInfo = { ...response.data.data, interaction: new Date().toISOString() };
-
-      queryClient.setQueryData<GroupInfo[]>(["groups", userInfo?._id], (older = []) => {
-        return older.map((group) => (group._id === updatedGroup._id ? updatedGroup : group));
-      });
-
-      setSelectedChatData(updatedGroup);
+      const response = await api.patch(`/api/group/update/${selectedChatData._id}/details`, detailsState);
+      handleGroupUpdate(response.data.data);
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
@@ -173,8 +226,9 @@ const ChatHeader = () => {
   };
 
   const renderActionIcon = () => {
-    const isInvalid = !state.name || !state.description;
-    const isUnchanged = state.name === selectedChatData?.name && state.description === selectedChatData?.description;
+    const isInvalid = !detailsState.name || !detailsState.description;
+    const isUnchanged =
+      detailsState.name === selectedChatData?.name && detailsState.description === selectedChatData?.description;
 
     if (isUpdatePending) return <Spinner className="size-4" />;
 
@@ -208,7 +262,7 @@ const ChatHeader = () => {
             size={16}
             className="tooltip-icon"
             onClick={() => {
-              dispatch({ type: "RESET_FORM" });
+              detailsDispatch({ type: "RESET_FORM" });
               refForNameInput.current?.focus();
             }}
           />
@@ -217,6 +271,62 @@ const ChatHeader = () => {
     }
 
     return null;
+  };
+
+  useEffect(() => {
+    return () => {
+      if (avatarState.selectedImage) {
+        URL.revokeObjectURL(avatarState.selectedImage);
+      }
+    };
+  }, [avatarState.selectedImage]);
+
+  const { handleImageSelect } = useImageSelector({
+    formKey: "group-avatar",
+    onSuccess: (previewUrl, formData) => {
+      avatarDispatch({ type: "SET_SELECTED_IMAGE", payload: previewUrl });
+      avatarDispatch({ type: "SET_IMAGE_FORM_DATA", payload: formData });
+      avatarDispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: true });
+    },
+    onError: () => {
+      avatarDispatch({ type: "RESET_AVATAR_STATE" });
+      avatarDispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: false });
+    },
+  });
+
+  const handleAvatarUpload = async (formData: FormData | null) => {
+    if (!formData) return;
+    setIsUpdatePending(true);
+
+    try {
+      const response = await api.patch(`/api/group/update/${selectedChatData._id}/avatar`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      handleGroupUpdate(response.data.data);
+      toast.success(response.data.message);
+    } catch (error: any) {
+      toast.error(error.response.data.message);
+    }
+
+    avatarDispatch({ type: "RESET_AVATAR_STATE" });
+    avatarDispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: false });
+    setIsUpdatePending(false);
+  };
+
+  const handleAvatarDelete = async () => {
+    setIsUpdatePending(true);
+
+    try {
+      const response = await api.delete(`/api/group/delete/${selectedChatData._id}/avatar`);
+      handleGroupUpdate(response.data.data);
+      toast.success(response.data.message);
+    } catch (error: any) {
+      toast.error(error.response.data.message);
+    }
+
+    avatarDispatch({ type: "RESET_AVATAR_STATE" });
+    avatarDispatch({ type: "TOGGLE_DELETION_MODAL", payload: false });
+    setIsUpdatePending(false);
   };
 
   return (
@@ -389,10 +499,11 @@ const ChatHeader = () => {
             onOpenChange={(open) => {
               setGroupSettingDialog(open);
               setInputReadOnlyEnable(true);
-              dispatch({
+              detailsDispatch({
                 type: "SET_DATA",
                 payload: { name: selectedChatData?.name, description: selectedChatData?.description },
               });
+              avatarDispatch({ type: "RESET_AVATAR_STATE" });
             }}
           >
             <DialogContent
@@ -408,10 +519,41 @@ const ChatHeader = () => {
               <div className="w-full flex flex-col gap-4">
                 <div className="w-full flex justify-between gap-4">
                   <div className="h-full w-2/6 p-5">
-                    <img
-                      src={selectedChatData.avatar || groupAvatar}
-                      alt="Group Avatar"
-                      className="size-full rounded-full border-4 border-white object-cover shadow-lg transition-all"
+                    <ContextMenu>
+                      <ContextMenuTrigger className="size-full">
+                        <Avatar className="size-full rounded-full overflow-hidden">
+                          <AvatarImage
+                            src={avatarState.selectedImage || selectedChatData.avatar}
+                            alt="group-avatar"
+                            className="object-cover size-full"
+                          />
+                          <AvatarFallback className="uppercase size-full text-5xl border-2 text-center font-bold transition-all bg-gray-50 dark:bg-transparent hover:bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]">
+                            {selectedChatData?.name?.charAt(0) ?? ""}
+                          </AvatarFallback>
+                        </Avatar>
+                      </ContextMenuTrigger>
+                      <ContextMenuContent className="w-20 flex flex-col gap-2 p-2 transition-all duration-300 text-gray-950 dark:text-gray-50">
+                        {selectedChatData.avatar && (
+                          <ContextMenuItem
+                            className="flex gap-2"
+                            onClick={() => avatarDispatch({ type: "TOGGLE_DELETION_MODAL", payload: true })}
+                          >
+                            <HiOutlineTrash size={16} className="text-neutral-600 dark:text-neutral-100" /> Delete
+                          </ContextMenuItem>
+                        )}
+                        <ContextMenuItem className="flex gap-2" onClick={() => fileInputRef.current?.click()}>
+                          <HiOutlineCloudArrowUp size={16} className="text-neutral-600 dark:text-neutral-100" /> Upload
+                        </ContextMenuItem>
+                      </ContextMenuContent>
+                    </ContextMenu>
+                    <input
+                      type="file"
+                      id="group-avatar-inp"
+                      ref={fileInputRef}
+                      name="group-avatar"
+                      onChange={handleImageSelect}
+                      accept=".png, .jpg, .jpeg, .webp"
+                      className="hidden"
                     />
                   </div>
 
@@ -424,7 +566,7 @@ const ChatHeader = () => {
                           id="group-name-inp"
                           name="name"
                           placeholder="Group Name"
-                          value={state.name}
+                          value={detailsState.name}
                           autoComplete="off"
                           onChange={handleDetailsChange}
                           readOnly={inputReadOnlyEnable}
@@ -439,7 +581,7 @@ const ChatHeader = () => {
                           id="group-desc-inp"
                           name="description"
                           placeholder="Group Description"
-                          value={state.description}
+                          value={detailsState.description}
                           autoComplete="off"
                           onChange={handleDetailsChange}
                           readOnly={inputReadOnlyEnable}
@@ -461,6 +603,69 @@ const ChatHeader = () => {
               </p>
             </DialogContent>
           </Dialog>
+
+          {/* Dialog for avatar update confirmation */}
+          <AlertDialog
+            open={avatarState.isConfirmOpen}
+            onOpenChange={(open) => avatarDispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: open })}
+          >
+            <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
+            <AlertDialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl select-none">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-start">Update group avatar?</AlertDialogTitle>
+                <AlertDialogDescription className="text-start dark:text-gray-300">
+                  Update group avatar for better user interactions!
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel
+                  disabled={isUpdatePending}
+                  onClick={() => {
+                    avatarDispatch({ type: "RESET_AVATAR_STATE" });
+                    avatarDispatch({ type: "TOGGLE_CONFIRMATION_MODAL", payload: false });
+                  }}
+                >
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  disabled={isUpdatePending}
+                  onClick={() => handleAvatarUpload(avatarState.imageFormData)}
+                >
+                  Update
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          {/* Dialog for avatar delete confirmation */}
+          <AlertDialog
+            open={avatarState.isDeleteOpen}
+            onOpenChange={(open) => avatarDispatch({ type: "TOGGLE_DELETION_MODAL", payload: open })}
+          >
+            <AlertDialogTrigger className="hidden"></AlertDialogTrigger>
+            <AlertDialogContent className="w-80 md:w-96 rounded-md shadow-lg transition-all hover:shadow-2xl select-none">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-start">Delete group avatar?</AlertDialogTitle>
+                <AlertDialogDescription className="text-start dark:text-gray-300">
+                  Are you sure to delete group avatar?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel
+                  disabled={isUpdatePending}
+                  onClick={() => {
+                    avatarDispatch({ type: "RESET_AVATAR_STATE" });
+                    avatarDispatch({ type: "TOGGLE_DELETION_MODAL", payload: false });
+                  }}
+                >
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction disabled={isUpdatePending} onClick={handleAvatarDelete}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           {/* Voice & Video Stream Info */}
           {selectedChatType === "contact" && isCurrentlyOnline && (
