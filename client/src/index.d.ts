@@ -98,3 +98,25 @@ interface ChatStore {
   groupSettingDialog: boolean;
   setGroupSettingDialog: (editDialog: boolean) => void;
 }
+
+type DetailsState = {
+  name: string;
+  description: string;
+};
+
+type MemberUpdateState = {
+  add: string[];
+  remove: string[];
+};
+
+interface GroupMemberManage {
+  contacts?: UserInfo[];
+  getMemberStatus: (userId: string) => "none" | "member" | "remove" | "add";
+  toggleMember: (userId: string) => void;
+  tooltipMap: {
+    member: string;
+    remove: string;
+    add: string;
+    none: string;
+  };
+}

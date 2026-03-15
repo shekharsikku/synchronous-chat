@@ -7,15 +7,14 @@ import {
   HiOutlineLanguage,
   HiOutlineVideoCamera,
   HiOutlineShare,
-  HiOutlineBackspace,
   HiOutlineTrash,
   HiOutlineCloudArrowUp,
 } from "react-icons/hi2";
-import { LuPencilLine, LuInfo, LuCheck, LuAudioLines } from "react-icons/lu";
+import { LuInfo, LuAudioLines } from "react-icons/lu";
 import { toast } from "sonner";
-
 import { groupAvatar } from "@/assets/images";
-import { GroupMembersList } from "@/components/chat/member-list";
+import { GroupMembersList, GroupMemberManage } from "@/components/chat/member-list";
+import { RenderActionIcon } from "@/components/chat/render-action-icon";
 import { TooltipElement } from "@/components/chat/tooltip-element";
 import {
   AlertDialog,
@@ -40,22 +39,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-// import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Spinner } from "@/components/ui/spinner";
 import { useContacts, useImageSelector, useGroupUpdate } from "@/hooks";
 import api from "@/lib/api";
 import env from "@/lib/env";
 import { useSocket, usePeer } from "@/lib/context";
 import { cn, languageOptions, getAvatar, formatUtcTimestamp } from "@/lib/utils";
 import { useAuthStore, useChatStore } from "@/lib/zustand";
-
-type DetailsState = {
-  name: string;
-  description: string;
-};
 
 type DetailsAction =
   | { type: "UPDATE_FIELD"; field: "name" | "description"; value: string }
@@ -128,6 +120,13 @@ function avatarReducer(state: AvatarState, action: AvatarAction) {
   }
 }
 
+const tooltipMap = {
+  member: "Remove from group",
+  remove: "Undo remove",
+  add: "Added to group",
+  none: "Add to group",
+};
+
 const ChatHeader = () => {
   const { userInfo } = useAuthStore();
   const {
@@ -141,7 +140,7 @@ const ChatHeader = () => {
     groupSettingDialog,
     setGroupSettingDialog,
   } = useChatStore();
-  const { groups } = useContacts();
+  const { contacts, groups } = useContacts();
   const { handleGroupUpdate } = useGroupUpdate();
   const userAvatar = getAvatar(selectedChatData);
   const refForNameInput = useRef<HTMLInputElement>(null);
@@ -152,6 +151,11 @@ const ChatHeader = () => {
   const [isUpdatePending, setIsUpdatePending] = useState(false);
   const [detailsState, detailsDispatch] = useReducer(detailsReducer, selectedChatData, initialDetails);
   const [avatarState, avatarDispatch] = useReducer(avatarReducer, initialAvatar);
+
+  const [memberChanges, setMemberChanges] = useState<MemberUpdateState>({
+    add: [],
+    remove: [],
+  });
 
   useHotkeys("ctrl+q", () => closeChat(), {
     enabled: !!selectedChatData,
@@ -192,6 +196,18 @@ const ChatHeader = () => {
     socket?.emit("before:call-request", { callingDetails });
   };
 
+  const handleDetailActionClick = (action: "change" | "clear") => {
+    if (action === "change") {
+      setInputReadOnlyEnable(false);
+    }
+
+    if (action === "clear") {
+      detailsDispatch({ type: "RESET_FORM" });
+    }
+
+    refForNameInput.current?.focus();
+  };
+
   const handleDetailsChange = (event: ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
     detailsDispatch({
@@ -225,52 +241,19 @@ const ChatHeader = () => {
     setIsUpdatePending(false);
   };
 
-  const renderActionIcon = () => {
-    const isInvalid = !detailsState.name || !detailsState.description;
-    const isUnchanged =
-      detailsState.name === selectedChatData?.name && detailsState.description === selectedChatData?.description;
+  const handleMembersUpdate = async () => {
+    setIsUpdatePending(true);
 
-    if (isUpdatePending) return <Spinner className="size-4" />;
-
-    if (inputReadOnlyEnable) {
-      return (
-        <TooltipElement content="Change Details">
-          <LuPencilLine
-            size={16}
-            className="tooltip-icon"
-            onClick={() => {
-              setInputReadOnlyEnable(false);
-              refForNameInput.current?.focus();
-            }}
-          />
-        </TooltipElement>
-      );
+    try {
+      const response = await api.patch(`/api/group/update/${selectedChatData._id}/members`, memberChanges);
+      handleGroupUpdate(response.data.data);
+      toast.success(response.data.message);
+    } catch (error: any) {
+      toast.error(error.response.data.message);
     }
 
-    if (!isInvalid && !isUnchanged) {
-      return (
-        <TooltipElement content="Save Details">
-          <LuCheck size={16} className="tooltip-icon" onClick={handleDetailsSubmit} />
-        </TooltipElement>
-      );
-    }
-
-    if (isUnchanged) {
-      return (
-        <TooltipElement content="Clear Details">
-          <HiOutlineBackspace
-            size={16}
-            className="tooltip-icon"
-            onClick={() => {
-              detailsDispatch({ type: "RESET_FORM" });
-              refForNameInput.current?.focus();
-            }}
-          />
-        </TooltipElement>
-      );
-    }
-
-    return null;
+    setMemberChanges({ add: [], remove: [] });
+    setIsUpdatePending(false);
   };
 
   useEffect(() => {
@@ -327,6 +310,49 @@ const ChatHeader = () => {
     avatarDispatch({ type: "RESET_AVATAR_STATE" });
     avatarDispatch({ type: "TOGGLE_DELETION_MODAL", payload: false });
     setIsUpdatePending(false);
+  };
+
+  const toggleMember = (userId: string) => {
+    setMemberChanges((prev: MemberUpdateState) => {
+      const isOriginalMember = selectedChatData.members?.includes(userId);
+
+      if (isOriginalMember) {
+        // removing existing member
+        if (prev.remove.includes(userId)) {
+          return {
+            ...prev,
+            remove: prev.remove.filter((id) => id !== userId),
+          };
+        }
+
+        return {
+          ...prev,
+          remove: [...prev.remove, userId],
+        };
+      } else {
+        // adding new member
+        if (prev.add.includes(userId)) {
+          return {
+            ...prev,
+            add: prev.add.filter((id) => id !== userId),
+          };
+        }
+
+        return {
+          ...prev,
+          add: [...prev.add, userId],
+        };
+      }
+    });
+  };
+
+  const getMemberStatus = (userId: string) => {
+    const isOriginalMember = selectedChatData.members?.includes(userId);
+
+    if (memberChanges.remove.includes(userId)) return "remove";
+    if (memberChanges.add.includes(userId)) return "add";
+
+    return isOriginalMember ? "member" : "none";
   };
 
   return (
@@ -504,6 +530,7 @@ const ChatHeader = () => {
                 payload: { name: selectedChatData?.name, description: selectedChatData?.description },
               });
               avatarDispatch({ type: "RESET_AVATAR_STATE" });
+              setMemberChanges({ add: [], remove: [] });
             }}
           >
             <DialogContent
@@ -590,16 +617,30 @@ const ChatHeader = () => {
                     </div>
 
                     <div className="absolute -top-2 right-5 flex items-center w-4 justify-center">
-                      {renderActionIcon()}
+                      <RenderActionIcon
+                        detailsState={detailsState}
+                        selectedChatData={selectedChatData}
+                        memberChanges={memberChanges}
+                        isUpdatePending={isUpdatePending}
+                        inputReadOnlyEnable={inputReadOnlyEnable}
+                        handleDetailsSubmit={handleDetailsSubmit}
+                        handleMembersUpdate={handleMembersUpdate}
+                        handleDetailActionClick={handleDetailActionClick}
+                      />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <GroupMembersList selectedChatData={selectedChatData} />
+              <GroupMemberManage
+                contacts={contacts}
+                getMemberStatus={getMemberStatus}
+                toggleMember={toggleMember}
+                tooltipMap={tooltipMap}
+              />
 
               <p className="text-center text-xs md:text-sm tracking-wider text-gray-500 dark:text-gray-100">
-                Created at: {formatUtcTimestamp(selectedChatData?.createdAt)}
+                Updated at: {formatUtcTimestamp(selectedChatData?.updatedAt)}
               </p>
             </DialogContent>
           </Dialog>
