@@ -33,6 +33,12 @@ const GroupSchema = new Schema<GroupInterface>(
   }
 );
 
+GroupSchema.pre("save", async function () {
+  if (!this.members.includes(this.admin)) {
+    this.members.push(this.admin);
+  }
+});
+
 const Group = model<GroupInterface>("Group", GroupSchema);
 
 export default Group;

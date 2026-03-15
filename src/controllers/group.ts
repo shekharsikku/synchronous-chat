@@ -2,8 +2,9 @@ import { Types } from "mongoose";
 
 import { Group, User, Conversation } from "#/models/index.js";
 import { getSocketId, io } from "#/server.js";
+import { deleteImageByUrl, uploadOnCloudinary } from "#/utils/cloudinary.js";
 import { HttpError, SuccessResponse, ErrorResponse } from "#/utils/response.js";
-
+import { unlinkFilesWithExtensions, extensionsToDelete, folderPath } from "#/utils/unlink.js";
 import type { CreateGroup, UpdateDetails, UpdateMembers } from "#/utils/schema.js";
 import type { Request, Response } from "express";
 
@@ -140,6 +141,68 @@ export const updateMembers = async (req: Request<{ id: string }, {}, UpdateMembe
     return SuccessResponse(res, 200, "Group members updated successfully!", updatedGroup);
   } catch (error: any) {
     return ErrorResponse(res, error.code || 500, error.message || "Error while updating group member!");
+  }
+};
+
+export const updateAvatar = async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const groupId = req.params.id;
+    const imagePath = req.file?.path;
+    const requestUser = req.user?._id!;
+
+    if (!imagePath) {
+      throw new HttpError(400, "Group avatar file required!");
+    }
+
+    const currentGroup = await Group.findOne({ _id: groupId, admin: requestUser });
+
+    if (!currentGroup) {
+      throw new HttpError(403, "You are not allowed make update to this group!");
+    }
+
+    const uploadImage = await uploadOnCloudinary(imagePath);
+
+    if (!uploadImage?.secure_url) {
+      throw new HttpError(500, "Error while uploading group avatar!");
+    }
+
+    if (currentGroup?.avatar) {
+      await deleteImageByUrl(currentGroup.avatar);
+    }
+
+    currentGroup.avatar = uploadImage.secure_url;
+    await currentGroup.save({ validateBeforeSave: false });
+
+    return SuccessResponse(res, 200, "Group avatar updated successfully!", currentGroup);
+  } catch (error: any) {
+    unlinkFilesWithExtensions(folderPath, extensionsToDelete);
+    return ErrorResponse(res, error.code || 500, error.message || "Error while updating group avatar!");
+  }
+};
+
+export const deleteAvatar = async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const groupId = req.params.id;
+    const requestUser = req.user?._id!;
+
+    const currentGroup = await Group.findOne({ _id: groupId, admin: requestUser });
+
+    if (!currentGroup) {
+      throw new HttpError(403, "You are not allowed update this group!");
+    }
+
+    if (!currentGroup.avatar) {
+      throw new HttpError(400, "Group avatar is not available!");
+    }
+
+    await deleteImageByUrl(currentGroup.avatar);
+
+    currentGroup.avatar = null;
+    await currentGroup.save({ validateBeforeSave: false });
+
+    return SuccessResponse(res, 200, "Group avatar deleted successfully!", currentGroup);
+  } catch (error: any) {
+    return ErrorResponse(res, error.code || 500, error.message || "Error while deleting group avatar!");
   }
 };
 

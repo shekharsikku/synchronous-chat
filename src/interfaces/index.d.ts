@@ -6,7 +6,7 @@ interface UserInterface extends Document {
   username?: string;
   password?: string;
   gender?: "Male" | "Female" | "Other";
-  image?: string;
+  image?: string | null;
   bio?: string;
   setup?: boolean;
   authentication?: {
@@ -43,7 +43,7 @@ interface MessageInterface extends Document {
 interface GroupInterface extends Document {
   name: string;
   description: string;
-  avatar?: string;
+  avatar?: string | null;
   admin: Types.ObjectId;
   members: Types.ObjectId[];
 }
