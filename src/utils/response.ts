@@ -11,32 +11,28 @@ class HttpError extends Error {
   }
 }
 
-type TypeResponse<T = any, E = any> = {
-  success: boolean;
-  message: string;
-  code?: number;
-  data?: T;
-  error?: E;
-};
+type TypeResponse<T = unknown, E = unknown> =
+  | { success: true; message: string; data?: T }
+  | { success: false; message: string; error?: E };
 
-const ErrorResponse = <E = any>(
+const ErrorResponse = <E>(
   res: Response,
   code: number,
   message: string,
   error?: E
-): Response<TypeResponse<undefined, E>> => {
-  const response: TypeResponse<undefined, E> = { success: false, message };
+): Response<TypeResponse<never, E>> => {
+  const response: TypeResponse<never, E> = { success: false, message };
   if (error !== undefined) response.error = error;
   return res.status(code).json(response);
 };
 
-const SuccessResponse = <T = any>(
+const SuccessResponse = <T>(
   res: Response,
   code: number,
   message: string,
   data?: T
-): Response<TypeResponse<T, undefined>> => {
-  const response: TypeResponse<T, undefined> = { success: true, message };
+): Response<TypeResponse<T, never>> => {
+  const response: TypeResponse<T, never> = { success: true, message };
   if (data !== undefined) response.data = data;
   return res.status(code).json(response);
 };
