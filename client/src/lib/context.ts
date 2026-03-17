@@ -1,7 +1,6 @@
 import Peer from "peerjs";
 import { createContext, useContext } from "react";
 import { Socket } from "socket.io-client";
-
 import type { Dispatch, SetStateAction, RefObject } from "react";
 
 export type SocketState = {
@@ -14,13 +13,13 @@ export const SocketContext = createContext<SocketState | undefined>(undefined);
 
 export const useSocket = (): SocketState => {
   const context = useContext(SocketContext);
+
   if (!context) {
     throw new Error("useSocket must be used within a SocketProvider");
   }
+
   return context;
 };
-
-/** PeerInformation for connect user via peer-to-peer */
 
 export type PeerInformation = {
   uid: string;
@@ -83,36 +82,24 @@ export interface PeerInterface {
 
 export const PeerContext = createContext<PeerInterface | undefined>(undefined);
 
-/** Custom hook for use peerjs webrtc context in app */
-
 export const usePeer = (): PeerInterface => {
   const context = useContext(PeerContext);
+
   if (!context) {
     throw new Error("usePeer must be used within a PeerProvider");
   }
+
   return context;
 };
 
-/** Custom hook for access theme context in app */
-
-export type Theme = "dark" | "light" | "system";
-
-type ThemeState = {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-};
-
-const initialState: ThemeState = {
-  theme: "system",
-  setTheme: () => null,
-};
-
-export const ThemeContext = createContext<ThemeState | undefined>(initialState);
+export const ThemeContext = createContext<ThemeState | undefined>(undefined);
 
 export const useTheme = () => {
   const context = useContext(ThemeContext);
+
   if (!context) {
     throw new Error("useTheme must be used within a ThemeProvider");
   }
+
   return context;
 };

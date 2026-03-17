@@ -120,3 +120,17 @@ interface GroupMemberManage {
     none: string;
   };
 }
+
+type Theme = "dark" | "light" | "system";
+
+type ThemeState = {
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+};
+
+type DeviceState = {
+  deviceId: string | null;
+  initDeviceId: () => string;
+};
+
+type AppStore = ThemeState & DeviceState;

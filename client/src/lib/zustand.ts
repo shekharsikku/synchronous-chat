@@ -1,5 +1,5 @@
 import { create } from "zustand";
-
+import { persist } from "zustand/middleware";
 import api from "@/lib/api";
 
 export const useAuthStore = create<AuthStore>((set) => ({
@@ -96,3 +96,25 @@ export const useChatStore = create<ChatStore>((set) => ({
   groupSettingDialog: false,
   setGroupSettingDialog: (groupSettingDialog: boolean) => set({ groupSettingDialog }),
 }));
+
+export const useAppStore = create<AppStore>()(
+  persist(
+    (set, get) => ({
+      theme: "system",
+      setTheme: (theme) => set({ theme }),
+
+      deviceId: null,
+      initDeviceId: () => {
+        let currentId = get().deviceId;
+
+        if (!currentId) {
+          currentId = crypto.randomUUID();
+          set({ deviceId: currentId });
+        }
+
+        return currentId;
+      },
+    }),
+    { name: "app_synchronous" }
+  )
+);

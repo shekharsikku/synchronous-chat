@@ -7,6 +7,7 @@ import { twMerge } from "tailwind-merge";
 
 import { noAvatar, maleAvatar, femaleAvatar } from "@/assets/images";
 import api from "@/lib/api";
+import { useAppStore } from "@/lib/zustand";
 
 dayjs.extend(localizedFormat);
 
@@ -302,11 +303,10 @@ export const contactQuery = (id: string, options?: ContactQueryOptions) => {
 };
 
 export function getDeviceId() {
-  let deviceId = localStorage.getItem("device_id");
+  const { deviceId, initDeviceId } = useAppStore.getState();
 
   if (!deviceId) {
-    deviceId = crypto.randomUUID();
-    localStorage.setItem("device_id", deviceId);
+    return initDeviceId();
   }
 
   return deviceId;

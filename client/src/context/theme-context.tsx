@@ -1,20 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { ThemeContext } from "@/lib/context";
+import { useAppStore } from "@/lib/zustand";
 
-import { type Theme, ThemeContext } from "@/lib/context";
-
-type ThemeProps = {
-  children: React.ReactNode;
-  storageKey?: string;
-  defaultTheme?: Theme;
-};
-
-const ThemeProvider = ({
-  children,
-  storageKey = "synchronous_theme",
-  defaultTheme = "system",
-  ...props
-}: ThemeProps) => {
-  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(storageKey) as Theme) || defaultTheme);
+const ThemeProvider = ({ children, ...props }: { children: React.ReactNode }) => {
+  const { theme, setTheme } = useAppStore();
 
   useEffect(() => {
     const rootElement = window.document.documentElement;
@@ -30,16 +19,8 @@ const ThemeProvider = ({
     rootElement.classList.add(theme);
   }, [theme]);
 
-  const value = {
-    theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
-      setTheme(theme);
-    },
-  };
-
   return (
-    <ThemeContext.Provider {...props} value={value}>
+    <ThemeContext.Provider {...props} value={{ theme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );
