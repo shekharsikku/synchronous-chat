@@ -1,27 +1,11 @@
 import { defineConfig } from "vite";
 import { resolve } from "path";
-import viteReact from "@vitejs/plugin-react";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
-import viteTsConfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
-  plugins: [
-    viteTsConfigPaths({
-      projects: ["./tsconfig.json"],
-    }),
-    tailwindcss(),
-    viteReact({
-      babel: {
-        plugins: [["babel-plugin-react-compiler"]],
-      },
-    }),
-  ],
-  resolve: {
-    alias: {
-      "@": resolve(__dirname, "src"),
-    },
-  },
-  build: {
-    chunkSizeWarningLimit: 2000,
-  },
+  plugins: [tailwindcss(), react(), babel({ presets: [reactCompilerPreset()] })],
+  resolve: { tsconfigPaths: true, alias: { "@": resolve(__dirname, "src") } },
+  build: { chunkSizeWarningLimit: 2000 },
 });
