@@ -1,6 +1,6 @@
 import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { useEffect, useRef, useEffectEvent } from "react";
-
+import { toast } from "sonner";
 import notificationIcon from "@/assets/favicon.ico";
 import notificationSound from "@/assets/sounds/message-alert.mp3";
 import { useContacts } from "@/hooks";
@@ -16,7 +16,7 @@ export const useListeners = () => {
   const { socket } = useSocket();
   const { contacts, allChats } = useContacts();
   const { userInfo, setUserInfo } = useAuthStore();
-  const { selectedChatData, setSelectedChatData, isSoundAllow } = useChatStore();
+  const { selectedChatData, setSelectedChatData, closeChat, isSoundAllow } = useChatStore();
 
   useEffect(() => {
     notificationAudio.current = new Audio(notificationSound);
@@ -144,24 +144,32 @@ export const useListeners = () => {
       });
     };
 
-    const handleGroupCreate = (newGroup: GroupInfo) => {
-      if (!userInfo?._id || !newGroup.members?.includes(userInfo._id)) return;
+    const handleGroupUpsert = (groupData: GroupInfo) => {
+      if (!userInfo?._id) return;
+
+      const isMember = groupData.members?.includes(userInfo._id!);
 
       queryClient.setQueryData<GroupInfo[]>(["groups", userInfo?._id], (older = []) => {
-        const exists = older.some((group) => group._id === newGroup._id);
-        if (exists) return older;
+        if (!isMember) {
+          return older.filter((group) => group._id !== groupData._id);
+        }
 
-        return [newGroup, ...older];
+        const exists = older.some((group) => group._id === groupData._id);
+
+        if (exists) {
+          return older.map((group) => (group._id === groupData._id ? groupData : group));
+        }
+
+        return [groupData, ...older];
       });
-    };
 
-    const handleGroupUpdate = (updatedGroup: GroupInfo) => {
-      queryClient.setQueryData<GroupInfo[]>(["groups", userInfo?._id], (older = []) => {
-        return older.map((group) => (group._id === updatedGroup._id ? updatedGroup : group));
-      });
-
-      if (selectedChatData && selectedChatData._id === updatedGroup._id) {
-        setSelectedChatData(updatedGroup);
+      if (selectedChatData?._id === groupData._id) {
+        if (!isMember) {
+          toast.info("You were removed from the group!");
+          closeChat();
+        } else {
+          setSelectedChatData(groupData);
+        }
       }
     };
 
@@ -170,9 +178,9 @@ export const useListeners = () => {
       ["message:remove", handleMessageUpdate],
       ["message:edited", handleMessageUpdate],
       ["message:reacted", handleMessageUpdate],
-      ["group:created", handleGroupCreate],
+      ["group:created", handleGroupUpsert],
       ["profile:update", handleProfileUpdate],
-      ["after:group-update", handleGroupUpdate],
+      ["after:group-update", handleGroupUpsert],
     ];
 
     if (!messageListeners.current) {

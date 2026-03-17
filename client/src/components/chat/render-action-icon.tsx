@@ -34,7 +34,7 @@ const RenderActionIcon: React.FC<RenderActionProps> = ({
   if (hasMemberChanges) {
     return (
       <TooltipElement content="Update Members">
-        <LuCheck size={16} className="tooltip-icon text-blue-400" onClick={handleMembersUpdate} />
+        <LuCheck size={16} className="tooltip-icon text-blue-500" onClick={handleMembersUpdate} />
       </TooltipElement>
     );
   }
@@ -42,7 +42,11 @@ const RenderActionIcon: React.FC<RenderActionProps> = ({
   if (inputReadOnlyEnable) {
     return (
       <TooltipElement content="Change Details">
-        <LuPencilLine size={16} className="tooltip-icon" onClick={() => handleDetailActionClick("change")} />
+        <LuPencilLine
+          size={14}
+          className="tooltip-icon text-yellow-500"
+          onClick={() => handleDetailActionClick("change")}
+        />
       </TooltipElement>
     );
   }
@@ -50,7 +54,7 @@ const RenderActionIcon: React.FC<RenderActionProps> = ({
   if (!isInvalid && !isUnchanged) {
     return (
       <TooltipElement content="Save Details">
-        <LuCheck size={16} className="tooltip-icon" onClick={handleDetailsSubmit} />
+        <LuCheck size={16} className="tooltip-icon text-green-500" onClick={handleDetailsSubmit} />
       </TooltipElement>
     );
   }
@@ -58,7 +62,11 @@ const RenderActionIcon: React.FC<RenderActionProps> = ({
   if (isUnchanged) {
     return (
       <TooltipElement content="Clear Details">
-        <HiOutlineBackspace size={16} className="tooltip-icon" onClick={() => handleDetailActionClick("clear")} />
+        <HiOutlineBackspace
+          size={16}
+          className="tooltip-icon text-red-500"
+          onClick={() => handleDetailActionClick("clear")}
+        />
       </TooltipElement>
     );
   }
