@@ -52,16 +52,8 @@ export const useChatStore = create<ChatStore>((set) => ({
   isPartnerTyping: false,
   setIsPartnerTyping: (isPartnerTyping: boolean) => set({ isPartnerTyping }),
 
-  isSoundAllow: true,
-  setIsSoundAllow: (isSoundAllow: boolean) => set({ isSoundAllow }),
-
   language: "en",
   setLanguage: (language: string) => set({ language }),
-
-  updateMessage: (id: string, updated: any) =>
-    set((state) => ({
-      messages: state.messages.map((message) => (message._id === id ? { ...message, ...updated } : message)),
-    })),
 
   editDialog: false,
   setEditDialog: (editDialog: boolean) => set({ editDialog }),
@@ -114,6 +106,9 @@ export const useAppStore = create<AppStore>()(
 
         return currentId;
       },
+
+      isAllow: false,
+      setIsAllow: (isAllow) => set({ isAllow }),
     }),
     { name: "app_synchronous" }
   )

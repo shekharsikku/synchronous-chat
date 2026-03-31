@@ -80,11 +80,8 @@ interface ChatStore {
   closeChat: () => void;
   isPartnerTyping: boolean;
   setIsPartnerTyping: (isPartnerTyping: boolean) => void;
-  isSoundAllow: boolean;
-  setIsSoundAllow: (isSoundAllow: boolean) => void;
   language: string;
   setLanguage: (translateLanguage: string) => void;
-  updateMessage: (id: string, updated: any) => void;
   editDialog: boolean;
   setEditDialog: (editDialog: boolean) => void;
   groupDialog: boolean;
@@ -131,6 +128,8 @@ type ThemeState = {
 type DeviceState = {
   deviceId: string | null;
   initDeviceId: () => string;
+  isAllow: boolean;
+  setIsAllow: (isAllow: boolean) => void;
 };
 
 type AppStore = ThemeState & DeviceState;

@@ -14,17 +14,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSignOut } from "@/hooks";
 import { usePeer, useTheme } from "@/lib/context";
 import { getAvatar } from "@/lib/utils";
-import { useAuthStore, useChatStore } from "@/lib/zustand";
+import { useAuthStore, useAppStore } from "@/lib/zustand";
 
 const ProfileInfo = () => {
   const navigate = useNavigate();
   const { userInfo } = useAuthStore();
   const { handleSignOut } = useSignOut();
   const { theme, setTheme } = useTheme();
-  const { isSoundAllow, setIsSoundAllow } = useChatStore();
+  const { isAllow, setIsAllow } = useAppStore();
   const { callingActive } = usePeer();
 
-  useHotkeys("ctrl+m", () => setIsSoundAllow(isSoundAllow ? false : true), {
+  useHotkeys("ctrl+m", () => setIsAllow(isAllow ? false : true), {
     enabled: !callingActive,
     enableOnFormTags: ["input"],
   });
@@ -66,11 +66,11 @@ const ProfileInfo = () => {
               <HiOutlineSun size={20} onClick={() => setTheme("light")} className="tooltip-icon" />
             )}
           </TooltipElement>
-          <TooltipElement content="Alert">
-            {isSoundAllow ? (
-              <HiOutlineBellAlert size={20} onClick={() => setIsSoundAllow(false)} className="tooltip-icon" />
+          <TooltipElement content="Notification">
+            {isAllow ? (
+              <HiOutlineBellAlert size={20} onClick={() => setIsAllow(false)} className="tooltip-icon" />
             ) : (
-              <HiOutlineBellSlash size={20} onClick={() => setIsSoundAllow(true)} className="tooltip-icon" />
+              <HiOutlineBellSlash size={20} onClick={() => setIsAllow(true)} className="tooltip-icon" />
             )}
           </TooltipElement>
           <TooltipElement content="Sign Out">
