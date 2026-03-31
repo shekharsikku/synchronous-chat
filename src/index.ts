@@ -1,5 +1,6 @@
 import { connect } from "mongoose";
 
+import logger from "#/middlewares/logger.js";
 import server from "#/server.js";
 import jobs from "#/services/jobs.js";
 import env from "#/utils/env.js";
@@ -19,7 +20,7 @@ void (async () => {
     }
 
     /** Database connection success log. */
-    console.log("\nDatabase connection success!");
+    logger.info("Database connection success!");
 
     /** Starting cron jobs schedules. */
     jobs.start();
@@ -27,10 +28,10 @@ void (async () => {
     /** Listening express/socket.io server */
     server.listen(port, () => {
       /** Server running information log. */
-      console.log(`Server running on port: ${port}\n`);
+      logger.info("Server running on port: %s", port);
     });
-  } catch (error: any) {
-    console.error(`Error: ${error.message}\n`);
+  } catch (err) {
+    logger.error({ err }, "Server startup failed!");
     process.exit(1);
   }
 })();

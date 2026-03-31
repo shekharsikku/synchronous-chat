@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import logger from "#/middlewares/logger.js";
 
 class EventsService {
   private clients = new Map<string, Response>();
@@ -16,7 +17,7 @@ class EventsService {
     res.write(": connected\n\n");
 
     this.clients.set(uid, res);
-    console.log("Event user connected:", uid);
+    logger.info("Event user connected: %s", uid);
 
     const heartbeat = setInterval(() => {
       res.write(": ping\n\n");
@@ -26,7 +27,7 @@ class EventsService {
     req.on("close", () => {
       clearInterval(heartbeat);
       this.clients.delete(uid);
-      console.log("Event user disconnected:", uid);
+      logger.info("Event user disconnected: %s", uid);
     });
   }
 
@@ -34,7 +35,7 @@ class EventsService {
     const client = this.clients.get(uid);
 
     if (!client) {
-      console.log("Event client not found:", uid);
+      logger.info("Event client not found: %s", uid);
       return;
     }
 
@@ -49,7 +50,7 @@ export const connectEvents = (req: Request, res: Response) => {
   const uid = req.user?._id;
 
   if (!uid) {
-    console.log("Event user not authenticated!");
+    logger.info("Event user not authenticated!");
     res.sendStatus(401);
     return;
   }

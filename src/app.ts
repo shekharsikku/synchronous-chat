@@ -7,11 +7,12 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
-import morgan from "morgan";
+import { pinoHttp } from "pino-http";
 import requestIp from "request-ip";
 import { parse } from "yaml";
 
 import { limiter } from "#/middlewares/index.js";
+import logger from "#/middlewares/logger.js";
 import routers from "#/routers/index.js";
 import env from "#/utils/env.js";
 import { HttpError, ErrorResponse, SuccessResponse } from "#/utils/response.js";
@@ -23,6 +24,9 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const { directives } = parse(readFileSync(join(__dirname, "../public/csp.yaml"), "utf-8"));
+
+/** Pino - HttpLogger */
+app.use(pinoHttp({ logger }));
 
 /** Helmet - Security Headers */
 app.use(
@@ -54,12 +58,9 @@ app.use(
   })
 );
 
-/** Morgan Logging + Trust Proxy */
-if (env.isDev) {
-  app.use(morgan("dev"));
-} else {
+/** Client Static + Trust Proxy */
+if (env.isProd) {
   app.set("trust proxy", 1);
-  app.use(morgan("tiny"));
   app.use(
     express.static(join(__dirname, "../client/dist"), {
       maxAge: "30d",
@@ -105,17 +106,17 @@ app.all("*path", (_req: Request, res: Response) => {
 });
 
 /**  Global Error Handler */
-app.use(((err: Error, _req: Request, res: Response, next: NextFunction) => {
+app.use(((err: HttpError | Error, req: Request, res: Response, next: NextFunction) => {
   if (res.headersSent) return next(err);
 
   if (err instanceof HttpError) {
+    req.log.warn({ err }, "Handled http error!");
     return ErrorResponse(res, err.code || 500, err.message || "Unknown error occurred!");
   }
 
-  const message = err.message || "Internal server error!";
-  console.error(`Error: ${message}`);
+  req.log.error({ err }, "Unhandled http error!");
 
-  return ErrorResponse(res, 500, message);
+  return ErrorResponse(res, 500, "Internal server error!");
 }) as ErrorRequestHandler);
 
 export default app;

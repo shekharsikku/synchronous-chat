@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { unlinkSync } from "node:fs";
-
 import { v2 as cloudinary } from "cloudinary";
 
+import logger from "#/middlewares/logger.js";
 import env from "#/utils/env.js";
 
 cloudinary.config({
@@ -18,7 +18,7 @@ const uploadOnCloudinary = async (localFilePath: string) => {
       public_id: randomUUID(),
       resource_type: "auto",
     });
-    console.log(`File uploaded successfully: ${response.public_id}`);
+    logger.info(response, "File uploaded successfully!");
     unlinkSync(localFilePath);
     return response;
   } catch {
@@ -31,9 +31,9 @@ const deleteImageByUrl = async (imageUrl: string) => {
   try {
     const publicId = imageUrl.split("/").pop()?.split(".")[0];
     const result = await cloudinary.uploader.destroy(publicId!);
-    console.log("Image deleted successfully:", result);
-  } catch (error: any) {
-    console.error("Error deleting image:", error.message);
+    logger.info(result, "Image deleted successfully!");
+  } catch (err) {
+    logger.error({ err }, "Error deleting image!");
   }
 };
 

@@ -19,7 +19,14 @@ const env = cleanEnv(process.env, {
 
   MONGODB_URI: url(),
   CORS_ORIGIN: str(),
-  NODE_ENV: str({ choices: ["development", "production"] }),
+  NODE_ENV: str({
+    choices: ["development", "production"],
+    default: "development",
+  }),
+  LOG_LEVEL: str({
+    choices: ["fatal", "error", "warn", "info", "debug", "trace", "silent"],
+    default: "info",
+  }),
 });
 
 export default env;

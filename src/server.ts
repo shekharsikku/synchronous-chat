@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
-
 import { Server, type Socket } from "socket.io";
 
+import logger from "#/middlewares/logger.js";
 import app from "#/app.js";
 import env from "#/utils/env.js";
 
@@ -25,7 +25,7 @@ io.use((socket, next) => {
   const publicKey = socket.handshake.auth.publicKey as string;
 
   if (publicKey !== env.SOCKET_PUBLIC) {
-    console.log(`Unauthorized socket attempt: ${socket.handshake.address}`);
+    logger.info("Unauthorized socket attempt: %s", socket.handshake.address);
     return next(new Error("Unauthorized socket connection!"));
   }
 
@@ -40,9 +40,9 @@ io.on("connection", (socket: Socket) => {
       userSocketMap.set(userId, new Set());
     }
     userSocketMap.get(userId)?.add(socket.id);
-    console.log(`User connected: ${userId}:${socket.id}`);
+    logger.info("User connected: %s:%s", userId, socket.id);
   } else {
-    console.log(`Socket disconnected missing userId:${socket.id}`);
+    logger.info("Socket disconnected missing userId: %s", socket.id);
     socket.disconnect();
   }
 
@@ -137,7 +137,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("disconnect", () => {
     for (const [userId, sockets] of userSocketMap.entries()) {
       if (sockets.has(socket.id)) {
-        console.log(`User disconnected: ${userId}:${socket.id}`);
+        logger.info("User disconnected: %s:%s", userId, socket.id);
         sockets.delete(socket.id);
         if (sockets.size === 0) userSocketMap.delete(userId);
         break;

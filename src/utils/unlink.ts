@@ -1,5 +1,6 @@
 import { readdir, stat, unlink } from "node:fs";
 import { join, extname } from "node:path";
+import logger from "#/middlewares/logger.js";
 
 const folderPath = "./public/temp";
 
@@ -8,7 +9,7 @@ const extensionsToDelete = [".png", ".jpg", ".jpeg", ".gif", ".pdf", ".webp", ".
 const unlinkFilesWithExtensions = (folderPath: string, extensions: string[]) => {
   readdir(folderPath, (err, files) => {
     if (err) {
-      console.error("Error reading directory:", err);
+      logger.error({ err }, "Error reading directory!");
       return;
     }
 
@@ -16,7 +17,7 @@ const unlinkFilesWithExtensions = (folderPath: string, extensions: string[]) => 
       const filePath = join(folderPath, file);
       stat(filePath, (err, stats) => {
         if (err) {
-          console.error("Error getting file stats:", err);
+          logger.error({ err }, "Error getting file stats!");
           return;
         }
 
@@ -25,10 +26,10 @@ const unlinkFilesWithExtensions = (folderPath: string, extensions: string[]) => 
           if (extensions.includes(fileExtension)) {
             unlink(filePath, (err) => {
               if (err) {
-                console.error("Error deleting file:", err);
+                logger.error({ err }, "Error deleting file!");
                 return;
               }
-              console.log("File deleted:", filePath);
+              logger.info("File deleted: %s", filePath);
             });
           }
         }

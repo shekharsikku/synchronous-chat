@@ -335,7 +335,6 @@ export const reactMessage = async (req: Request<{ id: string }, {}, { emoji: str
 
     return SuccessResponse(res, 200, "Message reacted successfully!");
   } catch (error: any) {
-    console.log({ error });
     return ErrorResponse(res, error.code || 500, error.message || "Error while reacting message!");
   }
 };

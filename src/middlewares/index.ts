@@ -6,6 +6,7 @@ import { Types } from "mongoose";
 import multer from "multer";
 import { ZodError, type ZodType } from "zod";
 
+import logger from "#/middlewares/logger.js";
 import { User } from "#/models/index.js";
 import env from "#/utils/env.js";
 import {
@@ -48,8 +49,8 @@ export const revokeToken = async (res: Response, authKey: any) => {
         },
       }
     );
-  } catch (error: any) {
-    console.error(`Error: ${error.message}`);
+  } catch (err) {
+    logger.error({ err }, "Unknown error occurred!");
   } finally {
     res.clearCookie("access", cookieOptions);
     res.clearCookie("refresh", cookieOptions);
@@ -225,7 +226,7 @@ export const limiter = (minute = 10, limit = 1000) => {
       return req.clientIp!;
     },
     handler: (req: Request, _res: Response, _next: NextFunction) => {
-      console.error(`Rate limit exceeded for IP: ${req.clientIp}`);
+      req.log.error(`Rate limit exceeded for IP: ${req.clientIp}`);
       throw new HttpError(429, "Maximum number of requests exceeded!");
     },
   });

@@ -1,7 +1,7 @@
 import { CronJob } from "cron";
 
 import { User, Message } from "#/models/index.js";
-import env from "#/utils/env.js";
+import logger from "#/middlewares/logger.js";
 
 const calculatePastDate = (daysAgo: number) => {
   const taskDate = new Date();
@@ -26,17 +26,9 @@ const jobs = new CronJob(
         Message.deleteMany({ createdAt: { $lt: messagesExpiryDate } }),
       ]);
 
-      if (env.isDev) {
-        console.log("Result:", {
-          authentication,
-          profiles,
-          messages,
-        });
-      }
-    } catch (error: any) {
-      console.log(`Error: ${error.message}`);
-    } finally {
-      console.log(`Schedule: ${new Date().toISOString()}`);
+      logger.info({ authentication, profiles, messages }, "Cron job result!");
+    } catch (err) {
+      logger.error({ err }, "Cron job failed!");
     }
   },
   null,
