@@ -407,7 +407,7 @@ const MessageBar = () => {
             <input
               type="text"
               id="message-input"
-              placeholder={`Message @${selectedChatData?.username || "user"}`}
+              placeholder={`Message @${selectedChatData.name.trim().toLowerCase().replace(/\s+/g, "_") || "unknown"}`}
               autoComplete="off"
               value={message}
               onChange={handleChange}

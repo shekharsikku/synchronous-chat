@@ -1,5 +1,5 @@
 import { HiOutlineXMark, HiOutlineSlash } from "react-icons/hi2";
-
+import { useHotkeys } from "react-hotkeys-hook";
 import { TooltipElement } from "@/components/chat/tooltip-element";
 import { usePlainText } from "@/hooks";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,11 @@ import { useChatStore } from "@/lib/zustand";
 const MessagePreview = () => {
   const { plainText } = usePlainText();
   const { replyTo, setReplyTo, selectedChatData } = useChatStore();
+
+  useHotkeys("esc", () => setReplyTo(null), {
+    enabled: !!replyTo,
+    enableOnFormTags: ["input", "textarea", "select"],
+  });
 
   const isReplyingToSelf = !!replyTo && !!selectedChatData && replyTo.sender === selectedChatData._id;
   const replyName = isReplyingToSelf ? selectedChatData?.name : "Yourself";
