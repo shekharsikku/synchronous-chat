@@ -1,6 +1,5 @@
 import { useEffect, useRef, useEffectEvent } from "react";
 import { useNavigate } from "react-router-dom";
-
 import env from "@/lib/env";
 import { useAuthStore } from "@/lib/zustand";
 
@@ -8,7 +7,15 @@ export const useEvents = () => {
   const navigate = useNavigate();
   const eventSourceRef = useRef<EventSource | null>(null);
   const connectedUserIdRef = useRef<string | null>(null);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const retryCountRef = useRef(0);
   const { userInfo, setUserInfo } = useAuthStore();
+
+  /** Delay for timeout min 10 sec to max 60 sec */
+  const getRetryDelay = () => {
+    const baseDelay = Math.min(10000 * 2 ** retryCountRef.current, 60000);
+    return baseDelay + Math.random() * 2000 - 1000;
+  };
 
   const updateUserInfo = useEffectEvent((updatedProfile: UserInfo) => {
     if (updatedProfile._id === userInfo?._id) {
@@ -18,16 +25,9 @@ export const useEvents = () => {
     }
   });
 
-  useEffect(() => {
+  const connectEvent = () => {
     if (!userInfo?._id) return;
-    if (connectedUserIdRef.current === userInfo._id) return;
-
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
-    }
-
-    connectedUserIdRef.current = userInfo._id;
+    if (eventSourceRef.current) return;
 
     const eventSource = new EventSource(`${env.serverUrl}/api/events`, {
       withCredentials: true,
@@ -40,16 +40,49 @@ export const useEvents = () => {
       updateUserInfo(updatedProfile);
     });
 
-    eventSource.onerror = (error) => {
-      console.error("Server events connection error:", error);
-      eventSource.close();
-      eventSourceRef.current = null;
-      connectedUserIdRef.current = null;
+    eventSource.onopen = () => {
+      retryCountRef.current = 0;
+      console.log("✅ Connected to event source!");
     };
 
-    return () => {
+    eventSource.onerror = (_error) => {
+      console.error("❌ Event source connection error!");
+
       eventSource.close();
       eventSourceRef.current = null;
+
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+
+      const retryDelay = getRetryDelay();
+      retryCountRef.current++;
+
+      console.log(`🔄 Reconnecting in ${(retryDelay / 1000).toFixed(1)} sec...`);
+
+      retryTimeoutRef.current = setTimeout(() => {
+        console.log("🔄 Reconnecting now...");
+        connectEvent();
+      }, retryDelay);
+    };
+  };
+
+  useEffect(() => {
+    if (!userInfo?._id) return;
+    if (connectedUserIdRef.current === userInfo._id) return;
+
+    connectedUserIdRef.current = userInfo._id;
+
+    connectEvent();
+
+    return () => {
+      eventSourceRef.current?.close();
+      eventSourceRef.current = null;
+
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+
       connectedUserIdRef.current = null;
     };
   }, [userInfo?._id]);
