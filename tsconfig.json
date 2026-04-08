@@ -31,13 +31,19 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
+    "noImplicitOverride": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "noPropertyAccessFromIndexSignature": true,
 
-    /* Path Alias & Base Url */
-    "rootDir": "src",
-    "outDir": "dist",
-    "baseUrl": "src",
+    /* For Node.js */
+    "types": ["node"],
+
+    /* Path Alias & File Layout */
+    "rootDir": "./src",
+    "outDir": "./dist",
     "paths": {
-      "#/*": ["*"]
+      "#/*": ["./src/*"]
     }
   },
   "tsc-alias": {
