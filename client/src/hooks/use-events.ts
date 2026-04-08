@@ -1,6 +1,7 @@
 import { useEffect, useRef, useEffectEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import env from "@/lib/env";
+import { getTimeoutDelay } from "@/lib/utils";
 import { useAuthStore } from "@/lib/zustand";
 
 export const useEvents = () => {
@@ -10,12 +11,6 @@ export const useEvents = () => {
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const retryCountRef = useRef(0);
   const { userInfo, setUserInfo } = useAuthStore();
-
-  /** Delay for timeout min 10 sec to max 60 sec */
-  const getRetryDelay = () => {
-    const baseDelay = Math.min(10000 * 2 ** retryCountRef.current, 60000);
-    return baseDelay + Math.random() * 2000 - 1000;
-  };
 
   const updateUserInfo = useEffectEvent((updatedProfile: UserInfo) => {
     if (updatedProfile._id === userInfo?._id) {
@@ -55,7 +50,7 @@ export const useEvents = () => {
         clearTimeout(retryTimeoutRef.current);
       }
 
-      const retryDelay = getRetryDelay();
+      const retryDelay = getTimeoutDelay(retryCountRef.current);
       retryCountRef.current++;
 
       console.log(`🔄 Reconnecting in ${(retryDelay / 1000).toFixed(1)} sec...`);

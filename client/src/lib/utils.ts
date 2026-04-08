@@ -328,6 +328,11 @@ export const displayFileName = (filename: string, maxLength = 20) => {
   return truncatedName + ext;
 };
 
+export const getTimeoutDelay = (count: number, min = 10000, max = 60000) => {
+  const baseDelay = Math.min(min * 2 ** count, max);
+  return baseDelay + Math.random() * 2000 - 1000;
+};
+
 /*
 
 import CryptoJS from "crypto-js";
