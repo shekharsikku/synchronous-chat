@@ -1,12 +1,19 @@
 import Peer, { type MediaConnection } from "peerjs";
-import { useEffect, useState, useRef, useId, useEffectEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useState, useRef, useId, useEffectEvent, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { PeerShare } from "@/components/chat";
 import { useSocket, PeerContext, type PeerInformation, type ResponseActions } from "@/lib/context";
 import env from "@/lib/env";
+import { getDeviceId, getTimeoutDelay } from "@/lib/utils";
 import { useAuthStore } from "@/lib/zustand";
+
+/** These errors are unrecoverable — don't retry. */
+const fatalErrors = new Set(["unavailable-id", "invalid-id", "ssl-unavailable"]);
+
+/** Only reconnect on network issues when online. */
+const retryableErrors = new Set(["network", "server-error", "socket-error", "socket-closed"]);
 
 const PeerProvider = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
@@ -26,6 +33,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const callTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectCountRef = useRef(0);
 
   const [callingResponse, setCallingResponse] = useState<ResponseActions>(null);
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
@@ -46,20 +54,25 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
 
   const callingToastId = useId();
 
-  const cleanupPeer = () => {
-    if (peerRef.current && !peerRef.current.destroyed) {
-      peerRef.current.destroy();
-      peerRef.current = null;
-      console.log("🧹 Cleaned up old peer!");
-      return true;
+  const cleanupPeer = useCallback(() => {
+    const currentPeer = peerRef.current;
+
+    if (!currentPeer || currentPeer.destroyed) {
+      console.log("🚫 No active peer to clean up!");
+      return false;
     }
 
-    console.log("🚫 No active peer to clean up!");
-    return false;
-  };
+    /** Remove all listeners before destroying to prevent ghost callbacks. */
+    currentPeer.removeAllListeners();
+    currentPeer.destroy();
+    peerRef.current = null;
+
+    console.log("🧹 Cleaned up old peer!");
+    return true;
+  }, []);
 
   useEffect(() => {
-    if (!userInfo?._id || !isConnected) {
+    if (!userInfo?._id || !userInfo?.setup || !isConnected) {
       console.log("⚠️ Returning from peer effect!");
       return;
     }
@@ -67,54 +80,92 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
     /** Function for initialize and manage peer connection. */
     const createPeerConnection = () => {
       const cleaned = cleanupPeer();
+
       if (cleaned) {
         console.log("✨ Peer cleanup done!");
       }
 
-      if (userInfo?.setup) {
-        console.log("🛠️ Creating peer connection!");
+      console.log("🛠️ Creating peer connection!");
 
-        const peer = new Peer();
-        peerRef.current = peer;
+      const deviceId = getDeviceId();
 
-        peer.on("open", (id) => {
-          console.log("✅ Peer connected successfully!");
+      const peer = new Peer(deviceId, {
+        host: env.peerHost,
+        port: env.peerPort,
+        path: env.peerPath,
+        secure: env.isProd,
+      });
 
-          if (env.isDev) {
-            console.log("🆔 Peer ID:", id);
+      peerRef.current = peer;
+
+      peer.on("open", (id) => {
+        reconnectCountRef.current = 0;
+        console.log("✅ Peer connected successfully!");
+
+        if (env.isDev) {
+          console.log("🆔 Peer ID:", id);
+        }
+
+        setLocalInfo({ uid: userInfo._id!, name: userInfo.name!, pid: id });
+        setIsPeerReady(true);
+      });
+
+      peer.on("error", (error) => {
+        console.error("❌ Peer error:", error.message);
+        setIsPeerReady(false);
+
+        if (!navigator.onLine) {
+          console.log("🌐 Offline → waiting...");
+          return;
+        }
+
+        const reconnectDelay = getTimeoutDelay(reconnectCountRef.current);
+        reconnectCountRef.current++;
+
+        console.log(`🔄 Reconnecting peer in ${(reconnectDelay / 1000).toFixed(1)} sec...`);
+        console.log(`🔄 Reconnecting peer attempt ${reconnectCountRef.current}`);
+
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+        }
+
+        reconnectTimeoutRef.current = setTimeout(() => {
+          console.log("🔁 Reconnecting peer now...");
+
+          if (peer.destroyed) {
+            console.warn("⚠️ Peer destroyed → recreating peer:", error.type);
+            createPeerConnection();
+            return;
           }
 
-          setLocalInfo({
-            uid: userInfo._id!,
-            name: userInfo.name!,
-            pid: id,
-          });
-          setIsPeerReady(true);
-        });
-
-        peer.on("error", (error) => {
-          console.error("❌ Peer error:", error.message);
-          setIsPeerReady(false);
-
-          if (error.type === "network" && navigator.onLine) {
-            console.log("🔁 Retrying connection in 5s!");
-            setTimeout(() => {
-              createPeerConnection();
-            }, 5000);
+          if (retryableErrors.has(error.type)) {
+            console.log("♻️ Reusing the peer instance:", error.type);
+            peer.reconnect();
+            return;
           }
-        });
 
-        peer.on("disconnected", () => {
-          console.log("⚠️ Peer disconnected!");
-          setIsPeerReady(false);
-        });
+          if (fatalErrors.has(error.type)) {
+            console.error("💀 Fatal error → recreating peer:", error.type);
+            peer.destroy();
+            createPeerConnection();
+            return;
+          }
 
-        peer.on("close", () => {
-          console.log("🔚 Peer connection closed!");
-          setIsPeerReady(false);
-          peerRef.current = null;
-        });
-      }
+          console.warn("🤔 Unknown error → recreating peer:", error.type);
+          createPeerConnection();
+        }, reconnectDelay);
+      });
+
+      peer.on("disconnected", () => {
+        console.log("⚠️ Peer disconnected!");
+        setIsPeerReady(false);
+      });
+
+      peer.on("close", () => {
+        console.log("🔚 Peer connection closed!");
+        setIsPeerReady(false);
+        peerRef.current = null;
+      });
     };
 
     const handleReconnect = () => {
@@ -126,7 +177,15 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
         }
 
         reconnectTimeoutRef.current = setTimeout(() => {
-          createPeerConnection();
+          const peer = peerRef.current;
+
+          if (!peer || peer.destroyed) {
+            console.log("🆕 Creating new peer instance...");
+            createPeerConnection();
+          } else {
+            console.log("♻️ Reconnecting existing peer...");
+            peer.reconnect();
+          }
         }, 5000);
       }
     };
@@ -136,6 +195,11 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
     const handleOffline = () => {
       console.log("📴 Network went offline!");
       setIsPeerReady(false);
+
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
     };
 
     window.addEventListener("online", handleReconnect);

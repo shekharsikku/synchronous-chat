@@ -30,3 +30,5 @@ directives:
     - "'self'"
     - "wss://0.peerjs.com"
     - "https://0.peerjs.com"
+    - "wss://synchronouspeer.onrender.com"
+    - "https://synchronouspeer.onrender.com"
