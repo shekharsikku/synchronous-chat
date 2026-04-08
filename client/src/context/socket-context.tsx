@@ -49,8 +49,8 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
 
     const socket = io(env.serverUrl, {
       withCredentials: true,
-      query: { userId: userInfo._id },
-      auth: { publicKey: env.publicKey },
+      query: { uid: userInfo._id },
+      auth: { pk: env.publicKey },
     });
 
     socket.on("connect", () => {

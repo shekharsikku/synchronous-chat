@@ -22,7 +22,7 @@ export const getSocketId = (userId: string) => {
 };
 
 io.use((socket, next) => {
-  const publicKey = socket.handshake.auth.publicKey as string;
+  const publicKey = socket.handshake.auth["pk"] as string;
 
   if (publicKey !== env.SOCKET_PUBLIC) {
     logger.info("Unauthorized socket attempt: %s", socket.handshake.address);
@@ -33,7 +33,7 @@ io.use((socket, next) => {
 });
 
 io.on("connection", (socket: Socket) => {
-  const userId = socket.handshake.query.userId as string;
+  const userId = socket.handshake.query["uid"] as string;
 
   if (userId) {
     if (!userSocketMap.has(userId)) {

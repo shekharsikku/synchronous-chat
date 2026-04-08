@@ -60,7 +60,7 @@ export const revokeToken = async (res: Response, authKey: any) => {
 
 export const authAccess = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const accessToken = req.cookies.access;
+    const accessToken = req.cookies["access"];
 
     if (!accessToken) {
       throw new HttpError(401, "Unauthorized access request!");
@@ -86,8 +86,8 @@ export const authAccess = async (req: Request, res: Response, next: NextFunction
 export const authRefresh = async (req: Request, res: Response) => {
   try {
     const deviceId = req.headers["x-device-id"] as string;
-    const refreshToken = req.cookies.refresh;
-    const currentAuthKey = req.cookies.current;
+    const refreshToken = req.cookies["refresh"];
+    const currentAuthKey = req.cookies["current"];
 
     if (!refreshToken || !currentAuthKey) {
       throw new HttpError(401, "Unauthorized refresh request!");
@@ -173,7 +173,7 @@ export const authRefresh = async (req: Request, res: Response) => {
 
 export const authEvents = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const accessToken = req.cookies.access;
+    const accessToken = req.cookies["access"];
     if (!accessToken) return res.sendStatus(401);
 
     const accessSecret = await generateSecret();

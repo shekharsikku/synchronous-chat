@@ -342,7 +342,7 @@ export const reactMessage = async (req: Request<{ id: string }, {}, { emoji: str
 export const deleteMessages = async (req: Request, res: Response) => {
   try {
     const uid = req.user?._id!;
-    const before = Number(req.query.before ?? 1) * 24;
+    const before = Number(req.query["before"] ?? 1) * 24;
 
     const hoursAgo = new Date();
     hoursAgo.setHours(hoursAgo.getHours() - before);

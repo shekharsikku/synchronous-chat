@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useCallback, useRef, useState, ChangeEvent } from "react";
+import { useEffect, useCallback, useRef, useState, type ChangeEvent } from "react";
 import { Socket } from "socket.io-client";
 import { toast } from "sonner";
 

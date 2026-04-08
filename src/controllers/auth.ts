@@ -86,7 +86,7 @@ const signInUser = async (req: Request<{}, {}, SignIn>, res: Response) => {
 };
 
 const signOutUser = async (req: Request, res: Response) => {
-  const currentAuthKey = req.cookies.current;
+  const currentAuthKey = req.cookies["current"];
 
   if (currentAuthKey) {
     await revokeToken(res, currentAuthKey);

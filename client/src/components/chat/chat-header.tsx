@@ -1,4 +1,4 @@
-import { useState, useReducer, ChangeEvent, useRef, useEffect } from "react";
+import { useState, useReducer, type ChangeEvent, useRef, useEffect } from "react";
 import { isDesktop } from "react-device-detect";
 import { useHotkeys } from "react-hotkeys-hook";
 import {
