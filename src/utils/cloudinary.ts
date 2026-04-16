@@ -1,8 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { unlinkSync } from "node:fs";
+import { existsSync, unlinkSync } from "node:fs";
 import { v2 as cloudinary } from "cloudinary";
-
-import { unlinkFilesWithExtensions, extensionsToDelete, folderPath } from "#/utils/unlink.js";
+import { unlinkFiles } from "#/utils/unlink.js";
 import logger from "#/middlewares/logger.js";
 import env from "#/utils/env.js";
 
@@ -12,31 +11,36 @@ cloudinary.config({
   api_secret: env.CLOUDINARY_API_SECRET,
 });
 
-const uploadOnCloudinary = async (localFilePath: string) => {
+export const uploadToCloudinary = async (localFilePath: string) => {
   try {
     if (!localFilePath) return null;
+
     const response = await cloudinary.uploader.upload(localFilePath, {
       public_id: randomUUID(),
       resource_type: "auto",
     });
-    logger.info(response, "File uploaded successfully!");
+
+    logger.info(response, "Image uploaded successfully!");
     return response;
-  } catch {
+  } catch (err) {
+    logger.error({ err }, "Error uploading image!");
     return null;
   } finally {
-    unlinkSync(localFilePath);
-    unlinkFilesWithExtensions(folderPath, extensionsToDelete);
+    if (localFilePath && existsSync(localFilePath)) {
+      unlinkSync(localFilePath);
+    }
+    unlinkFiles();
   }
 };
 
-const deleteImageByUrl = async (imageUrl: string) => {
+export const deleteFromCloudinary = async (imageUrl: string) => {
   try {
     const publicId = imageUrl.split("/").pop()?.split(".")[0];
-    const result = await cloudinary.uploader.destroy(publicId!);
+    if (!publicId) return;
+
+    const result = await cloudinary.uploader.destroy(publicId);
     logger.info(result, "Image deleted successfully!");
   } catch (err) {
     logger.error({ err }, "Error deleting image!");
   }
 };
-
-export { uploadOnCloudinary, deleteImageByUrl };

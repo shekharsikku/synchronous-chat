@@ -4,17 +4,17 @@ import logger from "#/middlewares/logger.js";
 
 const folderPath = "./public/temp";
 
-const extensionsToDelete = [".png", ".jpg", ".jpeg", ".gif", ".pdf", ".webp", ".svg"];
+const fileExtensions = [".png", ".jpg", ".jpeg", ".gif", ".pdf", ".webp", ".svg"];
 
-const unlinkFilesWithExtensions = (folderPath: string, extensions: string[]) => {
-  readdir(folderPath, (err, files) => {
+export const unlinkFiles = (folder = folderPath, extensions = fileExtensions) => {
+  readdir(folder, (err, files) => {
     if (err) {
       logger.error({ err }, "Error reading directory!");
       return;
     }
 
     files.forEach((file) => {
-      const filePath = join(folderPath, file);
+      const filePath = join(folder, file);
       stat(filePath, (err, stats) => {
         if (err) {
           logger.error({ err }, "Error getting file stats!");
@@ -37,5 +37,3 @@ const unlinkFilesWithExtensions = (folderPath: string, extensions: string[]) => 
     });
   });
 };
-
-export { folderPath, extensionsToDelete, unlinkFilesWithExtensions };
