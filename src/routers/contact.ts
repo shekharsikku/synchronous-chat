@@ -1,5 +1,4 @@
 import { Router } from "express";
-
 import { searchContact, fetchContacts, fetchContact, availableContact } from "#/controllers/contact.js";
 import { authAccess } from "#/middlewares/index.js";
 

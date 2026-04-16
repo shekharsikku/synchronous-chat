@@ -1,4 +1,4 @@
-import type { NextFunction, Request, Response, ErrorRequestHandler } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,8 +10,7 @@ import helmet from "helmet";
 import { pinoHttp } from "pino-http";
 import requestIp from "request-ip";
 import { parse } from "yaml";
-import { limiter } from "#/middlewares/index.js";
-import logger from "#/middlewares/logger.js";
+import { limiter, logger } from "#/middlewares/index.js";
 import routers from "#/routers/index.js";
 import env from "#/utils/env.js";
 import { ApiError, ApiResponse } from "#/utils/helpers.js";
@@ -92,7 +91,7 @@ app.use("/api", limiter(), routers);
 
 app.all("*path", (_req: Request, res: Response) => {
   if (env.isDev) {
-    return ApiResponse.success(res, 200, "Welcome to Synchronous Chat!");
+    return new ApiResponse(200, "Welcome to Synchronous Chat!").send(res);
   } else {
     return res.sendFile(join(__dirname, "../client/dist", "index.html"), {
       headers: {
@@ -103,16 +102,16 @@ app.all("*path", (_req: Request, res: Response) => {
 });
 
 /**  Global Error Handler */
-app.use(((err: any, req: Request, res: Response, next: NextFunction) => {
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   if (res.headersSent) return next(err);
 
   if (err instanceof ApiError) {
     req.log.warn({ err }, "Handled http error!");
-    return ApiResponse.error(res, err.code, err.message);
+    return new ApiResponse(err.code, err.message).send(res);
   }
 
   req.log.error({ err }, "Unhandled http error!");
-  return ApiResponse.error(res, 500, "Internal server error!");
-}) as ErrorRequestHandler);
+  return new ApiResponse(500, "Internal server error!").send(res);
+});
 
 export default app;

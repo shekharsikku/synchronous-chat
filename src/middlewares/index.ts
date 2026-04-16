@@ -1,182 +1,40 @@
 import { inflateSync } from "node:zlib";
 import { rateLimit } from "express-rate-limit";
-import { compactDecrypt, jwtVerify } from "jose";
-import { Types } from "mongoose";
+import { compactDecrypt } from "jose";
 import multer from "multer";
-import { ZodError, type ZodType } from "zod";
-import logger from "#/middlewares/logger.js";
-import { User } from "#/models/index.js";
+import pino from "pino";
 import env from "#/utils/env.js";
-import {
-  ApiError,
-  ApiResponse,
-  asyncHandler,
-  cookieOptions,
-  generateSecret,
-  generateAccess,
-  generateRefresh,
-  createUserInfo,
-  generateHash,
-} from "#/utils/helpers.js";
+import { ZodError, type ZodType } from "zod";
+import { ApiError, ApiResponse, generateSecret, asyncMiddleware } from "#/utils/helpers.js";
 import type { UserInterface } from "#/interfaces/index.js";
 import type { NextFunction, Request, Response } from "express";
 
-const parseAuthKey = (authKey: any) => {
-  const [firstKey, secondKey] = authKey.split(":", 2);
-
-  if (!Types.ObjectId.isValid(firstKey) || !Types.ObjectId.isValid(secondKey)) {
-    throw new Error("Invalid authentication key!");
-  }
-
-  return { userId: new Types.ObjectId(firstKey), authId: new Types.ObjectId(secondKey) };
-};
-
-export const revokeToken = async (res: Response, authKey: any) => {
-  try {
-    const { userId, authId } = parseAuthKey(authKey);
-
-    await User.updateOne(
-      {
-        _id: userId,
-        authentication: {
-          $elemMatch: { _id: authId },
-        },
-      },
-      {
-        $pull: {
-          authentication: { _id: authId },
-        },
-      }
-    );
-  } catch (err) {
-    logger.error({ err }, "Unknown error occurred!");
-  } finally {
-    res.clearCookie("access", cookieOptions);
-    res.clearCookie("refresh", cookieOptions);
-    res.clearCookie("current", cookieOptions);
-  }
-};
-
-export const authAccess = asyncHandler(async (req, _res, next) => {
+const authorizeAccess = async (req: Request): Promise<UserInterface> => {
   const accessToken = req.cookies["access"];
+  if (!accessToken) throw new Error("No access token available!");
 
-  if (!accessToken) {
+  const accessSecret = await generateSecret();
+  const decryptedAccess = await compactDecrypt(accessToken, accessSecret);
+  return JSON.parse(inflateSync(decryptedAccess.plaintext).toString());
+};
+
+export const authAccess = asyncMiddleware(async (req, _res, next) => {
+  try {
+    req.user = await authorizeAccess(req);
+    return next();
+  } catch {
     throw new ApiError(401, "Unauthorized access request!");
   }
-
-  let accessPayload;
-
-  try {
-    const accessSecret = await generateSecret();
-    const decrypted = await compactDecrypt(accessToken, accessSecret);
-    accessPayload = JSON.parse(inflateSync(decrypted.plaintext).toString());
-  } catch {
-    throw new ApiError(401, "Invalid or expired access request!");
-  }
-
-  req.user = accessPayload as UserInterface;
-  return next();
 });
 
-export const authRefresh = asyncHandler(async (req, res) => {
-  const deviceId = req.headers["x-device-id"] as string;
-  const refreshToken = req.cookies["refresh"];
-  const currentAuthKey = req.cookies["current"];
-
-  if (!refreshToken || !currentAuthKey) {
-    throw new ApiError(401, "Unauthorized refresh request!");
-  }
-
-  let userId: Types.ObjectId;
-  let authorizeId: Types.ObjectId;
-  let hashedRefresh: string;
-  let refreshExpiry: number | undefined;
-
+export const authEvents = asyncMiddleware(async (req, res, next) => {
   try {
-    const parsedPayload = parseAuthKey(currentAuthKey);
-    authorizeId = parsedPayload.authId;
-
-    const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
-
-    const [jwtResult, hashedToken] = await Promise.all([
-      jwtVerify(refreshToken, refreshSecret),
-      generateHash(refreshToken),
-    ]);
-
-    hashedRefresh = hashedToken;
-    refreshExpiry = jwtResult.payload.exp;
-
-    if (
-      !Types.ObjectId.isValid(jwtResult.payload.uid!) ||
-      !parsedPayload.userId.equals(new Types.ObjectId(jwtResult.payload.uid)) ||
-      jwtResult.payload.jti !== deviceId
-    ) {
-      throw new Error("Refresh request mismatch!");
-    }
-
-    userId = parsedPayload.userId;
-  } catch {
-    await revokeToken(res, currentAuthKey);
-    throw new ApiError(403, "Please, signin again to continue!");
-  }
-
-  const currentTime = Math.floor(Date.now() / 1000);
-  const expiresAt = refreshExpiry ?? currentTime;
-
-  const authFilter = {
-    _id: userId,
-    authentication: {
-      $elemMatch: { _id: authorizeId, token: hashedRefresh },
-    },
-  };
-
-  const requestUser = await User.findOne(authFilter);
-
-  if (!requestUser) {
-    throw new ApiError(401, "Invalid authorization!");
-  }
-
-  const userInfo = createUserInfo(requestUser);
-  const shouldRotate = currentTime >= expiresAt - env.REFRESH_EXPIRY / 2;
-
-  if (shouldRotate) {
-    const newRefreshToken = await generateRefresh(res, userId, authorizeId, deviceId);
-    const newHashedRefresh = await generateHash(newRefreshToken);
-    const newRefreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
-
-    const updatedResult = await User.updateOne(authFilter, {
-      $set: {
-        "authentication.$.token": newHashedRefresh,
-        "authentication.$.expiry": newRefreshExpiry,
-      },
-    });
-
-    if (updatedResult.modifiedCount === 0) {
-      await revokeToken(res, currentAuthKey);
-      throw new ApiError(403, "Please, signin again to continue!");
-    }
-  }
-
-  await generateAccess(res, userInfo);
-
-  return ApiResponse.success(res, 200, "Token refreshed successfully!");
-});
-
-export const authEvents = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const accessToken = req.cookies["access"];
-    if (!accessToken) return res.sendStatus(401);
-
-    const accessSecret = await generateSecret();
-    const decryptedAccess = await compactDecrypt(accessToken, accessSecret);
-    const accessPayload = JSON.parse(inflateSync(decryptedAccess.plaintext).toString());
-
-    req.user = accessPayload as UserInterface;
+    req.user = await authorizeAccess(req);
     return next();
   } catch {
     return res.sendStatus(401);
   }
-};
+});
 
 const storage = multer.diskStorage({
   destination: function (_req, _file, cb) {
@@ -198,11 +56,11 @@ export const validate =
       req.body = schema.parse(req.body);
       return next();
     } catch (error: any) {
+      let response = new ApiResponse(400, "Validation error occurred!", { error });
       if (error instanceof ZodError && error.name === "ZodError") {
-        const errors = JSON.parse(error.message);
-        return ApiResponse.error(res, 400, "Validation error occurred!", errors);
+        response.error = JSON.parse(error.message);
       }
-      return ApiResponse.error(res, 400, "Validation error occurred!", error);
+      return response.send(res);
     }
   };
 
@@ -222,3 +80,16 @@ export const limiter = (minute = 10, limit = 1000) => {
     },
   });
 };
+
+const otherOptions = env.isDev ? { transport: { target: "pino-pretty", options: { colorize: true } } } : { base: null };
+
+/** Pino Http Logger */
+export const logger = pino({
+  level: env.LOG_LEVEL,
+  redact: {
+    paths: ["req.headers.cookie", "res.headers['set-cookie']", "res.headers['content-security-policy']"],
+    remove: true,
+  },
+  msgPrefix: "[SYNCHRONOUS] ",
+  ...otherOptions,
+});

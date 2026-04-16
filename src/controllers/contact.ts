@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { ApiError, ApiResponse, asyncHandler } from "#/utils/helpers.js";
 import { User, Conversation } from "#/models/index.js";
 
-export const searchContact = asyncHandler<{}, {}, {}, { search?: string }>(async (req, res) => {
+export const searchContact = asyncHandler<{}, {}, {}, { search?: string }>(async (req) => {
   const search = req.query.search;
 
   if (!search) {
@@ -26,10 +26,10 @@ export const searchContact = asyncHandler<{}, {}, {}, { search?: string }>(async
     throw new ApiError(404, "No any contact found!");
   }
 
-  return ApiResponse.success(res, 200, "Available contacts!", contacts);
+  return new ApiResponse(200, "Available contacts!", { data: contacts });
 });
 
-export const availableContact = asyncHandler(async (req, res) => {
+export const availableContact = asyncHandler(async (req) => {
   const contacts = await User.find({
     _id: { $ne: req.user?._id! },
     setup: true,
@@ -41,10 +41,10 @@ export const availableContact = asyncHandler(async (req, res) => {
     throw new ApiError(404, "No any contact available!");
   }
 
-  return ApiResponse.success(res, 200, "Contacts fetched successfully!", contacts);
+  return new ApiResponse(200, "Contacts fetched successfully!", { data: contacts });
 });
 
-export const fetchContacts = asyncHandler(async (req, res) => {
+export const fetchContacts = asyncHandler(async (req) => {
   const uid = new Types.ObjectId(req.user?._id);
 
   const contacts = await Conversation.aggregate([
@@ -82,10 +82,10 @@ export const fetchContacts = asyncHandler(async (req, res) => {
     { $match: { _id: { $ne: null } } },
   ]);
 
-  return ApiResponse.success(res, 200, "Contacts fetched successfully!", contacts);
+  return new ApiResponse(200, "Contacts fetched successfully!", { data: contacts });
 });
 
-export const fetchContact = asyncHandler<{ id: string }>(async (req, res) => {
+export const fetchContact = asyncHandler<{ id: string }>(async (req) => {
   const userId = req.params.id;
 
   const userContact = await User.findById(userId).select("-setup -createdAt -updatedAt -__v");
@@ -94,5 +94,5 @@ export const fetchContact = asyncHandler<{ id: string }>(async (req, res) => {
     throw new ApiError(404, "Contact not found!");
   }
 
-  return ApiResponse.success(res, 200, "Contact fetched successfully!", userContact);
+  return new ApiResponse(200, "Contact fetched successfully!", { data: userContact });
 });

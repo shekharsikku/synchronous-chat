@@ -7,7 +7,7 @@ import { getSocketId, io } from "#/server.js";
 import type { MessageInterface } from "#/interfaces/index.js";
 import type { Message as MessageType, Translate } from "#/utils/schema.js";
 
-export const sendMessage = asyncHandler<{ id: string }, {}, MessageType, { type?: string }>(async (req, res) => {
+export const sendMessage = asyncHandler<{ id: string }, {}, MessageType, { type?: string }>(async (req) => {
   const senderId = req.user?._id!;
   const receiverId = new Types.ObjectId(req.params.id);
   const isGroup = req.query.type === "group";
@@ -98,7 +98,7 @@ export const sendMessage = asyncHandler<{ id: string }, {}, MessageType, { type?
       }
     }
   }
-  return ApiResponse.success(res, 201, "Message sent successfully!");
+  return new ApiResponse(201, "Message sent successfully!");
 });
 
 /** Transform null → undefined in response payload only */
@@ -110,7 +110,7 @@ const nullToUndefined = (obj: Record<string, any>) => {
   return obj;
 };
 
-export const getMessages = asyncHandler<{ id: string }, {}, {}, { group?: string }>(async (req, res) => {
+export const getMessages = asyncHandler<{ id: string }, {}, {}, { group?: string }>(async (req) => {
   const sender = req.user?._id!;
   const target = req.params.id;
   const isGroup = req.query.group === "true";
@@ -128,11 +128,11 @@ export const getMessages = asyncHandler<{ id: string }, {}, {}, { group?: string
     .sort({ createdAt: -1 })
     .lean({ transform: (doc) => nullToUndefined(doc) });
 
-  return ApiResponse.success(res, 200, "Messages fetched successfully!", messages.reverse());
+  return new ApiResponse(200, "Messages fetched successfully!", { data: messages.reverse() });
 });
 
 export const fetchMessages = asyncHandler<{ id: string }, {}, {}, { before?: string; group?: string; limit?: string }>(
-  async (req, res) => {
+  async (req) => {
     const sender = req.user?._id;
     const target = req.params.id;
     const { before, group, limit = 10 } = req.query;
@@ -157,7 +157,7 @@ export const fetchMessages = asyncHandler<{ id: string }, {}, {}, { before?: str
       .lean({ transform: (doc) => nullToUndefined(doc) });
 
     /* Reverse to show oldest → newest in UI */
-    return ApiResponse.success(res, 200, "Messages fetched successfully!", messages.reverse());
+    return new ApiResponse(200, "Messages fetched successfully!", { data: messages.reverse() });
   }
 );
 
@@ -174,7 +174,7 @@ const messageActionsEvents = async (message: MessageInterface, event: string) =>
   }
 };
 
-export const deleteMessage = asyncHandler<{ id: string }>(async (req, res) => {
+export const deleteMessage = asyncHandler<{ id: string }>(async (req) => {
   const uid = req.user?._id!;
   const mid = req.params.id;
 
@@ -194,10 +194,10 @@ export const deleteMessage = asyncHandler<{ id: string }>(async (req, res) => {
 
   await messageActionsEvents(message, "message:remove");
 
-  return ApiResponse.success(res, 200, "Message deleted successfully!");
+  return new ApiResponse(200, "Message deleted successfully!");
 });
 
-export const editMessage = asyncHandler<{ id: string }, {}, { text: string }>(async (req, res) => {
+export const editMessage = asyncHandler<{ id: string }, {}, { text: string }>(async (req) => {
   const uid = req.user?._id!;
   const mid = req.params.id;
   const { text } = req.body;
@@ -221,10 +221,10 @@ export const editMessage = asyncHandler<{ id: string }, {}, { text: string }>(as
 
   await messageActionsEvents(message, "message:edited");
 
-  return ApiResponse.success(res, 200, "Message edited successfully!");
+  return new ApiResponse(200, "Message edited successfully!");
 });
 
-export const reactMessage = asyncHandler<{ id: string }, {}, { emoji: string }>(async (req, res) => {
+export const reactMessage = asyncHandler<{ id: string }, {}, { emoji: string }>(async (req) => {
   const by = req.user?._id!;
   const mid = req.params.id;
   const { emoji } = req.body;
@@ -308,10 +308,10 @@ export const reactMessage = asyncHandler<{ id: string }, {}, { emoji: string }>(
 
   await messageActionsEvents(message, "message:reacted");
 
-  return ApiResponse.success(res, 200, "Message reacted successfully!");
+  return new ApiResponse(200, "Message reacted successfully!");
 });
 
-export const deleteMessages = asyncHandler<{}, {}, {}, { before?: string }>(async (req, res) => {
+export const deleteMessages = asyncHandler<{}, {}, {}, { before?: string }>(async (req) => {
   const uid = req.user?._id!;
   const before = Number(req.query.before ?? 1) * 24;
 
@@ -323,10 +323,10 @@ export const deleteMessages = asyncHandler<{}, {}, {}, { before?: string }>(asyn
     createdAt: { $lt: hoursAgo },
   });
 
-  return ApiResponse.success(res, 200, "Older messages deleted!", result);
+  return new ApiResponse(200, "Older messages deleted!", { data: result });
 });
 
-export const translateMessage = asyncHandler<{}, {}, Translate>(async (req, res) => {
+export const translateMessage = asyncHandler<{}, {}, Translate>(async (req) => {
   const { message, language } = req.body;
 
   if (!message || !language) {
@@ -339,5 +339,5 @@ export const translateMessage = asyncHandler<{}, {}, Translate>(async (req, res)
     throw new ApiError(500, "Error while translating message!");
   }
 
-  return ApiResponse.success(res, 200, "Text translated successfully!", result.translation);
+  return new ApiResponse(200, "Text translated successfully!", { data: result.translation });
 });

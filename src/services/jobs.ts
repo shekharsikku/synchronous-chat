@@ -1,7 +1,6 @@
 import { CronJob } from "cron";
-
+import { logger } from "#/middlewares/index.js";
 import { User, Message } from "#/models/index.js";
-import logger from "#/middlewares/logger.js";
 
 const calculatePastDate = (daysAgo: number) => {
   const taskDate = new Date();

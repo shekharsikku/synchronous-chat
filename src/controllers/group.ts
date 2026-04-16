@@ -5,7 +5,7 @@ import { getSocketId, io } from "#/server.js";
 import { deleteFromCloudinary, uploadToCloudinary } from "#/utils/cloudinary.js";
 import type { CreateGroup, UpdateDetails, UpdateMembers } from "#/utils/schema.js";
 
-export const createGroup = asyncHandler<{}, {}, CreateGroup>(async (req, res) => {
+export const createGroup = asyncHandler<{}, {}, CreateGroup>(async (req) => {
   const groupData = req.body;
   const reqUser = req.user?._id;
 
@@ -52,10 +52,10 @@ export const createGroup = asyncHandler<{}, {}, CreateGroup>(async (req, res) =>
     models: "Group",
   });
 
-  return ApiResponse.success(res, 200, "Group created successfully!");
+  return new ApiResponse(200, "Group created successfully!");
 });
 
-export const updateDetails = asyncHandler<{ id: string }, {}, UpdateDetails>(async (req, res) => {
+export const updateDetails = asyncHandler<{ id: string }, {}, UpdateDetails>(async (req) => {
   const groupId = req.params.id;
   const updateData = req.body;
   const reqUser = req.user?._id!;
@@ -82,10 +82,10 @@ export const updateDetails = asyncHandler<{ id: string }, {}, UpdateDetails>(asy
     throw new ApiError(404, "Group not found or you are not authorized!");
   }
 
-  return ApiResponse.success(res, 200, "Group details updated successfully!", updatedGroup);
+  return new ApiResponse(200, "Group details updated successfully!", { data: updatedGroup });
 });
 
-export const updateMembers = asyncHandler<{ id: string }, {}, UpdateMembers>(async (req, res) => {
+export const updateMembers = asyncHandler<{ id: string }, {}, UpdateMembers>(async (req) => {
   const groupId = req.params.id;
   const { add, remove } = req.body;
   const reqUser = req.user?._id!;
@@ -126,10 +126,10 @@ export const updateMembers = asyncHandler<{ id: string }, {}, UpdateMembers>(asy
     throw new ApiError(404, "Group not found or you are not authorized!");
   }
 
-  return ApiResponse.success(res, 200, "Group members updated successfully!", updatedGroup);
+  return new ApiResponse(200, "Group members updated successfully!", { data: updatedGroup });
 });
 
-export const updateAvatar = asyncHandler<{ id: string }>(async (req, res) => {
+export const updateAvatar = asyncHandler<{ id: string }>(async (req) => {
   const groupId = req.params.id;
   const imagePath = req.file?.path;
   const requestUser = req.user?._id!;
@@ -157,10 +157,10 @@ export const updateAvatar = asyncHandler<{ id: string }>(async (req, res) => {
   currentGroup.avatar = uploadImage.secure_url;
   await currentGroup.save({ validateBeforeSave: false });
 
-  return ApiResponse.success(res, 200, "Group avatar updated successfully!", currentGroup);
+  return new ApiResponse(200, "Group avatar updated successfully!", { data: currentGroup });
 });
 
-export const deleteAvatar = asyncHandler<{ id: string }>(async (req, res) => {
+export const deleteAvatar = asyncHandler<{ id: string }>(async (req) => {
   const groupId = req.params.id;
   const requestUser = req.user?._id!;
 
@@ -179,10 +179,10 @@ export const deleteAvatar = asyncHandler<{ id: string }>(async (req, res) => {
   currentGroup.avatar = null;
   await currentGroup.save({ validateBeforeSave: false });
 
-  return ApiResponse.success(res, 200, "Group avatar deleted successfully!", currentGroup);
+  return new ApiResponse(200, "Group avatar deleted successfully!", { data: currentGroup });
 });
 
-export const fetchGroups = asyncHandler(async (req, res) => {
+export const fetchGroups = asyncHandler(async (req) => {
   const uid = new Types.ObjectId(req.user?._id);
 
   const groups = await Group.aggregate([
@@ -215,7 +215,7 @@ export const fetchGroups = asyncHandler(async (req, res) => {
     },
   ]);
 
-  return ApiResponse.success(res, 200, "Groups fetched successfully!", groups);
+  return new ApiResponse(200, "Groups fetched successfully!", { data: groups });
 });
 
 export const fetchMembers = async (gid: Types.ObjectId) => {

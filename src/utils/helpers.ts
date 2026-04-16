@@ -3,7 +3,7 @@ import { deflateSync } from "node:zlib";
 import { CompactEncrypt, SignJWT } from "jose";
 import env from "#/utils/env.js";
 import type { UserInterface } from "#/interfaces/index.js";
-import type { CookieOptions, NextFunction, Request, RequestHandler, Response } from "express";
+import type { CookieOptions, NextFunction, Request, Response } from "express";
 import type { Types } from "mongoose";
 
 export const generateSecret = async () => {
@@ -87,18 +87,13 @@ export const createUserInfo = (user: UserInterface) => {
   return userInfo as UserInterface;
 };
 
-export const asyncHandler = <P = {}, ResBody = unknown, ReqBody = unknown, ReqQuery = {}>(
-  func: RequestHandler<P, ResBody, ReqBody, ReqQuery>
-): RequestHandler<P, ResBody, ReqBody, ReqQuery> => {
-  return (req: Request<P, ResBody, ReqBody, ReqQuery>, res: Response<ResBody>, next: NextFunction) => {
-    Promise.resolve(func(req, res, next)).catch(next);
-  };
-};
+type SuccessStatusCode = 200 | 201 | 202 | 204;
+type ErrorStatusCode = 400 | 401 | 403 | 404 | 409 | 422 | 429 | 500 | 502 | 503;
 
 export class ApiError extends Error {
-  public code: number;
+  public readonly code: ErrorStatusCode;
 
-  constructor(code: number, message: string) {
+  constructor(code: ErrorStatusCode, message: string) {
     super(message);
     this.code = code;
     this.name = this.constructor.name;
@@ -106,20 +101,78 @@ export class ApiError extends Error {
   }
 }
 
-type TypeResponse<T = unknown, E = unknown> =
-  | { success: true; message: string; data?: T }
-  | { success: false; message: string; error?: E };
+export class ApiResponse<T = unknown, E = unknown> {
+  private code: SuccessStatusCode | ErrorStatusCode;
+  private success: boolean;
+  private message: string;
+  public data?: T | undefined;
+  public error?: E | undefined;
 
-export class ApiResponse {
-  static success = <T>(res: Response, code: number, message: string, data?: T): Response<TypeResponse<T, never>> => {
-    const response: TypeResponse<T, never> = { success: true, message };
-    if (data !== undefined) response.data = data;
-    return res.status(code).json(response);
-  };
+  constructor(code: SuccessStatusCode | ErrorStatusCode, message: string);
+  constructor(code: SuccessStatusCode, message: string, options?: { data?: T });
+  constructor(code: ErrorStatusCode, message: string, options?: { error?: E });
 
-  static error = <E>(res: Response, code: number, message: string, error?: E): Response<TypeResponse<never, E>> => {
-    const response: TypeResponse<never, E> = { success: false, message };
-    if (error !== undefined) response.error = error;
-    return res.status(code).json(response);
-  };
+  constructor(code: SuccessStatusCode | ErrorStatusCode, message: string, options?: { data?: T; error?: E }) {
+    this.code = code;
+    this.success = code < 400;
+    this.message = message;
+
+    if (this.success) {
+      if (options?.error !== undefined) {
+        throw new Error("Cannot set error for success response!");
+      }
+      this.data = options?.data;
+    } else {
+      if (options?.data !== undefined) {
+        throw new Error("Cannot set data for error response!");
+      }
+      this.error = options?.error;
+    }
+  }
+
+  private toJSON() {
+    return {
+      success: this.success,
+      message: this.message,
+      data: this.data,
+      error: this.error,
+    };
+  }
+
+  public send(res: Response) {
+    return res.status(this.code).json(this.toJSON());
+  }
 }
+
+export const asyncHandler = <P = {}, ResBody = unknown, ReqBody = unknown, ReqQuery = {}>(
+  func: (
+    req: Request<P, ResBody, ReqBody, ReqQuery>,
+    res: Response<ResBody>,
+    next: NextFunction
+  ) => ApiResponse | Promise<ApiResponse>
+) => {
+  return async (req: Request<P, ResBody, ReqBody, ReqQuery>, res: Response<ResBody>, next: NextFunction) => {
+    try {
+      const response = await func(req, res, next);
+      return response.send(res);
+    } catch (err) {
+      return next(err);
+    }
+  };
+};
+
+export const asyncMiddleware = <P = {}, ResBody = unknown, ReqBody = unknown, ReqQuery = {}>(
+  func: (
+    req: Request<P, ResBody, ReqBody, ReqQuery>,
+    res: Response<ResBody>,
+    next: NextFunction
+  ) => void | Response | Promise<void | Response>
+) => {
+  return async (req: Request<P, ResBody, ReqBody, ReqQuery>, res: Response<ResBody>, next: NextFunction) => {
+    try {
+      return await func(req, res, next);
+    } catch (err) {
+      return next(err);
+    }
+  };
+};

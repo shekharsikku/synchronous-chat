@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import logger from "#/middlewares/logger.js";
+import { logger } from "#/middlewares/index.js";
 
 class EventsService {
   private clients = new Map<string, Response>();

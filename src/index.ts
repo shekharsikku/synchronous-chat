@@ -1,6 +1,5 @@
 import { connect } from "mongoose";
-
-import logger from "#/middlewares/logger.js";
+import { logger } from "#/middlewares/index.js";
 import server from "#/server.js";
 import jobs from "#/services/jobs.js";
 import env from "#/utils/env.js";

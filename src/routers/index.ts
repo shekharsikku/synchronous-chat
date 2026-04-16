@@ -20,7 +20,7 @@ router.use("/group", limiter(10, 500), groupRouter);
 router.get("/wakeup", (req: Request, res: Response) => {
   const from = (req.query["from"] as string) || "Unknown";
   const timestamp = new Date().toISOString();
-  return ApiResponse.success(res, 200, `Wake up server by ${from} at ${timestamp}!`);
+  return new ApiResponse(200, `Wake up server by ${from} at ${timestamp}!`).send(res);
 });
 
 /** Just for test sse in synchronous chat application */

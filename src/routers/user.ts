@@ -1,5 +1,4 @@
 import { Router } from "express";
-
 import { profileSetup, updateImage, deleteImage, changePassword, userInformation } from "#/controllers/user.js";
 import { authAccess, upload, validate } from "#/middlewares/index.js";
 import { profileSchema, passwordSchema } from "#/utils/schema.js";

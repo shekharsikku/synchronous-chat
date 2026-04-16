@@ -47,13 +47,13 @@ export const profileSetup = asyncHandler<{}, {}, Profile>(async (req, res) => {
   }
 
   if (!userInfo.setup) {
-    return ApiResponse.success(res, 200, "Please, complete your profile!");
+    return new ApiResponse(200, "Please, complete your profile!");
   }
 
   await generateAccess(res, userInfo);
   await profileUpdateEvents(userInfo);
 
-  return ApiResponse.success(res, 200, "Profile updated successfully!");
+  return new ApiResponse(200, "Profile updated successfully!");
 });
 
 export const updateImage = asyncHandler(async (req, res) => {
@@ -88,7 +88,7 @@ export const updateImage = asyncHandler(async (req, res) => {
   await generateAccess(res, userInfo);
   await profileUpdateEvents(userInfo);
 
-  return ApiResponse.success(res, 200, "Profile image updated successfully!");
+  return new ApiResponse(200, "Profile image updated successfully!");
 });
 
 export const deleteImage = asyncHandler(async (req, res) => {
@@ -114,7 +114,7 @@ export const deleteImage = asyncHandler(async (req, res) => {
   await generateAccess(res, userInfo);
   await profileUpdateEvents(userInfo);
 
-  return ApiResponse.success(res, 200, "Profile image deleted successfully!");
+  return new ApiResponse(200, "Profile image deleted successfully!");
 });
 
 export const changePassword = asyncHandler<{}, {}, Password>(async (req, res) => {
@@ -143,10 +143,10 @@ export const changePassword = asyncHandler<{}, {}, Password>(async (req, res) =>
   const userInfo = createUserInfo(requestUser);
   await generateAccess(res, userInfo);
 
-  return ApiResponse.success(res, 200, "Password changed successfully!");
+  return new ApiResponse(200, "Password changed successfully!");
 });
 
-export const userInformation = asyncHandler(async (req, res) => {
+export const userInformation = asyncHandler(async (req) => {
   const message = req.user?.setup ? "User profile information!" : "Please, complete your profile!";
-  return ApiResponse.success(res, 200, message, req.user);
+  return new ApiResponse(200, message, { data: req.user! });
 });
