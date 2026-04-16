@@ -7,7 +7,7 @@ import GroupRouter from "#/routers/group.js";
 import MessageRouter from "#/routers/message.js";
 import UserRouter from "#/routers/user.js";
 import { connectEvents } from "#/services/events.js";
-import { SuccessResponse } from "#/utils/response.js";
+import { HttpHandler } from "#/utils/response.js";
 
 const router = Router();
 
@@ -21,7 +21,7 @@ router.use("/group", limiter(10, 500), GroupRouter);
 router.get("/wakeup", (req: Request, res: Response) => {
   const from = (req.query["from"] as string) || "Unknown";
   const timestamp = new Date().toISOString();
-  return SuccessResponse(res, 200, `Wake up server by ${from} at ${timestamp}!`);
+  return HttpHandler.success(res, 200, `Wake up server by ${from} at ${timestamp}!`);
 });
 
 /** Just for test sse in synchronous chat application */

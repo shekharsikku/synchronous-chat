@@ -48,9 +48,11 @@ interface GroupInterface extends Document {
   members: Types.ObjectId[];
 }
 
-declare module "express" {
-  interface Request {
-    user?: UserInterface;
+declare global {
+  namespace Express {
+    interface Request {
+      user?: UserInterface;
+    }
   }
 }
 

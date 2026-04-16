@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-export const SignUpSchema = z.object({
+export const signUpSchema = z.object({
   email: z.email({ error: "Invalid email address!" }),
   password: z
     .string()
@@ -13,7 +13,7 @@ export const SignUpSchema = z.object({
     }),
 });
 
-export const SignInSchema = z
+export const signInSchema = z
   .object({
     email: z.email().optional(),
     username: z.string().optional(),
@@ -24,7 +24,7 @@ export const SignInSchema = z
     path: ["email", "username"],
   });
 
-export const ProfileSchema = z.object({
+export const profileSchema = z.object({
   name: z.string().min(3).max(30),
   username: z
     .string()
@@ -38,7 +38,7 @@ export const ProfileSchema = z.object({
   bio: z.string(),
 });
 
-export const PasswordSchema = z.object({
+export const passwordSchema = z.object({
   old_password: z.string(),
   new_password: z
     .string()
@@ -51,7 +51,7 @@ export const PasswordSchema = z.object({
     }),
 });
 
-export const MessageSchema = z
+export const messageSchema = z
   .object({
     type: z.enum(["text", "file"]),
     text: z.string().optional(),
@@ -76,12 +76,12 @@ export const MessageSchema = z
     }
   });
 
-export const TranslateSchema = z.object({
+export const translateSchema = z.object({
   message: z.string(),
   language: z.string(),
 });
 
-export const CreateGroupSchema = z.object({
+export const createGroupSchema = z.object({
   name: z.string().min(3).max(30),
   description: z.string().min(5).max(50),
   admin: z.string(),
@@ -91,22 +91,22 @@ export const CreateGroupSchema = z.object({
     .max(10, { error: "Group cannot have more than 10 members!" }),
 });
 
-export const UpdateDetailsSchema = z.object({
+export const updateDetailsSchema = z.object({
   name: z.string().min(3).max(30).optional(),
   description: z.string().min(5).max(50).optional(),
 });
 
-export const UpdateMembersSchema = z.object({
+export const updateMembersSchema = z.object({
   add: z.array(z.string().min(1)).default([]),
   remove: z.array(z.string().min(1)).default([]),
 });
 
-export type SignUp = z.infer<typeof SignUpSchema>;
-export type SignIn = z.infer<typeof SignInSchema>;
-export type Profile = z.infer<typeof ProfileSchema>;
-export type Password = z.infer<typeof PasswordSchema>;
-export type Message = z.infer<typeof MessageSchema>;
-export type Translate = z.infer<typeof TranslateSchema>;
-export type CreateGroup = z.infer<typeof CreateGroupSchema>;
-export type UpdateDetails = z.infer<typeof UpdateDetailsSchema>;
-export type UpdateMembers = z.infer<typeof UpdateMembersSchema>;
+export type SignUp = z.infer<typeof signUpSchema>;
+export type SignIn = z.infer<typeof signInSchema>;
+export type Profile = z.infer<typeof profileSchema>;
+export type Password = z.infer<typeof passwordSchema>;
+export type Message = z.infer<typeof messageSchema>;
+export type Translate = z.infer<typeof translateSchema>;
+export type CreateGroup = z.infer<typeof createGroupSchema>;
+export type UpdateDetails = z.infer<typeof updateDetailsSchema>;
+export type UpdateMembers = z.infer<typeof updateMembersSchema>;

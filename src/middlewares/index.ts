@@ -17,7 +17,7 @@ import {
   createUserInfo,
   generateHash,
 } from "#/utils/helpers.js";
-import { HttpError, ErrorResponse, SuccessResponse } from "#/utils/response.js";
+import { HttpError, HttpHandler } from "#/utils/response.js";
 
 import type { UserInterface } from "#/interfaces/index.js";
 import type { NextFunction, Request, Response } from "express";
@@ -58,118 +58,110 @@ export const revokeToken = async (res: Response, authKey: any) => {
   }
 };
 
-export const authAccess = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const accessToken = req.cookies["access"];
+export const authAccess = HttpHandler.wrap(async (req, _res, next) => {
+  const accessToken = req.cookies["access"];
 
-    if (!accessToken) {
-      throw new HttpError(401, "Unauthorized access request!");
-    }
-
-    let accessPayload;
-
-    try {
-      const accessSecret = await generateSecret();
-      const decrypted = await compactDecrypt(accessToken, accessSecret);
-      accessPayload = JSON.parse(inflateSync(decrypted.plaintext).toString());
-    } catch {
-      throw new HttpError(401, "Invalid or expired access request!");
-    }
-
-    req.user = accessPayload as UserInterface;
-    return next();
-  } catch (error: any) {
-    return ErrorResponse(res, error.code || 500, error.message || "Error while auth access!");
+  if (!accessToken) {
+    throw new HttpError(401, "Unauthorized access request!");
   }
-};
 
-export const authRefresh = async (req: Request, res: Response) => {
+  let accessPayload;
+
   try {
-    const deviceId = req.headers["x-device-id"] as string;
-    const refreshToken = req.cookies["refresh"];
-    const currentAuthKey = req.cookies["current"];
+    const accessSecret = await generateSecret();
+    const decrypted = await compactDecrypt(accessToken, accessSecret);
+    accessPayload = JSON.parse(inflateSync(decrypted.plaintext).toString());
+  } catch {
+    throw new HttpError(401, "Invalid or expired access request!");
+  }
 
-    if (!refreshToken || !currentAuthKey) {
-      throw new HttpError(401, "Unauthorized refresh request!");
+  req.user = accessPayload as UserInterface;
+  return next();
+});
+
+export const authRefresh = HttpHandler.wrap(async (req, res) => {
+  const deviceId = req.headers["x-device-id"] as string;
+  const refreshToken = req.cookies["refresh"];
+  const currentAuthKey = req.cookies["current"];
+
+  if (!refreshToken || !currentAuthKey) {
+    throw new HttpError(401, "Unauthorized refresh request!");
+  }
+
+  let userId: Types.ObjectId;
+  let authorizeId: Types.ObjectId;
+  let hashedRefresh: string;
+  let refreshExpiry: number | undefined;
+
+  try {
+    const parsedPayload = parseAuthKey(currentAuthKey);
+    authorizeId = parsedPayload.authId;
+
+    const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
+
+    const [jwtResult, hashedToken] = await Promise.all([
+      jwtVerify(refreshToken, refreshSecret),
+      generateHash(refreshToken),
+    ]);
+
+    hashedRefresh = hashedToken;
+    refreshExpiry = jwtResult.payload.exp;
+
+    if (
+      !Types.ObjectId.isValid(jwtResult.payload.uid!) ||
+      !parsedPayload.userId.equals(new Types.ObjectId(jwtResult.payload.uid)) ||
+      jwtResult.payload.jti !== deviceId
+    ) {
+      throw new Error("Refresh request mismatch!");
     }
 
-    let userId: Types.ObjectId;
-    let authorizeId: Types.ObjectId;
-    let hashedRefresh: string;
-    let refreshExpiry: number | undefined;
+    userId = parsedPayload.userId;
+  } catch {
+    await revokeToken(res, currentAuthKey);
+    throw new HttpError(403, "Please, signin again to continue!");
+  }
 
-    try {
-      const parsedPayload = parseAuthKey(currentAuthKey);
-      authorizeId = parsedPayload.authId;
+  const currentTime = Math.floor(Date.now() / 1000);
+  const expiresAt = refreshExpiry ?? currentTime;
 
-      const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
+  const authFilter = {
+    _id: userId,
+    authentication: {
+      $elemMatch: { _id: authorizeId, token: hashedRefresh },
+    },
+  };
 
-      const [jwtResult, hashedToken] = await Promise.all([
-        jwtVerify(refreshToken, refreshSecret),
-        generateHash(refreshToken),
-      ]);
+  const requestUser = await User.findOne(authFilter);
 
-      hashedRefresh = hashedToken;
-      refreshExpiry = jwtResult.payload.exp;
+  if (!requestUser) {
+    throw new HttpError(401, "Invalid authorization!");
+  }
 
-      if (
-        !Types.ObjectId.isValid(jwtResult.payload.uid!) ||
-        !parsedPayload.userId.equals(new Types.ObjectId(jwtResult.payload.uid)) ||
-        jwtResult.payload.jti !== deviceId
-      ) {
-        throw new Error("Refresh request mismatch!");
-      }
+  const userInfo = createUserInfo(requestUser);
+  const shouldRotate = currentTime >= expiresAt - env.REFRESH_EXPIRY / 2;
 
-      userId = parsedPayload.userId;
-    } catch {
+  if (shouldRotate) {
+    const newRefreshToken = await generateRefresh(res, userId, authorizeId, deviceId);
+    const newHashedRefresh = await generateHash(newRefreshToken);
+    const newRefreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
+
+    const updatedResult = await User.updateOne(authFilter, {
+      $set: {
+        "authentication.$.token": newHashedRefresh,
+        "authentication.$.expiry": newRefreshExpiry,
+      },
+    });
+
+    if (updatedResult.modifiedCount === 0) {
       await revokeToken(res, currentAuthKey);
       throw new HttpError(403, "Please, signin again to continue!");
     }
-
-    const currentTime = Math.floor(Date.now() / 1000);
-    const expiresAt = refreshExpiry ?? currentTime;
-
-    const authFilter = {
-      _id: userId,
-      authentication: {
-        $elemMatch: { _id: authorizeId, token: hashedRefresh },
-      },
-    };
-
-    const requestUser = await User.findOne(authFilter);
-
-    if (!requestUser) {
-      throw new HttpError(401, "Invalid authorization!");
-    }
-
-    const userInfo = createUserInfo(requestUser);
-    const shouldRotate = currentTime >= expiresAt - env.REFRESH_EXPIRY / 2;
-
-    if (shouldRotate) {
-      const newRefreshToken = await generateRefresh(res, userId, authorizeId, deviceId);
-      const newHashedRefresh = await generateHash(newRefreshToken);
-      const newRefreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
-
-      const updatedResult = await User.updateOne(authFilter, {
-        $set: {
-          "authentication.$.token": newHashedRefresh,
-          "authentication.$.expiry": newRefreshExpiry,
-        },
-      });
-
-      if (updatedResult.modifiedCount === 0) {
-        await revokeToken(res, currentAuthKey);
-        throw new HttpError(403, "Please, signin again to continue!");
-      }
-    }
-
-    await generateAccess(res, userInfo);
-
-    return SuccessResponse(res, 200, "Token refreshed successfully!");
-  } catch (error: any) {
-    return ErrorResponse(res, error.code || 500, error.message || "Error while token refresh!");
   }
-};
+
+  await generateAccess(res, userInfo);
+
+  return HttpHandler.success(res, 200, "Token refreshed successfully!");
+});
 
 export const authEvents = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -209,9 +201,9 @@ export const validate =
     } catch (error: any) {
       if (error instanceof ZodError && error.name === "ZodError") {
         const errors = JSON.parse(error.message);
-        return ErrorResponse(res, 400, "Validation error occurred!", errors);
+        return HttpHandler.error(res, 400, "Validation error occurred!", errors);
       }
-      return ErrorResponse(res, 400, "Validation error occurred!", error);
+      return HttpHandler.error(res, 400, "Validation error occurred!", error);
     }
   };
 

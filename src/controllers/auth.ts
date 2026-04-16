@@ -5,87 +5,78 @@ import { revokeToken } from "#/middlewares/index.js";
 import { User } from "#/models/index.js";
 import env from "#/utils/env.js";
 import { cookieOptions, generateAccess, generateRefresh, createUserInfo, generateHash } from "#/utils/helpers.js";
-import { HttpError, ErrorResponse, SuccessResponse } from "#/utils/response.js";
+import { HttpError, HttpHandler } from "#/utils/response.js";
 
 import type { SignUp, SignIn } from "#/utils/schema.js";
-import type { Request, Response } from "express";
 
-const signUpUser = async (req: Request<{}, {}, SignUp>, res: Response) => {
-  try {
-    const { email, password } = req.body;
+export const signUpUser = HttpHandler.wrap<{}, {}, SignUp>(async (req, res) => {
+  const { email, password } = req.body;
 
-    const existsEmail = await User.exists({ email });
+  const existsEmail = await User.exists({ email });
 
-    if (existsEmail) {
-      throw new HttpError(409, "Email already exists!");
-    }
-
-    const hashSalt = await genSalt(12);
-    const hashedPassword = await hash(password, hashSalt);
-
-    await User.create({ email, password: hashedPassword });
-
-    return SuccessResponse(res, 201, "Signed up successfully!");
-  } catch (error: any) {
-    return ErrorResponse(res, error.code || 500, error.message || "Error while user signup!");
+  if (existsEmail) {
+    throw new HttpError(409, "Email already exists!");
   }
-};
 
-const signInUser = async (req: Request<{}, {}, SignIn>, res: Response) => {
-  try {
-    const deviceId = req.headers["x-device-id"] as string;
-    const { email, password, username } = req.body;
-    const conditions = [];
+  const hashSalt = await genSalt(12);
+  const hashedPassword = await hash(password, hashSalt);
 
-    if (email) {
-      conditions.push({ email });
-    } else if (username) {
-      conditions.push({ username });
-    } else {
-      throw new HttpError(400, "Email or Username required!");
-    }
+  await User.create({ email, password: hashedPassword });
 
-    const existsUser = await User.findOne({
-      $or: conditions,
-    }).select("+password +authentication");
+  return HttpHandler.success(res, 201, "Signed up successfully!");
+});
 
-    if (!existsUser) {
-      throw new HttpError(404, "User not exists!");
-    }
+export const signInUser = HttpHandler.wrap<{}, {}, SignIn>(async (req, res) => {
+  const deviceId = req.headers["x-device-id"] as string;
+  const { email, password, username } = req.body;
+  const conditions = [];
 
-    const isCorrect = await compare(password, existsUser.password!);
-
-    if (!isCorrect) {
-      throw new HttpError(403, "Incorrect password!");
-    }
-
-    const userInfo = createUserInfo(existsUser);
-    await generateAccess(res, userInfo);
-
-    if (!userInfo.setup) {
-      return SuccessResponse(res, 200, "Please, complete your profile!", userInfo);
-    }
-
-    const authorizeId = new Types.ObjectId();
-    const refreshToken = await generateRefresh(res, userInfo._id!, authorizeId, deviceId);
-    const hashedRefresh = await generateHash(refreshToken);
-    const refreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
-
-    existsUser.authentication?.push({
-      _id: authorizeId,
-      token: hashedRefresh,
-      expiry: refreshExpiry,
-    });
-
-    await existsUser.save();
-
-    return SuccessResponse(res, 200, "Signed in successfully!", userInfo);
-  } catch (error: any) {
-    return ErrorResponse(res, error.code || 500, error.message || "Error while user signin!");
+  if (email) {
+    conditions.push({ email });
+  } else if (username) {
+    conditions.push({ username });
+  } else {
+    throw new HttpError(400, "Email or Username required!");
   }
-};
 
-const signOutUser = async (req: Request, res: Response) => {
+  const existsUser = await User.findOne({
+    $or: conditions,
+  }).select("+password +authentication");
+
+  if (!existsUser) {
+    throw new HttpError(404, "User not exists!");
+  }
+
+  const isCorrect = await compare(password, existsUser.password!);
+
+  if (!isCorrect) {
+    throw new HttpError(403, "Incorrect password!");
+  }
+
+  const userInfo = createUserInfo(existsUser);
+  await generateAccess(res, userInfo);
+
+  if (!userInfo.setup) {
+    return HttpHandler.success(res, 200, "Please, complete your profile!", userInfo);
+  }
+
+  const authorizeId = new Types.ObjectId();
+  const refreshToken = await generateRefresh(res, userInfo._id!, authorizeId, deviceId);
+  const hashedRefresh = await generateHash(refreshToken);
+  const refreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
+
+  existsUser.authentication?.push({
+    _id: authorizeId,
+    token: hashedRefresh,
+    expiry: refreshExpiry,
+  });
+
+  await existsUser.save();
+
+  return HttpHandler.success(res, 200, "Signed in successfully!", userInfo);
+});
+
+export const signOutUser = HttpHandler.wrap(async (req, res) => {
   const currentAuthKey = req.cookies["current"];
 
   if (currentAuthKey) {
@@ -96,7 +87,5 @@ const signOutUser = async (req: Request, res: Response) => {
   res.clearCookie("refresh", cookieOptions);
   res.clearCookie("current", cookieOptions);
 
-  return SuccessResponse(res, 200, "Signed out successfully!");
-};
-
-export { signUpUser, signInUser, signOutUser };
+  return HttpHandler.success(res, 200, "Signed out successfully!");
+});

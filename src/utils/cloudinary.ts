@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { unlinkSync } from "node:fs";
 import { v2 as cloudinary } from "cloudinary";
 
+import { unlinkFilesWithExtensions, extensionsToDelete, folderPath } from "#/utils/unlink.js";
 import logger from "#/middlewares/logger.js";
 import env from "#/utils/env.js";
 
@@ -19,11 +20,12 @@ const uploadOnCloudinary = async (localFilePath: string) => {
       resource_type: "auto",
     });
     logger.info(response, "File uploaded successfully!");
-    unlinkSync(localFilePath);
     return response;
   } catch {
-    unlinkSync(localFilePath);
     return null;
+  } finally {
+    unlinkSync(localFilePath);
+    unlinkFilesWithExtensions(folderPath, extensionsToDelete);
   }
 };
 

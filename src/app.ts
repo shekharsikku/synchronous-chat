@@ -15,7 +15,7 @@ import { limiter } from "#/middlewares/index.js";
 import logger from "#/middlewares/logger.js";
 import routers from "#/routers/index.js";
 import env from "#/utils/env.js";
-import { HttpError, ErrorResponse, SuccessResponse } from "#/utils/response.js";
+import { HttpError, HttpHandler } from "#/utils/response.js";
 
 import type { NextFunction, Request, Response, ErrorRequestHandler } from "express";
 
@@ -95,7 +95,7 @@ app.use("/api", limiter(), routers);
 
 app.all("*path", (_req: Request, res: Response) => {
   if (env.isDev) {
-    return SuccessResponse(res, 200, "Welcome to Synchronous Chat!");
+    return HttpHandler.success(res, 200, "Welcome to Synchronous Chat!");
   } else {
     return res.sendFile(join(__dirname, "../client/dist", "index.html"), {
       headers: {
@@ -106,17 +106,16 @@ app.all("*path", (_req: Request, res: Response) => {
 });
 
 /**  Global Error Handler */
-app.use(((err: HttpError | Error, req: Request, res: Response, next: NextFunction) => {
+app.use(((err: any, req: Request, res: Response, next: NextFunction) => {
   if (res.headersSent) return next(err);
 
   if (err instanceof HttpError) {
     req.log.warn({ err }, "Handled http error!");
-    return ErrorResponse(res, err.code || 500, err.message || "Unknown error occurred!");
+    return HttpHandler.error(res, err.code, err.message);
   }
 
   req.log.error({ err }, "Unhandled http error!");
-
-  return ErrorResponse(res, 500, "Internal server error!");
+  return HttpHandler.error(res, 500, "Internal server error!");
 }) as ErrorRequestHandler);
 
 export default app;

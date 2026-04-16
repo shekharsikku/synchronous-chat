@@ -1,119 +1,99 @@
 import { Types } from "mongoose";
 
 import { User, Conversation } from "#/models/index.js";
-import { HttpError, SuccessResponse, ErrorResponse } from "#/utils/response.js";
+import { HttpError, HttpHandler } from "#/utils/response.js";
 
-import type { Request, Response } from "express";
+export const searchContact = HttpHandler.wrap<{}, {}, {}, { search?: string }>(async (req, res) => {
+  const search = req.query.search;
 
-const searchContact = async (req: Request<{}, {}, {}, { search?: string }>, res: Response) => {
-  try {
-    const search = req.query.search;
-
-    if (!search) {
-      throw new HttpError(400, "Search terms is required!");
-    }
-
-    const terms = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(terms, "i");
-
-    const contacts = await User.find({
-      $and: [
-        { _id: { $ne: req.user?._id! } },
-        { setup: true },
-        { $or: [{ name: regex }, { username: regex }, { email: regex }] },
-      ],
-    })
-      .select("-setup -createdAt -updatedAt -__v")
-      .lean();
-
-    if (contacts.length == 0) {
-      throw new HttpError(404, "No any contact found!");
-    }
-
-    return SuccessResponse(res, 200, "Available contacts!", contacts);
-  } catch (error: any) {
-    return ErrorResponse(res, error.code || 500, error.message || "Error while searching contacts!");
+  if (!search) {
+    throw new HttpError(400, "Search terms is required!");
   }
-};
 
-const availableContact = async (req: Request, res: Response) => {
-  try {
-    const contacts = await User.find({
-      _id: { $ne: req.user?._id! },
-      setup: true,
-    })
-      .select("-setup -createdAt -updatedAt -__v")
-      .lean();
+  const terms = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(terms, "i");
 
-    if (contacts.length == 0) {
-      throw new HttpError(404, "No any contact available!");
-    }
+  const contacts = await User.find({
+    $and: [
+      { _id: { $ne: req.user?._id! } },
+      { setup: true },
+      { $or: [{ name: regex }, { username: regex }, { email: regex }] },
+    ],
+  })
+    .select("-setup -createdAt -updatedAt -__v")
+    .lean();
 
-    return SuccessResponse(res, 200, "Contacts fetched successfully!", contacts);
-  } catch (error: any) {
-    return ErrorResponse(res, error.code || 500, error.message || "Error while fetching contacts!");
+  if (contacts.length == 0) {
+    throw new HttpError(404, "No any contact found!");
   }
-};
 
-const fetchContacts = async (req: Request, res: Response) => {
-  try {
-    const uid = new Types.ObjectId(req.user?._id);
+  return HttpHandler.success(res, 200, "Available contacts!", contacts);
+});
 
-    const contacts = await Conversation.aggregate([
-      { $match: { participants: uid } },
-      { $sort: { interaction: -1 } },
-      {
-        $lookup: {
-          from: "users",
-          let: { participantIds: "$participants" },
-          pipeline: [
-            { $match: { $expr: { $in: ["$_id", "$$participantIds"] } } },
-            { $project: { _id: 1, name: 1, email: 1, username: 1, gender: 1, image: 1, bio: 1 } },
-          ],
-          as: "participantsData",
-        },
+export const availableContact = HttpHandler.wrap(async (req, res) => {
+  const contacts = await User.find({
+    _id: { $ne: req.user?._id! },
+    setup: true,
+  })
+    .select("-setup -createdAt -updatedAt -__v")
+    .lean();
+
+  if (contacts.length == 0) {
+    throw new HttpError(404, "No any contact available!");
+  }
+
+  return HttpHandler.success(res, 200, "Contacts fetched successfully!", contacts);
+});
+
+export const fetchContacts = HttpHandler.wrap(async (req, res) => {
+  const uid = new Types.ObjectId(req.user?._id);
+
+  const contacts = await Conversation.aggregate([
+    { $match: { participants: uid } },
+    { $sort: { interaction: -1 } },
+    {
+      $lookup: {
+        from: "users",
+        let: { participantIds: "$participants" },
+        pipeline: [
+          { $match: { $expr: { $in: ["$_id", "$$participantIds"] } } },
+          { $project: { _id: 1, name: 1, email: 1, username: 1, gender: 1, image: 1, bio: 1 } },
+        ],
+        as: "participantsData",
       },
-      {
-        $addFields: {
-          contact: {
-            $filter: {
-              input: "$participantsData",
-              as: "p",
-              cond: { $ne: ["$$p._id", uid] },
-            },
+    },
+    {
+      $addFields: {
+        contact: {
+          $filter: {
+            input: "$participantsData",
+            as: "p",
+            cond: { $ne: ["$$p._id", uid] },
           },
         },
       },
-      {
-        $replaceRoot: {
-          newRoot: {
-            $mergeObjects: [{ $arrayElemAt: ["$contact", 0] }, { interaction: "$interaction" }],
-          },
+    },
+    {
+      $replaceRoot: {
+        newRoot: {
+          $mergeObjects: [{ $arrayElemAt: ["$contact", 0] }, { interaction: "$interaction" }],
         },
       },
-      { $match: { _id: { $ne: null } } },
-    ]);
+    },
+    { $match: { _id: { $ne: null } } },
+  ]);
 
-    return SuccessResponse(res, 200, "Contacts fetched successfully!", contacts);
-  } catch (error: any) {
-    return ErrorResponse(res, error.code || 500, error.message || "Error while fetching contacts!");
+  return HttpHandler.success(res, 200, "Contacts fetched successfully!", contacts);
+});
+
+export const fetchContact = HttpHandler.wrap<{ id: string }>(async (req, res) => {
+  const userId = req.params.id;
+
+  const userContact = await User.findById(userId).select("-setup -createdAt -updatedAt -__v");
+
+  if (!userContact) {
+    throw new HttpError(404, "Contact not found!");
   }
-};
 
-const fetchContact = async (req: Request<{ id: string }>, res: Response) => {
-  try {
-    const userId = req.params.id;
-
-    const userContact = await User.findById(userId).select("-setup -createdAt -updatedAt -__v");
-
-    if (!userContact) {
-      throw new HttpError(404, "Contact not found!");
-    }
-
-    return SuccessResponse(res, 200, "Contact fetched successfully!", userContact);
-  } catch (error: any) {
-    return ErrorResponse(res, error.code || 500, error.message || "Error while fetching contact!");
-  }
-};
-
-export { searchContact, availableContact, fetchContacts, fetchContact };
+  return HttpHandler.success(res, 200, "Contact fetched successfully!", userContact);
+});
