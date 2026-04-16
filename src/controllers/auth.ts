@@ -1,21 +1,27 @@
 import { genSalt, hash, compare } from "bcryptjs";
 import { Types } from "mongoose";
-
 import { revokeToken } from "#/middlewares/index.js";
 import { User } from "#/models/index.js";
 import env from "#/utils/env.js";
-import { cookieOptions, generateAccess, generateRefresh, createUserInfo, generateHash } from "#/utils/helpers.js";
-import { HttpError, HttpHandler } from "#/utils/response.js";
-
+import {
+  ApiError,
+  ApiResponse,
+  asyncHandler,
+  cookieOptions,
+  generateAccess,
+  generateRefresh,
+  createUserInfo,
+  generateHash,
+} from "#/utils/helpers.js";
 import type { SignUp, SignIn } from "#/utils/schema.js";
 
-export const signUpUser = HttpHandler.wrap<{}, {}, SignUp>(async (req, res) => {
+export const signUpUser = asyncHandler<{}, {}, SignUp>(async (req, res) => {
   const { email, password } = req.body;
 
   const existsEmail = await User.exists({ email });
 
   if (existsEmail) {
-    throw new HttpError(409, "Email already exists!");
+    throw new ApiError(409, "Email already exists!");
   }
 
   const hashSalt = await genSalt(12);
@@ -23,10 +29,10 @@ export const signUpUser = HttpHandler.wrap<{}, {}, SignUp>(async (req, res) => {
 
   await User.create({ email, password: hashedPassword });
 
-  return HttpHandler.success(res, 201, "Signed up successfully!");
+  return ApiResponse.success(res, 201, "Signed up successfully!");
 });
 
-export const signInUser = HttpHandler.wrap<{}, {}, SignIn>(async (req, res) => {
+export const signInUser = asyncHandler<{}, {}, SignIn>(async (req, res) => {
   const deviceId = req.headers["x-device-id"] as string;
   const { email, password, username } = req.body;
   const conditions = [];
@@ -36,7 +42,7 @@ export const signInUser = HttpHandler.wrap<{}, {}, SignIn>(async (req, res) => {
   } else if (username) {
     conditions.push({ username });
   } else {
-    throw new HttpError(400, "Email or Username required!");
+    throw new ApiError(400, "Email or Username required!");
   }
 
   const existsUser = await User.findOne({
@@ -44,20 +50,20 @@ export const signInUser = HttpHandler.wrap<{}, {}, SignIn>(async (req, res) => {
   }).select("+password +authentication");
 
   if (!existsUser) {
-    throw new HttpError(404, "User not exists!");
+    throw new ApiError(404, "User not exists!");
   }
 
   const isCorrect = await compare(password, existsUser.password!);
 
   if (!isCorrect) {
-    throw new HttpError(403, "Incorrect password!");
+    throw new ApiError(403, "Incorrect password!");
   }
 
   const userInfo = createUserInfo(existsUser);
   await generateAccess(res, userInfo);
 
   if (!userInfo.setup) {
-    return HttpHandler.success(res, 200, "Please, complete your profile!", userInfo);
+    return ApiResponse.success(res, 200, "Please, complete your profile!", userInfo);
   }
 
   const authorizeId = new Types.ObjectId();
@@ -73,10 +79,10 @@ export const signInUser = HttpHandler.wrap<{}, {}, SignIn>(async (req, res) => {
 
   await existsUser.save();
 
-  return HttpHandler.success(res, 200, "Signed in successfully!", userInfo);
+  return ApiResponse.success(res, 200, "Signed in successfully!", userInfo);
 });
 
-export const signOutUser = HttpHandler.wrap(async (req, res) => {
+export const signOutUser = asyncHandler(async (req, res) => {
   const currentAuthKey = req.cookies["current"];
 
   if (currentAuthKey) {
@@ -87,5 +93,5 @@ export const signOutUser = HttpHandler.wrap(async (req, res) => {
   res.clearCookie("refresh", cookieOptions);
   res.clearCookie("current", cookieOptions);
 
-  return HttpHandler.success(res, 200, "Signed out successfully!");
+  return ApiResponse.success(res, 200, "Signed out successfully!");
 });

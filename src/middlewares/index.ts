@@ -1,15 +1,16 @@
 import { inflateSync } from "node:zlib";
-
 import { rateLimit } from "express-rate-limit";
 import { compactDecrypt, jwtVerify } from "jose";
 import { Types } from "mongoose";
 import multer from "multer";
 import { ZodError, type ZodType } from "zod";
-
 import logger from "#/middlewares/logger.js";
 import { User } from "#/models/index.js";
 import env from "#/utils/env.js";
 import {
+  ApiError,
+  ApiResponse,
+  asyncHandler,
   cookieOptions,
   generateSecret,
   generateAccess,
@@ -17,8 +18,6 @@ import {
   createUserInfo,
   generateHash,
 } from "#/utils/helpers.js";
-import { HttpError, HttpHandler } from "#/utils/response.js";
-
 import type { UserInterface } from "#/interfaces/index.js";
 import type { NextFunction, Request, Response } from "express";
 
@@ -58,11 +57,11 @@ export const revokeToken = async (res: Response, authKey: any) => {
   }
 };
 
-export const authAccess = HttpHandler.wrap(async (req, _res, next) => {
+export const authAccess = asyncHandler(async (req, _res, next) => {
   const accessToken = req.cookies["access"];
 
   if (!accessToken) {
-    throw new HttpError(401, "Unauthorized access request!");
+    throw new ApiError(401, "Unauthorized access request!");
   }
 
   let accessPayload;
@@ -72,20 +71,20 @@ export const authAccess = HttpHandler.wrap(async (req, _res, next) => {
     const decrypted = await compactDecrypt(accessToken, accessSecret);
     accessPayload = JSON.parse(inflateSync(decrypted.plaintext).toString());
   } catch {
-    throw new HttpError(401, "Invalid or expired access request!");
+    throw new ApiError(401, "Invalid or expired access request!");
   }
 
   req.user = accessPayload as UserInterface;
   return next();
 });
 
-export const authRefresh = HttpHandler.wrap(async (req, res) => {
+export const authRefresh = asyncHandler(async (req, res) => {
   const deviceId = req.headers["x-device-id"] as string;
   const refreshToken = req.cookies["refresh"];
   const currentAuthKey = req.cookies["current"];
 
   if (!refreshToken || !currentAuthKey) {
-    throw new HttpError(401, "Unauthorized refresh request!");
+    throw new ApiError(401, "Unauthorized refresh request!");
   }
 
   let userId: Types.ObjectId;
@@ -118,7 +117,7 @@ export const authRefresh = HttpHandler.wrap(async (req, res) => {
     userId = parsedPayload.userId;
   } catch {
     await revokeToken(res, currentAuthKey);
-    throw new HttpError(403, "Please, signin again to continue!");
+    throw new ApiError(403, "Please, signin again to continue!");
   }
 
   const currentTime = Math.floor(Date.now() / 1000);
@@ -134,7 +133,7 @@ export const authRefresh = HttpHandler.wrap(async (req, res) => {
   const requestUser = await User.findOne(authFilter);
 
   if (!requestUser) {
-    throw new HttpError(401, "Invalid authorization!");
+    throw new ApiError(401, "Invalid authorization!");
   }
 
   const userInfo = createUserInfo(requestUser);
@@ -154,13 +153,13 @@ export const authRefresh = HttpHandler.wrap(async (req, res) => {
 
     if (updatedResult.modifiedCount === 0) {
       await revokeToken(res, currentAuthKey);
-      throw new HttpError(403, "Please, signin again to continue!");
+      throw new ApiError(403, "Please, signin again to continue!");
     }
   }
 
   await generateAccess(res, userInfo);
 
-  return HttpHandler.success(res, 200, "Token refreshed successfully!");
+  return ApiResponse.success(res, 200, "Token refreshed successfully!");
 });
 
 export const authEvents = async (req: Request, res: Response, next: NextFunction) => {
@@ -201,9 +200,9 @@ export const validate =
     } catch (error: any) {
       if (error instanceof ZodError && error.name === "ZodError") {
         const errors = JSON.parse(error.message);
-        return HttpHandler.error(res, 400, "Validation error occurred!", errors);
+        return ApiResponse.error(res, 400, "Validation error occurred!", errors);
       }
-      return HttpHandler.error(res, 400, "Validation error occurred!", error);
+      return ApiResponse.error(res, 400, "Validation error occurred!", error);
     }
   };
 
@@ -219,7 +218,7 @@ export const limiter = (minute = 10, limit = 1000) => {
     },
     handler: (req: Request, _res: Response, _next: NextFunction) => {
       req.log.error(`Rate limit exceeded for IP: ${req.clientIp}`);
-      throw new HttpError(429, "Maximum number of requests exceeded!");
+      throw new ApiError(429, "Maximum number of requests exceeded!");
     },
   });
 };

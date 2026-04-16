@@ -1,15 +1,13 @@
 import { translate } from "bing-translate-api";
 import { Types } from "mongoose";
-
+import { ApiError, ApiResponse, asyncHandler } from "#/utils/helpers.js";
 import { fetchMembers } from "#/controllers/group.js";
 import { Message, Conversation } from "#/models/index.js";
 import { getSocketId, io } from "#/server.js";
-import { HttpError, HttpHandler } from "#/utils/response.js";
-
 import type { MessageInterface } from "#/interfaces/index.js";
 import type { Message as MessageType, Translate } from "#/utils/schema.js";
 
-export const sendMessage = HttpHandler.wrap<{ id: string }, {}, MessageType, { type?: string }>(async (req, res) => {
+export const sendMessage = asyncHandler<{ id: string }, {}, MessageType, { type?: string }>(async (req, res) => {
   const senderId = req.user?._id!;
   const receiverId = new Types.ObjectId(req.params.id);
   const isGroup = req.query.type === "group";
@@ -100,7 +98,7 @@ export const sendMessage = HttpHandler.wrap<{ id: string }, {}, MessageType, { t
       }
     }
   }
-  return HttpHandler.success(res, 201, "Message sent successfully!");
+  return ApiResponse.success(res, 201, "Message sent successfully!");
 });
 
 /** Transform null → undefined in response payload only */
@@ -112,7 +110,7 @@ const nullToUndefined = (obj: Record<string, any>) => {
   return obj;
 };
 
-export const getMessages = HttpHandler.wrap<{ id: string }, {}, {}, { group?: string }>(async (req, res) => {
+export const getMessages = asyncHandler<{ id: string }, {}, {}, { group?: string }>(async (req, res) => {
   const sender = req.user?._id!;
   const target = req.params.id;
   const isGroup = req.query.group === "true";
@@ -130,41 +128,38 @@ export const getMessages = HttpHandler.wrap<{ id: string }, {}, {}, { group?: st
     .sort({ createdAt: -1 })
     .lean({ transform: (doc) => nullToUndefined(doc) });
 
-  return HttpHandler.success(res, 200, "Messages fetched successfully!", messages.reverse());
+  return ApiResponse.success(res, 200, "Messages fetched successfully!", messages.reverse());
 });
 
-export const fetchMessages = HttpHandler.wrap<
-  { id: string },
-  {},
-  {},
-  { before?: string; group?: string; limit?: string }
->(async (req, res) => {
-  const sender = req.user?._id;
-  const target = req.params.id;
-  const { before, group, limit = 10 } = req.query;
-  const isGroup = group === "true";
+export const fetchMessages = asyncHandler<{ id: string }, {}, {}, { before?: string; group?: string; limit?: string }>(
+  async (req, res) => {
+    const sender = req.user?._id;
+    const target = req.params.id;
+    const { before, group, limit = 10 } = req.query;
+    const isGroup = group === "true";
 
-  const query: any = isGroup
-    ? { group: target }
-    : {
-        $or: [
-          { sender: sender, recipient: target },
-          { sender: target, recipient: sender },
-        ],
-      };
+    const query: any = isGroup
+      ? { group: target }
+      : {
+          $or: [
+            { sender: sender, recipient: target },
+            { sender: target, recipient: sender },
+          ],
+        };
 
-  if (before) {
-    query.createdAt = { $lt: new Date(before) };
+    if (before) {
+      query.createdAt = { $lt: new Date(before) };
+    }
+
+    const messages = await Message.find(query)
+      .sort({ createdAt: -1 })
+      .limit(Number(limit))
+      .lean({ transform: (doc) => nullToUndefined(doc) });
+
+    /* Reverse to show oldest → newest in UI */
+    return ApiResponse.success(res, 200, "Messages fetched successfully!", messages.reverse());
   }
-
-  const messages = await Message.find(query)
-    .sort({ createdAt: -1 })
-    .limit(Number(limit))
-    .lean({ transform: (doc) => nullToUndefined(doc) });
-
-  /* Reverse to show oldest → newest in UI */
-  return HttpHandler.success(res, 200, "Messages fetched successfully!", messages.reverse());
-});
+);
 
 const messageActionsEvents = async (message: MessageInterface, event: string) => {
   if (message.group) {
@@ -179,7 +174,7 @@ const messageActionsEvents = async (message: MessageInterface, event: string) =>
   }
 };
 
-export const deleteMessage = HttpHandler.wrap<{ id: string }>(async (req, res) => {
+export const deleteMessage = asyncHandler<{ id: string }>(async (req, res) => {
   const uid = req.user?._id!;
   const mid = req.params.id;
 
@@ -194,21 +189,21 @@ export const deleteMessage = HttpHandler.wrap<{ id: string }>(async (req, res) =
   ).lean<MessageInterface>({ transform: (doc) => nullToUndefined(doc) });
 
   if (!message) {
-    throw new HttpError(400, "You can't delete this message or message not found!");
+    throw new ApiError(400, "You can't delete this message or message not found!");
   }
 
   await messageActionsEvents(message, "message:remove");
 
-  return HttpHandler.success(res, 200, "Message deleted successfully!");
+  return ApiResponse.success(res, 200, "Message deleted successfully!");
 });
 
-export const editMessage = HttpHandler.wrap<{ id: string }, {}, { text: string }>(async (req, res) => {
+export const editMessage = asyncHandler<{ id: string }, {}, { text: string }>(async (req, res) => {
   const uid = req.user?._id!;
   const mid = req.params.id;
   const { text } = req.body;
 
   if (!text) {
-    throw new HttpError(400, "Text content is required for editing!");
+    throw new ApiError(400, "Text content is required for editing!");
   }
 
   const message = await Message.findOneAndUpdate(
@@ -221,21 +216,21 @@ export const editMessage = HttpHandler.wrap<{ id: string }, {}, { text: string }
   ).lean<MessageInterface>({ transform: (doc) => nullToUndefined(doc) });
 
   if (!message) {
-    throw new HttpError(400, "You can't edit this message or message not found!");
+    throw new ApiError(400, "You can't edit this message or message not found!");
   }
 
   await messageActionsEvents(message, "message:edited");
 
-  return HttpHandler.success(res, 200, "Message edited successfully!");
+  return ApiResponse.success(res, 200, "Message edited successfully!");
 });
 
-export const reactMessage = HttpHandler.wrap<{ id: string }, {}, { emoji: string }>(async (req, res) => {
+export const reactMessage = asyncHandler<{ id: string }, {}, { emoji: string }>(async (req, res) => {
   const by = req.user?._id!;
   const mid = req.params.id;
   const { emoji } = req.body;
 
   if (!emoji) {
-    throw new HttpError(400, "Emoji is required for reacting!");
+    throw new ApiError(400, "Emoji is required for reacting!");
   }
 
   const message = await Message.findOneAndUpdate(
@@ -308,15 +303,15 @@ export const reactMessage = HttpHandler.wrap<{ id: string }, {}, { emoji: string
   ).lean<MessageInterface>({ transform: (doc) => nullToUndefined(doc) });
 
   if (!message) {
-    throw new HttpError(400, "Unable to react on this message or message not found!");
+    throw new ApiError(400, "Unable to react on this message or message not found!");
   }
 
   await messageActionsEvents(message, "message:reacted");
 
-  return HttpHandler.success(res, 200, "Message reacted successfully!");
+  return ApiResponse.success(res, 200, "Message reacted successfully!");
 });
 
-export const deleteMessages = HttpHandler.wrap<{}, {}, {}, { before?: string }>(async (req, res) => {
+export const deleteMessages = asyncHandler<{}, {}, {}, { before?: string }>(async (req, res) => {
   const uid = req.user?._id!;
   const before = Number(req.query.before ?? 1) * 24;
 
@@ -328,21 +323,21 @@ export const deleteMessages = HttpHandler.wrap<{}, {}, {}, { before?: string }>(
     createdAt: { $lt: hoursAgo },
   });
 
-  return HttpHandler.success(res, 200, "Older messages deleted!", result);
+  return ApiResponse.success(res, 200, "Older messages deleted!", result);
 });
 
-export const translateMessage = HttpHandler.wrap<{}, {}, Translate>(async (req, res) => {
+export const translateMessage = asyncHandler<{}, {}, Translate>(async (req, res) => {
   const { message, language } = req.body;
 
   if (!message || !language) {
-    throw new HttpError(400, "Text message and language is required!");
+    throw new ApiError(400, "Text message and language is required!");
   }
 
   const result = await translate(message, null, language);
 
   if (!result) {
-    throw new HttpError(500, "Error while translating message!");
+    throw new ApiError(500, "Error while translating message!");
   }
 
-  return HttpHandler.success(res, 200, "Text translated successfully!", result.translation);
+  return ApiResponse.success(res, 200, "Text translated successfully!", result.translation);
 });

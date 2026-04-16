@@ -1,13 +1,12 @@
 import { Types } from "mongoose";
-
+import { ApiError, ApiResponse, asyncHandler } from "#/utils/helpers.js";
 import { User, Conversation } from "#/models/index.js";
-import { HttpError, HttpHandler } from "#/utils/response.js";
 
-export const searchContact = HttpHandler.wrap<{}, {}, {}, { search?: string }>(async (req, res) => {
+export const searchContact = asyncHandler<{}, {}, {}, { search?: string }>(async (req, res) => {
   const search = req.query.search;
 
   if (!search) {
-    throw new HttpError(400, "Search terms is required!");
+    throw new ApiError(400, "Search terms is required!");
   }
 
   const terms = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -24,13 +23,13 @@ export const searchContact = HttpHandler.wrap<{}, {}, {}, { search?: string }>(a
     .lean();
 
   if (contacts.length == 0) {
-    throw new HttpError(404, "No any contact found!");
+    throw new ApiError(404, "No any contact found!");
   }
 
-  return HttpHandler.success(res, 200, "Available contacts!", contacts);
+  return ApiResponse.success(res, 200, "Available contacts!", contacts);
 });
 
-export const availableContact = HttpHandler.wrap(async (req, res) => {
+export const availableContact = asyncHandler(async (req, res) => {
   const contacts = await User.find({
     _id: { $ne: req.user?._id! },
     setup: true,
@@ -39,13 +38,13 @@ export const availableContact = HttpHandler.wrap(async (req, res) => {
     .lean();
 
   if (contacts.length == 0) {
-    throw new HttpError(404, "No any contact available!");
+    throw new ApiError(404, "No any contact available!");
   }
 
-  return HttpHandler.success(res, 200, "Contacts fetched successfully!", contacts);
+  return ApiResponse.success(res, 200, "Contacts fetched successfully!", contacts);
 });
 
-export const fetchContacts = HttpHandler.wrap(async (req, res) => {
+export const fetchContacts = asyncHandler(async (req, res) => {
   const uid = new Types.ObjectId(req.user?._id);
 
   const contacts = await Conversation.aggregate([
@@ -83,17 +82,17 @@ export const fetchContacts = HttpHandler.wrap(async (req, res) => {
     { $match: { _id: { $ne: null } } },
   ]);
 
-  return HttpHandler.success(res, 200, "Contacts fetched successfully!", contacts);
+  return ApiResponse.success(res, 200, "Contacts fetched successfully!", contacts);
 });
 
-export const fetchContact = HttpHandler.wrap<{ id: string }>(async (req, res) => {
+export const fetchContact = asyncHandler<{ id: string }>(async (req, res) => {
   const userId = req.params.id;
 
   const userContact = await User.findById(userId).select("-setup -createdAt -updatedAt -__v");
 
   if (!userContact) {
-    throw new HttpError(404, "Contact not found!");
+    throw new ApiError(404, "Contact not found!");
   }
 
-  return HttpHandler.success(res, 200, "Contact fetched successfully!", userContact);
+  return ApiResponse.success(res, 200, "Contact fetched successfully!", userContact);
 });
