@@ -6,8 +6,9 @@ directives:
     - "'self'"
     - "data:"
     - "blob:"
-    - "res.cloudinary.com"
+    - "https://res.cloudinary.com"
     - "https://cdn.jsdelivr.net"
+    - "https://synchronouspeer.onrender.com"
 
   scriptSrc:
     - "'self'"

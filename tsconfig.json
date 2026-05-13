@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
-    /* TypeScript Build Info & Build Output */
+    /* TypeScript Build Output Behavior/Performance */
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tsbuildinfo",
     "incremental": true,
+    "skipLibCheck": true,
+    "removeComments": true,
 
     /* Basic Options & Module Interop */
     "target": "ESNext",
@@ -11,6 +13,7 @@
     "moduleResolution": "NodeNext",
     "moduleDetection": "force",
     "verbatimModuleSyntax": true,
+    "isolatedModules": true,
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -18,22 +21,21 @@
 
     /* Strict Type-Checking & Linting */
     "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "noImplicitReturns": true,
     "strictFunctionTypes": true,
+    "strictNullChecks": true,
     "strictPropertyInitialization": true,
-    "skipLibCheck": true,
-    "removeComments": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
+
+    /* Code Quality & Safety Check */
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
     "noImplicitOverride": true,
-    "isolatedModules": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedIndexedAccess": true,
     "noUncheckedSideEffectImports": true,
+    "noFallthroughCasesInSwitch": true,
     "noPropertyAccessFromIndexSignature": true,
 
     /* For Node.js */
