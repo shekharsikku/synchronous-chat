@@ -1,7 +1,6 @@
-import { Schema, model } from "mongoose";
-import type { ConversationInterface } from "#/interfaces/index.js";
+import { type InferSchemaType, type HydratedDocument, Schema, model } from "mongoose";
 
-const ConversationSchema = new Schema<ConversationInterface>({
+const ConversationSchema = new Schema({
   participants: [
     {
       type: Schema.Types.ObjectId,
@@ -19,6 +18,8 @@ const ConversationSchema = new Schema<ConversationInterface>({
   },
 });
 
-const Conversation = model<ConversationInterface>("Conversation", ConversationSchema);
+export type ConversationType = InferSchemaType<typeof ConversationSchema>;
+export type ConversationDocument = HydratedDocument<ConversationType>;
 
-export default Conversation;
+const ConversationModel = model<ConversationType>("Conversation", ConversationSchema);
+export default ConversationModel;

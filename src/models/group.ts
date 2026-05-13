@@ -1,7 +1,6 @@
-import { Schema, model } from "mongoose";
-import type { GroupInterface } from "#/interfaces/index.js";
+import { type InferSchemaType, type HydratedDocument, Schema, model } from "mongoose";
 
-const GroupSchema = new Schema<GroupInterface>(
+const GroupSchema = new Schema(
   {
     name: {
       type: String,
@@ -32,12 +31,14 @@ const GroupSchema = new Schema<GroupInterface>(
   }
 );
 
-GroupSchema.pre("save", async function () {
+GroupSchema.pre("save", function () {
   if (!this.members.includes(this.admin)) {
     this.members.push(this.admin);
   }
 });
 
-const Group = model<GroupInterface>("Group", GroupSchema);
+export type GroupType = InferSchemaType<typeof GroupSchema>;
+export type GroupDocument = HydratedDocument<GroupType>;
 
-export default Group;
+const GroupModel = model<GroupType>("Group", GroupSchema);
+export default GroupModel;

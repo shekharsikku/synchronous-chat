@@ -1,7 +1,7 @@
-import { Schema, model } from "mongoose";
-import type { UserInterface } from "#/interfaces/index.js";
+import { randomBytes } from "node:crypto";
+import { type InferSchemaType, type HydratedDocument, Schema, model } from "mongoose";
 
-const UserSchema = new Schema<UserInterface>(
+const UserSchema = new Schema(
   {
     name: {
       type: String,
@@ -56,19 +56,21 @@ const UserSchema = new Schema<UserInterface>(
   }
 );
 
-UserSchema.pre("save", async function () {
+UserSchema.pre("save", function () {
   if (!this.username || this.username.trim() === "") {
     /** Generate a temporary username by splitting email  */
     const localPart = this.email.split("@")[0]?.split(".")[0];
 
-    /** Unique suffix according to current timestamp  */
-    const uniqueSuffix = Date.now().toString(36);
+    /** Unique suffix using random hex string */
+    const uniqueSuffix = randomBytes(4).toString("hex");
 
     /** Use combination of temporary username and unique suffix */
     this.username = `${localPart}_${uniqueSuffix}`;
   }
 });
 
-const User = model<UserInterface>("User", UserSchema);
+export type UserType = InferSchemaType<typeof UserSchema>;
+export type UserDocument = HydratedDocument<UserType>;
 
-export default User;
+const UserModel = model<UserType>("User", UserSchema);
+export default UserModel;

@@ -1,7 +1,41 @@
-import { Schema, model } from "mongoose";
-import type { MessageInterface } from "#/interfaces/index.js";
+import { type InferSchemaType, type HydratedDocument, Schema, model } from "mongoose";
 
-const MessageSchema = new Schema<MessageInterface>(
+const ContentSchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: ["text", "file"],
+      required: true,
+    },
+    text: {
+      type: String,
+      required: function () {
+        return this.type === "text";
+      },
+    },
+    file: {
+      type: String,
+      required: function () {
+        return this.type === "file";
+      },
+    },
+    reactions: {
+      type: [
+        {
+          _id: false,
+          by: String,
+          emoji: String,
+        },
+      ],
+      default: [],
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
+const MessageSchema = new Schema(
   {
     sender: {
       type: Schema.Types.ObjectId,
@@ -11,16 +45,12 @@ const MessageSchema = new Schema<MessageInterface>(
     recipient: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      default: function () {
-        return this.group && undefined;
-      },
+      default: undefined,
     },
     group: {
       type: Schema.Types.ObjectId,
       ref: "Group",
-      default: function () {
-        return this.recipient && undefined;
-      },
+      default: undefined,
     },
     type: {
       type: String,
@@ -30,34 +60,8 @@ const MessageSchema = new Schema<MessageInterface>(
       default: "default",
     },
     content: {
-      _id: false,
-      type: {
-        type: String,
-        enum: ["text", "file"],
-        required: true,
-      },
-      text: {
-        type: String,
-        required: function () {
-          return this.content.type === "text";
-        },
-      },
-      file: {
-        type: String,
-        required: function () {
-          return this.content.type === "file";
-        },
-      },
-      reactions: {
-        type: [
-          {
-            _id: false,
-            by: String,
-            emoji: String,
-          },
-        ],
-        default: null,
-      },
+      type: ContentSchema,
+      required: true,
     },
     reply: {
       type: Schema.Types.ObjectId,
@@ -75,18 +79,23 @@ const MessageSchema = new Schema<MessageInterface>(
 );
 
 /** Custom validation — must have either recipient or group */
-MessageSchema.pre("validate", async function () {
+MessageSchema.pre("validate", function () {
   if (!this.recipient && !this.group) {
-    throw new Error("Either recipient or group must be provided!");
+    this.invalidate("recipient", "Either recipient or group must be provided!");
+  }
+
+  if (this.recipient && this.group) {
+    this.invalidate("recipient", "Message cannot have both recipient and group!");
   }
 });
 
-/** Index for group messages */
+/** Indexing for messages */
 MessageSchema.index({ group: 1, createdAt: -1 });
-
-/** Index for 1:1 messages */
 MessageSchema.index({ sender: 1, recipient: 1, createdAt: -1 });
+MessageSchema.index({ recipient: 1, sender: 1, createdAt: -1 });
 
-const Message = model<MessageInterface>("Message", MessageSchema);
+export type MessageType = InferSchemaType<typeof MessageSchema>;
+export type MessageDocument = HydratedDocument<MessageType>;
 
-export default Message;
+const MessageModel = model<MessageType>("Message", MessageSchema);
+export default MessageModel;
