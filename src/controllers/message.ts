@@ -2,12 +2,11 @@ import { translate } from "bing-translate-api";
 import { Types } from "mongoose";
 import { ApiError, ApiResponse, asyncHandler } from "#/utils/helpers.js";
 import { fetchMembers } from "#/controllers/group.js";
-import { Message, Conversation } from "#/models/index.js";
+import { Message, Conversation, type MessageType } from "#/models/index.js";
 import { getSocketId, io } from "#/server.js";
-import type { MessageInterface } from "#/interfaces/index.js";
-import type { Message as MessageType, Translate } from "#/utils/schema.js";
+import type { Message as MessageSchema, Translate } from "#/utils/schema.js";
 
-export const sendMessage = asyncHandler<{ id: string }, {}, MessageType, { type?: string }>(async (req) => {
+export const sendMessage = asyncHandler<{ id: string }, {}, MessageSchema, { type?: string }>(async (req) => {
   const senderId = req.user?._id!;
   const receiverId = new Types.ObjectId(req.params.id);
   const isGroup = req.query.type === "group";
@@ -133,7 +132,7 @@ export const getMessages = asyncHandler<{ id: string }, {}, {}, { group?: string
 
 export const fetchMessages = asyncHandler<{ id: string }, {}, {}, { before?: string; group?: string; limit?: string }>(
   async (req) => {
-    const sender = req.user?._id;
+    const sender = req.user?._id!;
     const target = req.params.id;
     const { before, group, limit = 10 } = req.query;
     const isGroup = group === "true";
@@ -161,7 +160,7 @@ export const fetchMessages = asyncHandler<{ id: string }, {}, {}, { before?: str
   }
 );
 
-const messageActionsEvents = async (message: MessageInterface, event: string) => {
+const messageActionsEvents = async (message: MessageType, event: string) => {
   if (message.group) {
     const members = await fetchMembers(message.group);
     const socketIds = members.flatMap((member) => getSocketId(member)).filter(Boolean);
@@ -186,7 +185,7 @@ export const deleteMessage = asyncHandler<{ id: string }>(async (req) => {
       $unset: { content: 1 },
     },
     { returnDocument: "after" }
-  ).lean<MessageInterface>({ transform: (doc) => nullToUndefined(doc) });
+  ).lean({ transform: (doc) => nullToUndefined(doc) });
 
   if (!message) {
     throw new ApiError(400, "You can't delete this message or message not found!");
@@ -213,7 +212,7 @@ export const editMessage = asyncHandler<{ id: string }, {}, { text: string }>(as
       "content.text": text,
     },
     { returnDocument: "after" }
-  ).lean<MessageInterface>({ transform: (doc) => nullToUndefined(doc) });
+  ).lean({ transform: (doc) => nullToUndefined(doc) });
 
   if (!message) {
     throw new ApiError(400, "You can't edit this message or message not found!");
@@ -300,7 +299,7 @@ export const reactMessage = asyncHandler<{ id: string }, {}, { emoji: string }>(
       },
     ],
     { returnDocument: "after", updatePipeline: true }
-  ).lean<MessageInterface>({ transform: (doc) => nullToUndefined(doc) });
+  ).lean({ transform: (doc) => nullToUndefined(doc) });
 
   if (!message) {
     throw new ApiError(400, "Unable to react on this message or message not found!");

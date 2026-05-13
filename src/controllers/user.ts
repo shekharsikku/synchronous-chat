@@ -4,10 +4,10 @@ import { getSocketId, io } from "#/server.js";
 import { eventsService } from "#/services/events.js";
 import { deleteFromCloudinary, uploadToCloudinary } from "#/utils/cloudinary.js";
 import { ApiError, ApiResponse, asyncHandler, hasEmptyField, createUserInfo, generateAccess } from "#/utils/helpers.js";
-import type { UserInterface } from "#/interfaces/index.js";
+import { type UserInfo } from "#/utils/helpers.js";
 import type { Profile, Password } from "#/utils/schema.js";
 
-const profileUpdateEvents = async (userData: UserInterface) => {
+const profileUpdateEvents = async (userData: UserInfo) => {
   const userSocketIds = getSocketId(userData._id.toString());
   io.to(userSocketIds).emit("profile:update", userData);
 };
@@ -124,7 +124,7 @@ export const changePassword = asyncHandler<{}, {}, Password>(async (req, res) =>
     throw new ApiError(400, "Please, choose a different password!");
   }
 
-  const requestUser = await User.findById(req.user?._id).select("+password");
+  const requestUser = await User.findById(req.user?._id!).select("+password");
 
   if (!requestUser) {
     throw new ApiError(401, "Invalid authorization!");

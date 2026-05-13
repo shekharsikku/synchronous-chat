@@ -2,9 +2,13 @@ import { createSecretKey, createHash } from "node:crypto";
 import { deflateSync } from "node:zlib";
 import { CompactEncrypt, SignJWT } from "jose";
 import env from "#/utils/env.js";
-import type { UserInterface } from "#/interfaces/index.js";
+import type { UserDocument } from "#/models/index.js";
 import type { CookieOptions, NextFunction, Request, Response } from "express";
 import type { Types } from "mongoose";
+
+export type UserInfo =
+  | Pick<UserDocument, "_id" | "email" | "username" | "setup">
+  | Omit<UserDocument, "password" | "authentication">;
 
 export const generateSecret = async () => {
   return createSecretKey(createHash("sha256").update(env.ACCESS_SECRET).digest());
@@ -16,7 +20,7 @@ export const cookieOptions: CookieOptions = {
   secure: env.isProd,
 };
 
-export const generateAccess = async (res: Response, user?: UserInterface) => {
+export const generateAccess = async (res: Response, user?: UserInfo) => {
   const accessExpiry = env.ACCESS_EXPIRY;
 
   const accessPayload = deflateSync(JSON.stringify(user));
@@ -67,24 +71,17 @@ export const hasEmptyField = (fields: object) => {
   return Object.values(fields).some((value) => value === "" || value === undefined || value === null);
 };
 
-export const createUserInfo = (user: UserInterface) => {
-  let userInfo;
-
-  if (user.setup) {
-    userInfo = {
-      ...user.toObject(),
-      password: undefined,
-      authentication: undefined,
-    };
-  } else {
-    userInfo = {
+export const createUserInfo = (user: UserDocument) => {
+  if (!user.setup) {
+    return {
       _id: user._id,
       email: user.email,
       setup: user.setup,
     };
   }
-
-  return userInfo as UserInterface;
+  // oxlint-disable-next-line no-unused-vars
+  const { password, authentication, ...safeUser } = user.toObject();
+  return safeUser;
 };
 
 type SuccessStatusCode = 200 | 201 | 202 | 204;

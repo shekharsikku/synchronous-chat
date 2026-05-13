@@ -5,11 +5,10 @@ import multer from "multer";
 import pino from "pino";
 import env from "#/utils/env.js";
 import { ZodError, type ZodType } from "zod";
-import { ApiError, ApiResponse, generateSecret, asyncMiddleware } from "#/utils/helpers.js";
-import type { UserInterface } from "#/interfaces/index.js";
+import { ApiError, ApiResponse, generateSecret, asyncMiddleware, type UserInfo } from "#/utils/helpers.js";
 import type { NextFunction, Request, Response } from "express";
 
-const authorizeAccess = async (req: Request): Promise<UserInterface> => {
+const authorizeAccess = async (req: Request): Promise<UserInfo> => {
   const accessToken = req.cookies["access"];
   if (!accessToken) throw new Error("No access token available!");
 

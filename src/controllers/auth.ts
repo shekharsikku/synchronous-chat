@@ -53,7 +53,7 @@ const revokeToken = async (res: Response, authKey: any) => {
   }
 };
 
-export const signUpUser = asyncHandler<{}, {}, SignUp>(async (req) => {
+export const signUpUser = asyncHandler<{}, {}, SignUp>(async (req, res) => {
   const { email, password } = req.body;
 
   const existsEmail = await User.exists({ email });
@@ -65,9 +65,11 @@ export const signUpUser = asyncHandler<{}, {}, SignUp>(async (req) => {
   const hashSalt = await genSalt(12);
   const hashedPassword = await hash(password, hashSalt);
 
-  await User.create({ email, password: hashedPassword });
+  const newUser = await User.create({ email, password: hashedPassword });
+  const userInfo = createUserInfo(newUser);
+  await generateAccess(res, userInfo);
 
-  return new ApiResponse(201, "Signed up successfully!");
+  return new ApiResponse(201, "Signed up successfully!", { data: userInfo });
 });
 
 export const signInUser = asyncHandler<{}, {}, SignIn>(async (req, res) => {
@@ -91,7 +93,7 @@ export const signInUser = asyncHandler<{}, {}, SignIn>(async (req, res) => {
     throw new ApiError(404, "User not exists!");
   }
 
-  const isCorrect = await compare(password, existsUser.password!);
+  const isCorrect = await compare(password, existsUser.password);
 
   if (!isCorrect) {
     throw new ApiError(403, "Incorrect password!");
@@ -105,7 +107,7 @@ export const signInUser = asyncHandler<{}, {}, SignIn>(async (req, res) => {
   }
 
   const authorizeId = new Types.ObjectId();
-  const refreshToken = await generateRefresh(res, userInfo._id!, authorizeId, deviceId);
+  const refreshToken = await generateRefresh(res, userInfo._id, authorizeId, deviceId);
   const hashedRefresh = await generateHash(refreshToken);
   const refreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
 
@@ -155,7 +157,9 @@ export const authRefresh = asyncHandler(async (req, res) => {
     const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
 
     const [jwtResult, hashedToken] = await Promise.all([
-      jwtVerify(refreshToken, refreshSecret),
+      jwtVerify<{ uid: string }>(refreshToken, refreshSecret, {
+        algorithms: ["HS512"],
+      }),
       generateHash(refreshToken),
     ]);
 
@@ -163,7 +167,7 @@ export const authRefresh = asyncHandler(async (req, res) => {
     refreshExpiry = jwtResult.payload.exp;
 
     if (
-      !Types.ObjectId.isValid(jwtResult.payload.uid!) ||
+      !Types.ObjectId.isValid(jwtResult.payload.uid) ||
       !parsedPayload.userId.equals(new Types.ObjectId(jwtResult.payload.uid)) ||
       jwtResult.payload.jti !== deviceId
     ) {
