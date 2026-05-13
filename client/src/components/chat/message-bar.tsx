@@ -18,14 +18,12 @@ import {
   HiOutlineClipboardDocumentCheck,
 } from "react-icons/hi2";
 import { toast } from "sonner";
-
 import { TooltipElement } from "@/components/chat/tooltip-element";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { useClipboard } from "@/hooks";
+import { useClipboard, useMessageActions } from "@/hooks";
 import api from "@/lib/api";
 import { useSocket, useTheme } from "@/lib/context";
 import { encryptMessage } from "@/lib/noble";
-import { convertToBase64 } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/lib/zustand";
 
 import type { EmojiClickData, Theme } from "emoji-picker-react";
@@ -37,7 +35,8 @@ type MessageInputState = {
   isTyping: boolean;
   isSending: boolean;
   emojiPicker: boolean;
-  selectedImage: any;
+  selectedImage: string | null;
+  imageFormData: FormData | null;
 };
 
 type MessageInputAction =
@@ -46,7 +45,8 @@ type MessageInputAction =
   | { type: "SET_TYPING"; payload: boolean }
   | { type: "SET_SENDING"; payload: boolean }
   | { type: "TOGGLE_EMOJI" }
-  | { type: "SET_IMAGE"; payload: any }
+  | { type: "SET_IMAGE"; payload: string | null }
+  | { type: "SET_IMAGE_FORM"; payload: FormData | null }
   | { type: "RESET" };
 
 const initialMessageInputState: MessageInputState = {
@@ -55,6 +55,7 @@ const initialMessageInputState: MessageInputState = {
   isSending: false,
   emojiPicker: false,
   selectedImage: null,
+  imageFormData: null,
 };
 
 function messageInputReducer(state: MessageInputState, action: MessageInputAction): MessageInputState {
@@ -76,6 +77,9 @@ function messageInputReducer(state: MessageInputState, action: MessageInputActio
 
     case "SET_IMAGE":
       return { ...state, selectedImage: action.payload };
+
+    case "SET_IMAGE_FORM":
+      return { ...state, imageFormData: action.payload };
 
     case "RESET":
       return initialMessageInputState;
@@ -99,13 +103,14 @@ const MessageBar = () => {
     groupDialog,
     groupSettingDialog,
   } = useChatStore();
+  const { uploadMessageFile } = useMessageActions();
 
   const emojiRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [{ message, isTyping, isSending, emojiPicker, selectedImage }, dispatch] = useReducer(
+  const [{ message, isTyping, isSending, emojiPicker, selectedImage, imageFormData }, dispatch] = useReducer(
     messageInputReducer,
     initialMessageInputState
   );
@@ -161,6 +166,14 @@ const MessageBar = () => {
     };
   }, [emojiRef]);
 
+  useEffect(() => {
+    return () => {
+      if (selectedImage) {
+        URL.revokeObjectURL(selectedImage);
+      }
+    };
+  }, [selectedImage]);
+
   const handleImageFile = useCallback(async (imageFile: File) => {
     /** Size is 6 MB and converted into Bytes */
     const maxBytesAllow = 6 * 1024 * 1024;
@@ -176,8 +189,13 @@ const MessageBar = () => {
     }
 
     try {
-      const base64 = await convertToBase64(imageFile);
-      dispatch({ type: "SET_IMAGE", payload: base64 });
+      const previewUrl = URL.createObjectURL(imageFile);
+      dispatch({ type: "SET_IMAGE", payload: previewUrl });
+
+      const formData = new FormData();
+      formData.append("file", imageFile);
+      dispatch({ type: "SET_IMAGE_FORM", payload: formData });
+
       dispatch({ type: "SET_MESSAGE", payload: imageFile.name });
     } catch (error: any) {
       console.error(`Error while attaching file: ${error.message}`);
@@ -218,6 +236,7 @@ const MessageBar = () => {
     if (reply) setReplyTo(null);
     dispatch({ type: "SET_MESSAGE", payload: "" });
     dispatch({ type: "SET_IMAGE", payload: null });
+    dispatch({ type: "SET_IMAGE_FORM", payload: null });
   };
 
   const handleAttachChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -243,7 +262,17 @@ const MessageBar = () => {
     };
 
     if (isFile && message !== "") {
-      messageData.file = selectedImage;
+      if (selectedImage) dispatch({ type: "SET_MESSAGE", payload: "Uploading..." });
+
+      const uploadResult = await uploadMessageFile(imageFormData);
+
+      if (!uploadResult) {
+        toast.error("Can't able to send image file!");
+        handleClearMessage(!!replyTo);
+        return;
+      }
+
+      messageData.file = uploadResult;
     } else {
       messageData.text = encryptMessage(message, chatId);
     }

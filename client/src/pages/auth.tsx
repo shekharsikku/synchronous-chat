@@ -48,8 +48,18 @@ const Auth = () => {
     setIsPending(true);
 
     try {
-      const response = await api.post("/api/auth/sign-up", values);
-      toast.success(response.data.message);
+      const { data: result } = await api.post("/api/auth/sign-up", values);
+
+      if (!result.success) {
+        toast.error("Sign up failed!");
+        return;
+      }
+
+      setUserInfo(result.data);
+      setIsAuthenticated(true);
+
+      toast.info(result.message);
+      navigate("/profile", { replace: true });
       signUpForm.reset();
     } catch (error: any) {
       toast.error(error.response.data.message);

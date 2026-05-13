@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { isDesktop } from "react-device-detect";
 import {
   HiOutlineLanguage,
@@ -6,7 +6,6 @@ import {
   HiOutlineTrash,
   HiOutlineClipboardDocument,
   HiOutlineCloudArrowDown,
-  HiOutlineDocumentArrowDown,
   HiOutlineViewfinderCircle,
   HiOutlinePencilSquare,
   HiOutlineArrowTopRightOnSquare,
@@ -15,24 +14,69 @@ import {
 } from "react-icons/hi2";
 import { LuReply } from "react-icons/lu";
 import { useInView } from "react-intersection-observer";
-
+import env from "@/lib/env";
 import { EditMessage } from "@/components/chat/edit-message";
 import { TooltipElement } from "@/components/chat/tooltip-element";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDisableAnimations, useLastMinutes, usePlainText, useReplyMessage, useMessageActions } from "@/hooks";
 import { useSocket } from "@/lib/context";
-import {
-  cn,
-  mergeRefs,
-  isValidUrl,
-  checkImageType,
-  renderMsgTimestamp,
-  handleDownload,
-  copyToClipboard,
-} from "@/lib/utils";
+import { cn, mergeRefs, isValidUrl, renderMsgTimestamp, handleDownload, copyToClipboard } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/lib/zustand";
+
+const MAX_WIDTH = 320;
+const MAX_HEIGHT = 240;
+
+const parseFileSrc = (fileSrc: string) => {
+  const fileInfo = JSON.parse(fileSrc);
+  const fileUrl = `${env.bucketUrl}/api/files/${fileInfo.id}`;
+  return { fileInfo, fileUrl };
+};
+
+const ChatImage = ({ fileSrc }: { fileSrc: string }) => {
+  const { fileInfo, fileUrl } = parseFileSrc(fileSrc);
+  const [loaded, setLoaded] = useState(false);
+
+  const { width, height } = useMemo(() => {
+    let width = fileInfo.width;
+    let height = fileInfo.height;
+
+    const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height, 1);
+
+    width *= ratio;
+    height *= ratio;
+
+    return { width, height };
+  }, [fileInfo.width, fileInfo.height]);
+
+  return (
+    <span
+      className="max-w-full block relative overflow-hidden rounded bg-neutral-800"
+      style={{
+        width: `${width}px`,
+        height: `${height}px`,
+      }}
+    >
+      {!loaded && (
+        <span
+          aria-hidden="true"
+          className="block absolute inset-0 animate-pulse bg-neutral-700 transition-opacity duration-300"
+        />
+      )}
+
+      <img
+        src={fileUrl}
+        alt="Image file"
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        className={cn(
+          "block h-full w-full select-none object-cover transition-opacity duration-300",
+          loaded ? "opacity-100" : "opacity-0"
+        )}
+      />
+    </span>
+  );
+};
 
 interface RenderDMMessagesProps {
   message: Message;
@@ -47,7 +91,6 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
   const { language, setMessageForEdit, setEditDialog, setReplyTo, selectedChatType } = useChatStore();
   const { deleteSelectedMessage, handleEmojiReaction, translateMessage } = useMessageActions();
 
-  const [imageViewExtend, setImageViewExtend] = useState(false);
   const [editMessageDialog, setEditMessageDialog] = useState(false);
   const [translated, setTranslated] = useState("");
 
@@ -123,19 +166,9 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
                 <span className="text-base">{plainText(message)}</span>
               )}
               {/* For file message type */}
-              {message?.content?.type === "file" &&
-                (checkImageType(message?.content?.file!) ? (
-                  <img
-                    src={message?.content?.file}
-                    loading="lazy"
-                    alt="Image file"
-                    className="h-auto max-h-60 w-auto rounded"
-                  />
-                ) : (
-                  <span className="flex items-center gap-1 text-base">
-                    <HiOutlineDocumentArrowDown size={16} /> Download this file to view it.
-                  </span>
-                ))}
+              {message.content?.type === "file" && message.content.file && (
+                <ChatImage fileSrc={message?.content?.file} />
+              )}
               {/* Message Reply & Emoji Reactions (show only on hover) */}
               {isDesktop && (
                 <span
@@ -222,23 +255,30 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
                 )}
               </>
             )}
-            {message?.content?.type === "file" && (
+            {message.content?.type === "file" && (
               <>
-                {checkImageType(message?.content?.file!) && (
-                  <ContextMenuItem className="flex gap-2" onClick={() => setImageViewExtend(true)}>
-                    <HiOutlineViewfinderCircle size={16} className="text-neutral-600 dark:text-neutral-100" /> View
-                  </ContextMenuItem>
-                )}
                 <ContextMenuItem
                   className="flex gap-2"
-                  onClick={() => handleDownload(message.content?.file!, message._id)}
+                  onClick={() => {
+                    const { fileUrl } = parseFileSrc(message.content?.file!);
+                    window.open(fileUrl, "_blank", "noopener,noreferrer");
+                  }}
+                >
+                  <HiOutlineViewfinderCircle size={16} className="text-neutral-600 dark:text-neutral-100" /> View
+                </ContextMenuItem>
+                <ContextMenuItem
+                  className="flex gap-2"
+                  onClick={() => {
+                    const { fileUrl } = parseFileSrc(message.content?.file!);
+                    handleDownload(`${fileUrl}?action=download`, message._id);
+                  }}
                 >
                   <HiOutlineCloudArrowDown size={16} className="text-neutral-600 dark:text-neutral-100" /> Download
                 </ContextMenuItem>
               </>
             )}
             {isSender && isLastMinForDelete && (
-              <ContextMenuItem className="flex gap-2" onClick={() => deleteSelectedMessage(message._id)}>
+              <ContextMenuItem className="flex gap-2" onClick={() => deleteSelectedMessage(message)}>
                 <HiOutlineTrash size={16} className="text-neutral-600 dark:text-neutral-100" /> Delete
               </ContextMenuItem>
             )}
@@ -262,18 +302,6 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
       )}
       {/* Message Timestamps */}
       <span className="text-xs text-gray-600 dark:text-gray-200 mt-0.5">{renderMsgTimestamp(message)}</span>
-      {/* Dialog for image extend view */}
-      <Dialog open={imageViewExtend} onOpenChange={setImageViewExtend}>
-        <DialogContent className="h-auto w-[90vw] lg:w-auto rounded-md select-none">
-          <DialogHeader>
-            <DialogTitle className="text-start">Image Extend View Mode</DialogTitle>
-            <DialogDescription className="hidden"></DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="max-h-[80vh] overflow-y-auto scrollbar-hide">
-            <img src={message?.content?.file} alt="Extend view" className="object-contain size-full rounded" />
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
       {/* for edit message */}
       <EditMessage editMessageDialog={editMessageDialog} setEditMessageDialog={setEditMessageDialog} />
     </div>

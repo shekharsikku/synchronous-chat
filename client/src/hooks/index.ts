@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useCallback, useRef, useState, type ChangeEvent } from "react";
 import { Socket } from "socket.io-client";
 import { toast } from "sonner";
-
+import axios from "axios";
 import api from "@/lib/api";
 import env from "@/lib/env";
 import { useSocket } from "@/lib/context";
@@ -155,9 +155,45 @@ export const useReplyMessage = (message: Message) => {
 };
 
 export const useMessageActions = () => {
-  const deleteSelectedMessage = async (id: string) => {
+  const { userInfo } = useAuthStore();
+
+  const uploadMessageFile = async (imageFormData: FormData | null) => {
+    if (!imageFormData) return null;
+
     try {
-      const response = await api.delete(`/api/message/delete/${id}`);
+      const { data: result } = await axios.post(`${env.bucketUrl}/api/files`, imageFormData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        params: {
+          uid: userInfo?._id,
+        },
+      });
+      const fileInfo = JSON.stringify({
+        id: result.data._id,
+        ...result.data.metadata.dimensions,
+      });
+      return fileInfo;
+    } catch {
+      return null;
+    }
+  };
+
+  const deleteSelectedMessage = async (message: Message) => {
+    try {
+      if (message.content?.type === "file") {
+        try {
+          const fileInfo = JSON.parse(message.content.file!);
+
+          await axios.delete(`${env.bucketUrl}/api/files/${fileInfo.id}`, {
+            params: {
+              uid: userInfo?._id,
+            },
+          });
+        } catch (err) {
+          console.error("Failed to delete file:", err);
+        }
+      }
+
+      const response = await api.delete(`/api/message/delete/${message._id}`);
       toast.info(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
@@ -191,7 +227,7 @@ export const useMessageActions = () => {
     }
   };
 
-  return { deleteSelectedMessage, handleEmojiReaction, translateMessage };
+  return { deleteSelectedMessage, handleEmojiReaction, translateMessage, uploadMessageFile };
 };
 
 type UseImageSelectorOptions = {
