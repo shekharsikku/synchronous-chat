@@ -145,48 +145,46 @@ export const authRefresh = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Unauthorized refresh request!");
   }
 
-  let userId: Types.ObjectId;
-  let authorizeId: Types.ObjectId;
-  let hashedRefresh: string;
-  let refreshExpiry: number | undefined;
+  const verifiedData = await (async () => {
+    try {
+      const parsedPayload = parseAuthKey(currentAuthKey);
+      const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
 
-  try {
-    const parsedPayload = parseAuthKey(currentAuthKey);
-    authorizeId = parsedPayload.authId;
+      const [jwtResult, hashedToken] = await Promise.all([
+        jwtVerify<{ uid: string }>(refreshToken, refreshSecret, {
+          algorithms: ["HS512"],
+        }),
+        generateHash(refreshToken),
+      ]);
 
-    const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
+      if (
+        !Types.ObjectId.isValid(jwtResult.payload.uid) ||
+        !parsedPayload.userId.equals(new Types.ObjectId(jwtResult.payload.uid)) ||
+        jwtResult.payload.jti !== deviceId
+      ) {
+        throw new Error("Refresh request mismatch!");
+      }
 
-    const [jwtResult, hashedToken] = await Promise.all([
-      jwtVerify<{ uid: string }>(refreshToken, refreshSecret, {
-        algorithms: ["HS512"],
-      }),
-      generateHash(refreshToken),
-    ]);
-
-    hashedRefresh = hashedToken;
-    refreshExpiry = jwtResult.payload.exp;
-
-    if (
-      !Types.ObjectId.isValid(jwtResult.payload.uid) ||
-      !parsedPayload.userId.equals(new Types.ObjectId(jwtResult.payload.uid)) ||
-      jwtResult.payload.jti !== deviceId
-    ) {
-      throw new Error("Refresh request mismatch!");
+      return {
+        userId: parsedPayload.userId,
+        authorizeId: parsedPayload.authId,
+        hashedRefresh: hashedToken,
+        refreshExpiry: jwtResult.payload.exp,
+      };
+    } catch {
+      await revokeToken(res, currentAuthKey);
+      throw new ApiError(403, "Please, signin again to continue!");
     }
+  })();
 
-    userId = parsedPayload.userId;
-  } catch {
-    await revokeToken(res, currentAuthKey);
-    throw new ApiError(403, "Please, signin again to continue!");
-  }
-
+  const { userId, authorizeId, hashedRefresh, refreshExpiry } = verifiedData;
   const currentTime = Math.floor(Date.now() / 1000);
   const expiresAt = refreshExpiry ?? currentTime;
 
   const authFilter = {
     _id: userId,
     authentication: {
-      $elemMatch: { _id: authorizeId, token: hashedRefresh },
+      $elemMatch: { _id: authorizeId, token: hashedRefresh, expiry: { $gt: new Date() } },
     },
   };
 

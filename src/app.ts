@@ -7,9 +7,11 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
+import { MulterError } from "multer";
 import { pinoHttp } from "pino-http";
 import requestIp from "request-ip";
 import { parse } from "yaml";
+import { ZodError } from "zod";
 import { limiter, logger } from "#/middlewares/index.js";
 import routers from "#/routers/index.js";
 import env from "#/utils/env.js";
@@ -105,12 +107,19 @@ app.all("*path", (_req: Request, res: Response) => {
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   if (res.headersSent) return next(err);
 
+  if (err instanceof ZodError) {
+    return new ApiResponse(400, "Validation error occurred!", { error: err.issues }).send(res);
+  }
+
+  if (err instanceof MulterError) {
+    return new ApiResponse(400, err.message).send(res);
+  }
+
   if (err instanceof ApiError) {
-    req.log.warn({ err }, "Handled http error!");
     return new ApiResponse(err.code, err.message).send(res);
   }
 
-  req.log.error({ err }, "Unhandled http error!");
+  req.log.error({ err }, "Unhandled server error!");
   return new ApiResponse(500, "Internal server error!").send(res);
 });
 

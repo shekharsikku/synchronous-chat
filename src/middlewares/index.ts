@@ -4,9 +4,9 @@ import { compactDecrypt } from "jose";
 import multer from "multer";
 import pino from "pino";
 import env from "#/utils/env.js";
-import { ZodError, type ZodType } from "zod";
-import { ApiError, ApiResponse, generateSecret, asyncMiddleware, type UserInfo } from "#/utils/helpers.js";
+import { ApiError, generateSecret, asyncMiddleware, type UserInfo } from "#/utils/helpers.js";
 import type { NextFunction, Request, Response } from "express";
+import type { ZodType } from "zod";
 
 const authorizeAccess = async (req: Request): Promise<UserInfo> => {
   const accessToken = req.cookies["access"];
@@ -50,16 +50,12 @@ export const upload = multer({ storage });
 /** Zod Schema Validator */
 export const validate =
   <T>(schema: ZodType<T>) =>
-  (req: Request<{}, {}, T>, res: Response, next: NextFunction) => {
+  (req: Request<{}, {}, T>, _res: Response, next: NextFunction) => {
     try {
       req.body = schema.parse(req.body);
       return next();
-    } catch (error: any) {
-      let response = new ApiResponse(400, "Validation error occurred!", { error });
-      if (error instanceof ZodError && error.name === "ZodError") {
-        response.error = JSON.parse(error.message);
-      }
-      return response.send(res);
+    } catch (err) {
+      return next(err);
     }
   };
 
@@ -70,10 +66,10 @@ export const limiter = (minute = 10, limit = 1000) => {
     limit: limit,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req: Request, _res: Response) => {
+    keyGenerator: (req: Request) => {
       return req.clientIp!;
     },
-    handler: (req: Request, _res: Response, _next: NextFunction) => {
+    handler: (req: Request) => {
       req.log.error(`Rate limit exceeded for IP: ${req.clientIp}`);
       throw new ApiError(429, "Maximum number of requests exceeded!");
     },
