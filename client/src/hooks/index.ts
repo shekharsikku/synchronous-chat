@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useCallback, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 import { toast } from "sonner";
 import axios from "axios";
@@ -8,12 +8,10 @@ import env from "@/lib/env";
 import { useSocket } from "@/lib/context";
 import { decryptMessage } from "@/lib/noble";
 import { useAuthStore, useChatStore } from "@/lib/zustand";
+import type { ChangeEvent, RefObject, SetStateAction, Dispatch } from "react";
 
-import type { RefObject, SetStateAction, Dispatch } from "react";
-
-export const useDebounce = (callback: Function, delay: number) => {
-  const callbackRef = useCallback(callback, [callback]);
-  const timeoutRef = useRef<any | any>(null);
+export const useDebounce = <T extends (...args: any[]) => void>(callback: T, delay: number) => {
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
@@ -23,43 +21,43 @@ export const useDebounce = (callback: Function, delay: number) => {
     };
   }, []);
 
-  const debouncedFunction = (...args: any) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      callbackRef(...args);
-    }, delay);
-  };
+  const debouncedFunction = useCallback(
+    (...args: Parameters<T>) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = setTimeout(() => {
+        callback(...args);
+      }, delay);
+    },
+    [callback, delay]
+  );
+
   return debouncedFunction;
 };
 
-export const useDisableAnimations = (socket: Socket, ref: any) => {
+export const useDisableAnimations = <T extends HTMLElement>(socket: Socket | null, ref: RefObject<T | null>) => {
   useEffect(() => {
-    if (!socket || !ref?.current) return;
+    if (!socket || !ref.current) return;
 
-    const disableAnimations = () => {
-      if (ref.current) {
-        ref.current.classList.add("transform-none");
-      }
-    };
+    let timeout: ReturnType<typeof setTimeout>;
 
-    const enableAnimations = () => {
-      if (ref.current) {
-        ref.current.classList.remove("transform-none");
-      }
-    };
+    const listener = () => {
+      ref.current?.classList.add("transform-none");
 
-    socket.onAny(() => {
-      disableAnimations();
+      clearTimeout(timeout);
 
-      setTimeout(() => {
-        enableAnimations();
+      timeout = setTimeout(() => {
+        ref.current?.classList.remove("transform-none");
       }, 5000);
-    });
+    };
+
+    socket.onAny(listener);
 
     return () => {
-      socket.offAny();
+      clearTimeout(timeout);
+      socket.offAny(listener);
     };
   }, [socket, ref]);
 };
@@ -68,17 +66,22 @@ export const useLastMinutes = (timestamp: Date | string | number, minutes = 10) 
   const [isLastMinutes, setIsLastMinutes] = useState(false);
 
   useEffect(() => {
+    const timestampDate = new Date(timestamp);
+
+    if (isNaN(timestampDate.getTime())) {
+      setIsLastMinutes(false);
+      return;
+    }
+
     const checkTimestamp = () => {
-      const timestampDate = new Date(timestamp);
-      const currentData = new Date();
-      const timeDifference = currentData.getTime() - timestampDate.getTime();
+      const currentDate = new Date();
+      const timeDifference = currentDate.getTime() - timestampDate.getTime();
       setIsLastMinutes(timeDifference <= minutes * 60 * 1000);
     };
 
     checkTimestamp();
-    const interval = setInterval(checkTimestamp, 60 * 1000);
-
-    return () => clearInterval(interval);
+    const timeInterval = setInterval(checkTimestamp, 60 * 1000);
+    return () => clearInterval(timeInterval);
   }, [timestamp, minutes]);
 
   return { isLastMinutes };

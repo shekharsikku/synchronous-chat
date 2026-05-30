@@ -99,8 +99,8 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
     delay: 100,
   });
 
-  const elementRef = useRef<any>(null);
-  useDisableAnimations(socket!, elementRef);
+  const elementRef = useRef<HTMLSpanElement>(null);
+  useDisableAnimations(socket, elementRef);
 
   const { replyMessage } = useReplyMessage(message);
   const { isLastMinutes: isLastMinForEdit } = useLastMinutes(message?.createdAt!);

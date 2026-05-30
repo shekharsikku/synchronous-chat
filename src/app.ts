@@ -77,9 +77,7 @@ app.use(cookieParser(env.COOKIES_SECRET));
 app.use(
   compression({
     filter: (req: Request, res: Response) => {
-      if (req.headers.accept === "text/event-stream") {
-        return false;
-      }
+      if (req.headers.accept === "text/event-stream") return false;
       return compression.filter(req, res);
     },
   })
