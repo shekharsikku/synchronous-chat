@@ -35,7 +35,8 @@ export const useListeners = () => {
     const messageFrom = getCurrentChat(chatKey)?.name;
     if (!messageFrom) return;
 
-    const notification = new Notification(`You have a message from ${messageFrom}`, {
+    const notification = new Notification(messageFrom, {
+      body: "Sent you a new message.",
       icon: notificationIcon,
     });
 
