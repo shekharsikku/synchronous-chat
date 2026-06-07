@@ -58,7 +58,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
     const currentPeer = peerRef.current;
 
     if (!currentPeer || currentPeer.destroyed) {
-      console.log("🚫 No active peer to clean up!");
+      console.info("[Peer] No active peer to clean up.");
       return false;
     }
 
@@ -67,13 +67,13 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
     currentPeer.destroy();
     peerRef.current = null;
 
-    console.log("🧹 Cleaned up old peer!");
+    console.info("[Peer] Cleaned up successfully.");
     return true;
   }, []);
 
   useEffect(() => {
     if (!userInfo?._id || !userInfo?.setup || !isConnected) {
-      console.log("⚠️ Returning from peer effect!");
+      console.info("[Peer] User not ready or disconnected.");
       return;
     }
 
@@ -82,10 +82,10 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       const cleaned = cleanupPeer();
 
       if (cleaned) {
-        console.log("✨ Peer cleanup done!");
+        console.info("[Peer] Previous peer cleaned up.");
       }
 
-      console.log("🛠️ Creating peer connection!");
+      console.info("[Peer] Creating new connection...");
 
       const deviceId = getDeviceId();
 
@@ -100,10 +100,10 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
 
       peer.on("open", (id) => {
         reconnectCountRef.current = 0;
-        console.log("✅ Peer connected successfully!");
+        console.info("[Peer] Connected successfully.");
 
         if (env.isDev) {
-          console.log("🆔 Peer ID:", id);
+          console.info("[Peer] ID:", id);
         }
 
         setLocalInfo({ uid: userInfo._id!, name: userInfo.name!, pid: id });
@@ -111,58 +111,58 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       });
 
       peer.on("error", (error) => {
-        console.error("❌ Peer error:", error.message);
+        console.error("[Peer] Error:", error.message);
         setIsPeerReady(false);
 
         if (!navigator.onLine) {
-          console.log("🌐 Offline → waiting...");
+          console.warn("[Peer] Offline, waiting for network.");
           return;
         }
 
         const reconnectDelay = getTimeoutDelay(reconnectCountRef.current);
         reconnectCountRef.current++;
 
-        console.log(`🔄 Reconnecting peer in ${(reconnectDelay / 1000).toFixed(1)} sec...`);
-        console.log(`🔄 Reconnecting peer attempt ${reconnectCountRef.current}`);
+        console.log(`[Peer] Reconnecting in ${(reconnectDelay / 1000).toFixed(1)} sec...`);
+        console.log(`[Peer] Reconnecting attempt ${reconnectCountRef.current}`);
 
         if (reconnectTimeoutRef.current) {
           clearTimeout(reconnectTimeoutRef.current);
         }
 
         reconnectTimeoutRef.current = setTimeout(() => {
-          console.log("🔁 Reconnecting peer now...");
+          console.info("[Peer] Reconnecting now...");
 
           if (peer.destroyed) {
-            console.warn("⚠️ Peer destroyed → recreating peer:", error.type);
+            console.warn("[Peer] Destroyed, recreating:", error.type);
             createPeerConnection();
             return;
           }
 
           if (retryableErrors.has(error.type)) {
-            console.log("♻️ Reusing the peer instance:", error.type);
+            console.info("[Peer] Reusing instance:", error.type);
             peer.reconnect();
             return;
           }
 
           if (fatalErrors.has(error.type)) {
-            console.error("💀 Fatal error → recreating peer:", error.type);
+            console.error("[Peer] Fatal error, recreating:", error.type);
             peer.destroy();
             createPeerConnection();
             return;
           }
 
-          console.warn("🤔 Unknown error → recreating peer:", error.type);
+          console.warn("[Peer] Unknown error, recreating:", error.type);
           createPeerConnection();
         }, reconnectDelay);
       });
 
       peer.on("disconnected", () => {
-        console.log("⚠️ Peer disconnected!");
+        console.warn("[Peer] Disconnected.");
         setIsPeerReady(false);
       });
 
       peer.on("close", () => {
-        console.log("🔚 Peer connection closed!");
+        console.info("[Peer] Connection closed.");
         setIsPeerReady(false);
         peerRef.current = null;
       });
@@ -170,7 +170,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
 
     const handleReconnect = () => {
       if (navigator.onLine && userInfo?.setup) {
-        console.log("📶 Network reconnected!");
+        console.info("[Peer] Network restored, scheduling reconnect...");
 
         if (reconnectTimeoutRef.current) {
           clearTimeout(reconnectTimeoutRef.current);
@@ -180,10 +180,10 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
           const peer = peerRef.current;
 
           if (!peer || peer.destroyed) {
-            console.log("🆕 Creating new peer instance...");
+            console.info("[Peer] Creating new instance after network restore.");
             createPeerConnection();
           } else {
-            console.log("♻️ Reconnecting existing peer...");
+            console.info("[Peer] Reconnecting existing instance.");
             peer.reconnect();
           }
         }, 5000);
@@ -193,7 +193,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
     createPeerConnection();
 
     const handleOffline = () => {
-      console.log("📴 Network went offline!");
+      console.warn("[Peer] Network went offline.");
       setIsPeerReady(false);
 
       if (reconnectTimeoutRef.current) {
@@ -292,7 +292,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
           });
         })
         .catch((error) => {
-          console.error("Error accessing media devices:", error.message);
+          console.error("[Media] Failed to access media devices:", error.message);
           toast.error("Camera or mic is already in use!");
         });
     };
@@ -406,7 +406,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
           socket?.emit("before:call-connect", { callingActions });
         })
         .catch((error) => {
-          console.error("Error accessing media devices:", error.message);
+          console.error("[Media] Failed to access media devices:", error.message);
           toast.error("Camera or mic is already in use!");
         });
     } else {

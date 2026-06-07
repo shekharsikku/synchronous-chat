@@ -29,7 +29,7 @@ export const encryptMessage = (text: string, uid: string): string => {
     /** Convert to base64 for safe storage/transmission */
     return btoa(String.fromCharCode(...encrypted));
   } catch (error: any) {
-    if (env.isDev) console.error("Encryption error:", error.message);
+    if (env.isDev) console.error("[Crypto] Encryption failed:", error.message);
     throw new Error("Encryption failed!");
   }
 };
@@ -62,7 +62,7 @@ export const decryptMessage = (text: string, uid: string): string => {
     /** Convert bytes back to text */
     return new TextDecoder().decode(decrypted);
   } catch (error: any) {
-    if (env.isDev) console.error("Decryption error:", error.message);
+    if (env.isDev) console.error("[Crypto] Decryption failed:", error.message);
     throw new Error("Decryption failed!");
   }
 };

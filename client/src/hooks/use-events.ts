@@ -16,7 +16,7 @@ export const useEvents = () => {
     if (updatedProfile._id === userInfo?._id) {
       setUserInfo(updatedProfile);
       if (updatedProfile.setup) navigate("/chat");
-      if (env.isDev) console.log("👍 Profile setup completed!");
+      if (env.isDev) console.info("[SSE] Profile setup completed.");
     }
   });
 
@@ -37,11 +37,11 @@ export const useEvents = () => {
 
     eventSource.onopen = () => {
       retryCountRef.current = 0;
-      console.log("✅ Connected to event source!");
+      console.info("[SSE] Connected to event source.");
     };
 
     eventSource.onerror = (_error) => {
-      console.error("❌ Event source connection error!");
+      console.warn("[SSE] Connection error, retrying...");
 
       eventSource.close();
       eventSourceRef.current = null;
@@ -53,15 +53,16 @@ export const useEvents = () => {
       const retryDelay = getTimeoutDelay(retryCountRef.current);
       retryCountRef.current++;
 
-      console.log(`🔄 Reconnecting in ${(retryDelay / 1000).toFixed(1)} sec...`);
+      console.info(`[SSE] Reconnecting in ${(retryDelay / 1000).toFixed(1)} sec...`);
 
       retryTimeoutRef.current = setTimeout(() => {
-        console.log("🔄 Reconnecting now...");
+        console.info("[SSE] Reconnecting now...");
         connectEvent();
       }, retryDelay);
     };
   };
 
+  /** Effect for manage sse connection. */
   useEffect(() => {
     if (!userInfo?._id) return;
     if (connectedUserIdRef.current === userInfo._id) return;

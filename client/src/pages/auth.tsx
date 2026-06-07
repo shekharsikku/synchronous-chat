@@ -105,7 +105,7 @@ const Auth = () => {
 
       if (result.data.setup && env.isDev) {
         const deleted = await api.delete("/api/message/delete");
-        console.log({ result: deleted.data });
+        console.info("[Chat] Messages cleared:", deleted.data);
       }
 
       const redirectPath = result.data?.setup ? "/chat" : "/profile";

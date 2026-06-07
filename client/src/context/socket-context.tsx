@@ -55,12 +55,12 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
 
     socket.on("connect", () => {
       dispatch({ type: "CONNECT", socket: socket });
-      console.log("☑️ Connected to socket server!");
+      console.info("[Socket] Connected to server.");
     });
 
     socket.on("disconnect", () => {
       dispatch({ type: "DISCONNECT" });
-      console.log("⚠️ Disconnected from socket server!");
+      console.warn("[Socket] Disconnected from server.");
     });
 
     socket.on("users:online", (users) => {
@@ -69,7 +69,7 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
 
     socket.on("connect_error", (error) => {
       dispatch({ type: "DISCONNECT" });
-      console.error(`❌ Socket error: ${error.message}`);
+      console.error("[Socket] Connection error:", error.message);
       toast.error("Network unavailable or request aborted!");
     });
 

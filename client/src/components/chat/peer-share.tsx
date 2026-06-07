@@ -266,7 +266,7 @@ const PeerShare = () => {
 
         remotePeer?.on("open", () => {
           dispatch({ type: "SET_STATUS", status: "connected" });
-          console.log("✅ Connected to receiver peer!");
+          console.info("[Peer] Connected to receiver.");
 
           if (file) {
             let offset = 0;
@@ -279,7 +279,7 @@ const PeerShare = () => {
                 const chunk = event.target?.result as ArrayBuffer;
 
                 if (!chunk) {
-                  toast.info("FIle chunk is not available to send!");
+                  toast.info("File chunk is not available to send!");
                   return;
                 }
 
@@ -331,14 +331,14 @@ const PeerShare = () => {
 
         remotePeer.on("error", (err) => {
           dispatch({ type: "SET_STATUS", status: "disconnected" });
-          console.error("❌ Peer connection error:", err.message);
+          console.error("[Peer] Connection error:", err.message);
         });
 
         remotePeer.on("close", () => {
           dispatch({ type: "SET_DISABLE_ACTIONS", payload: false });
           dispatch({ type: "SET_STATUS", status: "disconnected" });
           dispatch({ type: "SET_PROGRESS", progress: 0 });
-          console.log("☑️ Closing connection from receiver peer!");
+          console.info("[Peer] Connection closed.");
         });
       }
     };
@@ -357,7 +357,7 @@ const PeerShare = () => {
 
     const handleConnection = (conn: DataConnection) => {
       dispatch({ type: "SET_STATUS", status: "receiving" });
-      console.log("✅ Connected to sender peer!");
+      console.info("[Peer] Connected to sender.");
 
       let receivedBuffers: ArrayBuffer[] = [];
       let receivedSize = 0;
@@ -411,7 +411,7 @@ const PeerShare = () => {
         dispatch({ type: "SET_DISABLE_ACTIONS", payload: false });
         dispatch({ type: "SET_STATUS", status: "disconnected" });
         dispatch({ type: "SET_PROGRESS", progress: 0 });
-        console.log("☑️ Closing connection from sender peer!");
+        console.info("[Peer] Connection closed.");
       });
     };
 
