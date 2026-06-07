@@ -101,6 +101,16 @@ export const updateMembersSchema = z.object({
   remove: z.array(z.string().min(1)).default([]),
 });
 
+export const subscribeSchema = z.object({
+  endpoint: z.url(),
+  keys: z.object({
+    p256dh: z.string(),
+    auth: z.string(),
+  }),
+});
+
+export const unsubscribeSchema = subscribeSchema.pick({ endpoint: true });
+
 export type SignUp = z.infer<typeof signUpSchema>;
 export type SignIn = z.infer<typeof signInSchema>;
 export type Profile = z.infer<typeof profileSchema>;
@@ -110,3 +120,5 @@ export type Translate = z.infer<typeof translateSchema>;
 export type CreateGroup = z.infer<typeof createGroupSchema>;
 export type UpdateDetails = z.infer<typeof updateDetailsSchema>;
 export type UpdateMembers = z.infer<typeof updateMembersSchema>;
+export type Subscribe = z.infer<typeof subscribeSchema>;
+export type Unsubscribe = z.infer<typeof unsubscribeSchema>;
