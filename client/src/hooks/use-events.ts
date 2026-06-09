@@ -1,8 +1,10 @@
 import { useEffect, useRef, useEffectEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import env from "@/lib/env";
+import { useContacts } from "@/hooks";
 import { getTimeoutDelay } from "@/lib/utils";
-import { useAuthStore } from "@/lib/zustand";
+import { subscribeNotification } from "@/lib/push";
+import { useAuthStore, useChatStore } from "@/lib/zustand";
 
 export const useEvents = () => {
   const navigate = useNavigate();
@@ -11,6 +13,13 @@ export const useEvents = () => {
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const retryCountRef = useRef(0);
   const { userInfo, setUserInfo } = useAuthStore();
+
+  const { setSelectedChatType, setSelectedChatData } = useChatStore();
+  const { contacts } = useContacts();
+
+  const getSenderDetails = useEffectEvent((sender: string) => {
+    return contacts?.find((contact) => contact._id === sender);
+  });
 
   const updateUserInfo = useEffectEvent((updatedProfile: UserInfo) => {
     if (updatedProfile._id === userInfo?._id) {
@@ -81,5 +90,31 @@ export const useEvents = () => {
 
       connectedUserIdRef.current = null;
     };
+  }, [userInfo?._id]);
+
+  /** Effect for manage push notification. */
+  useEffect(() => {
+    if (!("Notification" in window)) return;
+    if (!("serviceWorker" in navigator)) return;
+    if (!userInfo?._id) return;
+
+    subscribeNotification();
+
+    const handleMessageEvent = (event: MessageEvent) => {
+      if (event.data?.type !== "NAVIGATE") return;
+      const { url, sid } = event.data;
+
+      if (sid) {
+        const details = getSenderDetails(sid);
+        if (details) {
+          setSelectedChatType("contact");
+          setSelectedChatData(details);
+        }
+      }
+      navigate(url, { replace: true });
+    };
+
+    navigator.serviceWorker.addEventListener("message", handleMessageEvent);
+    return () => navigator.serviceWorker.removeEventListener("message", handleMessageEvent);
   }, [userInfo?._id]);
 };
