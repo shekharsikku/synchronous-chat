@@ -10,70 +10,41 @@ import helmet from "helmet";
 import { MulterError } from "multer";
 import { pinoHttp } from "pino-http";
 import requestIp from "request-ip";
+import webpush from "web-push";
 import { parse } from "yaml";
 import { ZodError } from "zod";
 import { limiter, logger } from "#/middlewares/index.js";
 import routers from "#/routers/index.js";
 import env from "#/utils/env.js";
-import { ApiError, ApiResponse } from "#/utils/helpers.js";
-
-const app = express();
+import { HttpError, HttpResponse } from "#/utils/response.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const { directives } = parse(readFileSync(join(__dirname, "../public/csp.yaml"), "utf-8"));
 
-/** Pino - HttpLogger */
-app.use(pinoHttp({ logger }));
+webpush.setVapidDetails(env.VAPID_MAILTO, env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY);
 
-/** Helmet - Security Headers */
-app.use(
-  helmet({
-    contentSecurityPolicy: { directives },
-  })
-);
+const app = express();
 
-/** CORS - Allow Origin */
-app.use(
-  cors({
-    origin: env.CORS_ORIGIN,
-    credentials: true,
-  })
-);
-
-/** Body Parser - Json & Form Data */
-app.use(
-  express.json({
-    limit: env.PAYLOAD_LIMIT,
-    strict: true,
-  })
-);
-
-app.use(
-  express.urlencoded({
-    limit: env.PAYLOAD_LIMIT,
-    extended: true,
-  })
-);
-
-/** Client Static + Trust Proxy */
+/** Trust Proxy */
 if (env.isProd) {
   app.set("trust proxy", 1);
-  app.use(
-    express.static(join(__dirname, "../client/dist"), {
-      maxAge: "30d",
-      immutable: true,
-    })
-  );
 }
 
-/** Request IP Address */
+/** Logging  */
+app.use(pinoHttp({ logger }));
+
+/** Security */
+app.use(helmet({ contentSecurityPolicy: { directives } }));
+app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(requestIp.mw());
 
-/** Cookies Parser */
+/** Parsing */
 app.use(cookieParser(env.COOKIES_SECRET));
+app.use(express.json({ limit: env.PAYLOAD_LIMIT, strict: true }));
+app.use(express.urlencoded({ limit: env.PAYLOAD_LIMIT, extended: true }));
 
-/** Body Compression */
+/** Compression */
 app.use(
   compression({
     filter: (req: Request, res: Response) => {
@@ -83,42 +54,52 @@ app.use(
   })
 );
 
-/** Public Static Assets */
+/** Static Files */
+if (env.isProd) {
+  app.use(
+    express.static(join(__dirname, "../client/dist"), {
+      maxAge: "30d",
+      immutable: true,
+    })
+  );
+}
+
 app.use("/public/temp", express.static(join(__dirname, "../public/temp")));
 
-/** Rate Limiter & Api Routers */
+/** API Routes */
 app.use("/api", limiter(), routers);
 
+/** SPA Fallback */
 app.all("*path", (_req: Request, res: Response) => {
   if (env.isDev) {
-    return new ApiResponse(200, "Welcome to Synchronous Chat!").send(res);
-  } else {
-    return res.sendFile(join(__dirname, "../client/dist", "index.html"), {
-      headers: {
-        "Cache-Control": "no-store, must-revalidate",
-      },
-    });
+    return new HttpResponse(200, "Welcome to Synchronous Chat!").send(res);
   }
+
+  return res.sendFile(join(__dirname, "../client/dist", "index.html"), {
+    headers: {
+      "Cache-Control": "no-store, must-revalidate",
+    },
+  });
 });
 
-/**  Global Error Handler */
+/** Error Handler */
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   if (res.headersSent) return next(err);
 
   if (err instanceof ZodError) {
-    return new ApiResponse(400, "Validation error occurred!", { error: err.issues }).send(res);
+    return new HttpResponse(400, "Validation error occurred!", { error: err.issues }).send(res);
   }
 
   if (err instanceof MulterError) {
-    return new ApiResponse(400, err.message).send(res);
+    return new HttpResponse(400, err.message).send(res);
   }
 
-  if (err instanceof ApiError) {
-    return new ApiResponse(err.code, err.message).send(res);
+  if (err instanceof HttpError) {
+    return new HttpResponse(err.code, err.message).send(res);
   }
 
   req.log.error({ err }, "Unhandled server error!");
-  return new ApiResponse(500, "Internal server error!").send(res);
+  return new HttpResponse(500, "Internal server error!").send(res);
 });
 
 export default app;

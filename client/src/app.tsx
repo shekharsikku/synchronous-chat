@@ -1,12 +1,10 @@
 import { useEffect } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
-
+import env from "@/lib/env";
 import { Spinner } from "@/components/ui/spinner";
 import { useListeners, useAuthUser, useEvents } from "@/hooks";
 import { useTheme } from "@/lib/context";
-import env from "@/lib/env";
-import { getDeviceId } from "@/lib/utils";
 import { Auth, Chat, Profile } from "@/pages";
 
 const RouteLayout = ({ route }: { route: "auth" | "chat" }) => {
@@ -50,27 +48,18 @@ const App = () => {
   });
 
   useEffect(() => {
-    const deviceId = getDeviceId();
-
-    if (env.isDev) {
-      console.log(`🆔 Device ID: ${deviceId}`);
-    }
-
+    /** Request notification permission. */
     if (Notification.permission === "default") {
       void Notification.requestPermission();
     }
 
+    /** Disable right click for better context ux. */
     const disableRightClick = (event: MouseEvent) => {
-      if (env.isProd) {
-        event.preventDefault();
-      }
+      if (env.isProd) event.preventDefault();
     };
 
     document.addEventListener("contextmenu", disableRightClick);
-
-    return () => {
-      document.removeEventListener("contextmenu", disableRightClick);
-    };
+    return () => document.removeEventListener("contextmenu", disableRightClick);
   }, []);
 
   /** Hook for handling socket.io events. */

@@ -1,9 +1,10 @@
 import { translate } from "bing-translate-api";
 import { Types } from "mongoose";
-import { ApiError, ApiResponse, asyncHandler } from "#/utils/helpers.js";
+import { asyncHandler, HttpError, HttpResponse } from "#/utils/response.js";
 import { fetchMembers } from "#/controllers/group.js";
 import { Message, Conversation, type MessageType } from "#/models/index.js";
 import { getSocketId, io } from "#/server.js";
+import { sendPushNotification } from "#/utils/push.js";
 import type { Message as MessageSchema, Translate } from "#/utils/schema.js";
 
 export const sendMessage = asyncHandler<{ id: string }, {}, MessageSchema, { type?: string }>(async (req) => {
@@ -76,28 +77,45 @@ export const sendMessage = asyncHandler<{ id: string }, {}, MessageSchema, { typ
       interaction,
     });
   } else {
-    const socketEventInfo = [
-      { userId: message.sender.toString(), targetId: message.recipient?.toString()! },
-      { userId: message.recipient?.toString()!, targetId: message.sender.toString() },
-    ];
+    const messageSender = message.sender.toString();
+    const messageRecipient = message.recipient?.toString()!;
+    const senderSockets = getSocketId(messageSender);
+    const recipientSockets = getSocketId(messageRecipient);
 
-    for (const { userId, targetId } of socketEventInfo) {
-      const userSocketIds = getSocketId(userId);
+    /** deliver to sender via socket */
+    if (senderSockets.length) {
+      /** for update new message */
+      io.to(senderSockets).emit("message:receive", message);
 
-      if (userSocketIds.length > 0) {
-        /** for update new message */
-        io.to(userSocketIds).emit("message:receive", message);
+      /** for update last chat contact */
+      io.to(senderSockets).emit("conversation:updated", {
+        _id: messageRecipient,
+        type: "contact",
+        interaction,
+      });
+    }
 
-        /** for update last chat contact */
-        io.to(userSocketIds).emit("conversation:updated", {
-          _id: targetId,
-          type: "contact",
-          interaction,
-        });
-      }
+    /** deliver to recipient via socket */
+    if (recipientSockets.length) {
+      /** for update new message */
+      io.to(recipientSockets).emit("message:receive", message);
+
+      /** for update last chat contact */
+      io.to(recipientSockets).emit("conversation:updated", {
+        _id: messageSender,
+        type: "contact",
+        interaction,
+      });
+    } else {
+      sendPushNotification(receiverId, {
+        title: req.user?.name ?? req.user?.username ?? "Someone",
+        body: "Sent you a new message.",
+        data: { sid: messageSender },
+      }).catch(() => {});
     }
   }
-  return new ApiResponse(201, "Message sent successfully!");
+
+  return new HttpResponse(201, "Message sent successfully!");
 });
 
 /** Transform null → undefined in response payload only */
@@ -127,7 +145,7 @@ export const getMessages = asyncHandler<{ id: string }, {}, {}, { group?: string
     .sort({ createdAt: -1 })
     .lean({ transform: (doc) => nullToUndefined(doc) });
 
-  return new ApiResponse(200, "Messages fetched successfully!", { data: messages.reverse() });
+  return new HttpResponse(200, "Messages fetched successfully!", { data: messages.reverse() });
 });
 
 export const fetchMessages = asyncHandler<{ id: string }, {}, {}, { before?: string; group?: string; limit?: string }>(
@@ -156,7 +174,7 @@ export const fetchMessages = asyncHandler<{ id: string }, {}, {}, { before?: str
       .lean({ transform: (doc) => nullToUndefined(doc) });
 
     /* Reverse to show oldest → newest in UI */
-    return new ApiResponse(200, "Messages fetched successfully!", { data: messages.reverse() });
+    return new HttpResponse(200, "Messages fetched successfully!", { data: messages.reverse() });
   }
 );
 
@@ -188,12 +206,12 @@ export const deleteMessage = asyncHandler<{ id: string }>(async (req) => {
   ).lean({ transform: (doc) => nullToUndefined(doc) });
 
   if (!message) {
-    throw new ApiError(400, "You can't delete this message or message not found!");
+    throw new HttpError(400, "You can't delete this message or message not found!");
   }
 
   await messageActionsEvents(message, "message:remove");
 
-  return new ApiResponse(200, "Message deleted successfully!");
+  return new HttpResponse(200, "Message deleted successfully!");
 });
 
 export const editMessage = asyncHandler<{ id: string }, {}, { text: string }>(async (req) => {
@@ -202,7 +220,7 @@ export const editMessage = asyncHandler<{ id: string }, {}, { text: string }>(as
   const { text } = req.body;
 
   if (!text) {
-    throw new ApiError(400, "Text content is required for editing!");
+    throw new HttpError(400, "Text content is required for editing!");
   }
 
   const message = await Message.findOneAndUpdate(
@@ -215,12 +233,12 @@ export const editMessage = asyncHandler<{ id: string }, {}, { text: string }>(as
   ).lean({ transform: (doc) => nullToUndefined(doc) });
 
   if (!message) {
-    throw new ApiError(400, "You can't edit this message or message not found!");
+    throw new HttpError(400, "You can't edit this message or message not found!");
   }
 
   await messageActionsEvents(message, "message:edited");
 
-  return new ApiResponse(200, "Message edited successfully!");
+  return new HttpResponse(200, "Message edited successfully!");
 });
 
 export const reactMessage = asyncHandler<{ id: string }, {}, { emoji: string }>(async (req) => {
@@ -229,7 +247,7 @@ export const reactMessage = asyncHandler<{ id: string }, {}, { emoji: string }>(
   const { emoji } = req.body;
 
   if (!emoji) {
-    throw new ApiError(400, "Emoji is required for reacting!");
+    throw new HttpError(400, "Emoji is required for reacting!");
   }
 
   const message = await Message.findOneAndUpdate(
@@ -302,12 +320,12 @@ export const reactMessage = asyncHandler<{ id: string }, {}, { emoji: string }>(
   ).lean({ transform: (doc) => nullToUndefined(doc) });
 
   if (!message) {
-    throw new ApiError(400, "Unable to react on this message or message not found!");
+    throw new HttpError(400, "Unable to react on this message or message not found!");
   }
 
   await messageActionsEvents(message, "message:reacted");
 
-  return new ApiResponse(200, "Message reacted successfully!");
+  return new HttpResponse(200, "Message reacted successfully!");
 });
 
 export const deleteMessages = asyncHandler<{}, {}, {}, { before?: string }>(async (req) => {
@@ -322,21 +340,21 @@ export const deleteMessages = asyncHandler<{}, {}, {}, { before?: string }>(asyn
     createdAt: { $lt: hoursAgo },
   });
 
-  return new ApiResponse(200, "Older messages deleted!", { data: result });
+  return new HttpResponse(200, "Older messages deleted!", { data: result });
 });
 
 export const translateMessage = asyncHandler<{}, {}, Translate>(async (req) => {
   const { message, language } = req.body;
 
   if (!message || !language) {
-    throw new ApiError(400, "Text message and language is required!");
+    throw new HttpError(400, "Text message and language is required!");
   }
 
   const result = await translate(message, null, language);
 
   if (!result) {
-    throw new ApiError(500, "Error while translating message!");
+    throw new HttpError(500, "Error while translating message!");
   }
 
-  return new ApiResponse(200, "Text translated successfully!", { data: result.translation });
+  return new HttpResponse(200, "Text translated successfully!", { data: result.translation });
 });

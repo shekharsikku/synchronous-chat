@@ -145,8 +145,8 @@ export const useContacts = () => {
           const uniqueContacts = contacts.filter((details) => details._id !== newContact._id);
           return [{ ...newContact, interaction: new Date().toISOString() }, ...uniqueContacts];
         });
-      } catch (error: any) {
-        if (env.isDev) console.error("Failed to fetch contact:", error.message);
+      } catch {
+        if (env.isDev) console.error("[Chat] Failed to fetch contact.");
       }
     };
 

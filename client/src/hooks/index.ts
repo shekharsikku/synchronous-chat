@@ -112,7 +112,7 @@ export const usePlainText = () => {
 
       return decryptMessage(message?.content?.text!, messageKey);
     } catch {
-      if (env.isDev) console.log("Plain text decryption failed!");
+      if (env.isDev) console.warn("[Crypto] Failed to decrypt message.");
       return "Decryption Error!";
     }
   };
@@ -144,8 +144,8 @@ export const useClipboard = (
           });
         });
       }
-    } catch (error: any) {
-      console.error("Clipboard read failed:", error.message);
+    } catch {
+      console.error("[Chat] Failed to read from clipboard.");
     }
   };
 
@@ -191,8 +191,8 @@ export const useMessageActions = () => {
               uid: userInfo?._id,
             },
           });
-        } catch (err) {
-          console.error("Failed to delete file:", err);
+        } catch {
+          console.error("[Chat] Failed to delete file.");
         }
       }
 
@@ -226,7 +226,7 @@ export const useMessageActions = () => {
       setTranslated(response.data.data);
     } catch {
       setTranslated("");
-      if (env.isDev) console.log("Language translation error!");
+      if (env.isDev) console.error("[Chat] Failed to translate message.");
     }
   };
 

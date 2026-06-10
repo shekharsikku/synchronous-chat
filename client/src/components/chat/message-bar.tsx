@@ -197,8 +197,8 @@ const MessageBar = () => {
       dispatch({ type: "SET_IMAGE_FORM", payload: formData });
 
       dispatch({ type: "SET_MESSAGE", payload: imageFile.name });
-    } catch (error: any) {
-      console.error(`Error while attaching file: ${error.message}`);
+    } catch {
+      console.error("[Chat] Failed to attach image file.");
     }
   }, []);
 

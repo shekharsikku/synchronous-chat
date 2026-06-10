@@ -2,9 +2,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useEffectEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-
 import api from "@/lib/api";
 import { usePeer } from "@/lib/context";
+import { unsubscribeNotification } from "@/lib/push";
 import { useAuthStore, useChatStore } from "@/lib/zustand";
 
 export const useAuthUser = () => {
@@ -40,7 +40,7 @@ export const useSignOut = () => {
     event.preventDefault();
     if (callingActive) disconnectCalling();
     try {
-      const response = await api.delete("/api/auth/sign-out");
+      const [response] = await Promise.all([api.delete("/api/auth/sign-out"), unsubscribeNotification()]);
       closeChat();
       setUserInfo(null);
       setIsAuthenticated(false);
