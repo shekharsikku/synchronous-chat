@@ -1,34 +1,59 @@
 import { translate } from "bing-translate-api";
 import { Types } from "mongoose";
 import { fetchMembers } from "#/controllers/group.js";
-import { Message, Conversation, type MessageType } from "#/models/index.js";
+import type { ConversationDocument, MessageDocument, MessageType, MessageContent } from "#/models/index.js";
+import { Message, Conversation } from "#/models/index.js";
 import { getSocketId, io } from "#/server.js";
 import { sendPushNotification } from "#/utilities/push.js";
 import { asyncHandler, HttpError, HttpResponse } from "#/utilities/response.js";
 import type { Message as MessageSchema, Translate } from "#/utilities/schema.js";
+
+const buildContent = ({ type, text, file }: MessageContent) => {
+  if (type === "text" && text) return { type, text };
+  if (type === "file" && file) return { type, file };
+  return { type };
+};
+
+const emitMessage = (
+  sockets: string[],
+  message: MessageDocument,
+  targetId: string,
+  targetType: "contact" | "group",
+  interaction: Date
+) => {
+  if (!sockets.length) return;
+  io.to(sockets).emit("message:receive", message);
+  io.to(sockets).emit("conversation:updated", {
+    _id: targetId,
+    type: targetType,
+    interaction,
+  });
+};
+
+const resolveMembers = async (
+  conversation: ConversationDocument | null,
+  groupId: Types.ObjectId
+): Promise<string[]> => {
+  if (conversation) {
+    const populated = await conversation.populate("participants");
+    const members = (populated.participants?.[0] as { members?: Types.ObjectId[] })?.members ?? [];
+    if (members.length) return members.map((id) => id.toString());
+  }
+  return fetchMembers(groupId);
+};
 
 export const sendMessage = asyncHandler<{ id: string }, {}, MessageSchema, { type?: string }>(async (req) => {
   const senderId = req.user?._id!;
   const receiverId = new Types.ObjectId(req.params.id);
   const isGroup = req.query.type === "group";
   const { type, text, file, reply } = req.body;
-
-  const content: {
-    type: "text" | "file";
-    text?: string;
-    file?: string;
-  } = { type };
-
-  if (type === "text" && text) content.text = text;
-  if (type === "file" && file) content.file = file;
-
   const interaction = new Date();
 
   let [message, conversation] = await Promise.all([
     Message.create({
       sender: senderId,
       ...(isGroup ? { group: receiverId } : { recipient: receiverId }),
-      content: content,
+      content: buildContent({ type, text, file }),
       ...(reply && { reply: new Types.ObjectId(reply) }),
     }),
     Conversation.findOneAndUpdate(
@@ -41,71 +66,30 @@ export const sendMessage = asyncHandler<{ id: string }, {}, MessageSchema, { typ
     ),
   ]);
 
-  let members: string[] = [];
-
   if (!conversation) {
     conversation = await Conversation.create({
       participants: isGroup ? [receiverId] : [senderId, receiverId],
       models: isGroup ? "Group" : "User",
       interaction: interaction,
     });
-
-    if (isGroup) {
-      members = await fetchMembers(receiverId);
-    }
   }
 
   if (isGroup) {
-    if (!members.length && conversation) {
-      const populated = await conversation.populate("participants");
-      members = (populated.participants?.[0] as any)?.members ?? [];
-    }
-
-    if (!members.length) {
-      members = await fetchMembers(receiverId);
-    }
-
-    const socketIds = members.flatMap((member) => getSocketId(member)).filter(Boolean);
-
-    /** for update new message */
-    io.to(socketIds).emit("message:receive", message);
-
-    /** for update last chat contact */
-    io.to(socketIds).emit("conversation:updated", {
-      _id: receiverId,
-      type: "group",
-      interaction,
-    });
+    const groupMembers = await resolveMembers(conversation, receiverId);
+    const membersSockets = groupMembers.flatMap(getSocketId).filter(Boolean);
+    emitMessage(membersSockets, message, receiverId.toString(), "group", interaction);
   } else {
     const messageSender = message.sender.toString();
     const messageRecipient = message.recipient?.toString()!;
     const senderSockets = getSocketId(messageSender);
     const recipientSockets = getSocketId(messageRecipient);
 
-    /** deliver to sender via socket */
     if (senderSockets.length) {
-      /** for update new message */
-      io.to(senderSockets).emit("message:receive", message);
-
-      /** for update last chat contact */
-      io.to(senderSockets).emit("conversation:updated", {
-        _id: messageRecipient,
-        type: "contact",
-        interaction,
-      });
+      emitMessage(senderSockets, message, messageRecipient, "contact", interaction);
     }
 
-    /** deliver to recipient via socket */
     if (recipientSockets.length) {
-      /** for update new message */
-      io.to(recipientSockets).emit("message:receive", message);
-
-      /** for update last chat contact */
-      io.to(recipientSockets).emit("conversation:updated", {
-        _id: messageSender,
-        type: "contact",
-        interaction,
-      });
+      emitMessage(recipientSockets, message, messageSender, "contact", interaction);
     } else {
       sendPushNotification(receiverId, {
         title: req.user?.name ?? req.user?.username ?? "Someone",
