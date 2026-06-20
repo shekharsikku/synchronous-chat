@@ -7,7 +7,7 @@ import messageRouter from "#/routers/message.js";
 import userRouter from "#/routers/user.js";
 import subscriptionRouter from "#/routers/subscription.js";
 import { connectEvents } from "#/services/events.js";
-import { HttpResponse } from "#/utils/response.js";
+import { HttpResponse } from "#/utilities/response.js";
 
 const router = Router();
 

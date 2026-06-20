@@ -1,10 +1,10 @@
 import { createSecretKey, createHash } from "node:crypto";
 import { deflateSync } from "node:zlib";
 import { CompactEncrypt, SignJWT } from "jose";
-import env from "#/utils/env.js";
 import type { UserDocument } from "#/models/index.js";
 import type { CookieOptions, Response } from "express";
 import type { Types } from "mongoose";
+import env from "./env.js";
 
 export type UserInfo =
   | Pick<UserDocument, "_id" | "name" | "email" | "username" | "setup">
@@ -84,4 +84,26 @@ export const createUserInfo = (user: UserDocument) => {
   return safeUser;
 };
 
-export { asyncHandler, asyncMiddleware, HttpError as ApiError, HttpResponse as ApiResponse } from "#/utils/response.js";
+export function formatBytes(bytes: number) {
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let i = 0;
+
+  while (bytes >= 1024 && i < units.length - 1) {
+    bytes /= 1024;
+    i++;
+  }
+
+  return `${bytes.toFixed(2)} ${units[i]}`;
+}
+
+export function formatUptime(uptime = process.uptime()) {
+  const hours = Math.floor(uptime / 3600);
+  const minutes = Math.floor((uptime % 3600) / 60);
+  const seconds = uptime % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m ${seconds.toFixed(2)}s`;
+  }
+
+  return `${minutes}m ${seconds.toFixed(2)}s`;
+}

@@ -2,7 +2,7 @@ import { connect } from "mongoose";
 import { logger } from "#/middlewares/index.js";
 import server from "#/server.js";
 import jobs from "#/services/jobs.js";
-import env from "#/utils/env.js";
+import env from "#/utilities/env.js";
 
 const uri = env.MONGODB_URI;
 const port = env.PORT;

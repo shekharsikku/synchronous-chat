@@ -1,16 +1,16 @@
 import { Types } from "mongoose";
-import { ApiError, ApiResponse, asyncHandler } from "#/utils/helpers.js";
 import { Group, User, Conversation } from "#/models/index.js";
 import { getSocketId, io } from "#/server.js";
-import { deleteFromCloudinary, uploadToCloudinary } from "#/utils/cloudinary.js";
-import type { CreateGroup, UpdateDetails, UpdateMembers } from "#/utils/schema.js";
+import { deleteFromCloudinary, uploadToCloudinary } from "#/utilities/cloudinary.js";
+import { HttpError, HttpResponse, asyncHandler } from "#/utilities/response.js";
+import type { CreateGroup, UpdateDetails, UpdateMembers } from "#/utilities/schema.js";
 
 export const createGroup = asyncHandler<{}, {}, CreateGroup>(async (req) => {
   const groupData = req.body;
   const reqUser = req.user?._id;
 
   if (groupData.admin !== reqUser?.toString()) {
-    throw new ApiError(400, "Invalid group admin assignment!");
+    throw new HttpError(400, "Invalid group admin assignment!");
   }
 
   if (!groupData.members.includes(reqUser.toString())) {
@@ -25,11 +25,11 @@ export const createGroup = asyncHandler<{}, {}, CreateGroup>(async (req) => {
   ]);
 
   if (existingGroup) {
-    throw new ApiError(400, "You already have a group with this name!");
+    throw new HttpError(400, "You already have a group with this name!");
   }
 
   if (existingUsers.length !== groupData.members.length) {
-    throw new ApiError(400, "One or more members are invalid users!");
+    throw new HttpError(400, "One or more members are invalid users!");
   }
 
   const newGroup = await Group.create({
@@ -52,7 +52,7 @@ export const createGroup = asyncHandler<{}, {}, CreateGroup>(async (req) => {
     models: "Group",
   });
 
-  return new ApiResponse(200, "Group created successfully!");
+  return new HttpResponse(200, "Group created successfully!");
 });
 
 export const updateDetails = asyncHandler<{ id: string }, {}, UpdateDetails>(async (req) => {
@@ -68,7 +68,7 @@ export const updateDetails = asyncHandler<{ id: string }, {}, UpdateDetails>(asy
     });
 
     if (existingGroup) {
-      throw new ApiError(400, "You already have another group with this name!");
+      throw new HttpError(400, "You already have another group with this name!");
     }
   }
 
@@ -79,10 +79,10 @@ export const updateDetails = asyncHandler<{ id: string }, {}, UpdateDetails>(asy
   );
 
   if (!updatedGroup) {
-    throw new ApiError(404, "Group not found or you are not authorized!");
+    throw new HttpError(404, "Group not found or you are not authorized!");
   }
 
-  return new ApiResponse(200, "Group details updated successfully!", { data: updatedGroup });
+  return new HttpResponse(200, "Group details updated successfully!", { data: updatedGroup });
 });
 
 export const updateMembers = asyncHandler<{ id: string }, {}, UpdateMembers>(async (req) => {
@@ -91,11 +91,11 @@ export const updateMembers = asyncHandler<{ id: string }, {}, UpdateMembers>(asy
   const reqUser = req.user?._id!;
 
   if (!add?.length && !remove?.length) {
-    throw new ApiError(400, "Provide at least one member to add or remove!");
+    throw new HttpError(400, "Provide at least one member to add or remove!");
   }
 
   if (remove.includes(reqUser?.toString()!)) {
-    throw new ApiError(400, "Admin cannot be removed from the group!");
+    throw new HttpError(400, "Admin cannot be removed from the group!");
   }
 
   const updateMembers = [...add, ...remove];
@@ -109,7 +109,7 @@ export const updateMembers = asyncHandler<{ id: string }, {}, UpdateMembers>(asy
     const invalidIds = updateMembers.filter((cur) => !validUserIds.includes(cur));
 
     if (invalidIds.length > 0) {
-      throw new ApiError(400, `Invalid user IDs: ${invalidIds.join(", ")}`);
+      throw new HttpError(400, `Invalid user IDs: ${invalidIds.join(", ")}`);
     }
   }
 
@@ -123,10 +123,10 @@ export const updateMembers = asyncHandler<{ id: string }, {}, UpdateMembers>(asy
   });
 
   if (!updatedGroup) {
-    throw new ApiError(404, "Group not found or you are not authorized!");
+    throw new HttpError(404, "Group not found or you are not authorized!");
   }
 
-  return new ApiResponse(200, "Group members updated successfully!", { data: updatedGroup });
+  return new HttpResponse(200, "Group members updated successfully!", { data: updatedGroup });
 });
 
 export const updateAvatar = asyncHandler<{ id: string }>(async (req) => {
@@ -135,19 +135,19 @@ export const updateAvatar = asyncHandler<{ id: string }>(async (req) => {
   const requestUser = req.user?._id!;
 
   if (!imagePath) {
-    throw new ApiError(400, "Group avatar file required!");
+    throw new HttpError(400, "Group avatar file required!");
   }
 
   const currentGroup = await Group.findOne({ _id: groupId, admin: requestUser });
 
   if (!currentGroup) {
-    throw new ApiError(403, "You are not allowed make update to this group!");
+    throw new HttpError(403, "You are not allowed make update to this group!");
   }
 
   const uploadImage = await uploadToCloudinary(imagePath);
 
   if (!uploadImage?.secure_url) {
-    throw new ApiError(500, "Error while uploading group avatar!");
+    throw new HttpError(500, "Error while uploading group avatar!");
   }
 
   if (currentGroup?.avatar) {
@@ -157,7 +157,7 @@ export const updateAvatar = asyncHandler<{ id: string }>(async (req) => {
   currentGroup.avatar = uploadImage.secure_url;
   await currentGroup.save({ validateBeforeSave: false });
 
-  return new ApiResponse(200, "Group avatar updated successfully!", { data: currentGroup });
+  return new HttpResponse(200, "Group avatar updated successfully!", { data: currentGroup });
 });
 
 export const deleteAvatar = asyncHandler<{ id: string }>(async (req) => {
@@ -167,11 +167,11 @@ export const deleteAvatar = asyncHandler<{ id: string }>(async (req) => {
   const currentGroup = await Group.findOne({ _id: groupId, admin: requestUser });
 
   if (!currentGroup) {
-    throw new ApiError(403, "You are not allowed update this group!");
+    throw new HttpError(403, "You are not allowed update this group!");
   }
 
   if (!currentGroup.avatar) {
-    throw new ApiError(400, "Group avatar is not available!");
+    throw new HttpError(400, "Group avatar is not available!");
   }
 
   await deleteFromCloudinary(currentGroup.avatar);
@@ -179,7 +179,7 @@ export const deleteAvatar = asyncHandler<{ id: string }>(async (req) => {
   currentGroup.avatar = null;
   await currentGroup.save({ validateBeforeSave: false });
 
-  return new ApiResponse(200, "Group avatar deleted successfully!", { data: currentGroup });
+  return new HttpResponse(200, "Group avatar deleted successfully!", { data: currentGroup });
 });
 
 export const fetchGroups = asyncHandler(async (req) => {
@@ -215,7 +215,7 @@ export const fetchGroups = asyncHandler(async (req) => {
     },
   ]);
 
-  return new ApiResponse(200, "Groups fetched successfully!", { data: groups });
+  return new HttpResponse(200, "Groups fetched successfully!", { data: groups });
 });
 
 export const fetchMembers = async (gid: Types.ObjectId) => {

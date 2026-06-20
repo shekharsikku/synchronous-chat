@@ -3,8 +3,9 @@ import { rateLimit } from "express-rate-limit";
 import { compactDecrypt } from "jose";
 import multer from "multer";
 import pino from "pino";
-import env from "#/utils/env.js";
-import { ApiError, generateSecret, asyncMiddleware, type UserInfo } from "#/utils/helpers.js";
+import env from "#/utilities/env.js";
+import { generateSecret, type UserInfo } from "#/utilities/helpers.js";
+import { asyncMiddleware, HttpError } from "#/utilities/response.js";
 import type { NextFunction, Request, Response } from "express";
 import type { ZodType } from "zod";
 
@@ -22,7 +23,7 @@ export const authAccess = asyncMiddleware(async (req, _res, next) => {
     req.user = await authorizeAccess(req);
     return next();
   } catch {
-    throw new ApiError(401, "Unauthorized access request!");
+    throw new HttpError(401, "Unauthorized access request!");
   }
 });
 
@@ -71,7 +72,7 @@ export const limiter = (minute = 10, limit = 1000) => {
     },
     handler: (req: Request) => {
       req.log.error(`Rate limit exceeded for IP: ${req.clientIp}`);
-      throw new ApiError(429, "Maximum number of requests exceeded!");
+      throw new HttpError(429, "Maximum number of requests exceeded!");
     },
   });
 };

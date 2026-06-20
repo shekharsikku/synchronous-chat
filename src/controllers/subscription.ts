@@ -1,6 +1,6 @@
 import { Subscription } from "#/models/index.js";
-import { asyncHandler, HttpError, HttpResponse } from "#/utils/response.js";
-import type { Subscribe, Unsubscribe } from "#/utils/schema.js";
+import { asyncHandler, HttpError, HttpResponse } from "#/utilities/response.js";
+import type { Subscribe, Unsubscribe } from "#/utilities/schema.js";
 
 export const subscribe = asyncHandler<{}, {}, Subscribe>(async (req) => {
   const userId = req.user?._id!;

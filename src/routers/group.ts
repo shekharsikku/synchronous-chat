@@ -8,7 +8,7 @@ import {
   deleteAvatar,
 } from "#/controllers/group.js";
 import { authAccess, upload, validate, limiter } from "#/middlewares/index.js";
-import { createGroupSchema, updateDetailsSchema, updateMembersSchema } from "#/utils/schema.js";
+import { createGroupSchema, updateDetailsSchema, updateMembersSchema } from "#/utilities/schema.js";
 
 const router = Router();
 

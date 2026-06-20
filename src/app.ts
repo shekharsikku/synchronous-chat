@@ -15,8 +15,8 @@ import { parse } from "yaml";
 import { ZodError } from "zod";
 import { limiter, logger } from "#/middlewares/index.js";
 import routers from "#/routers/index.js";
-import env from "#/utils/env.js";
-import { HttpError, HttpResponse } from "#/utils/response.js";
+import env from "#/utilities/env.js";
+import { HttpError, HttpResponse } from "#/utilities/response.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

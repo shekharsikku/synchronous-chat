@@ -1,11 +1,11 @@
 import { translate } from "bing-translate-api";
 import { Types } from "mongoose";
-import { asyncHandler, HttpError, HttpResponse } from "#/utils/response.js";
 import { fetchMembers } from "#/controllers/group.js";
 import { Message, Conversation, type MessageType } from "#/models/index.js";
 import { getSocketId, io } from "#/server.js";
-import { sendPushNotification } from "#/utils/push.js";
-import type { Message as MessageSchema, Translate } from "#/utils/schema.js";
+import { sendPushNotification } from "#/utilities/push.js";
+import { asyncHandler, HttpError, HttpResponse } from "#/utilities/response.js";
+import type { Message as MessageSchema, Translate } from "#/utilities/schema.js";
 
 export const sendMessage = asyncHandler<{ id: string }, {}, MessageSchema, { type?: string }>(async (req) => {
   const senderId = req.user?._id!;
