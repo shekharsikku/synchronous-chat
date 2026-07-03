@@ -1,5 +1,11 @@
 import { type InferSchemaType, type HydratedDocument, Schema, model } from "mongoose";
 
+export type MessageContent = {
+  type: "text" | "file";
+  text?: string | undefined;
+  file?: string | undefined;
+};
+
 const ContentSchema = new Schema(
   {
     type: {
@@ -9,13 +15,13 @@ const ContentSchema = new Schema(
     },
     text: {
       type: String,
-      required: function () {
+      required: function (this: MessageContent) {
         return this.type === "text";
       },
     },
     file: {
       type: String,
-      required: function () {
+      required: function (this: MessageContent) {
         return this.type === "file";
       },
     },

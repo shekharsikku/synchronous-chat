@@ -5,7 +5,7 @@ export { default as Group } from "#/models/group.js";
 export { default as Subscription } from "#/models/subscription.js";
 
 export type { UserType, UserDocument } from "#/models/user.ts";
-export type { MessageType, MessageDocument } from "#/models/message.js";
+export type { MessageType, MessageDocument, MessageContent } from "#/models/message.js";
 export type { ConversationType, ConversationDocument } from "#/models/conversation.js";
 export type { GroupType, GroupDocument } from "#/models/group.js";
 export type { SubscriptionType, SubscriptionDocument } from "#/models/subscription.js";

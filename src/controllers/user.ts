@@ -2,10 +2,10 @@ import { genSalt, hash, compare } from "bcryptjs";
 import { User } from "#/models/index.js";
 import { getSocketId, io } from "#/server.js";
 import { eventsService } from "#/services/events.js";
-import { deleteFromCloudinary, uploadToCloudinary } from "#/utils/cloudinary.js";
-import { ApiError, ApiResponse, asyncHandler, hasEmptyField, createUserInfo, generateAccess } from "#/utils/helpers.js";
-import { type UserInfo } from "#/utils/helpers.js";
-import type { Profile, Password } from "#/utils/schema.js";
+import { deleteFromCloudinary, uploadToCloudinary } from "#/utilities/cloudinary.js";
+import { hasEmptyField, createUserInfo, generateAccess, type UserInfo } from "#/utilities/helpers.js";
+import { asyncHandler, HttpError, HttpResponse } from "#/utilities/response.js";
+import type { Profile, Password } from "#/utilities/schema.js";
 
 const profileUpdateEvents = async (userData: UserInfo) => {
   const userSocketIds = getSocketId(userData._id.toString());
@@ -20,7 +20,7 @@ export const profileSetup = asyncHandler<{}, {}, Profile>(async (req, res) => {
     const existsUsername = await User.exists({ username });
 
     if (existsUsername) {
-      throw new ApiError(409, "Username already exists!");
+      throw new HttpError(409, "Username already exists!");
     }
   }
 
@@ -37,7 +37,7 @@ export const profileSetup = asyncHandler<{}, {}, Profile>(async (req, res) => {
   });
 
   if (!updatedProfile) {
-    throw new ApiError(400, "Profile setup not completed!");
+    throw new HttpError(400, "Profile setup not completed!");
   }
 
   const userInfo = createUserInfo(updatedProfile);
@@ -47,13 +47,13 @@ export const profileSetup = asyncHandler<{}, {}, Profile>(async (req, res) => {
   }
 
   if (!userInfo.setup) {
-    return new ApiResponse(200, "Please, complete your profile!");
+    return new HttpResponse(200, "Please, complete your profile!");
   }
 
   await generateAccess(res, userInfo);
   await profileUpdateEvents(userInfo);
 
-  return new ApiResponse(200, "Profile updated successfully!");
+  return new HttpResponse(200, "Profile updated successfully!");
 });
 
 export const updateImage = asyncHandler(async (req, res) => {
@@ -61,19 +61,19 @@ export const updateImage = asyncHandler(async (req, res) => {
   const requestUser = req.user?._id!;
 
   if (!imagePath) {
-    throw new ApiError(400, "Profile image file required!");
+    throw new HttpError(400, "Profile image file required!");
   }
 
   const userProfile = await User.findById(requestUser);
 
   if (!userProfile) {
-    throw new ApiError(404, "Can't get current user profile!");
+    throw new HttpError(404, "Can't get current user profile!");
   }
 
   const uploadImage = await uploadToCloudinary(imagePath);
 
   if (!uploadImage?.secure_url) {
-    throw new ApiError(500, "Error while uploading profile image!");
+    throw new HttpError(500, "Error while uploading profile image!");
   }
 
   if (userProfile?.image) {
@@ -88,7 +88,7 @@ export const updateImage = asyncHandler(async (req, res) => {
   await generateAccess(res, userInfo);
   await profileUpdateEvents(userInfo);
 
-  return new ApiResponse(200, "Profile image updated successfully!");
+  return new HttpResponse(200, "Profile image updated successfully!");
 });
 
 export const deleteImage = asyncHandler(async (req, res) => {
@@ -97,11 +97,11 @@ export const deleteImage = asyncHandler(async (req, res) => {
   const userProfile = await User.findById(requestUser);
 
   if (!userProfile) {
-    throw new ApiError(404, "Can't get current user profile!");
+    throw new HttpError(404, "Can't get current user profile!");
   }
 
   if (!userProfile.image) {
-    throw new ApiError(400, "Profile image not available!");
+    throw new HttpError(400, "Profile image not available!");
   }
 
   await deleteFromCloudinary(userProfile.image);
@@ -114,26 +114,26 @@ export const deleteImage = asyncHandler(async (req, res) => {
   await generateAccess(res, userInfo);
   await profileUpdateEvents(userInfo);
 
-  return new ApiResponse(200, "Profile image deleted successfully!");
+  return new HttpResponse(200, "Profile image deleted successfully!");
 });
 
 export const changePassword = asyncHandler<{}, {}, Password>(async (req, res) => {
   const { old_password, new_password } = req.body;
 
   if (old_password === new_password) {
-    throw new ApiError(400, "Please, choose a different password!");
+    throw new HttpError(400, "Please, choose a different password!");
   }
 
   const requestUser = await User.findById(req.user?._id!).select("+password");
 
   if (!requestUser) {
-    throw new ApiError(401, "Invalid authorization!");
+    throw new HttpError(401, "Invalid authorization!");
   }
 
   const isCorrect = await compare(old_password, requestUser.password!);
 
   if (!isCorrect) {
-    throw new ApiError(401, "Incorrect old password!");
+    throw new HttpError(401, "Incorrect old password!");
   }
 
   const hashSalt = await genSalt(12);
@@ -143,10 +143,10 @@ export const changePassword = asyncHandler<{}, {}, Password>(async (req, res) =>
   const userInfo = createUserInfo(requestUser);
   await generateAccess(res, userInfo);
 
-  return new ApiResponse(200, "Password changed successfully!");
+  return new HttpResponse(200, "Password changed successfully!");
 });
 
 export const userInformation = asyncHandler(async (req) => {
   const message = req.user?.setup ? "User profile information!" : "Please, complete your profile!";
-  return new ApiResponse(200, message, { data: req.user! });
+  return new HttpResponse(200, message, { data: req.user! });
 });

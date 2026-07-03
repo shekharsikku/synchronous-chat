@@ -1,8 +1,8 @@
 import { createServer } from "node:http";
 import { Server, type Socket } from "socket.io";
 import { logger } from "#/middlewares/index.js";
+import env from "#/utilities/env.js";
 import app from "#/app.js";
-import env from "#/utils/env.js";
 
 const server = createServer(app);
 

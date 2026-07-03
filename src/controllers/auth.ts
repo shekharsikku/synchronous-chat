@@ -3,19 +3,11 @@ import { genSalt, hash, compare } from "bcryptjs";
 import { jwtVerify } from "jose";
 import { Types } from "mongoose";
 import { User } from "#/models/index.js";
-import env from "#/utils/env.js";
 import { logger } from "#/middlewares/index.js";
-import {
-  ApiError,
-  ApiResponse,
-  asyncHandler,
-  cookieOptions,
-  generateAccess,
-  generateRefresh,
-  createUserInfo,
-  generateHash,
-} from "#/utils/helpers.js";
-import type { SignUp, SignIn } from "#/utils/schema.js";
+import env from "#/utilities/env.js";
+import { cookieOptions, generateAccess, generateRefresh, createUserInfo, generateHash } from "#/utilities/helpers.js";
+import { HttpError, HttpResponse, asyncHandler } from "#/utilities/response.js";
+import type { SignUp, SignIn } from "#/utilities/schema.js";
 
 const parseAuthKey = (authKey: any) => {
   const [firstKey, secondKey] = authKey.split(":", 2);
@@ -59,7 +51,7 @@ export const signUpUser = asyncHandler<{}, {}, SignUp>(async (req, res) => {
   const existsEmail = await User.exists({ email });
 
   if (existsEmail) {
-    throw new ApiError(409, "Email already exists!");
+    throw new HttpError(409, "Email already exists!");
   }
 
   const hashSalt = await genSalt(12);
@@ -69,7 +61,7 @@ export const signUpUser = asyncHandler<{}, {}, SignUp>(async (req, res) => {
   const userInfo = createUserInfo(newUser);
   await generateAccess(res, userInfo);
 
-  return new ApiResponse(201, "Signed up successfully!", { data: userInfo });
+  return new HttpResponse(201, "Signed up successfully!", { data: userInfo });
 });
 
 export const signInUser = asyncHandler<{}, {}, SignIn>(async (req, res) => {
@@ -82,7 +74,7 @@ export const signInUser = asyncHandler<{}, {}, SignIn>(async (req, res) => {
   } else if (username) {
     conditions.push({ username });
   } else {
-    throw new ApiError(400, "Email or Username required!");
+    throw new HttpError(400, "Email or Username required!");
   }
 
   const existsUser = await User.findOne({
@@ -90,20 +82,20 @@ export const signInUser = asyncHandler<{}, {}, SignIn>(async (req, res) => {
   }).select("+password +authentication");
 
   if (!existsUser) {
-    throw new ApiError(404, "User not exists!");
+    throw new HttpError(404, "User not exists!");
   }
 
   const isCorrect = await compare(password, existsUser.password);
 
   if (!isCorrect) {
-    throw new ApiError(403, "Incorrect password!");
+    throw new HttpError(403, "Incorrect password!");
   }
 
   const userInfo = createUserInfo(existsUser);
   await generateAccess(res, userInfo);
 
   if (!userInfo.setup) {
-    return new ApiResponse(200, "Please, complete your profile!", { data: userInfo });
+    return new HttpResponse(200, "Please, complete your profile!", { data: userInfo });
   }
 
   const authorizeId = new Types.ObjectId();
@@ -119,7 +111,7 @@ export const signInUser = asyncHandler<{}, {}, SignIn>(async (req, res) => {
 
   await existsUser.save();
 
-  return new ApiResponse(200, "Signed in successfully!", { data: userInfo });
+  return new HttpResponse(200, "Signed in successfully!", { data: userInfo });
 });
 
 export const signOutUser = asyncHandler(async (req, res) => {
@@ -133,7 +125,7 @@ export const signOutUser = asyncHandler(async (req, res) => {
   res.clearCookie("refresh", cookieOptions);
   res.clearCookie("current", cookieOptions);
 
-  return new ApiResponse(200, "Signed out successfully!");
+  return new HttpResponse(200, "Signed out successfully!");
 });
 
 export const authRefresh = asyncHandler(async (req, res) => {
@@ -142,7 +134,7 @@ export const authRefresh = asyncHandler(async (req, res) => {
   const currentAuthKey = req.cookies["current"];
 
   if (!refreshToken || !currentAuthKey) {
-    throw new ApiError(401, "Unauthorized refresh request!");
+    throw new HttpError(401, "Unauthorized refresh request!");
   }
 
   const verifiedData = await (async () => {
@@ -173,7 +165,7 @@ export const authRefresh = asyncHandler(async (req, res) => {
       };
     } catch {
       await revokeToken(res, currentAuthKey);
-      throw new ApiError(403, "Please, signin again to continue!");
+      throw new HttpError(403, "Please, signin again to continue!");
     }
   })();
 
@@ -191,7 +183,7 @@ export const authRefresh = asyncHandler(async (req, res) => {
   const requestUser = await User.findOne(authFilter);
 
   if (!requestUser) {
-    throw new ApiError(401, "Invalid authorization!");
+    throw new HttpError(401, "Invalid authorization!");
   }
 
   const userInfo = createUserInfo(requestUser);
@@ -211,11 +203,11 @@ export const authRefresh = asyncHandler(async (req, res) => {
 
     if (updatedResult.modifiedCount === 0) {
       await revokeToken(res, currentAuthKey);
-      throw new ApiError(403, "Please, signin again to continue!");
+      throw new HttpError(403, "Please, signin again to continue!");
     }
   }
 
   await generateAccess(res, userInfo);
 
-  return new ApiResponse(200, "Token refreshed successfully!");
+  return new HttpResponse(200, "Token refreshed successfully!");
 });

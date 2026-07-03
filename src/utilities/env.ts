@@ -28,7 +28,7 @@ const env = cleanEnv(process.env, {
   }),
   LOG_LEVEL: str({
     choices: ["fatal", "error", "warn", "info", "debug", "trace", "silent"],
-    default: "info",
+    default: "trace",
   }),
 });
 

@@ -1,12 +1,12 @@
 import { Types } from "mongoose";
-import { ApiError, ApiResponse, asyncHandler } from "#/utils/helpers.js";
 import { User, Conversation } from "#/models/index.js";
+import { HttpError, HttpResponse, asyncHandler } from "#/utilities/response.js";
 
 export const searchContact = asyncHandler<{}, {}, {}, { search?: string }>(async (req) => {
   const search = req.query.search;
 
   if (!search) {
-    throw new ApiError(400, "Search terms is required!");
+    throw new HttpError(400, "Search terms is required!");
   }
 
   const terms = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -23,10 +23,10 @@ export const searchContact = asyncHandler<{}, {}, {}, { search?: string }>(async
     .lean();
 
   if (contacts.length == 0) {
-    throw new ApiError(404, "No any contact found!");
+    throw new HttpError(404, "No any contact found!");
   }
 
-  return new ApiResponse(200, "Available contacts!", { data: contacts });
+  return new HttpResponse(200, "Available contacts!", { data: contacts });
 });
 
 export const availableContact = asyncHandler(async (req) => {
@@ -38,10 +38,10 @@ export const availableContact = asyncHandler(async (req) => {
     .lean();
 
   if (contacts.length == 0) {
-    throw new ApiError(404, "No any contact available!");
+    throw new HttpError(404, "No any contact available!");
   }
 
-  return new ApiResponse(200, "Contacts fetched successfully!", { data: contacts });
+  return new HttpResponse(200, "Contacts fetched successfully!", { data: contacts });
 });
 
 export const fetchContacts = asyncHandler(async (req) => {
@@ -82,7 +82,7 @@ export const fetchContacts = asyncHandler(async (req) => {
     { $match: { _id: { $ne: null } } },
   ]);
 
-  return new ApiResponse(200, "Contacts fetched successfully!", { data: contacts });
+  return new HttpResponse(200, "Contacts fetched successfully!", { data: contacts });
 });
 
 export const fetchContact = asyncHandler<{ id: string }>(async (req) => {
@@ -91,8 +91,8 @@ export const fetchContact = asyncHandler<{ id: string }>(async (req) => {
   const userContact = await User.findById(userId).select("-setup -createdAt -updatedAt -__v");
 
   if (!userContact) {
-    throw new ApiError(404, "Contact not found!");
+    throw new HttpError(404, "Contact not found!");
   }
 
-  return new ApiResponse(200, "Contact fetched successfully!", { data: userContact });
+  return new HttpResponse(200, "Contact fetched successfully!", { data: userContact });
 });

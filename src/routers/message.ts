@@ -10,7 +10,7 @@ import {
   fetchMessages,
 } from "#/controllers/message.js";
 import { authAccess, validate, limiter } from "#/middlewares/index.js";
-import { messageSchema, translateSchema } from "#/utils/schema.js";
+import { messageSchema, translateSchema } from "#/utilities/schema.js";
 
 const router = Router();
 

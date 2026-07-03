@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { existsSync, unlinkSync } from "node:fs";
 import { v2 as cloudinary } from "cloudinary";
-import { unlinkFiles } from "#/utils/unlink.js";
 import { logger } from "#/middlewares/index.js";
-import env from "#/utils/env.js";
+import { unlinkFiles } from "./unlink.js";
+import env from "./env.js";
 
 cloudinary.config({
   cloud_name: env.CLOUDINARY_CLOUD_NAME,
