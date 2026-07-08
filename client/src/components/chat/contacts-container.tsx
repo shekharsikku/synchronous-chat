@@ -1,6 +1,6 @@
 import { Fragment, useState } from "react";
 import { isDesktop } from "react-device-detect";
-
+import type { AllChatItem, ChatType, GroupInfo, UserInfo } from "@/types";
 import { AddNewChat } from "@/components/chat/add-new-chat";
 import { GroupElement, ContactElement } from "@/components/chat/contact-element";
 import { ContactListSkeleton } from "@/components/chat/contact-list-skeleton";
@@ -58,7 +58,7 @@ const ContactsContainer = () => {
                 <TabsTrigger
                   key={current}
                   value={current.toLowerCase()}
-                  className="dark:data-[state=inactive]:bg-gray-700/20 dark:data-[state=active]:bg-gray-200 dark:data-[state=inactive]:text-white dark:data-[state=active]:text-black  
+                  className="dark:data-[state=inactive]:bg-gray-700/20 dark:data-[state=active]:bg-gray-200 dark:data-[state=inactive]:text-white dark:data-[state=active]:text-black
                   data-[state=inactive]:bg-gray-100/80 data-[state=active]:bg-gray-200/80 data-[state=inactive]:text-gray-700 data-[state=active]:text-gray-950
                   data-[state=active]:font-semibold w-full border-none rounded p-1.5 duration-0"
                 >

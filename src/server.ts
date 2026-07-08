@@ -1,23 +1,38 @@
 import { createServer } from "node:http";
-import { Server, type Socket } from "socket.io";
+import { Server } from "socket.io";
 import { logger } from "#/middlewares/index.js";
 import env from "#/utilities/env.js";
 import app from "#/app.js";
 
 const server = createServer(app);
 
-export const io = new Server(server, {
-  cors: {
-    origin: env.CORS_ORIGIN,
-    credentials: true,
-  },
+const io = new Server(server, {
+  cors: { origin: env.CORS_ORIGIN, credentials: true },
 });
 
-const userSocketMap = new Map<string, Set<string>>();
+const socketMap = new Map<string, Set<string>>();
 
-export const getSocketId = (userId: string) => {
-  const userSockets = userSocketMap.get(userId) || new Set<string>();
-  return Array.from(userSockets);
+const getClients = () =>
+  Array.from(socketMap.entries()).reduce(
+    (acc, [user, sockets]) => {
+      acc[user] = Array.from(sockets);
+      return acc;
+    },
+    {} as Record<string, string[]>
+  );
+
+const hasSocket = (uid: string, sid: string) => {
+  return socketMap.get(uid)?.has(sid) ?? false;
+};
+
+export const getSockets = (uid: string) => {
+  const sockets = socketMap.get(uid) || new Set<string>();
+  return Array.from(sockets);
+};
+
+export const emitEvent = (sockets: string[], event: string, payload: any) => {
+  if (!sockets.length) return;
+  io.to(sockets).emit(event, payload);
 };
 
 io.use((socket, next) => {
@@ -31,127 +46,87 @@ io.use((socket, next) => {
   next();
 });
 
-io.on("connection", (socket: Socket) => {
+io.on("connection", (socket) => {
   const userId = socket.handshake.query["uid"] as string;
 
   if (userId) {
-    if (!userSocketMap.has(userId)) {
-      userSocketMap.set(userId, new Set());
+    if (!socketMap.has(userId)) {
+      socketMap.set(userId, new Set());
     }
-    userSocketMap.get(userId)?.add(socket.id);
+    socketMap.get(userId)?.add(socket.id);
     logger.info("User connected: %s:%s", userId, socket.id);
   } else {
     logger.info("Socket disconnected missing userId: %s", socket.id);
     socket.disconnect();
   }
 
-  io.emit(
-    "users:online",
-    Array.from(userSocketMap.entries()).reduce(
-      (acc, [userId, sockets]) => {
-        acc[userId] = Array.from(sockets);
-        return acc;
-      },
-      {} as Record<string, string[]>
-    )
-  );
+  io.emit("users:online", getClients());
 
-  socket.on("typing:start", ({ selectedUser, currentUser }) => {
-    const socketId = getSocketId(selectedUser);
-
-    socket.to(socketId).emit("typing:display", {
-      uid: selectedUser,
-      cid: currentUser,
-      typing: true,
-    });
+  socket.on("typing:update", ({ selected, current, typing }) => {
+    const sockets = getSockets(selected);
+    emitEvent(sockets, "typing:update", { selected, current, typing });
   });
 
-  socket.on("typing:stop", ({ selectedUser, currentUser }) => {
-    const socketId = getSocketId(selectedUser);
-
-    socket.to(socketId).emit("typing:hide", {
-      uid: selectedUser,
-      cid: currentUser,
-      typing: false,
-    });
+  socket.on("call:request", ({ target, details, type }) => {
+    const socket = getSockets(target).at(-1)!;
+    emitEvent([socket], "call:request", { details, type });
   });
 
-  socket.on("before:call-request", ({ callingDetails }) => {
-    const socketId = getSocketId(callingDetails.to);
-
-    socket.to(socketId).emit("after:call-request", {
-      callingDetails,
-    });
+  socket.on("call:response", ({ target, details, action }) => {
+    if (!hasSocket(target.uid, target.sid)) {
+      socket.emit("target:invalid", { code: "TARGET_INVALID" });
+      return;
+    }
+    emitEvent([target.sid], "call:response", { details, action });
   });
 
-  socket.on("before:call-connect", ({ callingActions }) => {
-    const socketId = getSocketId(callingActions.to);
-
-    socket.to(socketId).emit("after:call-connect", {
-      callingActions,
-    });
+  socket.on("call:ended", ({ target, details }) => {
+    if (!hasSocket(target.uid, target.sid)) {
+      socket.emit("target:invalid", { code: "TARGET_INVALID" });
+      return;
+    }
+    emitEvent([target.sid], "call:ended", { details });
   });
 
-  socket.on("before:call-disconnect", ({ callingActions }) => {
-    const socketId = getSocketId(callingActions.to);
-
-    socket.to(socketId).emit("after:call-disconnect", {
-      callingActions,
-    });
+  socket.on("call:mute", ({ target, mute }) => {
+    if (!hasSocket(target?.uid, target?.sid)) {
+      socket.emit("target:invalid", { code: "TARGET_INVALID" });
+      return;
+    }
+    emitEvent([target.sid], "call:mute", { mute });
   });
 
-  socket.on("before:mute-action", ({ microphoneAction }) => {
-    const socketId = getSocketId(microphoneAction.to);
-
-    socket.to(socketId).emit("after:mute-action", {
-      microphoneAction,
-    });
+  socket.on("share:request", ({ target, details, file }) => {
+    const socket = getSockets(target).at(-1)!;
+    emitEvent([socket], "share:request", { details, file });
   });
 
-  socket.on("before:share-request", ({ shareInfo }) => {
-    const socketId = getSocketId(shareInfo.to);
-
-    socket.to(socketId).emit("after:share-request", {
-      shareInfo,
-    });
+  socket.on("file:request", ({ target, details, action }) => {
+    if (!hasSocket(target.uid, target.sid)) {
+      socket.emit("target:invalid", { code: "TARGET_INVALID" });
+      return;
+    }
+    emitEvent([target.sid], "file:request", { details, action });
   });
 
-  socket.on("before:file-request", ({ shareInfo }) => {
-    const socketId = getSocketId(shareInfo.to);
-
-    socket.to(socketId).emit("after:file-request", {
-      shareInfo,
-    });
-  });
-
-  socket.on("before:group-update", ({ updatedGroup }) => {
-    const socketIds = updatedGroup.members
-      .filter((member: string) => member !== updatedGroup.admin)
-      .flatMap((userId: string) => getSocketId(userId))
+  socket.on("group:update", ({ group, members }) => {
+    const sockets = members
+      .filter((member: string) => member !== group.admin)
+      .flatMap((uid: string) => getSockets(uid))
       .filter(Boolean);
-
-    socket.to(socketIds).emit("after:group-update", { ...updatedGroup });
+    emitEvent(sockets, "group:update", group);
   });
 
   socket.on("disconnect", () => {
-    for (const [userId, sockets] of userSocketMap.entries()) {
+    for (const [uid, sockets] of socketMap.entries()) {
       if (sockets.has(socket.id)) {
-        logger.info("User disconnected: %s:%s", userId, socket.id);
+        logger.info("User disconnected: %s:%s", uid, socket.id);
         sockets.delete(socket.id);
-        if (sockets.size === 0) userSocketMap.delete(userId);
+        if (sockets.size === 0) socketMap.delete(uid);
         break;
       }
     }
-    io.emit(
-      "users:online",
-      Array.from(userSocketMap.entries()).reduce(
-        (acc, [userId, sockets]) => {
-          acc[userId] = Array.from(sockets);
-          return acc;
-        },
-        {} as Record<string, string[]>
-      )
-    );
+    io.emit("users:online", getClients());
   });
 });
 

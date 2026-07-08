@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useReducer, type ReactNode } from "react";
+import { useEffect, useMemo, useReducer, type PropsWithChildren } from "react";
 import { io, Socket } from "socket.io-client";
 import { toast } from "sonner";
-
-import { SocketContext, type SocketState } from "@/lib/context";
+import type { SocketState } from "@/types";
+import { SocketContext } from "@/lib/context";
 import env from "@/lib/env";
 import { useAuthStore } from "@/lib/zustand";
 
@@ -37,7 +37,7 @@ function socketReducer(state: SocketState, action: SocketAction): SocketState {
   }
 }
 
-const SocketProvider = ({ children }: { children: ReactNode }) => {
+const SocketProvider = ({ children, ...props }: PropsWithChildren) => {
   const { userInfo } = useAuthStore();
   const [state, dispatch] = useReducer(socketReducer, initialState);
 
@@ -87,7 +87,11 @@ const SocketProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [state.socket, state.isConnected, state.onlineUsers]);
 
-  return <SocketContext.Provider value={contextValue}>{children}</SocketContext.Provider>;
+  return (
+    <SocketContext.Provider {...props} value={contextValue}>
+      {children}
+    </SocketContext.Provider>
+  );
 };
 
 export default SocketProvider;

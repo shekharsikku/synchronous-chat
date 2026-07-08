@@ -9,6 +9,7 @@ import { useSocket } from "@/lib/context";
 import { decryptMessage } from "@/lib/noble";
 import { useAuthStore, useChatStore } from "@/lib/zustand";
 import type { ChangeEvent, RefObject, SetStateAction, Dispatch } from "react";
+import type { GroupInfo, Message } from "@/types";
 
 export const useDebounce = <T extends (...args: any[]) => void>(callback: T, delay: number) => {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -284,15 +285,15 @@ export const useGroupUpdate = () => {
   const { userInfo } = useAuthStore();
   const { setSelectedChatData } = useChatStore();
 
-  const handleGroupUpdate = (updatedData: GroupInfo) => {
-    const updatedGroup = { ...updatedData, interaction: new Date().toISOString() };
+  const handleGroupUpdate = (updated: GroupInfo, members?: string[]) => {
+    const group = { ...updated, interaction: new Date().toISOString() };
 
     queryClient.setQueryData<GroupInfo[]>(["groups", userInfo?._id], (older = []) => {
-      return older.map((group) => (group._id === updatedGroup._id ? updatedGroup : group));
+      return older.map((old) => (old._id === group._id ? group : old));
     });
 
-    setSelectedChatData(updatedGroup);
-    socket?.emit("before:group-update", { updatedGroup });
+    setSelectedChatData(group);
+    socket?.emit("group:update", { group, members });
   };
 
   return { handleGroupUpdate };

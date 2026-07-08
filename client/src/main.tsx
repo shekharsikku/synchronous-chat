@@ -2,10 +2,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { isMobile } from "react-device-detect";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-
-import App from "@/app.tsx";
+import { SocketProvider, PeerProvider, ThemeProvider } from "@/contexts";
 import { Toaster } from "@/components/ui/sonner";
-import { SocketProvider, PeerProvider, ThemeProvider } from "@/context";
+import App from "@/app.tsx";
 import "@/main.css";
 
 const queryClient = new QueryClient();

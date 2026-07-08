@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-
+import type { UserInfo } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { cn, getAvatar, contactQuery } from "@/lib/utils";
 

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { AppStore, AuthStore, ChatStore, ChatType, GroupInfo, Message, UserInfo } from "@/types";
 import api from "@/lib/api";
 
 export const useAuthStore = create<AuthStore>((set) => ({

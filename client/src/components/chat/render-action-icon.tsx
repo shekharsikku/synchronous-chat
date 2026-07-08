@@ -1,7 +1,8 @@
-import { HiOutlineBackspace } from "react-icons/hi2";
-import { LuPencilLine, LuCheck } from "react-icons/lu";
+import { HiOutlineBackspace, HiMiniPencilSquare } from "react-icons/hi2";
+import { LuCheck } from "react-icons/lu";
 import { TooltipElement } from "@/components/chat/tooltip-element";
 import { Spinner } from "@/components/ui/spinner";
+import type { DetailsState, MemberUpdateState } from "@/types";
 
 interface RenderActionProps {
   detailsState: DetailsState;
@@ -34,7 +35,11 @@ const RenderActionIcon: React.FC<RenderActionProps> = ({
   if (hasMemberChanges) {
     return (
       <TooltipElement content="Update Members">
-        <LuCheck size={16} className="tooltip-icon text-blue-500" onClick={handleMembersUpdate} />
+        <LuCheck
+          size={16}
+          className="tooltip-icon text-blue-500 hover:text-blue-600 transition-colors"
+          onClick={handleMembersUpdate}
+        />
       </TooltipElement>
     );
   }
@@ -42,9 +47,9 @@ const RenderActionIcon: React.FC<RenderActionProps> = ({
   if (inputReadOnlyEnable) {
     return (
       <TooltipElement content="Change Details">
-        <LuPencilLine
+        <HiMiniPencilSquare
           size={14}
-          className="tooltip-icon text-yellow-500"
+          className="tooltip-icon text-slate-500 hover:text-slate-600 transition-colors"
           onClick={() => handleDetailActionClick("change")}
         />
       </TooltipElement>
@@ -54,7 +59,11 @@ const RenderActionIcon: React.FC<RenderActionProps> = ({
   if (!isInvalid && !isUnchanged) {
     return (
       <TooltipElement content="Save Details">
-        <LuCheck size={16} className="tooltip-icon text-green-500" onClick={handleDetailsSubmit} />
+        <LuCheck
+          size={16}
+          className="tooltip-icon text-green-500 hover:text-green-600 transition-colors"
+          onClick={handleDetailsSubmit}
+        />
       </TooltipElement>
     );
   }
@@ -64,7 +73,7 @@ const RenderActionIcon: React.FC<RenderActionProps> = ({
       <TooltipElement content="Clear Details">
         <HiOutlineBackspace
           size={16}
-          className="tooltip-icon text-red-500"
+          className="tooltip-icon text-red-500 hover:text-red-600 transition-colors"
           onClick={() => handleDetailActionClick("clear")}
         />
       </TooltipElement>

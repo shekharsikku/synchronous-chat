@@ -1,4 +1,4 @@
-import type { UserInfo } from "#/utils/helpers.ts";
+import type { UserInfo } from "#/utilities/helpers.ts";
 
 declare module "express" {
   interface Request {

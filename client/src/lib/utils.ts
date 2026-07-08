@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
-
+import type { Message, TimeStamp, UserInfo } from "@/types";
 import { noAvatar, maleAvatar, femaleAvatar } from "@/assets/images";
 import api from "@/lib/api";
 import { useAppStore } from "@/lib/zustand";

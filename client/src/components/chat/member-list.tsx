@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useContacts } from "@/hooks";
 import { getAvatar } from "@/lib/utils";
 import { useAuthStore } from "@/lib/zustand";
+import type { GroupMemberManageProps } from "@/types";
 
 interface GroupMembersProps {
   selectedChatData: any;
@@ -44,7 +45,12 @@ const GroupMembersList: React.FC<GroupMembersProps> = ({ selectedChatData }) => 
   );
 };
 
-const GroupMemberManage: React.FC<GroupMemberManage> = ({ contacts, getMemberStatus, toggleMember, tooltipMap }) => {
+const GroupMemberManage: React.FC<GroupMemberManageProps> = ({
+  contacts,
+  getMemberStatus,
+  toggleMember,
+  tooltipMap,
+}) => {
   return (
     <div className="min-h-36 max-h-60 py-1 overflow-y-scroll scrollbar-hide">
       <ScrollArea className="min-h-20 overflow-y-auto scrollbar-hide">

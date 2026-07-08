@@ -1,10 +1,10 @@
 import Peer, { type MediaConnection } from "peerjs";
-import { useCallback, useEffect, useState, useRef, useId, useEffectEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useState, useRef, useId, useEffectEvent, type PropsWithChildren } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-
+import type { PeerInformation, ResponseActions, CallType } from "@/types";
 import { PeerShare } from "@/components/chat";
-import { useSocket, PeerContext, type PeerInformation, type ResponseActions } from "@/lib/context";
+import { useSocket, PeerContext } from "@/lib/context";
 import env from "@/lib/env";
 import { getDeviceId, getTimeoutDelay } from "@/lib/utils";
 import { useAuthStore } from "@/lib/zustand";
@@ -15,7 +15,22 @@ const fatalErrors = new Set(["unavailable-id", "invalid-id", "ssl-unavailable"])
 /** Only reconnect on network issues when online. */
 const retryableErrors = new Set(["network", "server-error", "socket-error", "socket-closed"]);
 
-const PeerProvider = ({ children }: { children: ReactNode }) => {
+/** To stop media track for both clients. */
+const stopMediaTracks = (mediaRef: any) => {
+  if (mediaRef.current) {
+    const mediaStream = mediaRef.current.srcObject as MediaStream;
+    if (mediaStream?.getTracks) {
+      mediaStream.getTracks().forEach((track) => {
+        track.stop();
+        mediaStream.removeTrack(track);
+      });
+    }
+    mediaRef.current.srcObject = null;
+    mediaRef.current = null;
+  }
+};
+
+const PeerProvider = ({ children, ...props }: PropsWithChildren) => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -48,7 +63,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
 
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
-  const [mediaType, setMediaType] = useState<"audio" | "video">("audio");
+  const [mediaType, setMediaType] = useState<CallType>("audio");
 
   const [openPeerShareModal, setOpenPeerShareModal] = useState(false);
 
@@ -106,7 +121,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
           console.info("[Peer] ID:", id);
         }
 
-        setLocalInfo({ uid: userInfo._id!, name: userInfo.name!, pid: id });
+        setLocalInfo({ uid: userInfo._id!, name: userInfo.name!, pid: id, sid: socket?.id! });
         setIsPeerReady(true);
       });
 
@@ -219,42 +234,6 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   }, [userInfo?._id, userInfo?.setup, userInfo?.name, isConnected]);
 
   useEffect(() => {
-    /** Handle incoming signaling events */
-    const handleCallingRequest = ({ callingDetails: details }: { callingDetails: any }) => {
-      setRemoteInfo({
-        uid: details.from,
-        name: details.name,
-        pid: details.pid,
-      });
-
-      setMediaType(details.type);
-      const callType = details.type === "video" ? "Video" : "Voice";
-
-      toast(`${callType} call form ${details?.name}?`, {
-        description: "Accept to connect via WebRTC?",
-        action: {
-          label: "Accept",
-          onClick: () => setCallingResponse("accept"),
-        },
-        duration: 30000,
-        onDismiss: () => setCallingResponse("reject"),
-        onAutoClose: () => setCallingResponse("missed"),
-        unstyled: false,
-        classNames: {
-          actionButton: "h-8 w-16 justify-center hover:opacity-80",
-        },
-      });
-    };
-
-    /** Handling signaling for call request */
-    socket?.on("after:call-request", handleCallingRequest);
-    /** Cleanup for signaling request */
-    return () => {
-      socket?.off("after:call-request", handleCallingRequest);
-    };
-  }, [socket]);
-
-  useEffect(() => {
     if (!isPeerReady || !peerRef.current) return;
 
     const handleCall = (call: MediaConnection) => {
@@ -316,7 +295,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
   }, [pendingRequest, callingToastId]);
 
   const responseCallingRequest = useEffectEvent((action: ResponseActions) => {
-    if (!remoteInfo?.pid) return;
+    if (!remoteInfo) return;
 
     /** Clear any existing timeout before doing anything */
     if (callTimeoutRef.current) {
@@ -326,14 +305,14 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
 
     if (callingActive) {
       /** Notify the remote user when you busy */
-      const callingActions = {
-        from: localInfo?.uid,
-        name: localInfo?.name,
+      socket?.emit("call:response", {
+        target: {
+          uid: remoteInfo?.uid,
+          sid: remoteInfo?.sid,
+        },
+        details: localInfo,
         action: "busy",
-        to: remoteInfo?.uid,
-        pid: localInfo?.pid,
-      };
-      socket?.emit("before:call-connect", { callingActions });
+      });
 
       if (action === "accept") {
         toast.info("Can't response on another call currently!");
@@ -378,7 +357,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
           }
 
           /** Call the remote user */
-          const call = peerRef.current?.call(remoteInfo?.pid!, localStream);
+          const call = peerRef.current?.call(remoteInfo?.pid, localStream);
 
           call?.on("stream", (remoteStream) => {
             setMediaStream(remoteStream);
@@ -396,14 +375,14 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
           });
 
           /** Notify the remote user when accept */
-          const callingActions = {
-            from: localInfo?.uid,
-            name: localInfo?.name,
-            action: action,
-            to: remoteInfo?.uid,
-            pid: localInfo?.pid,
-          };
-          socket?.emit("before:call-connect", { callingActions });
+          socket?.emit("call:response", {
+            target: {
+              uid: remoteInfo?.uid,
+              sid: remoteInfo?.sid,
+            },
+            details: localInfo,
+            action,
+          });
         })
         .catch((error) => {
           console.error("[Media] Failed to access media devices:", error.message);
@@ -414,14 +393,14 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
       setCallingDialog(false);
 
       /** Notify the remote user when missed */
-      const callingActions = {
-        from: localInfo?.uid,
-        name: localInfo?.name,
-        action: action,
-        to: remoteInfo?.uid,
-        pid: localInfo?.pid,
-      };
-      socket?.emit("before:call-connect", { callingActions });
+      socket?.emit("call:response", {
+        target: {
+          uid: remoteInfo?.uid,
+          sid: remoteInfo?.sid,
+        },
+        details: localInfo,
+        action,
+      });
     }
   });
 
@@ -431,24 +410,61 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [callingResponse]);
 
-  /** Mount unmount for request/response action */
+  const disconnectCalling = () => {
+    stopMediaTracks(localAudioRef);
+    stopMediaTracks(remoteAudioRef);
+    stopMediaTracks(localVideoRef);
+    stopMediaTracks(remoteVideoRef);
+
+    socket?.emit("call:ended", {
+      target: {
+        uid: callingInfo?.uid,
+        sid: callingInfo?.sid,
+      },
+      details: localInfo,
+    });
+
+    setCallingDialog(false);
+    setCallingActive(false);
+    setCallingResponse(null);
+    setPendingRequest(false);
+    setCallingInfo(null);
+    setMuteUser(false);
+    setRemoteMute(false);
+    setRemoteMicOff(false);
+  };
+
   useEffect(() => {
-    const handleCallingActions = ({ callingActions: response }: { callingActions: any }) => {
-      if (response.action === "accept") {
-        setRemoteInfo({
-          uid: response.from,
-          name: response.name,
-          pid: response.pid,
-        });
-        setCallingInfo({
-          uid: response.from,
-          name: response.name,
-          pid: response.pid,
-        });
+    if (!socket) return;
+
+    const handleCallRequest = ({ details, type }: { details: PeerInformation; type: CallType }) => {
+      setRemoteInfo(details);
+      setMediaType(type);
+
+      toast(`${type === "video" ? "Video" : "Voice"} call form ${details?.name}?`, {
+        description: "Accept to connect via WebRTC?",
+        action: {
+          label: "Accept",
+          onClick: () => setCallingResponse("accept"),
+        },
+        duration: 30000,
+        onDismiss: () => setCallingResponse("reject"),
+        onAutoClose: () => setCallingResponse("missed"),
+        unstyled: false,
+        classNames: {
+          actionButton: "h-8 w-16 justify-center hover:opacity-80",
+        },
+      });
+    };
+
+    const handleCallResponse = ({ details, action }: { details: PeerInformation; action: ResponseActions }) => {
+      if (action === "accept") {
+        setRemoteInfo(details);
+        setCallingInfo(details);
         setCallingActive(true);
         setCallingDialog(true);
         setPendingRequest(false);
-        toast.success(`Call request ${response.action} by ${response.name}!`);
+        toast.success(`Call request ${action} by ${details?.name}!`);
       } else {
         setPendingRequest(false);
         setCallingDialog(false);
@@ -456,109 +472,60 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
         setCallingResponse(null);
         setRemoteInfo(null);
 
-        if (response.action === "busy") {
-          toast.info(`${response.name} is currently ${response.action} on another call!`);
+        if (action === "busy") {
+          toast.info(`${details?.name} is currently ${action} on another call!`);
         } else {
-          toast.info(`Call request ${response.action} by ${response.name}!`);
+          toast.info(`Call request ${action} by ${details?.name}!`);
         }
       }
     };
 
-    /** Handling signaling for call request */
-    socket?.on("after:call-connect", handleCallingActions);
-    /** Cleanup for signaling request */
-    return () => {
-      socket?.off("after:call-connect", handleCallingActions);
-    };
-  }, [socket]);
-
-  const stopMediaTracks = (mediaRef: any) => {
-    if (mediaRef.current) {
-      const mediaStream = mediaRef.current.srcObject as MediaStream;
-      if (mediaStream?.getTracks) {
-        mediaStream.getTracks().forEach((track) => {
-          track.stop();
-          mediaStream.removeTrack(track);
-        });
-      }
-      mediaRef.current.srcObject = null;
-      mediaRef.current = null;
-    }
-  };
-
-  const disconnectCalling = () => {
-    /** Stop local/remote audio tracks */
-    stopMediaTracks(localAudioRef);
-    stopMediaTracks(remoteAudioRef);
-    /** Stop local/remote video tracks */
-    stopMediaTracks(localVideoRef);
-    stopMediaTracks(remoteVideoRef);
-
-    /** Notify the remote user */
-    const callingActions = {
-      from: localInfo?.uid,
-      name: localInfo?.name,
-      to: callingInfo?.uid,
-      pid: localInfo?.pid,
-    };
-    socket?.emit("before:call-disconnect", { callingActions });
-
-    /** Reset remote info state */
-    setCallingDialog(false);
-    setCallingActive(false);
-    setCallingResponse(null);
-    setPendingRequest(false);
-    setCallingInfo(null);
-  };
-
-  useEffect(() => {
-    const handleCallDisconnect = ({ callingActions: response }: { callingActions: any }) => {
-      /** Stop local/remote audio tracks */
+    const handleCallDisconnect = ({ details }: { details: PeerInformation }) => {
       stopMediaTracks(localAudioRef);
       stopMediaTracks(remoteAudioRef);
-      /** Stop local/remote video tracks */
       stopMediaTracks(localVideoRef);
       stopMediaTracks(remoteVideoRef);
 
-      /** Reset remote info state */
       setCallingDialog(false);
       setCallingActive(false);
       setCallingResponse(null);
       setPendingRequest(false);
       setCallingInfo(null);
+      setMuteUser(false);
+      setRemoteMute(false);
+      setRemoteMicOff(false);
 
-      toast.info(`Call disconnected from ${response.name}!`);
+      toast.info(`Call disconnected from ${details?.name}!`);
     };
-    /** Handling signaling for call request */
-    socket?.on("after:call-disconnect", handleCallDisconnect);
-    /** Cleanup for signaling request */
+
+    const handleMuteAction = ({ mute }: { mute: boolean }) => {
+      setRemoteMute(mute);
+    };
+
+    const handleTargetInvalid = ({ code }: { code: string }) => {
+      if (code === "TARGET_INVALID") {
+        toast.error("The target device is no longer available!");
+      }
+    };
+
+    const events: [string, (...args: any[]) => void][] = [
+      ["call:request", handleCallRequest],
+      ["call:response", handleCallResponse],
+      ["call:ended", handleCallDisconnect],
+      ["call:mute", handleMuteAction],
+      ["target:invalid", handleTargetInvalid],
+    ];
+
+    events.forEach(([event, handler]) => socket.on(event, handler));
+
     return () => {
-      socket?.off("after:call-disconnect", handleCallDisconnect);
-    };
-  }, [socket]);
-
-  useEffect(() => {
-    const microphoneAction = {
-      to: callingInfo?.uid,
-      mute: remoteMicOff,
-    };
-    socket?.emit("before:mute-action", { microphoneAction });
-  }, [socket, callingInfo?.uid, remoteMicOff]);
-
-  useEffect(() => {
-    const handleMicAction = ({ microphoneAction: action }: { microphoneAction: any }) => {
-      setRemoteMute(action.mute);
-    };
-
-    socket?.on("after:mute-action", handleMicAction);
-
-    return () => {
-      socket?.off("after:mute-action", handleMicAction);
+      events.forEach(([event, handler]) => socket.on(event, handler));
     };
   }, [socket]);
 
   return (
     <PeerContext.Provider
+      {...props}
       value={{
         localInfo,
         setLocalInfo,

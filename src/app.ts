@@ -36,7 +36,7 @@ app.use(pinoHttp({ logger }));
 
 /** Security */
 app.use(helmet({ contentSecurityPolicy: { directives } }));
-app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+app.use(cors({ origin: env.CORS_ORIGIN, credentials: true, maxAge: 3600 }));
 app.use(requestIp.mw());
 
 /** Parsing */

@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState, useEffectEvent, type RefObject } from "react";
 import { HiOutlineArrowSmallDown } from "react-icons/hi2";
 import { useInView } from "react-intersection-observer";
-
+import type { Message } from "@/types";
 import { MessageSkeleton } from "@/components/chat/message-skeleton";
 import { RenderDMMessages } from "@/components/chat/render-dm-messages";
 import { Button } from "@/components/ui/button";
