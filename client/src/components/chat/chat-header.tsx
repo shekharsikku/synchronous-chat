@@ -35,7 +35,7 @@ import { UploadActionDialog } from "@/components/chat/upload-action-dialog";
 import { useContacts, useImageSelector, useGroupUpdate } from "@/hooks";
 import api from "@/lib/api";
 import env from "@/lib/env";
-import { useSocket, usePeer } from "@/lib/context";
+import { useSocket, usePeer, type CallType } from "@/lib/context";
 import { cn, languageOptions, getAvatar, formatUtcTimestamp } from "@/lib/utils";
 import { useAuthStore, useChatStore } from "@/lib/zustand";
 
@@ -166,24 +166,21 @@ const ChatHeader = () => {
 
   const isCurrentlyOnline = onlineUsers.hasOwnProperty(selectedChatData?._id!);
 
-  const requestVoiceCalling = (userId: string, type: "audio" | "video") => {
+  const requestCalling = (userId: string, callType: CallType) => {
     if (callingActive || pendingRequest) {
       toast.info("Can't request for another call currently!");
       return;
     }
 
-    /** Local user details for call request */
-    const callingDetails = {
-      from: localInfo?.uid,
-      name: localInfo?.name,
-      to: userId,
-      pid: localInfo?.pid,
-      type: type,
-    };
-
-    setMediaType(type);
+    setMediaType(callType);
     setPendingRequest(true);
-    socket?.emit("before:call-request", { callingDetails });
+
+    /** Local user details for call request */
+    socket?.emit("call:request", {
+      target: userId,
+      details: localInfo,
+      type: callType,
+    });
   };
 
   const handleDetailActionClick = (action: "change" | "clear") => {
@@ -221,7 +218,8 @@ const ChatHeader = () => {
 
     try {
       const response = await api.patch(`/api/group/update/${selectedChatData._id}/details`, detailsState);
-      handleGroupUpdate(response.data.data);
+      const updated = response.data.data;
+      handleGroupUpdate(updated, updated.members);
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
@@ -236,7 +234,9 @@ const ChatHeader = () => {
 
     try {
       const response = await api.patch(`/api/group/update/${selectedChatData._id}/members`, memberChanges);
-      handleGroupUpdate(response.data.data);
+      const updated = response.data.data;
+      const members = new Set(memberChanges.remove.concat(updated.members));
+      handleGroupUpdate(updated, Array.from(members));
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
@@ -275,7 +275,8 @@ const ChatHeader = () => {
       const response = await api.patch(`/api/group/update/${selectedChatData._id}/avatar`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      handleGroupUpdate(response.data.data);
+      const updated = response.data.data;
+      handleGroupUpdate(updated, updated.members);
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
@@ -291,7 +292,8 @@ const ChatHeader = () => {
 
     try {
       const response = await api.delete(`/api/group/delete/${selectedChatData._id}/avatar`);
-      handleGroupUpdate(response.data.data);
+      const updated = response.data.data;
+      handleGroupUpdate(updated, updated.members);
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
@@ -360,10 +362,7 @@ const ChatHeader = () => {
                   alt="avatar"
                   className="object-cover size-full"
                 />
-                <AvatarFallback
-                  className={`uppercase h-full w-full text-xl border text-center font-medium 
-                  transition-all duration-300 bg-[#06d6a02a] text-[#06d6a0] border-[#06d6a0bb`}
-                >
+                <AvatarFallback className="uppercase h-full w-full text-xl border text-center font-medium transition-all duration-300 bg-[#06d6a02a] text-[#06d6a0] border-[#06d6a0bb">
                   {selectedChatData?.name.charAt(0) ?? ""}
                 </AvatarFallback>
               </Avatar>
@@ -410,10 +409,7 @@ const ChatHeader = () => {
                 onClick={() => setOpenUserInfoModal(true)}
               >
                 <AvatarImage src={userAvatar} alt="profile" className="object-cover size-full" />
-                <AvatarFallback
-                  className={`uppercase h-full w-full text-xl border text-center font-medium 
-                      transition-all duration-300 bg-[#06d6a02a] text-[#06d6a0] border-[#06d6a0bb`}
-                >
+                <AvatarFallback className="uppercase h-full w-full text-xl border text-center font-medium transition-all duration-300 bg-[#06d6a02a] text-[#06d6a0] border-[#06d6a0bb">
                   {(selectedChatData?.name || selectedChatData?.username || selectedChatData?.email)?.charAt(0) ?? ""}
                 </AvatarFallback>
               </Avatar>
@@ -430,8 +426,7 @@ const ChatHeader = () => {
               {/* Profile Image */}
               <div className="flex justify-center">
                 <img
-                  className="size-28 lg:size-32 rounded-full border-4 border-white 
-                  object-cover shadow-lg -mt-20 lg:-mt-24 transition-all"
+                  className="size-28 lg:size-32 rounded-full border-4 border-white object-cover shadow-lg -mt-20 lg:-mt-24 transition-all"
                   src={userAvatar}
                   alt="User profile"
                 />
@@ -678,14 +673,14 @@ const ChatHeader = () => {
                   <TooltipElement content="Video Call" disabled={pendingRequest}>
                     <HiOutlineVideoCamera
                       size={20}
-                      onClick={() => requestVoiceCalling(selectedChatData?._id!, "video")}
+                      onClick={() => requestCalling(selectedChatData?._id!, "video")}
                       className="tooltip-icon"
                     />
                   </TooltipElement>
                   <TooltipElement content="Voice Call" disabled={pendingRequest}>
                     <HiOutlinePhone
                       size={18}
-                      onClick={() => requestVoiceCalling(selectedChatData?._id!, "audio")}
+                      onClick={() => requestCalling(selectedChatData?._id!, "audio")}
                       className="tooltip-icon"
                     />
                   </TooltipElement>
@@ -709,8 +704,10 @@ const ChatHeader = () => {
                     <DropdownMenuRadioItem
                       key={option.code}
                       value={option.code}
-                      className={`flex items-center justify-start gap-2 text-sm capitalize cursor-pointer rounded-md 
-                    ${option.code === language && "bg-neutral-100 dark:bg-neutral-800"}`}
+                      className={cn(
+                        "flex items-center justify-start gap-2 text-sm capitalize cursor-pointer rounded-md",
+                        option.code === language && "bg-neutral-100 dark:bg-neutral-800"
+                      )}
                     >
                       {option.name}
                     </DropdownMenuRadioItem>

@@ -25,9 +25,11 @@ export type PeerInformation = {
   uid: string;
   name: string;
   pid: string;
+  sid: string;
 } | null;
 
-export type ResponseActions = "accept" | "reject" | "missed" | null;
+export type CallType = "audio" | "video";
+export type ResponseActions = "accept" | "reject" | "busy" | "missed" | null;
 
 export interface PeerInterface {
   peerRef?: RefObject<Peer | null>;
@@ -73,8 +75,8 @@ export interface PeerInterface {
   localVideoRef: RefObject<HTMLVideoElement | null>;
   remoteVideoRef: RefObject<HTMLVideoElement | null>;
 
-  mediaType: "audio" | "video";
-  setMediaType: Dispatch<SetStateAction<"audio" | "video">>;
+  mediaType: CallType;
+  setMediaType: Dispatch<SetStateAction<CallType>>;
 
   openPeerShareModal: boolean;
   setOpenPeerShareModal: Dispatch<SetStateAction<boolean>>;

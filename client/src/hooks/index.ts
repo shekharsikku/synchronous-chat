@@ -284,15 +284,15 @@ export const useGroupUpdate = () => {
   const { userInfo } = useAuthStore();
   const { setSelectedChatData } = useChatStore();
 
-  const handleGroupUpdate = (updatedData: GroupInfo) => {
-    const updatedGroup = { ...updatedData, interaction: new Date().toISOString() };
+  const handleGroupUpdate = (updated: GroupInfo, members?: string[]) => {
+    const group = { ...updated, interaction: new Date().toISOString() };
 
     queryClient.setQueryData<GroupInfo[]>(["groups", userInfo?._id], (older = []) => {
-      return older.map((group) => (group._id === updatedGroup._id ? updatedGroup : group));
+      return older.map((old) => (old._id === group._id ? group : old));
     });
 
-    setSelectedChatData(updatedGroup);
-    socket?.emit("before:group-update", { updatedGroup });
+    setSelectedChatData(group);
+    socket?.emit("group:update", { group, members });
   };
 
   return { handleGroupUpdate };

@@ -169,7 +169,7 @@ export const useListeners = () => {
       ["message:reacted", handleMessageUpdate],
       ["group:created", handleGroupUpsert],
       ["profile:update", handleProfileUpdate],
-      ["after:group-update", handleGroupUpsert],
+      ["group:update", handleGroupUpsert],
     ];
 
     if (!messageListeners.current) {

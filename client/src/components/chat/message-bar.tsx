@@ -30,6 +30,12 @@ import type { EmojiClickData, Theme } from "emoji-picker-react";
 
 const EmojiPicker = React.lazy(() => import("emoji-picker-react"));
 
+interface TypingUpdate {
+  selected: string;
+  current: string;
+  typing: boolean;
+}
+
 type MessageInputState = {
   message: string;
   isTyping: boolean;
@@ -301,21 +307,16 @@ const MessageBar = () => {
   useEffect(() => {
     if (selectedChatType === "group") return;
 
-    socket?.on("typing:display", (typingUser) => {
-      if (typingUser.uid === userInfo?._id && selectedChatData?._id === typingUser.cid) {
-        setIsPartnerTyping(typingUser.typing);
+    const handleTypingUpdate = ({ selected, current, typing }: TypingUpdate) => {
+      if (selected === userInfo?._id && current === selectedChatData?._id) {
+        setIsPartnerTyping(typing);
       }
-    });
+    };
 
-    socket?.on("typing:hide", (typingUser) => {
-      if (typingUser.uid === userInfo?._id) {
-        setIsPartnerTyping(typingUser.typing);
-      }
-    });
+    socket?.on("typing:update", handleTypingUpdate);
 
     return () => {
-      socket?.off("typing:display");
-      socket?.off("typing:hide");
+      socket?.off("typing:update", handleTypingUpdate);
     };
   }, [socket, userInfo?._id, selectedChatData?._id, selectedChatType, setIsPartnerTyping]);
 
@@ -325,9 +326,10 @@ const MessageBar = () => {
     if (!isTyping) {
       dispatch({ type: "SET_TYPING", payload: true });
 
-      socket?.emit("typing:start", {
-        selectedUser: selectedChatData?._id,
-        currentUser: userInfo?._id,
+      socket?.emit("typing:update", {
+        selected: selectedChatData?._id,
+        current: userInfo?._id,
+        typing: true,
       });
     }
 
@@ -338,9 +340,10 @@ const MessageBar = () => {
     typingTimeoutRef.current = setTimeout(() => {
       dispatch({ type: "SET_TYPING", payload: false });
 
-      socket?.emit("typing:stop", {
-        selectedUser: selectedChatData?._id,
-        currentUser: userInfo?._id,
+      socket?.emit("typing:update", {
+        selected: selectedChatData?._id,
+        current: userInfo?._id,
+        typing: false,
       });
     }, 2000);
   };
@@ -356,9 +359,10 @@ const MessageBar = () => {
       typingTimeoutRef.current = null;
     }
 
-    socket?.emit("typing:stop", {
-      selectedUser: selectedChatData?._id,
-      currentUser: userInfo?._id,
+    socket?.emit("typing:update", {
+      selected: selectedChatData?._id,
+      current: userInfo?._id,
+      typing: false,
     });
   };
 

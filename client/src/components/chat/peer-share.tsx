@@ -17,14 +17,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { usePeer, useSocket } from "@/lib/context";
+import { usePeer, useSocket, type PeerInformation } from "@/lib/context";
 import { formatSize, handleDownload, displayFileName } from "@/lib/utils";
 import { useChatStore } from "@/lib/zustand";
 
 type PeerShareStatus = "pending" | "connecting" | "connected" | "sending" | "receiving" | "completed" | "disconnected";
 
 type IncomingFileInfo = {
-  file: string;
+  name: string;
   size: string | number;
 };
 
@@ -176,55 +176,41 @@ const PeerShare = () => {
       return;
     }
 
-    const shareInfo = {
-      from: localInfo?.uid,
-      name: localInfo?.name,
-      pid: localInfo?.pid,
-      to: selectedChatData?._id,
-      file: file.name,
-      size: formatSize(file.size),
-    };
-
     dispatch({ type: "SET_DISABLE_ACTIONS", payload: true });
     dispatch({ type: "SET_STATUS", status: "pending" });
-    socket?.emit("before:share-request", { shareInfo });
+
+    socket?.emit("share:request", {
+      target: selectedChatData?._id,
+      details: localInfo,
+      file: {
+        name: file.name,
+        size: formatSize(file.size),
+      },
+    });
+
     toast.info("Waiting for response from receiver!");
   };
 
   /** Receiver who handle file share request */
   useEffect(() => {
-    const handleShareRequest = ({ shareInfo }: { shareInfo: any }) => {
-      setRemoteInfo({
-        uid: shareInfo.from,
-        name: shareInfo.name,
-        pid: shareInfo.pid,
-      });
-
-      dispatch({ type: "SET_INCOMING_FILE", payload: { file: shareInfo.file, size: shareInfo.size } });
+    const handleShareRequest = ({ details, file }: { details: PeerInformation; file: IncomingFileInfo }) => {
+      setRemoteInfo(details);
+      dispatch({ type: "SET_INCOMING_FILE", payload: file });
       dispatch({ type: "SET_STATUS", status: "pending" });
       dispatch({ type: "OPEN_MODAL", payload: true });
-      toast.info(`${shareInfo.name} is requesting to send file!`);
+      toast.info(`${details?.name} is requesting to send file!`);
     };
 
-    socket?.on("after:share-request", handleShareRequest);
+    socket?.on("share:request", handleShareRequest);
 
     return () => {
-      socket?.off("after:share-request", handleShareRequest);
+      socket?.off("share:request", handleShareRequest);
     };
   }, [socket]);
 
   /** Response accept/reject from receiver side for file share */
   const responseShareRequest = (action: "accept" | "reject") => {
-    const shareInfo = {
-      from: localInfo?.uid,
-      name: localInfo?.name,
-      pid: localInfo?.pid,
-      to: remoteInfo?.uid,
-      res: action,
-    };
-
     if (action === "reject") {
-      delete shareInfo.pid;
       setRemoteInfo(null);
       dispatch({ type: "SET_INCOMING_FILE", payload: null });
     }
@@ -233,30 +219,33 @@ const PeerShare = () => {
       dispatch({ type: "SET_DISABLE_ACTIONS", payload: true });
     }
 
-    socket?.emit("before:file-request", { shareInfo });
+    socket?.emit("file:request", {
+      target: {
+        uid: remoteInfo?.uid,
+        sid: remoteInfo?.sid,
+      },
+      details: localInfo,
+      action,
+    });
   };
 
   /** Response accept/reject to sender side for file share */
   useEffect(() => {
-    const handleShareRequest = ({ shareInfo }: { shareInfo: any }) => {
-      if (shareInfo.res === "reject") {
+    const handleShareRequest = ({ details, action }: { details: PeerInformation; action: "accept" | "reject" }) => {
+      if (action === "reject") {
         setOpenPeerShareModal(false);
         dispatch({ type: "SELECT_FILE", file: null });
         dispatch({ type: "SET_DISABLE_ACTIONS", payload: false });
         dispatch({ type: "SET_STATUS", status: "disconnected" });
-        toast.info(`${shareInfo.name} rejected to receive file!`);
+        toast.info(`${details?.name} rejected to receive file!`);
         return;
       }
 
-      if (shareInfo.res === "accept" && shareInfo.pid) {
-        setRemoteInfo({
-          uid: shareInfo.from,
-          name: shareInfo.name,
-          pid: shareInfo.pid,
-        });
+      if (action === "accept" && details?.pid) {
+        setRemoteInfo(details);
 
         dispatch({ type: "SET_STATUS", status: "connecting" });
-        const remotePeer = peerRef?.current?.connect(shareInfo?.pid);
+        const remotePeer = peerRef?.current?.connect(details?.pid);
 
         if (!remotePeer) {
           dispatch({ type: "SET_STATUS", status: "disconnected" });
@@ -343,10 +332,10 @@ const PeerShare = () => {
       }
     };
 
-    socket?.on("after:file-request", handleShareRequest);
+    socket?.on("file:request", handleShareRequest);
 
     return () => {
-      socket?.off("after:file-request", handleShareRequest);
+      socket?.off("file:request", handleShareRequest);
     };
   }, [socket, file]);
 
@@ -522,7 +511,7 @@ const PeerShare = () => {
             <div className="w-full flex items-center py-3 justify-center">
               <div>
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate max-w-xs">
-                  {displayFileName(incomingFileInfo?.file!)}
+                  {displayFileName(incomingFileInfo?.name!)}
                 </p>
                 <p className="text-xs text-gray-500">{incomingFileInfo?.size}</p>
               </div>

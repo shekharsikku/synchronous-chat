@@ -1,6 +1,6 @@
 import { genSalt, hash, compare } from "bcryptjs";
 import { User } from "#/models/index.js";
-import { getSocketId, io } from "#/server.js";
+import { getSockets, emitEvent } from "#/server.js";
 import { eventsService } from "#/services/events.js";
 import { deleteFromCloudinary, uploadToCloudinary } from "#/utilities/cloudinary.js";
 import { hasEmptyField, createUserInfo, generateAccess, type UserInfo } from "#/utilities/helpers.js";
@@ -8,8 +8,8 @@ import { asyncHandler, HttpError, HttpResponse } from "#/utilities/response.js";
 import type { Profile, Password } from "#/utilities/schema.js";
 
 const profileUpdateEvents = async (userData: UserInfo) => {
-  const userSocketIds = getSocketId(userData._id.toString());
-  io.to(userSocketIds).emit("profile:update", userData);
+  const sockets = getSockets(userData._id.toString());
+  emitEvent(sockets, "profile:update", userData);
 };
 
 export const profileSetup = asyncHandler<{}, {}, Profile>(async (req, res) => {

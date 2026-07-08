@@ -6,7 +6,7 @@ import { continuousVisualizer } from "sound-visualizer";
 import { TooltipElement } from "@/components/chat/tooltip-element";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { usePeer } from "@/lib/context";
+import { usePeer, useSocket } from "@/lib/context";
 import env from "@/lib/env";
 import { formatTimer } from "@/lib/utils";
 
@@ -15,7 +15,7 @@ const StreamInfo = () => {
   const [hoverInfo, setHoverInfo] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
+  const { socket } = useSocket();
   const {
     localInfo,
     callingInfo,
@@ -99,6 +99,20 @@ const StreamInfo = () => {
     }
   }, [mediaStream, callingActive, remoteAudioRef, callingDialog, remoteMute]);
 
+  const toggleCallMute = (mute: boolean) => {
+    if (!socket) return;
+
+    socket?.emit("call:mute", {
+      target: {
+        uid: callingInfo?.uid,
+        sid: callingInfo?.sid,
+      },
+      mute,
+    });
+
+    setRemoteMicOff(mute);
+  };
+
   return (
     <>
       <div className="h-bar border-t p-2">
@@ -135,9 +149,9 @@ const StreamInfo = () => {
           <div className="flex gap-4 justify-end">
             <TooltipElement content={remoteMicOff ? "Mic On" : "Mic Off"}>
               {remoteMicOff ? (
-                <LuMicOff size={20} strokeWidth={1.5} onClick={() => setRemoteMicOff(false)} className="tooltip-icon" />
+                <LuMicOff size={20} strokeWidth={1.5} onClick={() => toggleCallMute(false)} className="tooltip-icon" />
               ) : (
-                <LuMic size={20} strokeWidth={1.5} onClick={() => setRemoteMicOff(true)} className="tooltip-icon" />
+                <LuMic size={20} strokeWidth={1.5} onClick={() => toggleCallMute(true)} className="tooltip-icon" />
               )}
             </TooltipElement>
             <TooltipElement content={muteUser ? "Voice On" : "Voice Off"}>
@@ -207,7 +221,7 @@ const StreamInfo = () => {
           </div>
 
           <div className="w-full flex items-center gap-4">
-            <Button size="lg" variant="outline" className="w-full p-2" onClick={() => setRemoteMicOff((prev) => !prev)}>
+            <Button size="lg" variant="outline" className="w-full p-2" onClick={() => toggleCallMute(!remoteMicOff)}>
               {remoteMicOff ? "Unmute" : "Mute"}
             </Button>
             <Button size="lg" className="w-full p-2" onClick={disconnectCalling}>
