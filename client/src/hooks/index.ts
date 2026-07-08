@@ -9,6 +9,7 @@ import { useSocket } from "@/lib/context";
 import { decryptMessage } from "@/lib/noble";
 import { useAuthStore, useChatStore } from "@/lib/zustand";
 import type { ChangeEvent, RefObject, SetStateAction, Dispatch } from "react";
+import type { GroupInfo, Message } from "@/types";
 
 export const useDebounce = <T extends (...args: any[]) => void>(callback: T, delay: number) => {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);

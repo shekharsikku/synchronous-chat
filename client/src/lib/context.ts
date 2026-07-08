@@ -1,17 +1,9 @@
-import Peer from "peerjs";
 import { createContext, useContext } from "react";
-import { Socket } from "socket.io-client";
-import type { Dispatch, SetStateAction, RefObject } from "react";
-
-export type SocketState = {
-  socket: Socket | null;
-  isConnected: boolean;
-  onlineUsers: Record<string, any>;
-};
+import type { SocketState, PeerInterface, ThemeState } from "@/types";
 
 export const SocketContext = createContext<SocketState | undefined>(undefined);
 
-export const useSocket = (): SocketState => {
+export const useSocket = () => {
   const context = useContext(SocketContext);
 
   if (!context) {
@@ -21,70 +13,9 @@ export const useSocket = (): SocketState => {
   return context;
 };
 
-export type PeerInformation = {
-  uid: string;
-  name: string;
-  pid: string;
-  sid: string;
-} | null;
-
-export type CallType = "audio" | "video";
-export type ResponseActions = "accept" | "reject" | "busy" | "missed" | null;
-
-export interface PeerInterface {
-  peerRef?: RefObject<Peer | null>;
-
-  localInfo: PeerInformation;
-  setLocalInfo: Dispatch<SetStateAction<PeerInformation>>;
-
-  remoteInfo: PeerInformation;
-  setRemoteInfo: Dispatch<SetStateAction<PeerInformation>>;
-
-  callingInfo: PeerInformation;
-  setCallingInfo: Dispatch<SetStateAction<PeerInformation>>;
-
-  localAudioRef: RefObject<HTMLAudioElement | null>;
-  remoteAudioRef: RefObject<HTMLAudioElement | null>;
-
-  callingResponse: ResponseActions;
-  setCallingResponse: Dispatch<SetStateAction<ResponseActions>>;
-
-  callingDialog: boolean;
-  setCallingDialog: Dispatch<SetStateAction<boolean>>;
-
-  callingActive: boolean;
-  setCallingActive: Dispatch<SetStateAction<boolean>>;
-
-  pendingRequest: boolean;
-  setPendingRequest: Dispatch<SetStateAction<boolean>>;
-
-  disconnectCalling: () => void;
-
-  mediaStream: MediaStream | null;
-  setMediaStream: Dispatch<SetStateAction<MediaStream | null>>;
-
-  muteUser: boolean;
-  setMuteUser: Dispatch<SetStateAction<boolean>>;
-
-  remoteMute: boolean;
-  setRemoteMute: Dispatch<SetStateAction<boolean>>;
-
-  remoteMicOff: boolean;
-  setRemoteMicOff: Dispatch<SetStateAction<boolean>>;
-
-  localVideoRef: RefObject<HTMLVideoElement | null>;
-  remoteVideoRef: RefObject<HTMLVideoElement | null>;
-
-  mediaType: CallType;
-  setMediaType: Dispatch<SetStateAction<CallType>>;
-
-  openPeerShareModal: boolean;
-  setOpenPeerShareModal: Dispatch<SetStateAction<boolean>>;
-}
-
 export const PeerContext = createContext<PeerInterface | undefined>(undefined);
 
-export const usePeer = (): PeerInterface => {
+export const usePeer = () => {
   const context = useContext(PeerContext);
 
   if (!context) {

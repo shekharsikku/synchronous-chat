@@ -3,7 +3,7 @@ import { useReducer, useCallback, useRef, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { HiOutlineInformationCircle, HiOutlineDocumentText, HiOutlineXMark } from "react-icons/hi2";
 import { toast } from "sonner";
-
+import type { PeerInformation } from "@/types";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { usePeer, useSocket, type PeerInformation } from "@/lib/context";
+import { usePeer, useSocket } from "@/lib/context";
 import { formatSize, handleDownload, displayFileName } from "@/lib/utils";
 import { useChatStore } from "@/lib/zustand";
 

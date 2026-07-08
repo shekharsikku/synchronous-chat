@@ -35,9 +35,10 @@ import { UploadActionDialog } from "@/components/chat/upload-action-dialog";
 import { useContacts, useImageSelector, useGroupUpdate } from "@/hooks";
 import api from "@/lib/api";
 import env from "@/lib/env";
-import { useSocket, usePeer, type CallType } from "@/lib/context";
+import { useSocket, usePeer } from "@/lib/context";
 import { cn, languageOptions, getAvatar, formatUtcTimestamp } from "@/lib/utils";
 import { useAuthStore, useChatStore } from "@/lib/zustand";
+import type { CallType, DetailsState, GroupInfo, MemberUpdateState } from "@/types";
 
 type DetailsAction =
   | { type: "UPDATE_FIELD"; field: "name" | "description"; value: string }

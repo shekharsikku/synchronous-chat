@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useEffectEvent, useMemo } from "react";
-
+import type { AllChatItem, GroupInfo, Message, UserInfo } from "@/types";
 import api from "@/lib/api";
 import { useSocket } from "@/lib/context";
 import env from "@/lib/env";

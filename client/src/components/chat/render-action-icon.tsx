@@ -2,6 +2,7 @@ import { HiOutlineBackspace, HiMiniPencilSquare } from "react-icons/hi2";
 import { LuCheck } from "react-icons/lu";
 import { TooltipElement } from "@/components/chat/tooltip-element";
 import { Spinner } from "@/components/ui/spinner";
+import type { DetailsState, MemberUpdateState } from "@/types";
 
 interface RenderActionProps {
   detailsState: DetailsState;

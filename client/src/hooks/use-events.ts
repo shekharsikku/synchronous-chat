@@ -5,6 +5,7 @@ import { useContacts } from "@/hooks";
 import { getTimeoutDelay } from "@/lib/utils";
 import { subscribeNotification } from "@/lib/push";
 import { useAuthStore, useChatStore } from "@/lib/zustand";
+import type { UserInfo } from "@/types";
 
 export const useEvents = () => {
   const navigate = useNavigate();

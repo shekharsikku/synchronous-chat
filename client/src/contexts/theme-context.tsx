@@ -1,8 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, type PropsWithChildren } from "react";
 import { ThemeContext } from "@/lib/context";
 import { useAppStore } from "@/lib/zustand";
 
-const ThemeProvider = ({ children, ...props }: { children: React.ReactNode }) => {
+const ThemeProvider = ({ children, ...props }: PropsWithChildren) => {
   const { theme, setTheme } = useAppStore();
 
   useEffect(() => {

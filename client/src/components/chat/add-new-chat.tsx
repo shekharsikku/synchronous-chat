@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { HiOutlineUserPlus } from "react-icons/hi2";
-
+import type { UserInfo } from "@/types";
 import { ContactListSkeleton } from "@/components/chat/contact-list-skeleton";
 import { TooltipElement } from "@/components/chat/tooltip-element";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

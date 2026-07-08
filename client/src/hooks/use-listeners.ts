@@ -1,7 +1,7 @@
 import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { useEffect, useRef, useEffectEvent } from "react";
 import { toast } from "sonner";
-import notificationIcon from "@/assets/favicon.ico";
+import type { GroupInfo, Message, UserInfo } from "@/types";
 import { useContacts } from "@/hooks";
 import api from "@/lib/api";
 import { useSocket } from "@/lib/context";
@@ -37,7 +37,7 @@ export const useListeners = () => {
 
     const notification = new Notification(messageFrom, {
       body: "Sent you a new message.",
-      icon: notificationIcon,
+      icon: "/logo.png",
     });
 
     setTimeout(() => notification.close(), 5000);

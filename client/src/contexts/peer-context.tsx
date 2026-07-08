@@ -1,10 +1,10 @@
 import Peer, { type MediaConnection } from "peerjs";
-import { useCallback, useEffect, useState, useRef, useId, useEffectEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useState, useRef, useId, useEffectEvent, type PropsWithChildren } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-
+import type { PeerInformation, ResponseActions, CallType } from "@/types";
 import { PeerShare } from "@/components/chat";
-import { useSocket, PeerContext, type PeerInformation, type ResponseActions, type CallType } from "@/lib/context";
+import { useSocket, PeerContext } from "@/lib/context";
 import env from "@/lib/env";
 import { getDeviceId, getTimeoutDelay } from "@/lib/utils";
 import { useAuthStore } from "@/lib/zustand";
@@ -30,7 +30,7 @@ const stopMediaTracks = (mediaRef: any) => {
   }
 };
 
-const PeerProvider = ({ children }: { children: ReactNode }) => {
+const PeerProvider = ({ children, ...props }: PropsWithChildren) => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -525,6 +525,7 @@ const PeerProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <PeerContext.Provider
+      {...props}
       value={{
         localInfo,
         setLocalInfo,

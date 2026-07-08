@@ -22,6 +22,7 @@ import { useDisableAnimations, useLastMinutes, usePlainText, useReplyMessage, us
 import { useSocket } from "@/lib/context";
 import { cn, mergeRefs, isValidUrl, renderMsgTimestamp, handleDownload, copyToClipboard } from "@/lib/utils";
 import { useChatStore, useAuthStore } from "@/lib/zustand";
+import type { Message } from "@/types";
 
 const MAX_WIDTH = 320;
 const MAX_HEIGHT = 240;

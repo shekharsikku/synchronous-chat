@@ -1,6 +1,62 @@
-type TimeStamp = Date | string;
+import Peer from "peerjs";
+import { Socket } from "socket.io-client";
+import type { Dispatch, SetStateAction, RefObject } from "react";
 
-interface UserInfo {
+export type SocketState = {
+  socket: Socket | null;
+  isConnected: boolean;
+  onlineUsers: Record<string, any>;
+};
+
+export type PeerInformation = {
+  uid: string;
+  name: string;
+  pid: string;
+  sid: string;
+} | null;
+
+export type CallType = "audio" | "video";
+
+export type ResponseActions = "accept" | "reject" | "busy" | "missed" | null;
+
+export interface PeerInterface {
+  peerRef?: RefObject<Peer | null>;
+  localInfo: PeerInformation;
+  setLocalInfo: Dispatch<SetStateAction<PeerInformation>>;
+  remoteInfo: PeerInformation;
+  setRemoteInfo: Dispatch<SetStateAction<PeerInformation>>;
+  callingInfo: PeerInformation;
+  setCallingInfo: Dispatch<SetStateAction<PeerInformation>>;
+  localAudioRef: RefObject<HTMLAudioElement | null>;
+  remoteAudioRef: RefObject<HTMLAudioElement | null>;
+  callingResponse: ResponseActions;
+  setCallingResponse: Dispatch<SetStateAction<ResponseActions>>;
+  callingDialog: boolean;
+  setCallingDialog: Dispatch<SetStateAction<boolean>>;
+  callingActive: boolean;
+  setCallingActive: Dispatch<SetStateAction<boolean>>;
+  pendingRequest: boolean;
+  setPendingRequest: Dispatch<SetStateAction<boolean>>;
+  disconnectCalling: () => void;
+  mediaStream: MediaStream | null;
+  setMediaStream: Dispatch<SetStateAction<MediaStream | null>>;
+  muteUser: boolean;
+  setMuteUser: Dispatch<SetStateAction<boolean>>;
+  remoteMute: boolean;
+  setRemoteMute: Dispatch<SetStateAction<boolean>>;
+  remoteMicOff: boolean;
+  setRemoteMicOff: Dispatch<SetStateAction<boolean>>;
+  localVideoRef: RefObject<HTMLVideoElement | null>;
+  remoteVideoRef: RefObject<HTMLVideoElement | null>;
+  mediaType: CallType;
+  setMediaType: Dispatch<SetStateAction<CallType>>;
+  openPeerShareModal: boolean;
+  setOpenPeerShareModal: Dispatch<SetStateAction<boolean>>;
+}
+
+export type TimeStamp = Date | string;
+
+export interface UserInfo {
   _id?: string;
   name?: string;
   email?: string;
@@ -15,7 +71,7 @@ interface UserInfo {
   interaction?: TimeStamp;
 }
 
-interface GroupInfo {
+export interface GroupInfo {
   _id?: string;
   name?: string;
   description?: string;
@@ -28,7 +84,7 @@ interface GroupInfo {
   interaction?: TimeStamp;
 }
 
-interface Message {
+export interface Message {
   _id: string;
   sender: string;
   recipient?: string;
@@ -50,14 +106,14 @@ interface Message {
   __v?: number;
 }
 
-interface MessageData {
+export interface MessageData {
   type: "text" | "file";
   text?: string;
   file?: string;
   reply?: string;
 }
 
-interface AuthStore {
+export interface AuthStore {
   userInfo: UserInfo | null;
   setUserInfo: (userInfo: UserInfo | null) => void;
   isAuthenticated: boolean;
@@ -67,10 +123,11 @@ interface AuthStore {
   getUserInfo: () => Promise<UserInfo | null>;
 }
 
-type ChatType = "contact" | "group" | null;
-type AllChatItem = (UserInfo & { type: "contact" }) | (GroupInfo & { type: "group" });
+export type ChatType = "contact" | "group" | null;
 
-interface ChatStore {
+export type AllChatItem = (UserInfo & { type: "contact" }) | (GroupInfo & { type: "group" });
+
+export interface ChatStore {
   selectedChatType: ChatType;
   setSelectedChatType: (selectedChatType: ChatType) => void;
   selectedChatData: any;
@@ -96,17 +153,17 @@ interface ChatStore {
   setGroupSettingDialog: (editDialog: boolean) => void;
 }
 
-type DetailsState = {
+export type DetailsState = {
   name: string;
   description: string;
 };
 
-type MemberUpdateState = {
+export type MemberUpdateState = {
   add: string[];
   remove: string[];
 };
 
-interface GroupMemberManage {
+export interface GroupMemberManageProps {
   contacts?: UserInfo[];
   getMemberStatus: (userId: string) => "none" | "member" | "remove" | "add";
   toggleMember: (userId: string) => void;
@@ -120,7 +177,7 @@ interface GroupMemberManage {
 
 type Theme = "dark" | "light" | "system";
 
-type ThemeState = {
+export type ThemeState = {
   theme: Theme;
   setTheme: (theme: Theme) => void;
 };
@@ -132,4 +189,4 @@ type DeviceState = {
   setIsAllow: (isAllow: boolean) => void;
 };
 
-type AppStore = ThemeState & DeviceState;
+export type AppStore = ThemeState & DeviceState;

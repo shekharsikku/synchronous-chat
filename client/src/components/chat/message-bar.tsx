@@ -25,7 +25,7 @@ import api from "@/lib/api";
 import { useSocket, useTheme } from "@/lib/context";
 import { encryptMessage } from "@/lib/noble";
 import { useChatStore, useAuthStore } from "@/lib/zustand";
-
+import type { MessageData } from "@/types";
 import type { EmojiClickData, Theme } from "emoji-picker-react";
 
 const EmojiPicker = React.lazy(() => import("emoji-picker-react"));
