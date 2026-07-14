@@ -70,7 +70,7 @@ const RenderMessages: React.FC<RenderMessagesProps> = React.memo(({ messages, me
         }}
         className="relative"
       >
-        {showDate && <div className="text-center text-gray-500 dark:text-gray-100 py-4">{dateLabel}</div>}
+        {showDate && <div className="text-center text-gray-500 dark:text-gray-100 py-4 font-medium">{dateLabel}</div>}
         <RenderDMMessages message={message} scrollMessage={scrollMessage} getSender={getSender} />
       </div>
     );

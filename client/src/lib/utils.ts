@@ -1,6 +1,8 @@
 import { type UseQueryOptions, queryOptions } from "@tanstack/react-query";
 import { type ClassValue, clsx } from "clsx";
 import dayjs from "dayjs";
+import isToday from "dayjs/plugin/isToday";
+import isYesterday from "dayjs/plugin/isYesterday";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
@@ -9,24 +11,26 @@ import { noAvatar, maleAvatar, femaleAvatar } from "@/assets/images";
 import api from "@/lib/api";
 import { useAppStore } from "@/lib/zustand";
 
+dayjs.extend(isToday);
+dayjs.extend(isYesterday);
 dayjs.extend(localizedFormat);
 
 export const formatUtcTimestamp = (timestamp: TimeStamp) => {
-  return dayjs(timestamp).format("MMM DD, YYYY | h:mm A");
+  return dayjs(timestamp).format("MMMM DD, YYYY • h:mm A");
+};
+
+const getDateLabel = (date: dayjs.Dayjs) => {
+  if (date.isToday()) return "Today";
+  if (date.isYesterday()) return "Yesterday";
+  return date.format("LL");
 };
 
 export const formatMsgTimestamp = (timestamp?: TimeStamp) => {
-  const createdAt = dayjs(timestamp);
-
-  const dateLabel = createdAt.isSame(dayjs(), "day")
-    ? "Today"
-    : createdAt.isSame(dayjs().subtract(1, "day"), "day")
-      ? "Yesterday"
-      : createdAt.format("LL");
-
-  const messageDate = createdAt.format("YYYY-MM-DD");
-
-  return { dateLabel, messageDate };
+  const date = dayjs(timestamp);
+  return {
+    dateLabel: getDateLabel(date),
+    messageDate: date.format("YYYY-MM-DD"),
+  };
 };
 
 export const renderMsgTimestamp = (message: Message) => {
