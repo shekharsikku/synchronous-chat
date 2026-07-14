@@ -1,7 +1,7 @@
 import axios, { type AxiosError, type AxiosRequestConfig } from "axios";
-
 import env from "@/lib/env";
 import { getDeviceId } from "@/lib/utils";
+import { useAuthStore } from "@/lib/zustand";
 
 interface RetryRequestConfig extends AxiosRequestConfig {
   _retry?: boolean;
@@ -30,7 +30,7 @@ const api = axios.create({
   withCredentials: true,
 });
 
-const auth = axios.create({
+export const auth = axios.create({
   baseURL: env.serverUrl,
   withCredentials: true,
 });
@@ -85,11 +85,17 @@ api.interceptors.response.use(
 
       isRefreshing = true;
 
+      const { setUserInfo, setIsAuthenticated } = useAuthStore.getState();
+
       try {
         const response = await auth.get("/api/auth/auth-refresh");
 
         if (response.data.success) {
           processQueue(null, true);
+
+          setUserInfo(response.data.data);
+          setIsAuthenticated(true);
+
           return api(originalRequest);
         }
 
@@ -97,9 +103,8 @@ api.interceptors.response.use(
       } catch (error: any) {
         processQueue(error, false);
 
-        if (error.response?.status === 403) {
-          window.location.href = "/auth";
-        }
+        setUserInfo(null);
+        setIsAuthenticated(false);
 
         return Promise.reject(error);
       } finally {
