@@ -2,7 +2,6 @@ import { deflateSync } from "node:zlib";
 import { CompactEncrypt, SignJWT } from "jose";
 import type { UserDocument } from "#/models/index.js";
 import type { CookieOptions, Response } from "express";
-import type { Types } from "mongoose";
 import { accessSecret, encryptAuth, refreshSecret } from "./crypto.js";
 import env from "./env.js";
 
@@ -28,15 +27,16 @@ export const generateAccess = async (res: Response, user?: UserInfo) => {
   return accessToken;
 };
 
-export const generateRefresh = async (res: Response, uid: Types.ObjectId, aid: Types.ObjectId, jti: string) => {
+export const generateRefresh = async (res: Response, uid: string, aid: string) => {
   const refreshExpiry = env.REFRESH_EXPIRY;
-  const currentAuthKey = encryptAuth(uid.toString(), aid.toString());
+  const currentToken = encryptAuth(uid, aid);
 
-  const refreshToken = await new SignJWT({ uid: uid.toString() })
+  const refreshToken = await new SignJWT({})
     .setProtectedHeader({ alg: "HS512" })
+    .setSubject(uid)
+    .setJti(aid)
     .setIssuedAt()
     .setExpirationTime(`${refreshExpiry}sec`)
-    .setJti(jti)
     .sign(refreshSecret);
 
   res.cookie("refresh", refreshToken, {
@@ -44,7 +44,7 @@ export const generateRefresh = async (res: Response, uid: Types.ObjectId, aid: T
     ...cookieOptions,
   });
 
-  res.cookie("current", currentAuthKey, {
+  res.cookie("current", currentToken, {
     maxAge: refreshExpiry * 1000 * 2,
     ...cookieOptions,
   });
