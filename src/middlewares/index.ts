@@ -4,7 +4,8 @@ import { compactDecrypt } from "jose";
 import multer from "multer";
 import pino from "pino";
 import env from "#/utilities/env.js";
-import { generateSecret, type UserInfo } from "#/utilities/helpers.js";
+import { accessSecret } from "#/utilities/crypto.js";
+import type { UserInfo } from "#/utilities/helpers.js";
 import { asyncMiddleware, HttpError } from "#/utilities/response.js";
 import type { NextFunction, Request, Response } from "express";
 import type { ZodType } from "zod";
@@ -13,7 +14,6 @@ const authorizeAccess = async (req: Request): Promise<UserInfo> => {
   const accessToken = req.cookies["access"];
   if (!accessToken) throw new Error("No access token available!");
 
-  const accessSecret = await generateSecret();
   const decryptedAccess = await compactDecrypt(accessToken, accessSecret);
   return JSON.parse(inflateSync(decryptedAccess.plaintext).toString());
 };

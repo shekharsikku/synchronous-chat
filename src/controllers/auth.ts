@@ -5,18 +5,19 @@ import { Types } from "mongoose";
 import { User } from "#/models/index.js";
 import { logger } from "#/middlewares/index.js";
 import env from "#/utilities/env.js";
-import { cookieOptions, generateAccess, generateRefresh, createUserInfo, generateHash } from "#/utilities/helpers.js";
+import { generateHash, refreshSecret, decryptAuth } from "#/utilities/crypto.js";
+import { cookieOptions, generateAccess, generateRefresh, createUserInfo } from "#/utilities/helpers.js";
 import { HttpError, HttpResponse, asyncHandler } from "#/utilities/response.js";
 import type { SignUp, SignIn } from "#/utilities/schema.js";
 
-const parseAuthKey = (authKey: any) => {
-  const [firstKey, secondKey] = authKey.split(":", 2);
+const parseAuthKey = (token: string) => {
+  const { uid, aid } = decryptAuth(token);
 
-  if (!Types.ObjectId.isValid(firstKey) || !Types.ObjectId.isValid(secondKey)) {
+  if (!Types.ObjectId.isValid(uid) || !Types.ObjectId.isValid(aid)) {
     throw new Error("Invalid authentication key!");
   }
 
-  return { userId: new Types.ObjectId(firstKey), authId: new Types.ObjectId(secondKey) };
+  return { userId: new Types.ObjectId(uid), authId: new Types.ObjectId(aid) };
 };
 
 const revokeToken = async (res: Response, authKey: any) => {
@@ -100,7 +101,7 @@ export const signInUser = asyncHandler<{}, {}, SignIn>(async (req, res) => {
 
   const authorizeId = new Types.ObjectId();
   const refreshToken = await generateRefresh(res, userInfo._id, authorizeId, deviceId);
-  const hashedRefresh = await generateHash(refreshToken);
+  const hashedRefresh = generateHash(refreshToken);
   const refreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
 
   existsUser.authentication?.push({
@@ -140,7 +141,6 @@ export const authRefresh = asyncHandler(async (req, res) => {
   const verifiedData = await (async () => {
     try {
       const parsedPayload = parseAuthKey(currentAuthKey);
-      const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
 
       const [jwtResult, hashedToken] = await Promise.all([
         jwtVerify<{ uid: string }>(refreshToken, refreshSecret, {
@@ -191,7 +191,7 @@ export const authRefresh = asyncHandler(async (req, res) => {
 
   if (shouldRotate) {
     const newRefreshToken = await generateRefresh(res, userId, authorizeId, deviceId);
-    const newHashedRefresh = await generateHash(newRefreshToken);
+    const newHashedRefresh = generateHash(newRefreshToken);
     const newRefreshExpiry = new Date(Date.now() + env.REFRESH_EXPIRY * 1000);
 
     const updatedResult = await User.updateOne(authFilter, {
