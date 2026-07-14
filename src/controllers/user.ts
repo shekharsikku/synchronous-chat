@@ -77,7 +77,7 @@ export const updateImage = asyncHandler(async (req, res) => {
   }
 
   if (userProfile?.image) {
-    await deleteFromCloudinary(userProfile.image);
+    deleteFromCloudinary(userProfile.image).catch(() => {});
   }
 
   userProfile.image = uploadImage.secure_url;
@@ -104,7 +104,7 @@ export const deleteImage = asyncHandler(async (req, res) => {
     throw new HttpError(400, "Profile image not available!");
   }
 
-  await deleteFromCloudinary(userProfile.image);
+  deleteFromCloudinary(userProfile.image).catch(() => {});
 
   userProfile.image = null;
   await userProfile.save({ validateBeforeSave: false });
