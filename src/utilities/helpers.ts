@@ -6,10 +6,6 @@ import type { Types } from "mongoose";
 import { accessSecret, encryptAuth, refreshSecret } from "./crypto.js";
 import env from "./env.js";
 
-export type UserInfo =
-  | Pick<UserDocument, "_id" | "name" | "email" | "username" | "image" | "setup">
-  | Omit<UserDocument, "password" | "authentication">;
-
 export const cookieOptions: CookieOptions = {
   httpOnly: true,
   sameSite: "strict" as const,
@@ -65,13 +61,26 @@ export const createUserInfo = (user: UserDocument) => {
     return {
       _id: user._id,
       email: user.email,
+      name: user.name ?? null,
+      username: user.username ?? null,
       setup: user.setup,
     };
   }
-  // oxlint-disable-next-line no-unused-vars
-  const { password, authentication, ...safeUser } = user.toObject();
-  return safeUser;
+  return {
+    _id: user._id,
+    email: user.email,
+    name: user.name ?? null,
+    username: user.username ?? null,
+    gender: user.gender ?? null,
+    image: user.image ?? null,
+    bio: user.bio ?? null,
+    setup: user.setup,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
 };
+
+export type UserInfo = ReturnType<typeof createUserInfo>;
 
 export function formatBytes(bytes: number) {
   const units = ["B", "KB", "MB", "GB", "TB"];

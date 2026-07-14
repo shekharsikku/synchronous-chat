@@ -20,9 +20,9 @@ const parseAuthKey = (token: string) => {
   return { userId: new Types.ObjectId(uid), authId: new Types.ObjectId(aid) };
 };
 
-const revokeToken = async (res: Response, authKey: any) => {
+export const revokeToken = async (res: Response, token: string) => {
   try {
-    const { userId, authId } = parseAuthKey(authKey);
+    const { userId, authId } = parseAuthKey(token);
 
     await User.updateOne(
       {
@@ -56,9 +56,9 @@ export const signUpUser = asyncHandler<{}, {}, SignUp>(async (req, res) => {
   }
 
   const hashSalt = await genSalt(12);
-  const hashedPassword = await hash(password, hashSalt);
+  const hashed = await hash(password, hashSalt);
 
-  const newUser = await User.create({ email, password: hashedPassword });
+  const newUser = await User.create({ email, password: hashed });
   const userInfo = createUserInfo(newUser);
   await generateAccess(res, userInfo);
 
@@ -82,21 +82,15 @@ export const signInUser = asyncHandler<{}, {}, SignIn>(async (req, res) => {
     $or: conditions,
   }).select("+password +authentication");
 
-  if (!existsUser) {
-    throw new HttpError(404, "User not exists!");
-  }
-
-  const isCorrect = await compare(password, existsUser.password);
-
-  if (!isCorrect) {
-    throw new HttpError(403, "Incorrect password!");
+  if (!existsUser || !(await compare(password, existsUser.password))) {
+    throw new HttpError(401, "Invalid credentials!");
   }
 
   const userInfo = createUserInfo(existsUser);
   await generateAccess(res, userInfo);
 
   if (!userInfo.setup) {
-    return new HttpResponse(200, "Please, complete your profile!", { data: userInfo });
+    return new HttpResponse(200, "Complete your profile!", { data: userInfo });
   }
 
   const authorizeId = new Types.ObjectId();
@@ -135,7 +129,7 @@ export const authRefresh = asyncHandler(async (req, res) => {
   const currentAuthKey = req.cookies["current"];
 
   if (!refreshToken || !currentAuthKey) {
-    throw new HttpError(401, "Unauthorized refresh request!");
+    throw new HttpError(401, "Unauthorized request!");
   }
 
   const verifiedData = await (async () => {
@@ -165,7 +159,7 @@ export const authRefresh = asyncHandler(async (req, res) => {
       };
     } catch {
       await revokeToken(res, currentAuthKey);
-      throw new HttpError(403, "Please, signin again to continue!");
+      throw new HttpError(401, "Please, sign in again!");
     }
   })();
 
@@ -183,7 +177,7 @@ export const authRefresh = asyncHandler(async (req, res) => {
   const requestUser = await User.findOne(authFilter);
 
   if (!requestUser) {
-    throw new HttpError(401, "Invalid authorization!");
+    throw new HttpError(401, "Please, sign in again!");
   }
 
   const userInfo = createUserInfo(requestUser);
@@ -203,11 +197,11 @@ export const authRefresh = asyncHandler(async (req, res) => {
 
     if (updatedResult.modifiedCount === 0) {
       await revokeToken(res, currentAuthKey);
-      throw new HttpError(403, "Please, signin again to continue!");
+      throw new HttpError(401, "Please, sign in again!");
     }
   }
 
   await generateAccess(res, userInfo);
 
-  return new HttpResponse(200, "Token refreshed successfully!");
+  return new HttpResponse(200, "Refreshed successfully!", { data: userInfo });
 });

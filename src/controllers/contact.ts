@@ -4,78 +4,82 @@ import { HttpError, HttpResponse, asyncHandler } from "#/utilities/response.js";
 
 export const searchContact = asyncHandler<{}, {}, {}, { search?: string }>(async (req) => {
   const search = req.query.search;
+  const userId = req.user?._id!;
 
   if (!search) {
     throw new HttpError(400, "Search terms is required!");
   }
 
-  const terms = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const regex = new RegExp(terms, "i");
+  const regex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
 
   const contacts = await User.find({
-    $and: [
-      { _id: { $ne: req.user?._id! } },
-      { setup: true },
-      { $or: [{ name: regex }, { username: regex }, { email: regex }] },
-    ],
+    _id: { $ne: userId },
+    setup: true,
+    $or: [{ name: regex }, { username: regex }, { email: regex }],
   })
     .select("-setup -createdAt -updatedAt -__v")
     .lean();
 
-  if (contacts.length == 0) {
-    throw new HttpError(404, "No any contact found!");
-  }
-
-  return new HttpResponse(200, "Available contacts!", { data: contacts });
+  return new HttpResponse(200, "Contacts searched successfully!", { data: contacts });
 });
 
 export const availableContact = asyncHandler(async (req) => {
+  const userId = req.user?._id!;
+
   const contacts = await User.find({
-    _id: { $ne: req.user?._id! },
+    _id: { $ne: userId },
     setup: true,
   })
     .select("-setup -createdAt -updatedAt -__v")
     .lean();
 
-  if (contacts.length == 0) {
-    throw new HttpError(404, "No any contact available!");
-  }
-
   return new HttpResponse(200, "Contacts fetched successfully!", { data: contacts });
 });
 
 export const fetchContacts = asyncHandler(async (req) => {
-  const uid = new Types.ObjectId(req.user?._id);
+  const userId = new Types.ObjectId(req.user?._id);
 
   const contacts = await Conversation.aggregate([
-    { $match: { participants: uid } },
+    { $match: { participants: userId } },
     { $sort: { interaction: -1 } },
     {
-      $lookup: {
-        from: "users",
-        let: { participantIds: "$participants" },
-        pipeline: [
-          { $match: { $expr: { $in: ["$_id", "$$participantIds"] } } },
-          { $project: { _id: 1, name: 1, email: 1, username: 1, gender: 1, image: 1, bio: 1 } },
-        ],
-        as: "participantsData",
+      $project: {
+        _id: 0,
+        participants: 1,
+        interaction: 1,
       },
     },
     {
-      $addFields: {
-        contact: {
-          $filter: {
-            input: "$participantsData",
-            as: "p",
-            cond: { $ne: ["$$p._id", uid] },
+      $lookup: {
+        from: "users",
+        let: { participants: "$participants" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [{ $in: ["$_id", "$$participants"] }, { $ne: ["$_id", userId] }],
+              },
+            },
           },
-        },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              email: 1,
+              username: 1,
+              gender: 1,
+              image: 1,
+              bio: 1,
+            },
+          },
+        ],
+        as: "contacts",
       },
     },
     {
       $replaceRoot: {
         newRoot: {
-          $mergeObjects: [{ $arrayElemAt: ["$contact", 0] }, { interaction: "$interaction" }],
+          $mergeObjects: [{ $arrayElemAt: ["$contacts", 0] }, { interaction: "$interaction" }],
         },
       },
     },
@@ -88,11 +92,11 @@ export const fetchContacts = asyncHandler(async (req) => {
 export const fetchContact = asyncHandler<{ id: string }>(async (req) => {
   const userId = req.params.id;
 
-  const userContact = await User.findById(userId).select("-setup -createdAt -updatedAt -__v");
+  const contact = await User.findById(userId).select("-setup -createdAt -updatedAt -__v");
 
-  if (!userContact) {
+  if (!contact) {
     throw new HttpError(404, "Contact not found!");
   }
 
-  return new HttpResponse(200, "Contact fetched successfully!", { data: userContact });
+  return new HttpResponse(200, "Contact fetched successfully!", { data: contact });
 });

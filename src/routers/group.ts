@@ -12,11 +12,13 @@ import { createGroupSchema, updateDetailsSchema, updateMembersSchema } from "#/u
 
 const router = Router();
 
-router.post("/create", limiter(10, 5), validate(createGroupSchema), authAccess, createGroup);
-router.patch("/update/:id/details", limiter(10, 10), validate(updateDetailsSchema), authAccess, updateDetails);
-router.patch("/update/:id/members", limiter(10, 10), validate(updateMembersSchema), authAccess, updateMembers);
-router.patch("/update/:id/avatar", limiter(10, 5), authAccess, upload.single("group-avatar"), updateAvatar);
-router.delete("/delete/:id/avatar", limiter(10, 5), authAccess, deleteAvatar);
-router.get("/fetch", limiter(10, 50), authAccess, fetchGroups);
+router.use(limiter(10, 200), authAccess);
+
+router.post("/create", validate(createGroupSchema), createGroup);
+router.patch("/update/:id/details", validate(updateDetailsSchema), updateDetails);
+router.patch("/update/:id/members", validate(updateMembersSchema), updateMembers);
+router.patch("/update/:id/avatar", upload.single("group-avatar"), updateAvatar);
+router.delete("/delete/:id/avatar", deleteAvatar);
+router.get("/fetch", fetchGroups);
 
 export default router;

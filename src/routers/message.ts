@@ -14,15 +14,15 @@ import { messageSchema, translateSchema } from "#/utilities/schema.js";
 
 const router = Router();
 
-router.get("/:id", limiter(1, 60), authAccess, getMessages);
-router.get("/fetch/:id", limiter(1, 60), authAccess, fetchMessages);
-router.post("/send/:id", limiter(1, 100), authAccess, validate(messageSchema), sendMessage);
-router.patch("/edit/:id", limiter(1, 20), authAccess, editMessage);
-router.patch("/react/:id", limiter(1, 100), authAccess, reactMessage);
-router.delete("/delete/:id", limiter(1, 20), authAccess, deleteMessage);
-router.delete("/delete", limiter(10, 5), authAccess, deleteMessages);
+router.use(limiter(10, 1000), authAccess);
 
-/** For translate text message in prefer language */
+router.post("/send/:id", validate(messageSchema), sendMessage);
+router.get("/get/:id", getMessages);
+router.get("/fetch/:id", fetchMessages);
+router.patch("/edit/:id", editMessage);
+router.patch("/react/:id", reactMessage);
+router.delete("/delete/:id", deleteMessage);
+router.delete("/delete", deleteMessages);
 router.post("/translate", validate(translateSchema), translateMessage);
 
 export default router;

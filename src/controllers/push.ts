@@ -2,7 +2,7 @@ import { Subscription } from "#/models/index.js";
 import { asyncHandler, HttpError, HttpResponse } from "#/utilities/response.js";
 import type { Subscribe, Unsubscribe } from "#/utilities/schema.js";
 
-export const subscribe = asyncHandler<{}, {}, Subscribe>(async (req) => {
+export const subscribePush = asyncHandler<{}, {}, Subscribe>(async (req) => {
   const userId = req.user?._id!;
   const { endpoint, keys } = req.body;
 
@@ -15,14 +15,14 @@ export const subscribe = asyncHandler<{}, {}, Subscribe>(async (req) => {
   return new HttpResponse(200, "Subscribed successfully!", { data: result });
 });
 
-export const unsubscribe = asyncHandler<{}, {}, Unsubscribe>(async (req) => {
+export const unsubscribePush = asyncHandler<{}, {}, Unsubscribe>(async (req) => {
   const userId = req.user?._id!;
   const { endpoint } = req.body;
 
   const result = await Subscription.findOneAndDelete({ userId, endpoint });
 
   if (!result) {
-    throw new HttpError(404, "No subscription found with this endpoint!");
+    throw new HttpError(404, "No subscription found!");
   }
 
   return new HttpResponse(200, "Unsubscribed successfully!", { data: result });

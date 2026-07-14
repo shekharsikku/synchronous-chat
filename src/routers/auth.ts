@@ -5,9 +5,9 @@ import { signUpSchema, signInSchema } from "#/utilities/schema.js";
 
 const router = Router();
 
-router.post("/sign-up", limiter(10, 5), validate(signUpSchema), signUpUser);
+router.post("/sign-up", limiter(20, 10), validate(signUpSchema), signUpUser);
 router.post("/sign-in", limiter(10, 10), validate(signInSchema), signInUser);
-router.all("/sign-out", signOutUser);
-router.get("/auth-refresh", authRefresh);
+router.all("/sign-out", limiter(10, 20), signOutUser);
+router.get("/auth-refresh", limiter(10, 20), authRefresh);
 
 export default router;

@@ -23,7 +23,7 @@ export const authAccess = asyncMiddleware(async (req, _res, next) => {
     req.user = await authorizeAccess(req);
     return next();
   } catch {
-    throw new HttpError(401, "Unauthorized access request!");
+    throw new HttpError(401, "Unauthorized request!");
   }
 });
 
@@ -61,17 +61,17 @@ export const validate =
   };
 
 /** Rate Limiter */
-export const limiter = (minute = 10, limit = 1000) => {
+export const limiter = (minute = 10, limit = 10000) => {
   return rateLimit({
     windowMs: minute * 60 * 1000,
     limit: limit,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req: Request) => {
+    keyGenerator: (req) => {
       return req.clientIp!;
     },
-    handler: (req: Request) => {
-      req.log.error(`Rate limit exceeded for IP: ${req.clientIp}`);
+    handler: (req) => {
+      req.log.error("Rate limit exceeded for ip: %s", req.clientIp);
       throw new HttpError(429, "Maximum number of requests exceeded!");
     },
   });

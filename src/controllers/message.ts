@@ -98,7 +98,7 @@ export const sendMessage = asyncHandler<{ id: string }, {}, MessageSchema, { typ
     }
   }
 
-  return new HttpResponse(201, "Message sent successfully!");
+  return new HttpResponse(201, "Message sent successfully!", { data: message });
 });
 
 /** Transform null → undefined in response payload only */
@@ -126,6 +126,7 @@ export const getMessages = asyncHandler<{ id: string }, {}, {}, { group?: string
 
   const messages = await Message.find(query)
     .sort({ createdAt: -1 })
+    .limit(20)
     .lean({ transform: (doc) => nullToUndefined(doc) });
 
   return new HttpResponse(200, "Messages fetched successfully!", { data: messages.reverse() });
@@ -173,11 +174,11 @@ const messageActionsEvents = async (message: MessageType, event: string) => {
 };
 
 export const deleteMessage = asyncHandler<{ id: string }>(async (req) => {
-  const uid = req.user?._id!;
-  const mid = req.params.id;
+  const userId = req.user?._id!;
+  const msgId = req.params.id;
 
   const message = await Message.findOneAndUpdate(
-    { _id: mid, sender: uid },
+    { _id: msgId, sender: userId },
     {
       type: "deleted",
       deletedAt: new Date(),
@@ -187,25 +188,25 @@ export const deleteMessage = asyncHandler<{ id: string }>(async (req) => {
   ).lean({ transform: (doc) => nullToUndefined(doc) });
 
   if (!message) {
-    throw new HttpError(400, "You can't delete this message or message not found!");
+    throw new HttpError(400, "You can't delete this message!");
   }
 
   await messageActionsEvents(message, "message:remove");
 
-  return new HttpResponse(200, "Message deleted successfully!");
+  return new HttpResponse(200, "Message deleted successfully!", { data: message });
 });
 
 export const editMessage = asyncHandler<{ id: string }, {}, { text: string }>(async (req) => {
-  const uid = req.user?._id!;
-  const mid = req.params.id;
+  const userId = req.user?._id!;
+  const msgId = req.params.id;
   const { text } = req.body;
 
-  if (!text) {
+  if (!text.trim()) {
     throw new HttpError(400, "Text content is required for editing!");
   }
 
   const message = await Message.findOneAndUpdate(
-    { _id: mid, sender: uid, "content.type": "text" },
+    { _id: msgId, sender: userId, "content.type": "text" },
     {
       type: "edited",
       "content.text": text,
@@ -214,12 +215,12 @@ export const editMessage = asyncHandler<{ id: string }, {}, { text: string }>(as
   ).lean({ transform: (doc) => nullToUndefined(doc) });
 
   if (!message) {
-    throw new HttpError(400, "You can't edit this message or message not found!");
+    throw new HttpError(400, "You can't edit this message!");
   }
 
   await messageActionsEvents(message, "message:edited");
 
-  return new HttpResponse(200, "Message edited successfully!");
+  return new HttpResponse(200, "Message edited successfully!", { data: message });
 });
 
 export const reactMessage = asyncHandler<{ id: string }, {}, { emoji: string }>(async (req) => {
@@ -301,23 +302,23 @@ export const reactMessage = asyncHandler<{ id: string }, {}, { emoji: string }>(
   ).lean({ transform: (doc) => nullToUndefined(doc) });
 
   if (!message) {
-    throw new HttpError(400, "Unable to react on this message or message not found!");
+    throw new HttpError(400, "Unable to react on this message!");
   }
 
   await messageActionsEvents(message, "message:reacted");
 
-  return new HttpResponse(200, "Message reacted successfully!");
+  return new HttpResponse(200, "Message reacted successfully!", { data: message });
 });
 
 export const deleteMessages = asyncHandler<{}, {}, {}, { before?: string }>(async (req) => {
-  const uid = req.user?._id!;
+  const userId = req.user?._id!;
   const before = Number(req.query.before ?? 1) * 24;
 
   const hoursAgo = new Date();
   hoursAgo.setHours(hoursAgo.getHours() - before);
 
   const result = await Message.deleteMany({
-    $or: [{ sender: uid }, { recipient: uid }],
+    $or: [{ sender: userId }, { recipient: userId }],
     createdAt: { $lt: hoursAgo },
   });
 
