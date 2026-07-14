@@ -21,10 +21,10 @@ const ProfileInfo = () => {
   const { userInfo } = useAuthStore();
   const { handleSignOut } = useSignOut();
   const { theme, setTheme } = useTheme();
-  const { isAllow, setIsAllow } = useAppStore();
+  const { notify, setNotify } = useAppStore();
   const { callingActive } = usePeer();
 
-  useHotkeys("ctrl+m", () => setIsAllow(isAllow ? false : true), {
+  useHotkeys("ctrl+m", () => setNotify(notify ? false : true), {
     enabled: !callingActive,
     enableOnFormTags: ["input"],
   });
@@ -44,10 +44,7 @@ const ProfileInfo = () => {
           <div className="flex gap-4 items-center" onClick={handleProfileNavigate} role="button">
             <Avatar className="size-8 rounded-full overflow-hidden cursor-pointer border-2">
               <AvatarImage src={getAvatar(userInfo)} alt="profile" className="object-cover size-full" />
-              <AvatarFallback
-                className={`uppercase h-full w-full text-xl border text-center font-medium 
-                      transition-all duration-300 bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]`}
-              >
+              <AvatarFallback className="uppercase h-full w-full text-xl border text-center font-medium transition-all duration-300 bg-[#4cc9f02a] text-[#4cc9f0] border-[#4cc9f0bb]">
                 {(userInfo?.name ?? userInfo?.username ?? userInfo?.email)?.charAt(0) ?? ""}
               </AvatarFallback>
             </Avatar>
@@ -67,10 +64,10 @@ const ProfileInfo = () => {
             )}
           </TooltipElement>
           <TooltipElement content="Notification">
-            {isAllow ? (
-              <HiOutlineBellAlert size={20} onClick={() => setIsAllow(false)} className="tooltip-icon" />
+            {notify ? (
+              <HiOutlineBellAlert size={20} onClick={() => setNotify(false)} className="tooltip-icon" />
             ) : (
-              <HiOutlineBellSlash size={20} onClick={() => setIsAllow(true)} className="tooltip-icon" />
+              <HiOutlineBellSlash size={20} onClick={() => setNotify(true)} className="tooltip-icon" />
             )}
           </TooltipElement>
           <TooltipElement content="Sign Out">
