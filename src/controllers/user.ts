@@ -6,6 +6,7 @@ import { deleteFromCloudinary, uploadToCloudinary } from "#/utilities/cloudinary
 import { hasEmptyField, createUserInfo, generateAccess, type UserInfo } from "#/utilities/helpers.js";
 import { asyncHandler, HttpError, HttpResponse } from "#/utilities/response.js";
 import type { Profile, Password } from "#/utilities/schema.js";
+import { revokeToken } from "./auth.js";
 
 const profileUpdateEvents = async (userData: UserInfo) => {
   const sockets = getSockets(userData._id.toString());
@@ -26,18 +27,23 @@ export const profileSetup = asyncHandler<{}, {}, Profile>(async (req, res) => {
 
   const wasSetup = requestUser?.setup;
   const userDetails = { name, username, gender, bio, setup: false };
-  const isCompleted = !hasEmptyField({ name, username, gender });
 
-  if (isCompleted) {
+  if (!hasEmptyField({ name, username, gender })) {
     userDetails.setup = true;
   }
 
   const updatedProfile = await User.findByIdAndUpdate(requestUser?._id, userDetails, {
-    new: true,
+    returnDocument: "after",
   });
 
   if (!updatedProfile) {
-    throw new HttpError(400, "Profile setup not completed!");
+    const currentAuthKey = req.cookies["current"];
+
+    if (currentAuthKey) {
+      await revokeToken(res, currentAuthKey);
+    }
+
+    throw new HttpError(401, "Please, sign in again!");
   }
 
   const userInfo = createUserInfo(updatedProfile);
@@ -53,21 +59,26 @@ export const profileSetup = asyncHandler<{}, {}, Profile>(async (req, res) => {
   await generateAccess(res, userInfo);
   await profileUpdateEvents(userInfo);
 
-  return new HttpResponse(200, "Profile updated successfully!");
+  return new HttpResponse(200, "Profile updated successfully!", { data: userInfo });
 });
 
 export const updateImage = asyncHandler(async (req, res) => {
   const imagePath = req.file?.path;
-  const requestUser = req.user?._id!;
 
   if (!imagePath) {
     throw new HttpError(400, "Profile image file required!");
   }
 
-  const userProfile = await User.findById(requestUser);
+  const requestUser = await User.findById(req.user?._id!);
 
-  if (!userProfile) {
-    throw new HttpError(404, "Can't get current user profile!");
+  if (!requestUser) {
+    const currentAuthKey = req.cookies["current"];
+
+    if (currentAuthKey) {
+      await revokeToken(res, currentAuthKey);
+    }
+
+    throw new HttpError(401, "Please, sign in again!");
   }
 
   const uploadImage = await uploadToCloudinary(imagePath);
@@ -76,64 +87,72 @@ export const updateImage = asyncHandler(async (req, res) => {
     throw new HttpError(500, "Error while uploading profile image!");
   }
 
-  if (userProfile?.image) {
-    await deleteFromCloudinary(userProfile.image);
+  if (requestUser?.image) {
+    deleteFromCloudinary(requestUser.image).catch(() => {});
   }
 
-  userProfile.image = uploadImage.secure_url;
-  await userProfile.save({ validateBeforeSave: false });
+  requestUser.image = uploadImage.secure_url;
+  await requestUser.save({ validateBeforeSave: false });
 
-  const userInfo = createUserInfo(userProfile);
+  const userInfo = createUserInfo(requestUser);
 
   await generateAccess(res, userInfo);
   await profileUpdateEvents(userInfo);
 
-  return new HttpResponse(200, "Profile image updated successfully!");
+  return new HttpResponse(200, "Profile image updated successfully!", { data: userInfo });
 });
 
 export const deleteImage = asyncHandler(async (req, res) => {
-  const requestUser = req.user?._id!;
+  const requestUser = await User.findById(req.user?._id!);
 
-  const userProfile = await User.findById(requestUser);
+  if (!requestUser) {
+    const currentAuthKey = req.cookies["current"];
 
-  if (!userProfile) {
-    throw new HttpError(404, "Can't get current user profile!");
+    if (currentAuthKey) {
+      await revokeToken(res, currentAuthKey);
+    }
+
+    throw new HttpError(401, "Please, sign in again!");
   }
 
-  if (!userProfile.image) {
+  if (!requestUser.image) {
     throw new HttpError(400, "Profile image not available!");
   }
 
-  await deleteFromCloudinary(userProfile.image);
+  deleteFromCloudinary(requestUser.image).catch(() => {});
 
-  userProfile.image = null;
-  await userProfile.save({ validateBeforeSave: false });
+  requestUser.image = null;
+  await requestUser.save({ validateBeforeSave: false });
 
-  const userInfo = createUserInfo(userProfile);
+  const userInfo = createUserInfo(requestUser);
 
   await generateAccess(res, userInfo);
   await profileUpdateEvents(userInfo);
 
-  return new HttpResponse(200, "Profile image deleted successfully!");
+  return new HttpResponse(200, "Profile image deleted successfully!", { data: userInfo });
 });
 
 export const changePassword = asyncHandler<{}, {}, Password>(async (req, res) => {
   const { old_password, new_password } = req.body;
 
   if (old_password === new_password) {
-    throw new HttpError(400, "Please, choose a different password!");
+    throw new HttpError(400, "New password must be different!");
   }
 
   const requestUser = await User.findById(req.user?._id!).select("+password");
 
   if (!requestUser) {
-    throw new HttpError(401, "Invalid authorization!");
+    const currentAuthKey = req.cookies["current"];
+
+    if (currentAuthKey) {
+      await revokeToken(res, currentAuthKey);
+    }
+
+    throw new HttpError(401, "Please, sign in again!");
   }
 
-  const isCorrect = await compare(old_password, requestUser.password!);
-
-  if (!isCorrect) {
-    throw new HttpError(401, "Incorrect old password!");
+  if (!(await compare(old_password, requestUser.password!))) {
+    throw new HttpError(403, "Incorrect old password!");
   }
 
   const hashSalt = await genSalt(12);
@@ -143,10 +162,9 @@ export const changePassword = asyncHandler<{}, {}, Password>(async (req, res) =>
   const userInfo = createUserInfo(requestUser);
   await generateAccess(res, userInfo);
 
-  return new HttpResponse(200, "Password changed successfully!");
+  return new HttpResponse(200, "Password changed successfully!", { data: userInfo });
 });
 
 export const userInformation = asyncHandler(async (req) => {
-  const message = req.user?.setup ? "User profile information!" : "Please, complete your profile!";
-  return new HttpResponse(200, message, { data: req.user! });
+  return new HttpResponse(200, "User profile information!", { data: req.user! });
 });

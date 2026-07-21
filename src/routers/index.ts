@@ -8,16 +8,18 @@ import contactRouter from "./contact.js";
 import groupRouter from "./group.js";
 import messageRouter from "./message.js";
 import userRouter from "./user.js";
-import subscriptionRouter from "./subscription.js";
+import pushRouter from "./push.js";
 
 const router = Router();
 
-router.use("/auth", limiter(10, 100), authRouter);
-router.use("/user", limiter(10, 100), userRouter);
-router.use("/contact", limiter(10, 100), contactRouter);
-router.use("/message", limiter(10, 500), messageRouter);
-router.use("/group", limiter(10, 500), groupRouter);
-router.use("/push", limiter(10, 10), subscriptionRouter);
+router.use(limiter(10, 2000));
+
+router.use("/auth", authRouter);
+router.use("/user", userRouter);
+router.use("/contact", contactRouter);
+router.use("/group", groupRouter);
+router.use("/message", messageRouter);
+router.use("/push", pushRouter);
 router.get("/events", authEvents, connectEvents);
 
 router.get("/wakeup", (req: Request<{}, {}, {}, { from?: string }>, res: Response) => {

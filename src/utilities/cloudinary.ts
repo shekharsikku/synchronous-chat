@@ -11,23 +11,23 @@ cloudinary.config({
   api_secret: env.CLOUDINARY_API_SECRET,
 });
 
-export const uploadToCloudinary = async (localFilePath: string) => {
+export const uploadToCloudinary = async (filePath: string) => {
   try {
-    if (!localFilePath) return null;
+    if (!filePath) return null;
 
-    const response = await cloudinary.uploader.upload(localFilePath, {
+    const response = await cloudinary.uploader.upload(filePath, {
       public_id: randomUUID(),
       resource_type: "auto",
     });
 
-    logger.info(response, "Image uploaded successfully!");
+    logger.debug({ response }, "Image uploaded successfully!");
     return response;
   } catch (err) {
     logger.error({ err }, "Error uploading image!");
     return null;
   } finally {
-    if (localFilePath && existsSync(localFilePath)) {
-      unlinkSync(localFilePath);
+    if (filePath && existsSync(filePath)) {
+      unlinkSync(filePath);
     }
     unlinkFiles();
   }
@@ -38,8 +38,8 @@ export const deleteFromCloudinary = async (imageUrl: string) => {
     const publicId = imageUrl.split("/").pop()?.split(".")[0];
     if (!publicId) return;
 
-    const result = await cloudinary.uploader.destroy(publicId);
-    logger.info(result, "Image deleted successfully!");
+    const response = await cloudinary.uploader.destroy(publicId).then((r) => ({ public_id: publicId, ...r }));
+    logger.debug({ response }, "Image deleted successfully!");
   } catch (err) {
     logger.error({ err }, "Error deleting image!");
   }

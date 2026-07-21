@@ -397,7 +397,7 @@ const ChatHeader = () => {
                 <GroupMembersList selectedChatData={selectedChatData} />
 
                 <p className="text-center text-xs md:text-sm tracking-wider text-gray-500 dark:text-gray-100">
-                  Created at: {formatUtcTimestamp(selectedChatData?.createdAt)}
+                  {formatUtcTimestamp(selectedChatData?.interaction)}
                 </p>
               </div>
             </DialogContent>
@@ -454,7 +454,7 @@ const ChatHeader = () => {
               </div>
               {/* Last Message Time */}
               <p className="text-center text-xs md:text-sm tracking-wider text-gray-500 dark:text-gray-100">
-                Last msg: {formatUtcTimestamp(selectedChatData?.interaction)}
+                {formatUtcTimestamp(selectedChatData?.interaction)}
               </p>
             </DialogContent>
           </Dialog>
@@ -626,7 +626,7 @@ const ChatHeader = () => {
               />
 
               <p className="text-center text-xs md:text-sm tracking-wider text-gray-500 dark:text-gray-100">
-                Updated at: {formatUtcTimestamp(selectedChatData?.updatedAt)}
+                {formatUtcTimestamp(selectedChatData?.interaction)}
               </p>
             </DialogContent>
           </Dialog>

@@ -4,13 +4,12 @@ import { useForm } from "react-hook-form";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
-import * as z from "zod";
-
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import api from "@/lib/api";
+import { auth as api } from "@/lib/api";
 import env from "@/lib/env";
 import { signUpSchema, signInSchema } from "@/lib/schema";
 import { validateEmail, validateDummyEmail, cn } from "@/lib/utils";

@@ -1,18 +1,10 @@
-import { createSecretKey, createHash } from "node:crypto";
 import { deflateSync } from "node:zlib";
 import { CompactEncrypt, SignJWT } from "jose";
 import type { UserDocument } from "#/models/index.js";
 import type { CookieOptions, Response } from "express";
 import type { Types } from "mongoose";
+import { accessSecret, encryptAuth, refreshSecret } from "./crypto.js";
 import env from "./env.js";
-
-export type UserInfo =
-  | Pick<UserDocument, "_id" | "name" | "email" | "username" | "setup">
-  | Omit<UserDocument, "password" | "authentication">;
-
-export const generateSecret = async () => {
-  return createSecretKey(createHash("sha256").update(env.ACCESS_SECRET).digest());
-};
 
 export const cookieOptions: CookieOptions = {
   httpOnly: true,
@@ -22,9 +14,7 @@ export const cookieOptions: CookieOptions = {
 
 export const generateAccess = async (res: Response, user?: UserInfo) => {
   const accessExpiry = env.ACCESS_EXPIRY;
-
   const accessPayload = deflateSync(JSON.stringify(user));
-  const accessSecret = await generateSecret();
 
   const accessToken = await new CompactEncrypt(accessPayload)
     .setProtectedHeader({ alg: "dir", enc: "A256GCM" })
@@ -40,8 +30,7 @@ export const generateAccess = async (res: Response, user?: UserInfo) => {
 
 export const generateRefresh = async (res: Response, uid: Types.ObjectId, aid: Types.ObjectId, jti: string) => {
   const refreshExpiry = env.REFRESH_EXPIRY;
-  const refreshSecret = new TextEncoder().encode(env.REFRESH_SECRET);
-  const currentAuthKey = `${uid.toString()}:${aid.toString()}`;
+  const currentAuthKey = encryptAuth(uid.toString(), aid.toString());
 
   const refreshToken = await new SignJWT({ uid: uid.toString() })
     .setProtectedHeader({ alg: "HS512" })
@@ -63,10 +52,6 @@ export const generateRefresh = async (res: Response, uid: Types.ObjectId, aid: T
   return refreshToken;
 };
 
-export const generateHash = async (token: string) => {
-  return createHash("sha256").update(token).digest("hex");
-};
-
 export const hasEmptyField = (fields: object) => {
   return Object.values(fields).some((value) => value === "" || value === undefined || value === null);
 };
@@ -76,13 +61,26 @@ export const createUserInfo = (user: UserDocument) => {
     return {
       _id: user._id,
       email: user.email,
+      name: user.name ?? null,
+      username: user.username ?? null,
       setup: user.setup,
     };
   }
-  // oxlint-disable-next-line no-unused-vars
-  const { password, authentication, ...safeUser } = user.toObject();
-  return safeUser;
+  return {
+    _id: user._id,
+    email: user.email,
+    name: user.name ?? null,
+    username: user.username ?? null,
+    gender: user.gender ?? null,
+    image: user.image ?? null,
+    bio: user.bio ?? null,
+    setup: user.setup,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
 };
+
+export type UserInfo = ReturnType<typeof createUserInfo>;
 
 export function formatBytes(bytes: number) {
   const units = ["B", "KB", "MB", "GB", "TB"];
