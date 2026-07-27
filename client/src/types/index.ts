@@ -183,10 +183,8 @@ export type ThemeState = {
 };
 
 type DeviceState = {
-  deviceId: string | null;
-  initDeviceId: () => string;
-  isAllow: boolean;
-  setIsAllow: (isAllow: boolean) => void;
+  notify: boolean;
+  setNotify: (notify: boolean) => void;
 };
 
 export type AppStore = ThemeState & DeviceState;

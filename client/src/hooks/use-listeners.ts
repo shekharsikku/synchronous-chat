@@ -13,7 +13,7 @@ export const useListeners = () => {
 
   const { socket } = useSocket();
   const { allChats } = useContacts();
-  const { isAllow } = useAppStore();
+  const { notify } = useAppStore();
   const { userInfo, setUserInfo } = useAuthStore();
   const { selectedChatData, setSelectedChatData, closeChat } = useChatStore();
 
@@ -30,7 +30,7 @@ export const useListeners = () => {
   });
 
   const showNotification = useEffectEvent((chatKey?: string) => {
-    if (Notification.permission !== "granted" || selectedChatData?._id || !isAllow) return;
+    if (Notification.permission !== "granted" || selectedChatData?._id || !notify) return;
 
     const messageFrom = getCurrentChat(chatKey)?.name;
     if (!messageFrom) return;

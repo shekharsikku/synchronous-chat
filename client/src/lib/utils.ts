@@ -9,7 +9,6 @@ import { twMerge } from "tailwind-merge";
 import type { Message, TimeStamp, UserInfo } from "@/types";
 import { noAvatar, maleAvatar, femaleAvatar } from "@/assets/images";
 import api from "@/lib/api";
-import { useAppStore } from "@/lib/zustand";
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -305,16 +304,6 @@ export const contactQuery = (id: string, options?: ContactQueryOptions) => {
     ...options,
   });
 };
-
-export function getDeviceId() {
-  const { deviceId, initDeviceId } = useAppStore.getState();
-
-  if (!deviceId) {
-    return initDeviceId();
-  }
-
-  return deviceId;
-}
 
 export const displayFileName = (filename: string, maxLength = 20) => {
   if (!filename) return "";

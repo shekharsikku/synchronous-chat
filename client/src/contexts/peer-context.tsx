@@ -6,7 +6,7 @@ import type { PeerInformation, ResponseActions, CallType } from "@/types";
 import { PeerShare } from "@/components/chat";
 import { useSocket, PeerContext } from "@/lib/context";
 import env from "@/lib/env";
-import { getDeviceId, getTimeoutDelay } from "@/lib/utils";
+import { getTimeoutDelay } from "@/lib/utils";
 import { useAuthStore } from "@/lib/zustand";
 
 /** These errors are unrecoverable — don't retry. */
@@ -68,6 +68,7 @@ const PeerProvider = ({ children, ...props }: PropsWithChildren) => {
   const [openPeerShareModal, setOpenPeerShareModal] = useState(false);
 
   const callingToastId = useId();
+  const peerClientId = useRef(crypto.randomUUID()).current;
 
   const cleanupPeer = useCallback(() => {
     const currentPeer = peerRef.current;
@@ -102,9 +103,7 @@ const PeerProvider = ({ children, ...props }: PropsWithChildren) => {
 
       console.info("[Peer] Creating new connection...");
 
-      const deviceId = getDeviceId();
-
-      const peer = new Peer(deviceId, {
+      const peer = new Peer(peerClientId, {
         host: env.peerHost,
         port: env.peerPort,
         path: env.peerPath,
@@ -231,7 +230,7 @@ const PeerProvider = ({ children, ...props }: PropsWithChildren) => {
 
       cleanupPeer();
     };
-  }, [userInfo?._id, userInfo?.setup, userInfo?.name, isConnected]);
+  }, [userInfo?._id, userInfo?.setup, userInfo?.name, isConnected, peerClientId]);
 
   useEffect(() => {
     if (!isPeerReady || !peerRef.current) return;

@@ -92,24 +92,11 @@ export const useChatStore = create<ChatStore>((set) => ({
 
 export const useAppStore = create<AppStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       theme: "system",
       setTheme: (theme) => set({ theme }),
-
-      deviceId: null,
-      initDeviceId: () => {
-        let currentId = get().deviceId;
-
-        if (!currentId) {
-          currentId = crypto.randomUUID();
-          set({ deviceId: currentId });
-        }
-
-        return currentId;
-      },
-
-      isAllow: false,
-      setIsAllow: (isAllow) => set({ isAllow }),
+      notify: false,
+      setNotify: (notify) => set({ notify }),
     }),
     { name: "app_synchronous" }
   )

@@ -37,11 +37,9 @@ export const profileSetup = asyncHandler<{}, {}, Profile>(async (req, res) => {
   });
 
   if (!updatedProfile) {
-    const currentAuthKey = req.cookies["current"];
+    const currentToken = req.cookies["current"];
 
-    if (currentAuthKey) {
-      await revokeToken(res, currentAuthKey);
-    }
+    if (currentToken) await revokeToken(res, currentToken);
 
     throw new HttpError(401, "Please, sign in again!");
   }
@@ -72,11 +70,9 @@ export const updateImage = asyncHandler(async (req, res) => {
   const requestUser = await User.findById(req.user?._id!);
 
   if (!requestUser) {
-    const currentAuthKey = req.cookies["current"];
+    const currentToken = req.cookies["current"];
 
-    if (currentAuthKey) {
-      await revokeToken(res, currentAuthKey);
-    }
+    if (currentToken) await revokeToken(res, currentToken);
 
     throw new HttpError(401, "Please, sign in again!");
   }
@@ -106,11 +102,9 @@ export const deleteImage = asyncHandler(async (req, res) => {
   const requestUser = await User.findById(req.user?._id!);
 
   if (!requestUser) {
-    const currentAuthKey = req.cookies["current"];
+    const currentToken = req.cookies["current"];
 
-    if (currentAuthKey) {
-      await revokeToken(res, currentAuthKey);
-    }
+    if (currentToken) await revokeToken(res, currentToken);
 
     throw new HttpError(401, "Please, sign in again!");
   }
@@ -142,11 +136,9 @@ export const changePassword = asyncHandler<{}, {}, Password>(async (req, res) =>
   const requestUser = await User.findById(req.user?._id!).select("+password");
 
   if (!requestUser) {
-    const currentAuthKey = req.cookies["current"];
+    const currentToken = req.cookies["current"];
 
-    if (currentAuthKey) {
-      await revokeToken(res, currentAuthKey);
-    }
+    if (currentToken) await revokeToken(res, currentToken);
 
     throw new HttpError(401, "Please, sign in again!");
   }
