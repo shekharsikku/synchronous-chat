@@ -1,5 +1,7 @@
 import { createServer } from "node:http";
+import { parseCookie } from "cookie";
 import { Server } from "socket.io";
+import { parseToken } from "#/controllers/auth.js";
 import { logger } from "#/middlewares/index.js";
 import env from "#/utilities/env.js";
 import app from "#/app.js";
@@ -36,18 +38,36 @@ export const emitEvent = (sockets: string[], event: string, payload: any) => {
 };
 
 io.use((socket, next) => {
-  const publicKey = socket.handshake.auth["pk"] as string;
+  const { address: ip, auth, headers, query } = socket.handshake;
+  const uid = query["uid"] as string;
 
-  if (publicKey !== env.SOCKET_PUBLIC) {
-    logger.info("Unauthorized socket attempt: %s", socket.handshake.address);
-    return next(new Error("Unauthorized socket connection!"));
+  try {
+    if (auth["pk"] !== env.SOCKET_PUBLIC) {
+      throw new Error("Invalid socket public key!");
+    }
+
+    const token = parseCookie(headers.cookie ?? "")?.["current"];
+
+    if (!token) {
+      throw new Error("Missing current auth token!");
+    }
+
+    const { userId } = parseToken(token);
+
+    if (!userId.equals(uid)) {
+      throw new Error("Socket client uid mismatch!");
+    }
+
+    socket.data.userId = userId.toString();
+    return next();
+  } catch (err) {
+    logger.error({ err, ip, uid }, "Socket authentication failed!");
+    return next(new Error("Unauthorized socket!"));
   }
-
-  next();
 });
 
 io.on("connection", (socket) => {
-  const userId = socket.handshake.query["uid"] as string;
+  const userId = socket.data.userId as string;
 
   if (userId) {
     if (!socketMap.has(userId)) {
@@ -68,8 +88,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("call:request", ({ target, details, type }) => {
-    const socket = getSockets(target).at(-1)!;
-    emitEvent([socket], "call:request", { details, type });
+    const socket = getSockets(target).at(-1);
+    if (socket) emitEvent([socket], "call:request", { details, type });
   });
 
   socket.on("call:response", ({ target, details, action }) => {
@@ -97,8 +117,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("share:request", ({ target, details, file }) => {
-    const socket = getSockets(target).at(-1)!;
-    emitEvent([socket], "share:request", { details, file });
+    const socket = getSockets(target).at(-1);
+    if (socket) emitEvent([socket], "share:request", { details, file });
   });
 
   socket.on("file:request", ({ target, details, action }) => {

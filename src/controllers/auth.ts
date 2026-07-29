@@ -10,7 +10,7 @@ import { cookieOptions, generateAccess, generateRefresh, createUserInfo } from "
 import { HttpError, HttpResponse, asyncHandler } from "#/utilities/response.js";
 import type { SignUp, SignIn } from "#/utilities/schema.js";
 
-const parseToken = (token: string) => {
+export const parseToken = (token: string) => {
   const { uid, aid } = decryptAuth(token);
 
   if (!Types.ObjectId.isValid(uid) || !Types.ObjectId.isValid(aid)) {
