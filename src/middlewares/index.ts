@@ -1,3 +1,4 @@
+import { extname } from "node:path";
 import { inflateSync } from "node:zlib";
 import { rateLimit } from "express-rate-limit";
 import { compactDecrypt } from "jose";
@@ -6,7 +7,7 @@ import pino from "pino";
 import env from "#/utilities/env.js";
 import { accessSecret } from "#/utilities/crypto.js";
 import type { UserInfo } from "#/utilities/helpers.js";
-import { asyncMiddleware, HttpError } from "#/utilities/response.js";
+import { asyncHandler, HttpError, HttpResponse } from "#/utilities/response.js";
 import type { NextFunction, Request, Response } from "express";
 import type { ZodType } from "zod";
 
@@ -14,20 +15,20 @@ const authorizeAccess = async (req: Request): Promise<UserInfo> => {
   const accessToken = req.cookies["access"];
   if (!accessToken) throw new Error("No access token available!");
 
-  const decryptedAccess = await compactDecrypt(accessToken, accessSecret);
-  return JSON.parse(inflateSync(decryptedAccess.plaintext).toString());
+  const { plaintext } = await compactDecrypt(accessToken, accessSecret);
+  return JSON.parse(inflateSync(plaintext).toString());
 };
 
-export const authAccess = asyncMiddleware(async (req, _res, next) => {
+export const authAccess = asyncHandler(async (req, res, next) => {
   try {
     req.user = await authorizeAccess(req);
     return next();
   } catch {
-    throw new HttpError(401, "Unauthorized request!");
+    return HttpResponse.error(res, 401, "Unauthorized request!");
   }
 });
 
-export const authEvents = asyncMiddleware(async (req, res, next) => {
+export const authEvents = asyncHandler(async (req, res, next) => {
   try {
     req.user = await authorizeAccess(req);
     return next();
@@ -36,17 +37,28 @@ export const authEvents = asyncMiddleware(async (req, res, next) => {
   }
 });
 
-const storage = multer.diskStorage({
-  destination: function (_req, _file, cb) {
-    cb(null, "./public/temp");
+/** Multer File Uploader */
+export const upload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => {
+      cb(null, "./public/temp");
+    },
+    filename: (_req, file, cb) => {
+      cb(null, Date.now() + extname(file.originalname));
+    },
+  }),
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new HttpError(422, "Only image files are allowed!"));
+    }
   },
-  filename: function (_req, file, cb) {
-    cb(null, file.originalname);
+  limits: {
+    files: 1,
+    fileSize: 5 * 1024 * 1024,
   },
 });
-
-/** Multer File Uploader */
-export const upload = multer({ storage });
 
 /** Zod Schema Validator */
 export const validate =
@@ -70,9 +82,9 @@ export const limiter = (minute = 10, limit = 10000) => {
     keyGenerator: (req) => {
       return req.clientIp!;
     },
-    handler: (req) => {
+    handler: (req, res) => {
       req.log.error("Rate limit exceeded for ip: %s", req.clientIp);
-      throw new HttpError(429, "Maximum number of requests exceeded!");
+      return HttpResponse.error(res, 429, "You've made too many requests!");
     },
   });
 };
