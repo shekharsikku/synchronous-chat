@@ -25,7 +25,7 @@ router.get("/events", authEvents, connectEvents);
 router.get("/wakeup", (req: Request<{}, {}, {}, { from?: string }>, res: Response) => {
   const from = req.query["from"] || "Unknown";
   const timestamp = new Date().toISOString();
-  return new HttpResponse(200, `Wake up server by ${from} at ${timestamp}!`).send(res);
+  return HttpResponse.success(res, 200, `Wake up server by ${from} at ${timestamp}!`);
 });
 
 router.get("/stats", async (_req: Request, res: Response) => {
@@ -60,7 +60,7 @@ router.get("/stats", async (_req: Request, res: Response) => {
     pid: process.pid,
   };
 
-  return new HttpResponse(200, "Runtime memory stats!", { data }).send(res);
+  return HttpResponse.success(res, 200, "Runtime memory stats!", data);
 });
 
 export default router;

@@ -1,80 +1,37 @@
 import type { NextFunction, Request, Response } from "express";
 
 type SuccessStatusCode = 200 | 201 | 202 | 204;
-type ErrorStatusCode = 400 | 401 | 403 | 404 | 409 | 422 | 429 | 500 | 502 | 503;
+type ErrorStatusCode = 400 | 401 | 403 | 404 | 409 | 413 | 422 | 429 | 500 | 502 | 503;
 
 export class HttpError extends Error {
-  public readonly code: ErrorStatusCode;
-
-  constructor(code: ErrorStatusCode, message: string) {
+  constructor(
+    public readonly code: ErrorStatusCode,
+    message: string
+  ) {
     super(message);
-    this.code = code;
-    this.name = this.constructor.name;
-    Error.captureStackTrace(this, this.constructor);
+    this.name = new.target.name;
+    Error.captureStackTrace(this, new.target);
   }
 }
 
-export class HttpResponse<T = unknown, E = unknown> {
-  private code: SuccessStatusCode | ErrorStatusCode;
-  private success: boolean;
-  private message: string;
-  public data?: T | undefined;
-  public error?: E | undefined;
+type SuccessResponse<T = unknown> = { success: true; message: string; data?: T };
+type ErrorResponse<E = unknown> = { success: false; message: string; error?: E };
 
-  constructor(code: SuccessStatusCode | ErrorStatusCode, message: string);
-  constructor(code: SuccessStatusCode, message: string, options?: { data?: T });
-  constructor(code: ErrorStatusCode, message: string, options?: { error?: E });
-
-  constructor(code: SuccessStatusCode | ErrorStatusCode, message: string, options?: { data?: T; error?: E }) {
-    this.code = code;
-    this.success = code < 400;
-    this.message = message;
-
-    if (this.success) {
-      if (options?.error !== undefined) {
-        throw new Error("Cannot set error for success response!");
-      }
-      this.data = options?.data;
-    } else {
-      if (options?.data !== undefined) {
-        throw new Error("Cannot set data for error response!");
-      }
-      this.error = options?.error;
-    }
+export class HttpResponse {
+  static success<T>(res: Response, code: SuccessStatusCode, message: string, data?: T) {
+    const response: SuccessResponse<T> = { success: true, message };
+    if (data !== undefined) response.data = data;
+    return res.status(code).json(response);
   }
 
-  private toJSON() {
-    return {
-      success: this.success,
-      message: this.message,
-      data: this.data,
-      error: this.error,
-    };
-  }
-
-  public send(res: Response) {
-    return res.status(this.code).json(this.toJSON());
+  static error<E>(res: Response, code: ErrorStatusCode, message: string, error?: E) {
+    const response: ErrorResponse<E> = { success: false, message };
+    if (error !== undefined) response.error = error;
+    return res.status(code).json(response);
   }
 }
 
 export const asyncHandler = <P = {}, ResBody = unknown, ReqBody = unknown, ReqQuery = {}>(
-  func: (
-    req: Request<P, ResBody, ReqBody, ReqQuery>,
-    res: Response<ResBody>,
-    next: NextFunction
-  ) => HttpResponse | Promise<HttpResponse>
-) => {
-  return async (req: Request<P, ResBody, ReqBody, ReqQuery>, res: Response<ResBody>, next: NextFunction) => {
-    try {
-      const response = await func(req, res, next);
-      return response.send(res);
-    } catch (err) {
-      return next(err);
-    }
-  };
-};
-
-export const asyncMiddleware = <P = {}, ResBody = unknown, ReqBody = unknown, ReqQuery = {}>(
   func: (
     req: Request<P, ResBody, ReqBody, ReqQuery>,
     res: Response<ResBody>,

@@ -62,7 +62,7 @@ export const signUpUser = asyncHandler<{}, {}, SignUp>(async (req, res) => {
   const userInfo = createUserInfo(newUser);
   await generateAccess(res, userInfo);
 
-  return new HttpResponse(201, "Signed up successfully!", { data: userInfo });
+  return HttpResponse.success(res, 201, "Signed up successfully!", userInfo);
 });
 
 export const signInUser = asyncHandler<{}, {}, SignIn>(async (req, res) => {
@@ -83,7 +83,7 @@ export const signInUser = asyncHandler<{}, {}, SignIn>(async (req, res) => {
   await generateAccess(res, userInfo);
 
   if (!userInfo.setup) {
-    return new HttpResponse(200, "Complete your profile!", { data: userInfo });
+    return HttpResponse.success(res, 200, "Complete your profile!", userInfo);
   }
 
   const authId = new Types.ObjectId();
@@ -97,7 +97,7 @@ export const signInUser = asyncHandler<{}, {}, SignIn>(async (req, res) => {
 
   await existsUser.save();
 
-  return new HttpResponse(200, "Signed in successfully!", { data: userInfo });
+  return HttpResponse.success(res, 200, "Signed in successfully!", userInfo);
 });
 
 export const signOutUser = asyncHandler(async (req, res) => {
@@ -109,7 +109,7 @@ export const signOutUser = asyncHandler(async (req, res) => {
   res.clearCookie("refresh", cookieOptions);
   res.clearCookie("current", cookieOptions);
 
-  return new HttpResponse(200, "Signed out successfully!");
+  return HttpResponse.success(res, 200, "Signed out successfully!");
 });
 
 export const authRefresh = asyncHandler(async (req, res) => {
@@ -178,5 +178,5 @@ export const authRefresh = asyncHandler(async (req, res) => {
 
   await generateAccess(res, userInfo);
 
-  return new HttpResponse(200, "Refreshed successfully!", { data: userInfo });
+  return HttpResponse.success(res, 200, "Refreshed successfully!", userInfo);
 });

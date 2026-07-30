@@ -51,13 +51,13 @@ export const profileSetup = asyncHandler<{}, {}, Profile>(async (req, res) => {
   }
 
   if (!userInfo.setup) {
-    return new HttpResponse(200, "Please, complete your profile!");
+    return HttpResponse.success(res, 200, "Complete your profile!", userInfo);
   }
 
   await generateAccess(res, userInfo);
   await profileUpdateEvents(userInfo);
 
-  return new HttpResponse(200, "Profile updated successfully!", { data: userInfo });
+  return HttpResponse.success(res, 200, "Profile updated successfully!", userInfo);
 });
 
 export const updateImage = asyncHandler(async (req, res) => {
@@ -95,7 +95,7 @@ export const updateImage = asyncHandler(async (req, res) => {
   await generateAccess(res, userInfo);
   await profileUpdateEvents(userInfo);
 
-  return new HttpResponse(200, "Profile image updated successfully!", { data: userInfo });
+  return HttpResponse.success(res, 200, "Profile image updated successfully!", userInfo);
 });
 
 export const deleteImage = asyncHandler(async (req, res) => {
@@ -123,7 +123,7 @@ export const deleteImage = asyncHandler(async (req, res) => {
   await generateAccess(res, userInfo);
   await profileUpdateEvents(userInfo);
 
-  return new HttpResponse(200, "Profile image deleted successfully!", { data: userInfo });
+  return HttpResponse.success(res, 200, "Profile image deleted successfully!", userInfo);
 });
 
 export const changePassword = asyncHandler<{}, {}, Password>(async (req, res) => {
@@ -154,9 +154,9 @@ export const changePassword = asyncHandler<{}, {}, Password>(async (req, res) =>
   const userInfo = createUserInfo(requestUser);
   await generateAccess(res, userInfo);
 
-  return new HttpResponse(200, "Password changed successfully!", { data: userInfo });
+  return HttpResponse.success(res, 200, "Password changed successfully!", userInfo);
 });
 
-export const userInformation = asyncHandler(async (req) => {
-  return new HttpResponse(200, "User profile information!", { data: req.user! });
+export const userInformation = asyncHandler(async (req, res) => {
+  return HttpResponse.success(res, 200, "User profile information!", req.user);
 });

@@ -41,7 +41,7 @@ const resolveMembers = async (
   return fetchMembers(groupId);
 };
 
-export const sendMessage = asyncHandler<{ id: string }, {}, MessageSchema, { type?: string }>(async (req) => {
+export const sendMessage = asyncHandler<{ id: string }, {}, MessageSchema, { type?: string }>(async (req, res) => {
   const senderId = req.user?._id!;
   const receiverId = new Types.ObjectId(req.params.id);
   const isGroup = req.query.type === "group";
@@ -98,7 +98,7 @@ export const sendMessage = asyncHandler<{ id: string }, {}, MessageSchema, { typ
     }
   }
 
-  return new HttpResponse(201, "Message sent successfully!", { data: message });
+  return HttpResponse.success(res, 201, "Message sent successfully!", message);
 });
 
 /** Transform null → undefined in response payload only */
@@ -110,7 +110,7 @@ const nullToUndefined = (obj: Record<string, any>) => {
   return obj;
 };
 
-export const getMessages = asyncHandler<{ id: string }, {}, {}, { group?: string }>(async (req) => {
+export const getMessages = asyncHandler<{ id: string }, {}, {}, { group?: string }>(async (req, res) => {
   const sender = req.user?._id!;
   const target = req.params.id;
   const isGroup = req.query.group === "true";
@@ -129,11 +129,11 @@ export const getMessages = asyncHandler<{ id: string }, {}, {}, { group?: string
     .limit(20)
     .lean({ transform: (doc) => nullToUndefined(doc) });
 
-  return new HttpResponse(200, "Messages fetched successfully!", { data: messages.reverse() });
+  return HttpResponse.success(res, 200, "Messages fetched successfully!", messages.reverse());
 });
 
 export const fetchMessages = asyncHandler<{ id: string }, {}, {}, { before?: string; group?: string; limit?: string }>(
-  async (req) => {
+  async (req, res) => {
     const sender = req.user?._id!;
     const target = req.params.id;
     const { before, group, limit = 10 } = req.query;
@@ -158,7 +158,7 @@ export const fetchMessages = asyncHandler<{ id: string }, {}, {}, { before?: str
       .lean({ transform: (doc) => nullToUndefined(doc) });
 
     /* Reverse to show oldest → newest in UI */
-    return new HttpResponse(200, "Messages fetched successfully!", { data: messages.reverse() });
+    return HttpResponse.success(res, 200, "Messages fetched successfully!", messages.reverse());
   }
 );
 
@@ -173,7 +173,7 @@ const messageActionsEvents = async (message: MessageType, event: string) => {
   }
 };
 
-export const deleteMessage = asyncHandler<{ id: string }>(async (req) => {
+export const deleteMessage = asyncHandler<{ id: string }>(async (req, res) => {
   const userId = req.user?._id!;
   const msgId = req.params.id;
 
@@ -193,10 +193,10 @@ export const deleteMessage = asyncHandler<{ id: string }>(async (req) => {
 
   await messageActionsEvents(message, "message:remove");
 
-  return new HttpResponse(200, "Message deleted successfully!", { data: message });
+  return HttpResponse.success(res, 200, "Message deleted successfully!", message);
 });
 
-export const editMessage = asyncHandler<{ id: string }, {}, { text: string }>(async (req) => {
+export const editMessage = asyncHandler<{ id: string }, {}, { text: string }>(async (req, res) => {
   const userId = req.user?._id!;
   const msgId = req.params.id;
   const { text } = req.body;
@@ -220,10 +220,10 @@ export const editMessage = asyncHandler<{ id: string }, {}, { text: string }>(as
 
   await messageActionsEvents(message, "message:edited");
 
-  return new HttpResponse(200, "Message edited successfully!", { data: message });
+  return HttpResponse.success(res, 200, "Message edited successfully!", message);
 });
 
-export const reactMessage = asyncHandler<{ id: string }, {}, { emoji: string }>(async (req) => {
+export const reactMessage = asyncHandler<{ id: string }, {}, { emoji: string }>(async (req, res) => {
   const by = req.user?._id!;
   const mid = req.params.id;
   const { emoji } = req.body;
@@ -307,10 +307,10 @@ export const reactMessage = asyncHandler<{ id: string }, {}, { emoji: string }>(
 
   await messageActionsEvents(message, "message:reacted");
 
-  return new HttpResponse(200, "Message reacted successfully!", { data: message });
+  return HttpResponse.success(res, 200, "Message reacted successfully!", message);
 });
 
-export const deleteMessages = asyncHandler<{}, {}, {}, { before?: string }>(async (req) => {
+export const deleteMessages = asyncHandler<{}, {}, {}, { before?: string }>(async (req, res) => {
   const userId = req.user?._id!;
   const before = Number(req.query.before ?? 1) * 24;
 
@@ -322,10 +322,10 @@ export const deleteMessages = asyncHandler<{}, {}, {}, { before?: string }>(asyn
     createdAt: { $lt: hoursAgo },
   });
 
-  return new HttpResponse(200, "Older messages deleted!", { data: result });
+  return HttpResponse.success(res, 200, "Older messages deleted!", result);
 });
 
-export const translateMessage = asyncHandler<{}, {}, Translate>(async (req) => {
+export const translateMessage = asyncHandler<{}, {}, Translate>(async (req, res) => {
   const { message, language } = req.body;
 
   if (!message || !language) {
@@ -338,5 +338,5 @@ export const translateMessage = asyncHandler<{}, {}, Translate>(async (req) => {
     throw new HttpError(500, "Error while translating message!");
   }
 
-  return new HttpResponse(200, "Text translated successfully!", { data: result.translation });
+  return HttpResponse.success(res, 200, "Text translated successfully!", result.translation);
 });

@@ -15,7 +15,7 @@ const createGroupInfo = (group: GroupDocument) => ({
   interaction: group.updatedAt,
 });
 
-export const createGroup = asyncHandler<{}, {}, CreateGroup>(async (req) => {
+export const createGroup = asyncHandler<{}, {}, CreateGroup>(async (req, res) => {
   const groupData = req.body;
   const userId = req.user?._id;
 
@@ -60,10 +60,10 @@ export const createGroup = asyncHandler<{}, {}, CreateGroup>(async (req) => {
     models: "Group",
   });
 
-  return new HttpResponse(201, "Group created successfully!", { data: groupInfo });
+  return HttpResponse.success(res, 201, "Group created successfully!", groupInfo);
 });
 
-export const updateDetails = asyncHandler<{ id: string }, {}, UpdateDetails>(async (req) => {
+export const updateDetails = asyncHandler<{ id: string }, {}, UpdateDetails>(async (req, res) => {
   const groupId = req.params.id;
   const updateData = req.body;
   const userId = req.user?._id!;
@@ -91,7 +91,7 @@ export const updateDetails = asyncHandler<{ id: string }, {}, UpdateDetails>(asy
   }
 
   const groupInfo = createGroupInfo(updatedGroup);
-  return new HttpResponse(200, "Group details updated successfully!", { data: groupInfo });
+  return HttpResponse.success(res, 200, "Group details updated successfully!", groupInfo);
 });
 
 const toObjectIds = (ids: string[]) =>
@@ -102,7 +102,7 @@ const toObjectIds = (ids: string[]) =>
     return new Types.ObjectId(id);
   });
 
-export const updateMembers = asyncHandler<{ id: string }, {}, UpdateMembers>(async (req) => {
+export const updateMembers = asyncHandler<{ id: string }, {}, UpdateMembers>(async (req, res) => {
   const groupId = req.params.id;
   const { add, remove } = req.body;
   const userId = req.user?._id!;
@@ -150,10 +150,10 @@ export const updateMembers = asyncHandler<{ id: string }, {}, UpdateMembers>(asy
   }
 
   const groupInfo = createGroupInfo(updatedGroup);
-  return new HttpResponse(200, "Group members updated successfully!", { data: groupInfo });
+  return HttpResponse.success(res, 200, "Group members updated successfully!", groupInfo);
 });
 
-export const updateAvatar = asyncHandler<{ id: string }>(async (req) => {
+export const updateAvatar = asyncHandler<{ id: string }>(async (req, res) => {
   const groupId = req.params.id;
   const imagePath = req.file?.path;
   const userId = req.user?._id!;
@@ -182,10 +182,10 @@ export const updateAvatar = asyncHandler<{ id: string }>(async (req) => {
   await currentGroup.save({ validateBeforeSave: false });
 
   const groupInfo = createGroupInfo(currentGroup);
-  return new HttpResponse(200, "Group avatar updated successfully!", { data: groupInfo });
+  return HttpResponse.success(res, 200, "Group avatar updated successfully!", groupInfo);
 });
 
-export const deleteAvatar = asyncHandler<{ id: string }>(async (req) => {
+export const deleteAvatar = asyncHandler<{ id: string }>(async (req, res) => {
   const groupId = req.params.id;
   const userId = req.user?._id!;
 
@@ -205,10 +205,10 @@ export const deleteAvatar = asyncHandler<{ id: string }>(async (req) => {
   await currentGroup.save({ validateBeforeSave: false });
 
   const groupInfo = createGroupInfo(currentGroup);
-  return new HttpResponse(200, "Group avatar deleted successfully!", { data: groupInfo });
+  return HttpResponse.success(res, 200, "Group avatar deleted successfully!", groupInfo);
 });
 
-export const fetchGroups = asyncHandler(async (req) => {
+export const fetchGroups = asyncHandler(async (req, res) => {
   const userId = new Types.ObjectId(req.user?._id);
 
   const groups = await Group.aggregate([
@@ -250,7 +250,7 @@ export const fetchGroups = asyncHandler(async (req) => {
     },
   ]);
 
-  return new HttpResponse(200, "Groups fetched successfully!", { data: groups });
+  return HttpResponse.success(res, 200, "Groups fetched successfully!", groups);
 });
 
 export const fetchMembers = async (groupId: Types.ObjectId) => {

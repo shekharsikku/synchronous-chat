@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { User, Conversation } from "#/models/index.js";
 import { HttpError, HttpResponse, asyncHandler } from "#/utilities/response.js";
 
-export const searchContact = asyncHandler<{}, {}, {}, { search?: string }>(async (req) => {
+export const searchContact = asyncHandler<{}, {}, {}, { search?: string }>(async (req, res) => {
   const search = req.query.search;
   const userId = req.user?._id!;
 
@@ -20,10 +20,10 @@ export const searchContact = asyncHandler<{}, {}, {}, { search?: string }>(async
     .select("-setup -createdAt -updatedAt -__v")
     .lean();
 
-  return new HttpResponse(200, "Contacts searched successfully!", { data: contacts });
+  return HttpResponse.success(res, 200, "Contacts searched successfully!", contacts);
 });
 
-export const availableContact = asyncHandler(async (req) => {
+export const availableContact = asyncHandler(async (req, res) => {
   const userId = req.user?._id!;
 
   const contacts = await User.find({
@@ -33,10 +33,10 @@ export const availableContact = asyncHandler(async (req) => {
     .select("-setup -createdAt -updatedAt -__v")
     .lean();
 
-  return new HttpResponse(200, "Contacts fetched successfully!", { data: contacts });
+  return HttpResponse.success(res, 200, "Contacts fetched successfully!", contacts);
 });
 
-export const fetchContacts = asyncHandler(async (req) => {
+export const fetchContacts = asyncHandler(async (req, res) => {
   const userId = new Types.ObjectId(req.user?._id);
 
   const contacts = await Conversation.aggregate([
@@ -86,10 +86,10 @@ export const fetchContacts = asyncHandler(async (req) => {
     { $match: { _id: { $ne: null } } },
   ]);
 
-  return new HttpResponse(200, "Contacts fetched successfully!", { data: contacts });
+  return HttpResponse.success(res, 200, "Contacts fetched successfully!", contacts);
 });
 
-export const fetchContact = asyncHandler<{ id: string }>(async (req) => {
+export const fetchContact = asyncHandler<{ id: string }>(async (req, res) => {
   const userId = req.params.id;
 
   const contact = await User.findById(userId).select("-setup -createdAt -updatedAt -__v");
@@ -98,5 +98,5 @@ export const fetchContact = asyncHandler<{ id: string }>(async (req) => {
     throw new HttpError(404, "Contact not found!");
   }
 
-  return new HttpResponse(200, "Contact fetched successfully!", { data: contact });
+  return HttpResponse.success(res, 200, "Contact fetched successfully!", contact);
 });
