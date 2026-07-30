@@ -10,86 +10,106 @@ import type { UserInfo } from "@/types";
 export const useEvents = () => {
   const navigate = useNavigate();
   const eventSourceRef = useRef<EventSource | null>(null);
-  const connectedUserIdRef = useRef<string | null>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const retryCountRef = useRef(0);
-  const { userInfo, setUserInfo } = useAuthStore();
 
+  const { userInfo, setUserInfo } = useAuthStore();
   const { setSelectedChatType, setSelectedChatData } = useChatStore();
   const { contacts } = useContacts();
 
-  const getSenderDetails = useEffectEvent((sender: string) => {
-    return contacts?.find((contact) => contact._id === sender);
+  const handleMessageEvent = useEffectEvent((event: MessageEvent) => {
+    if (event.data?.type !== "NAVIGATE") return;
+    const { url, sid } = event.data;
+
+    if (sid) {
+      const details = contacts?.find((c) => c._id === sid);
+      if (details) {
+        setSelectedChatType("contact");
+        setSelectedChatData(details);
+      }
+    }
+    navigate(url, { replace: true });
   });
 
-  const updateUserInfo = useEffectEvent((updatedProfile: UserInfo) => {
-    if (updatedProfile._id === userInfo?._id) {
-      setUserInfo(updatedProfile);
-      if (updatedProfile.setup) navigate("/chat");
-      if (env.isDev) console.info("[SSE] Profile setup completed.");
+  const handleProfileSetup = useEffectEvent((event: MessageEvent) => {
+    try {
+      const updatedProfile: UserInfo = JSON.parse(event.data);
+
+      if (updatedProfile._id === userInfo?._id) {
+        setUserInfo(updatedProfile);
+        if (updatedProfile.setup) navigate("/chat");
+        if (env.isDev) console.info("[SSE] Profile setup completed.");
+      }
+    } catch (err) {
+      console.error("[SSE] Failed to parse event payload:", err);
     }
   });
-
-  const connectEvent = () => {
-    if (!userInfo?._id) return;
-    if (eventSourceRef.current) return;
-
-    const eventSource = new EventSource(`${env.serverUrl}/api/events`, {
-      withCredentials: true,
-    });
-
-    eventSourceRef.current = eventSource;
-
-    eventSource.addEventListener("profile-setup-complete", (event) => {
-      const updatedProfile: UserInfo = JSON.parse(event.data);
-      updateUserInfo(updatedProfile);
-    });
-
-    eventSource.onopen = () => {
-      retryCountRef.current = 0;
-      console.info("[SSE] Connected to event source.");
-    };
-
-    eventSource.onerror = (_error) => {
-      console.warn("[SSE] Connection error, retrying...");
-
-      eventSource.close();
-      eventSourceRef.current = null;
-
-      if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
-      }
-
-      const retryDelay = getTimeoutDelay(retryCountRef.current);
-      retryCountRef.current++;
-
-      console.info(`[SSE] Reconnecting in ${(retryDelay / 1000).toFixed(1)} sec...`);
-
-      retryTimeoutRef.current = setTimeout(() => {
-        console.info("[SSE] Reconnecting now...");
-        connectEvent();
-      }, retryDelay);
-    };
-  };
 
   /** Effect for manage sse connection. */
   useEffect(() => {
     if (!userInfo?._id) return;
-    if (connectedUserIdRef.current === userInfo._id) return;
 
-    connectedUserIdRef.current = userInfo._id;
+    let isMounted = true;
+
+    const connectEvent = () => {
+      if (!isMounted || eventSourceRef.current) return;
+
+      const eventSource = new EventSource(`${env.serverUrl}/api/events`, {
+        withCredentials: true,
+      });
+
+      eventSourceRef.current = eventSource;
+
+      eventSource.addEventListener("profile-setup-complete", handleProfileSetup);
+
+      eventSource.onopen = () => {
+        if (!isMounted) return;
+        retryCountRef.current = 0;
+        console.info("[SSE] Connected to event source.");
+      };
+
+      eventSource.onerror = () => {
+        if (!isMounted) return;
+        console.warn("[SSE] Connection error, closing to retrying...");
+
+        eventSource.removeEventListener("profile-setup-complete", handleProfileSetup);
+        eventSource.close();
+        eventSourceRef.current = null;
+
+        if (retryTimeoutRef.current) {
+          clearTimeout(retryTimeoutRef.current);
+          retryTimeoutRef.current = null;
+        }
+
+        const retryDelay = getTimeoutDelay(retryCountRef.current);
+        retryCountRef.current++;
+
+        console.info(`[SSE] Reconnecting in ${(retryDelay / 1000).toFixed(1)} sec...`);
+
+        retryTimeoutRef.current = setTimeout(() => {
+          if (isMounted) {
+            console.info("[SSE] Reconnecting now...");
+            connectEvent();
+          }
+        }, retryDelay);
+      };
+    };
 
     connectEvent();
 
     return () => {
-      eventSourceRef.current?.close();
-      eventSourceRef.current = null;
+      isMounted = false;
 
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
       }
 
-      connectedUserIdRef.current = null;
+      if (eventSourceRef.current) {
+        eventSourceRef.current.removeEventListener("profile-setup-complete", handleProfileSetup);
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
     };
   }, [userInfo?._id]);
 
@@ -100,20 +120,6 @@ export const useEvents = () => {
     if (!userInfo?._id) return;
 
     subscribeNotification();
-
-    const handleMessageEvent = (event: MessageEvent) => {
-      if (event.data?.type !== "NAVIGATE") return;
-      const { url, sid } = event.data;
-
-      if (sid) {
-        const details = getSenderDetails(sid);
-        if (details) {
-          setSelectedChatType("contact");
-          setSelectedChatData(details);
-        }
-      }
-      navigate(url, { replace: true });
-    };
 
     navigator.serviceWorker.addEventListener("message", handleMessageEvent);
     return () => navigator.serviceWorker.removeEventListener("message", handleMessageEvent);
