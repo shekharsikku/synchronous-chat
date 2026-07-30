@@ -1,42 +1,16 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": null,
-  "categories": {},
-  "rules": {
-    "typescript/no-non-null-asserted-optional-chain": "allow"
+  "plugins": ["react", "typescript", "unicorn", "oxc"],
+  "categories": {
+    "correctness": "error"
   },
-  "settings": {
-    "jsx-a11y": {
-      "polymorphicPropName": null,
-      "components": {},
-      "attributes": {}
-    },
-    "next": {
-      "rootDir": []
-    },
-    "react": {
-      "formComponents": [],
-      "linkComponents": [],
-      "version": null,
-      "componentWrapperFunctions": []
-    },
-    "jsdoc": {
-      "ignorePrivate": false,
-      "ignoreInternal": false,
-      "ignoreReplacesDocs": true,
-      "overrideReplacesDocs": true,
-      "augmentsExtendsReplacesDocs": false,
-      "implementsReplacesDocs": false,
-      "exemptDestructuredRootsFromChecks": false,
-      "tagNamePreference": {}
-    },
-    "vitest": {
-      "typecheck": false
-    }
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }],
+    "typescript/no-non-null-asserted-optional-chain": "allow"
   },
   "env": {
     "builtin": true
   },
-  "globals": {},
-  "ignorePatterns": ["node_modules", ".idea", ".vscode", ".env", ".env.*", "**/dist", "**/test"]
+  "ignorePatterns": ["**/node_modules", "**/dist", "**/test", "**/ui"]
 }
