@@ -3,6 +3,7 @@ import { parseCookie } from "cookie";
 import { Server } from "socket.io";
 import { parseToken } from "#/controllers/auth.js";
 import { logger } from "#/middlewares/index.js";
+import { verifyKeyPair } from "#/utilities/crypto.js";
 import env from "#/utilities/env.js";
 import app from "#/app.js";
 
@@ -15,13 +16,10 @@ const io = new Server(server, {
 const socketMap = new Map<string, Set<string>>();
 
 const getClients = () =>
-  Array.from(socketMap.entries()).reduce(
-    (acc, [user, sockets]) => {
-      acc[user] = Array.from(sockets);
-      return acc;
-    },
-    {} as Record<string, string[]>
-  );
+  Array.from(socketMap.entries()).reduce<Record<string, string[]>>((acc, [user, sockets]) => {
+    acc[user] = Array.from(sockets);
+    return acc;
+  }, {});
 
 const hasSocket = (uid: string, sid: string) => {
   return socketMap.get(uid)?.has(sid) ?? false;
@@ -42,7 +40,7 @@ io.use((socket, next) => {
   const uid = query["uid"] as string;
 
   try {
-    if (auth["pk"] !== env.SOCKET_PUBLIC) {
+    if (!verifyKeyPair(auth["pk"])) {
       throw new Error("Invalid socket public key!");
     }
 
@@ -58,7 +56,7 @@ io.use((socket, next) => {
       throw new Error("Socket client uid mismatch!");
     }
 
-    socket.data.userId = userId.toString();
+    socket.data.uid = uid;
     return next();
   } catch (err) {
     logger.error({ err, ip, uid }, "Socket authentication failed!");
@@ -67,7 +65,7 @@ io.use((socket, next) => {
 });
 
 io.on("connection", (socket) => {
-  const userId = socket.data.userId as string;
+  const userId = socket.data.uid as string;
 
   if (userId) {
     if (!socketMap.has(userId)) {
