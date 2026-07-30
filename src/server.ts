@@ -3,6 +3,7 @@ import { parseCookie } from "cookie";
 import { Server } from "socket.io";
 import { parseToken } from "#/controllers/auth.js";
 import { logger } from "#/middlewares/index.js";
+import { verifyKeyPair } from "#/utilities/crypto.js";
 import env from "#/utilities/env.js";
 import app from "#/app.js";
 
@@ -42,7 +43,7 @@ io.use((socket, next) => {
   const uid = query["uid"] as string;
 
   try {
-    if (auth["pk"] !== env.SOCKET_PUBLIC) {
+    if (!verifyKeyPair(auth["pk"])) {
       throw new Error("Invalid socket public key!");
     }
 
