@@ -230,6 +230,7 @@ const PeerProvider = ({ children, ...props }: PropsWithChildren) => {
 
       cleanupPeer();
     };
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [userInfo?._id, userInfo?.setup, userInfo?.name, isConnected, peerClientId]);
 
   useEffect(() => {

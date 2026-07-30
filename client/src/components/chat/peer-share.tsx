@@ -1,5 +1,5 @@
 import { type DataConnection } from "peerjs";
-import { useReducer, useCallback, useRef, useEffect } from "react";
+import { useReducer, useCallback, useRef, useEffect, useEffectEvent } from "react";
 import { useDropzone } from "react-dropzone";
 import { HiOutlineInformationCircle, HiOutlineDocumentText, HiOutlineXMark } from "react-icons/hi2";
 import { toast } from "sonner";
@@ -26,6 +26,16 @@ type PeerShareStatus = "pending" | "connecting" | "connected" | "sending" | "rec
 type IncomingFileInfo = {
   name: string;
   size: string | number;
+};
+
+type ShareRequest = {
+  details: PeerInformation;
+  file: IncomingFileInfo;
+};
+
+type FileRequest = {
+  details: PeerInformation;
+  action: "accept" | "reject";
 };
 
 type PeerShareState = {
@@ -192,21 +202,13 @@ const PeerShare = () => {
   };
 
   /** Receiver who handle file share request */
-  useEffect(() => {
-    const handleShareRequest = ({ details, file }: { details: PeerInformation; file: IncomingFileInfo }) => {
-      setRemoteInfo(details);
-      dispatch({ type: "SET_INCOMING_FILE", payload: file });
-      dispatch({ type: "SET_STATUS", status: "pending" });
-      dispatch({ type: "OPEN_MODAL", payload: true });
-      toast.info(`${details?.name} is requesting to send file!`);
-    };
-
-    socket?.on("share:request", handleShareRequest);
-
-    return () => {
-      socket?.off("share:request", handleShareRequest);
-    };
-  }, [socket]);
+  const handleShareRequest = useEffectEvent(({ details, file }: ShareRequest) => {
+    setRemoteInfo(details);
+    dispatch({ type: "SET_INCOMING_FILE", payload: file });
+    dispatch({ type: "SET_STATUS", status: "pending" });
+    dispatch({ type: "OPEN_MODAL", payload: true });
+    toast.info(`${details?.name} is requesting to send file!`);
+  });
 
   /** Response accept/reject from receiver side for file share */
   const responseShareRequest = (action: "accept" | "reject") => {
@@ -230,186 +232,194 @@ const PeerShare = () => {
   };
 
   /** Response accept/reject to sender side for file share */
-  useEffect(() => {
-    const handleShareRequest = ({ details, action }: { details: PeerInformation; action: "accept" | "reject" }) => {
-      if (action === "reject") {
-        setOpenPeerShareModal(false);
-        dispatch({ type: "SELECT_FILE", file: null });
-        dispatch({ type: "SET_DISABLE_ACTIONS", payload: false });
+  const handleFileRequest = useEffectEvent(({ details, action }: FileRequest) => {
+    if (action === "reject") {
+      setOpenPeerShareModal(false);
+      dispatch({ type: "SELECT_FILE", file: null });
+      dispatch({ type: "SET_DISABLE_ACTIONS", payload: false });
+      dispatch({ type: "SET_STATUS", status: "disconnected" });
+      toast.info(`${details?.name} rejected to receive file!`);
+      return;
+    }
+
+    if (action === "accept" && details?.pid) {
+      setRemoteInfo(details);
+
+      dispatch({ type: "SET_STATUS", status: "connecting" });
+      const remotePeer = peerRef?.current?.connect(details?.pid);
+
+      if (!remotePeer) {
         dispatch({ type: "SET_STATUS", status: "disconnected" });
-        toast.info(`${details?.name} rejected to receive file!`);
+        toast.error("Unable to connect with receiver peer!");
         return;
       }
 
-      if (action === "accept" && details?.pid) {
-        setRemoteInfo(details);
+      remotePeer?.on("open", () => {
+        dispatch({ type: "SET_STATUS", status: "connected" });
+        console.info("[Peer] Connected to receiver.");
 
-        dispatch({ type: "SET_STATUS", status: "connecting" });
-        const remotePeer = peerRef?.current?.connect(details?.pid);
+        if (file) {
+          let offset = 0;
 
-        if (!remotePeer) {
-          dispatch({ type: "SET_STATUS", status: "disconnected" });
-          toast.error("Unable to connect with receiver peer!");
-          return;
-        }
+          const sendChunk = () => {
+            const slice = file.slice(offset, offset + maxChunkSize);
+            const reader = new FileReader();
 
-        remotePeer?.on("open", () => {
-          dispatch({ type: "SET_STATUS", status: "connected" });
-          console.info("[Peer] Connected to receiver.");
+            reader.onload = (event) => {
+              const chunk = event.target?.result as ArrayBuffer;
 
-          if (file) {
-            let offset = 0;
+              if (!chunk) {
+                toast.info("File chunk is not available to send!");
+                return;
+              }
 
-            const sendChunk = () => {
-              const slice = file.slice(offset, offset + maxChunkSize);
-              const reader = new FileReader();
+              if (offset === 0) {
+                remotePeer.send({
+                  type: "meta",
+                  name: file.name,
+                  size: file.size,
+                  mime: file.type,
+                });
 
-              reader.onload = (event) => {
-                const chunk = event.target?.result as ArrayBuffer;
+                dispatch({ type: "SET_STATUS", status: "sending" });
+              }
 
-                if (!chunk) {
-                  toast.info("File chunk is not available to send!");
-                  return;
-                }
+              remotePeer.send({ type: "chunk", chunk });
+              offset += chunk.byteLength;
 
-                if (offset === 0) {
-                  remotePeer.send({
-                    type: "meta",
-                    name: file.name,
-                    size: file.size,
-                    mime: file.type,
-                  });
-
-                  dispatch({ type: "SET_STATUS", status: "sending" });
-                }
-
-                remotePeer.send({ type: "chunk", chunk });
-                offset += chunk.byteLength;
-
-                if (offset < file.size) {
-                  sendChunk(); // send next chunk
-                } else {
-                  remotePeer.send({ type: "done" });
-                }
-              };
-
-              reader.readAsArrayBuffer(slice);
+              /* Send the next chunk of available. */
+              if (offset < file.size) {
+                sendChunk();
+              } else {
+                remotePeer.send({ type: "done" });
+              }
             };
 
-            sendChunk();
-          }
-        });
-
-        remotePeer.on("data", (data: any) => {
-          if (data.type === "progress" && file) {
-            const progress = Math.floor((data.received / file.size) * 100);
-            dispatch({ type: "SET_PROGRESS", progress: progress });
-          }
-
-          if (data.type === "completed") {
-            setRemoteInfo(null);
-            dispatch({ type: "SELECT_FILE", file: null });
-            dispatch({ type: "SET_STATUS", status: "completed" });
-            dispatch({ type: "SET_PROGRESS", progress: 100 });
-
-            senderConfirmRef.current?.click();
-            remotePeer.close();
-            toast.info("File has been sent successfully!");
-          }
-        });
-
-        remotePeer.on("error", (err) => {
-          dispatch({ type: "SET_STATUS", status: "disconnected" });
-          console.error("[Peer] Connection error:", err.message);
-        });
-
-        remotePeer.on("close", () => {
-          dispatch({ type: "SET_DISABLE_ACTIONS", payload: false });
-          dispatch({ type: "SET_STATUS", status: "disconnected" });
-          dispatch({ type: "SET_PROGRESS", progress: 0 });
-          console.info("[Peer] Connection closed.");
-        });
-      }
-    };
-
-    socket?.on("file:request", handleShareRequest);
-
-    return () => {
-      socket?.off("file:request", handleShareRequest);
-    };
-  }, [socket, file]);
-
-  useEffect(() => {
-    if (!peerRef?.current) return;
-
-    const peerConn = peerRef.current;
-
-    const handleConnection = (conn: DataConnection) => {
-      dispatch({ type: "SET_STATUS", status: "receiving" });
-      console.info("[Peer] Connected to sender.");
-
-      let receivedBuffers: ArrayBuffer[] = [];
-      let receivedSize = 0;
-      let fileMeta: any = null;
-
-      conn.on("data", async (data: any) => {
-        if (!fileMeta && data.type === "meta") {
-          fileMeta = {
-            name: data.name,
-            size: data.size,
-            mime: data.mime,
+            reader.readAsArrayBuffer(slice);
           };
-        }
 
-        if (fileMeta && data.type === "chunk") {
-          receivedBuffers.push(data.chunk);
-          receivedSize += data.chunk.byteLength;
-
-          conn.send({ type: "progress", received: receivedSize });
-
-          const progress = Math.floor((receivedSize / fileMeta.size) * 100);
-          dispatch({ type: "SET_PROGRESS", progress: progress });
-        }
-
-        if (data.type === "done") {
-          if (!fileMeta) return;
-
-          const blob = new Blob(receivedBuffers, { type: fileMeta.mime });
-          const url = URL.createObjectURL(blob);
-
-          handleDownload(url, fileMeta.name);
-          conn.send({ type: "completed" });
-
-          setRemoteInfo(null);
-          dispatch({ type: "SET_INCOMING_FILE", payload: null });
-          dispatch({ type: "SET_STATUS", status: "completed" });
-          dispatch({ type: "SET_PROGRESS", progress: 100 });
-
-          receiverConfirmRef.current?.click();
-          toast.info("File has been received successfully!");
-
-          receivedBuffers = [];
-          receivedSize = 0;
-          fileMeta = null;
-
-          cleanupTimeoutRef.current = setTimeout(() => URL.revokeObjectURL(url), 2000);
+          sendChunk();
         }
       });
 
-      conn.on("close", () => {
+      remotePeer.on("data", (data: any) => {
+        if (data.type === "progress" && file) {
+          const progress = Math.floor((data.received / file.size) * 100);
+          dispatch({ type: "SET_PROGRESS", progress: progress });
+        }
+
+        if (data.type === "completed") {
+          setRemoteInfo(null);
+          dispatch({ type: "SELECT_FILE", file: null });
+          dispatch({ type: "SET_STATUS", status: "completed" });
+          dispatch({ type: "SET_PROGRESS", progress: 100 });
+
+          senderConfirmRef.current?.click();
+          remotePeer.close();
+          toast.info("File has been sent successfully!");
+        }
+      });
+
+      remotePeer.on("error", (err) => {
+        dispatch({ type: "SET_STATUS", status: "disconnected" });
+        console.error("[Peer] Connection error:", err.message);
+      });
+
+      remotePeer.on("close", () => {
         dispatch({ type: "SET_DISABLE_ACTIONS", payload: false });
         dispatch({ type: "SET_STATUS", status: "disconnected" });
         dispatch({ type: "SET_PROGRESS", progress: 0 });
         console.info("[Peer] Connection closed.");
       });
+    }
+  });
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("share:request", handleShareRequest);
+    socket.on("file:request", handleFileRequest);
+
+    return () => {
+      socket.off("share:request", handleShareRequest);
+      socket.off("file:request", handleFileRequest);
     };
+  }, [socket]);
+
+  const handleConnection = useEffectEvent((conn: DataConnection) => {
+    dispatch({ type: "SET_STATUS", status: "receiving" });
+    console.info("[Peer] Connected to sender.");
+
+    let receivedBuffers: ArrayBuffer[] = [];
+    let receivedSize = 0;
+    let fileMeta: any = null;
+
+    const handleData = (data: any) => {
+      if (!fileMeta && data.type === "meta") {
+        fileMeta = {
+          name: data.name,
+          size: data.size,
+          mime: data.mime,
+        };
+      }
+
+      if (fileMeta && data.type === "chunk") {
+        receivedBuffers.push(data.chunk);
+        receivedSize += data.chunk.byteLength;
+
+        conn.send({ type: "progress", received: receivedSize });
+
+        const progress = Math.floor((receivedSize / fileMeta.size) * 100);
+        dispatch({ type: "SET_PROGRESS", progress: progress });
+      }
+
+      if (data.type === "done") {
+        if (!fileMeta) return;
+
+        const blob = new Blob(receivedBuffers, { type: fileMeta.mime });
+        const url = URL.createObjectURL(blob);
+
+        handleDownload(url, fileMeta.name);
+        conn.send({ type: "completed" });
+
+        setRemoteInfo(null);
+        dispatch({ type: "SET_INCOMING_FILE", payload: null });
+        dispatch({ type: "SET_STATUS", status: "completed" });
+        dispatch({ type: "SET_PROGRESS", progress: 100 });
+
+        receiverConfirmRef.current?.click();
+        toast.info("File has been received successfully!");
+
+        receivedBuffers = [];
+        receivedSize = 0;
+        fileMeta = null;
+
+        cleanupTimeoutRef.current = setTimeout(() => URL.revokeObjectURL(url), 5000);
+      }
+    };
+
+    const handleClose = () => {
+      dispatch({ type: "SET_DISABLE_ACTIONS", payload: false });
+      dispatch({ type: "SET_STATUS", status: "disconnected" });
+      dispatch({ type: "SET_PROGRESS", progress: 0 });
+      console.info("[Peer] Connection closed.");
+    };
+
+    conn.on("data", handleData);
+    conn.on("close", handleClose);
+  });
+
+  useEffect(() => {
+    const peerConn = peerRef?.current;
+
+    if (!peerConn) return;
 
     peerConn.on("connection", handleConnection);
 
     return () => {
       peerConn.off("connection", handleConnection);
     };
-  }, [peerRef?.current]);
+  }, [peerRef, peerRef?.current]);
 
   useEffect(() => {
     return () => {
