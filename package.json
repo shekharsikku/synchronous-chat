@@ -4,16 +4,9 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc --build --clean && tsc --build && tsc-alias",
+    "build": "tsdown",
     "start": "node dist/index.js",
-    "dev:all": "concurrently \"npm run dev\" \"npm run dev --prefix client\"",
-    "build:client": "npm run build --prefix client",
-    "build:all": "npm run build && npm run build:client",
-    "install:client": "npm install --include=dev --prefix client",
-    "install:all": "npm install --include=dev && npm run install:client",
-    "install:build": "npm run install:all && npm run build:all",
-    "dev:oxc": "oxnode --watch src/index.ts",
-    "start:oxc": "oxnode src/index.ts",
+    "typecheck": "tsc --noEmit",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
@@ -58,7 +51,8 @@
     "oxfmt": "^0.62.0",
     "oxlint": "^1.77.0",
     "tsc-alias": "^1.9.1",
-    "tsx": "^4.23.7",
+    "tsdown": "^0.22.14",
+    "tsx": "^4.23.12",
     "typescript": "^7.0.2"
   },
   "allowScripts": {
