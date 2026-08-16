@@ -1,20 +1,20 @@
 # Node modules
-node_modules/
+**/node_modules
 
 # Editor dirs
-.idea/
-.vscode/
+.idea
+.vscode
 
 # Env file
 .env
 .env.*
 
 # Other dirs
-dist/
-test/
+**/dist
+**/test
 
 # Git files
-.git/
+.git
 .gitkeep
 .gitignore
 

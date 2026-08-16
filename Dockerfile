@@ -43,6 +43,7 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/public ./public
 COPY --from=build /app/client/dist ./client/dist
 
+RUN chown -R node:node /app/public
 USER node
 
 EXPOSE 4000
