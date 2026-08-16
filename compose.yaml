@@ -1,0 +1,17 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        VITE_PUBLIC_KEY: ${VITE_PUBLIC_KEY}
+        VITE_SERVER_URL: ${VITE_SERVER_URL}
+        VITE_BUCKET_URL: ${VITE_BUCKET_URL}
+        VITE_PEER_HOST: ${VITE_PEER_HOST}
+        VITE_PEER_PORT: ${VITE_PEER_PORT}
+        VITE_PEER_PATH: ${VITE_PEER_PATH}
+    image: synchronous
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env.docker
+    restart: unless-stopped
