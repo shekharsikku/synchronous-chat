@@ -1,0 +1,24 @@
+# Node modules
+node_modules/
+
+# Editor dirs
+.idea/
+.vscode/
+
+# Env file
+.env
+.env.*
+
+# Other dirs
+dist/
+test/
+
+# Git files
+.git/
+.gitkeep
+.gitignore
+
+# Dockerfile
+.dockerignore
+compose.yaml
+Dockerfile
