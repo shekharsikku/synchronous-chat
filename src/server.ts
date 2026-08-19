@@ -1,11 +1,11 @@
 import { createServer } from "node:http";
 import { parseCookie } from "cookie";
 import { Server } from "socket.io";
-import { parseToken } from "#/controllers/auth.js";
-import { logger } from "#/middlewares/index.js";
-import { verifyKeyPair } from "#/utilities/crypto.js";
-import env from "#/utilities/env.js";
 import app from "#/app.js";
+import env from "#/configs/env.js";
+import logger from "#/configs/logger.js";
+import { parseToken } from "#/controllers/auth.js";
+import { verifyKeyPair } from "#/utilities/crypto.js";
 
 const server = createServer(app);
 

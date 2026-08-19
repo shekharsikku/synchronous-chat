@@ -1,32 +1,30 @@
 import { connect } from "mongoose";
-import { logger } from "#/middlewares/index.js";
+import env from "#/configs/env.js";
+import logger from "#/configs/logger.js";
 import server from "#/server.js";
 import jobs from "#/services/jobs.js";
-import env from "#/utilities/env.js";
 
 const uri = env.MONGODB_URI;
 const port = env.PORT;
 
 void (async () => {
   try {
-    /** Connection state returned by mongoose. */
     const { connection } = await connect(uri);
 
-    /** Checking connection state of mongodb. */
     if (connection.readyState !== 1) {
-      /** If database not connected throw error */
       throw new Error("Database connection error!");
     }
 
-    /** Database connection success log. */
     logger.info("Database connection success!");
 
-    /** Starting cron jobs schedules. */
     jobs.start();
 
-    /** Listening express/socket.io server */
+    server.on("error", (err) => {
+      logger.error({ err }, "Server failed to start!");
+      process.exit(1);
+    });
+
     server.listen(port, () => {
-      /** Server running information log. */
       logger.info("Server running on port: %s", port);
     });
   } catch (err) {
