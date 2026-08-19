@@ -7,7 +7,7 @@ export const useSocket = () => {
   const context = useContext(SocketContext);
 
   if (!context) {
-    throw new Error("useSocket must be used within a SocketProvider");
+    throw new Error("SocketProvider not available. Wrap your component with SocketProvider.");
   }
 
   return context;
@@ -19,7 +19,7 @@ export const usePeer = () => {
   const context = useContext(PeerContext);
 
   if (!context) {
-    throw new Error("usePeer must be used within a PeerProvider");
+    throw new Error("PeerProvider not available. Wrap your component with PeerProvider.");
   }
 
   return context;
@@ -31,7 +31,7 @@ export const useTheme = () => {
   const context = useContext(ThemeContext);
 
   if (!context) {
-    throw new Error("useTheme must be used within a ThemeProvider");
+    throw new Error("ThemeProvider not available. Wrap your component with ThemeProvider.");
   }
 
   return context;
