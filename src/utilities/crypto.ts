@@ -7,7 +7,7 @@ import {
   randomBytes,
   scryptSync,
 } from "node:crypto";
-import env from "./env.js";
+import env from "#/configs/env.js";
 
 const generateBuffer = (secret: string) => createHash("sha256").update(secret).digest();
 

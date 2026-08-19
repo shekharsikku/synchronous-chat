@@ -1,6 +1,7 @@
 import { Router } from "express";
+import limiter from "#/configs/limiter.js";
 import { subscribePush, unsubscribePush } from "#/controllers/push.js";
-import { authAccess, validate, limiter } from "#/middlewares/index.js";
+import { authAccess, validate } from "#/middlewares/index.js";
 import { subscribeSchema, unsubscribeSchema } from "#/utilities/schema.js";
 
 const router = Router();

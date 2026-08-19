@@ -1,8 +1,9 @@
-import { Router, type Request, type Response } from "express";
-import { authEvents, limiter } from "#/middlewares/index.js";
+import { Router } from "express";
+import limiter from "#/configs/limiter.js";
+import { authEvents } from "#/middlewares/index.js";
 import { connectEvents } from "#/services/events.js";
 import { formatBytes, formatUptime } from "#/utilities/helpers.js";
-import { HttpResponse } from "#/utilities/response.js";
+import { asyncHandler, HttpResponse } from "#/utilities/response.js";
 import authRouter from "./auth.js";
 import contactRouter from "./contact.js";
 import groupRouter from "./group.js";
@@ -22,13 +23,13 @@ router.use("/message", messageRouter);
 router.use("/push", pushRouter);
 router.get("/events", authEvents, connectEvents);
 
-router.get("/wakeup", (req: Request<{}, {}, {}, { from?: string }>, res: Response) => {
-  const from = req.query["from"] || "Unknown";
-  const timestamp = new Date().toISOString();
-  return HttpResponse.success(res, 200, `Wake up server by ${from} at ${timestamp}!`);
+const wakeupHandler = asyncHandler<any, any, any, { from?: string }>((req, res) => {
+  const from = req.query.from ?? "Unknown";
+  const ts = new Date().toISOString();
+  return HttpResponse.success(res, 200, `Wake up server by ${from} at ${ts}!`);
 });
 
-router.get("/stats", async (_req: Request, res: Response) => {
+const statsHandler = asyncHandler((_req, res) => {
   const memory = process.memoryUsage();
 
   const data = {
@@ -62,5 +63,8 @@ router.get("/stats", async (_req: Request, res: Response) => {
 
   return HttpResponse.success(res, 200, "Runtime memory stats!", data);
 });
+
+router.get("/wakeup", wakeupHandler);
+router.get("/stats", statsHandler);
 
 export default router;
