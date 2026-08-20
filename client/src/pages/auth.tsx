@@ -4,14 +4,13 @@ import { useForm } from "react-hook-form";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { auth as api } from "@/lib/api";
 import env from "@/lib/env";
-import { signUpSchema, signInSchema } from "@/lib/schema";
+import { signUpSchema, signInSchema, type SignUpType, type SignInType } from "@/lib/schema";
 import { validateEmail, validateDummyEmail, cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/zustand";
 
@@ -27,7 +26,7 @@ const Auth = () => {
   const [isPending, setIsPending] = useState(false);
 
   /** Hookform Zod Resolver - SignUp */
-  const signUpForm = useForm<z.infer<typeof signUpSchema>>({
+  const signUpForm = useForm<SignUpType>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
       email: "",
@@ -36,7 +35,7 @@ const Auth = () => {
     },
   });
 
-  const signUpSubmit = async (values: z.infer<typeof signUpSchema>) => {
+  const signUpSubmit = async (values: SignUpType) => {
     const isDummy = validateDummyEmail(values.email);
 
     if (isDummy) {
@@ -68,7 +67,7 @@ const Auth = () => {
   };
 
   /** Hookform Zod Resolver - SignIn */
-  const signInForm = useForm<z.infer<typeof signInSchema>>({
+  const signInForm = useForm<SignInType>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
       credential: "",
@@ -76,7 +75,7 @@ const Auth = () => {
     },
   });
 
-  const signInSubmit = async (values: z.infer<typeof signInSchema>) => {
+  const signInSubmit = async (values: SignInType) => {
     setIsPending(true);
 
     const details: SignInInterface = {

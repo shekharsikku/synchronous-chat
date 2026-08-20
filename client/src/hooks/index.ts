@@ -12,7 +12,12 @@ import type { ChangeEvent, RefObject, SetStateAction, Dispatch } from "react";
 import type { GroupInfo, Message } from "@/types";
 
 export const useDebounce = <T extends (...args: any[]) => void>(callback: T, delay: number) => {
+  const callbackRef = useRef(callback);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
 
   useEffect(() => {
     return () => {
@@ -22,20 +27,18 @@ export const useDebounce = <T extends (...args: any[]) => void>(callback: T, del
     };
   }, []);
 
-  const debouncedFunction = useCallback(
+  return useCallback(
     (...args: Parameters<T>) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
 
       timeoutRef.current = setTimeout(() => {
-        callback(...args);
+        callbackRef.current(...args);
       }, delay);
     },
-    [callback, delay]
+    [delay]
   );
-
-  return debouncedFunction;
 };
 
 export const useDisableAnimations = <T extends HTMLElement>(socket: Socket | null, ref: RefObject<T | null>) => {

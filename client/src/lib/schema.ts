@@ -1,4 +1,4 @@
-import * as z from "zod";
+import { z } from "zod";
 
 export const signUpSchema = z
   .object({
@@ -76,3 +76,9 @@ export const createGroupSchema = z.object({
     .min(1, { error: "Group must have at least one member!" })
     .max(10, { error: "Group cannot have more than 10 members!" }),
 });
+
+export type SignUpType = z.infer<typeof signUpSchema>;
+export type SignInType = z.infer<typeof signInSchema>;
+export type ChangePasswordType = z.infer<typeof changePasswordSchema>;
+export type ProfileUpdateType = z.infer<typeof profileUpdateSchema>;
+export type CreateGroupType = z.infer<typeof createGroupSchema>;
