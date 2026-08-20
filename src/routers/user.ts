@@ -1,6 +1,8 @@
 import { Router } from "express";
+import limiter from "#/configs/limiter.js";
+import upload from "#/configs/upload.js";
 import { profileSetup, updateImage, deleteImage, changePassword, userInformation } from "#/controllers/user.js";
-import { authAccess, upload, validate, limiter } from "#/middlewares/index.js";
+import { authAccess, validate } from "#/middlewares/index.js";
 import { profileSchema, passwordSchema } from "#/utilities/schema.js";
 
 const router = Router();

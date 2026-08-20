@@ -98,6 +98,6 @@ export const useAppStore = create<AppStore>()(
       notify: false,
       setNotify: (notify) => set({ notify }),
     }),
-    { name: "app_synchronous" }
+    { name: "app_synchronous", version: 1 }
   )
 );

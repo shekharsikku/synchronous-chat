@@ -4,7 +4,5 @@ export default defineConfig({
   entry: "./src/index.ts",
   target: "esnext",
   sourcemap: true,
-  outExtensions: () => ({
-    js: ".js",
-  }),
+  fixedExtension: false,
 });

@@ -1,12 +1,10 @@
 {
   "compilerOptions": {
-    /* TypeScript Build Output Behavior/Performance */
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tsbuildinfo",
     "incremental": true,
     "skipLibCheck": true,
     "removeComments": true,
 
-    /* Basic Options & Module Interop */
     "target": "ESNext",
     "lib": ["ESNext"],
     "module": "NodeNext",
@@ -14,12 +12,10 @@
     "moduleDetection": "force",
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
-    "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
 
-    /* Strict Type-Checking & Linting */
     "strict": true,
     "strictFunctionTypes": true,
     "strictNullChecks": true,
@@ -27,7 +23,6 @@
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
 
-    /* Code Quality & Safety Check */
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noImplicitOverride": true,
@@ -38,19 +33,13 @@
     "noFallthroughCasesInSwitch": true,
     "noPropertyAccessFromIndexSignature": true,
 
-    /* For Node.js */
     "types": ["node"],
 
-    /* Path Alias & File Layout */
     "rootDir": "./src",
     "outDir": "./dist",
     "paths": {
       "#/*": ["./src/*"]
     }
-  },
-  "tsc-alias": {
-    "resolveFullPaths": true,
-    "verbose": false
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

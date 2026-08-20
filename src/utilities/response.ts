@@ -21,13 +21,13 @@ export class HttpResponse {
   static success<T>(res: Response, code: SuccessStatusCode, message: string, data?: T) {
     const response: SuccessResponse<T> = { success: true, message };
     if (data !== undefined) response.data = data;
-    return res.status(code).json(response);
+    res.status(code).json(response);
   }
 
   static error<E>(res: Response, code: ErrorStatusCode, message: string, error?: E) {
     const response: ErrorResponse<E> = { success: false, message };
     if (error !== undefined) response.error = error;
-    return res.status(code).json(response);
+    res.status(code).json(response);
   }
 }
 

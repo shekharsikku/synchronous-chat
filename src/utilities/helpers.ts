@@ -3,7 +3,7 @@ import { CompactEncrypt, SignJWT } from "jose";
 import type { UserDocument } from "#/models/index.js";
 import type { CookieOptions, Response } from "express";
 import { accessSecret, encryptAuth, refreshSecret } from "./crypto.js";
-import env from "./env.js";
+import env from "#/configs/env.js";
 
 export const cookieOptions: CookieOptions = {
   httpOnly: true,

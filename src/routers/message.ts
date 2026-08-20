@@ -1,4 +1,5 @@
 import { Router } from "express";
+import limiter from "#/configs/limiter.js";
 import {
   deleteMessages,
   deleteMessage,
@@ -9,7 +10,7 @@ import {
   translateMessage,
   fetchMessages,
 } from "#/controllers/message.js";
-import { authAccess, validate, limiter } from "#/middlewares/index.js";
+import { authAccess, validate } from "#/middlewares/index.js";
 import { messageSchema, translateSchema } from "#/utilities/schema.js";
 
 const router = Router();

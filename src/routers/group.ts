@@ -1,4 +1,6 @@
 import { Router } from "express";
+import limiter from "#/configs/limiter.js";
+import upload from "#/configs/upload.js";
 import {
   createGroup,
   updateDetails,
@@ -7,7 +9,7 @@ import {
   fetchGroups,
   deleteAvatar,
 } from "#/controllers/group.js";
-import { authAccess, upload, validate, limiter } from "#/middlewares/index.js";
+import { authAccess, validate } from "#/middlewares/index.js";
 import { createGroupSchema, updateDetailsSchema, updateMembersSchema } from "#/utilities/schema.js";
 
 const router = Router();

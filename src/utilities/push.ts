@@ -1,7 +1,7 @@
 import webpush from "web-push";
-import { logger } from "#/middlewares/index.js";
-import { Subscription } from "#/models/index.js";
 import type { Types } from "mongoose";
+import logger from "#/configs/logger.js";
+import { Subscription } from "#/models/index.js";
 
 interface PushPayload {
   title: string;

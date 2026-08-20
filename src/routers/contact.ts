@@ -1,6 +1,7 @@
 import { Router } from "express";
+import limiter from "#/configs/limiter.js";
 import { searchContact, fetchContacts, fetchContact, availableContact } from "#/controllers/contact.js";
-import { authAccess, limiter } from "#/middlewares/index.js";
+import { authAccess } from "#/middlewares/index.js";
 
 const router = Router();
 

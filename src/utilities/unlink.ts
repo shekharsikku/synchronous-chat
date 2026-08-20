@@ -1,6 +1,6 @@
 import { readdir, stat, unlink } from "node:fs";
 import { join, extname } from "node:path";
-import { logger } from "#/middlewares/index.js";
+import logger from "#/configs/logger.js";
 
 const folderPath = "./public/temp";
 

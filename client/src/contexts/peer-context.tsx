@@ -68,7 +68,6 @@ const PeerProvider = ({ children, ...props }: PropsWithChildren) => {
   const [openPeerShareModal, setOpenPeerShareModal] = useState(false);
 
   const callingToastId = useId();
-  const peerClientId = useRef(crypto.randomUUID()).current;
 
   const cleanupPeer = useCallback(() => {
     const currentPeer = peerRef.current;
@@ -103,7 +102,7 @@ const PeerProvider = ({ children, ...props }: PropsWithChildren) => {
 
       console.info("[Peer] Creating new connection...");
 
-      const peer = new Peer(peerClientId, {
+      const peer = new Peer({
         host: env.peerHost,
         port: env.peerPort,
         path: env.peerPath,
@@ -231,7 +230,7 @@ const PeerProvider = ({ children, ...props }: PropsWithChildren) => {
       cleanupPeer();
     };
     // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [userInfo?._id, userInfo?.setup, userInfo?.name, isConnected, peerClientId]);
+  }, [userInfo?._id, userInfo?.setup, userInfo?.name, isConnected]);
 
   useEffect(() => {
     if (!isPeerReady || !peerRef.current) return;
