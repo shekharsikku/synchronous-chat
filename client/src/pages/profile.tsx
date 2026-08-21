@@ -10,8 +10,6 @@ import {
 } from "react-icons/hi2";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import * as z from "zod";
-
 import { TooltipElement } from "@/components/chat/tooltip-element";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -32,7 +30,13 @@ import { UploadActionDialog } from "@/components/chat/upload-action-dialog";
 import { useSignOut, useImageSelector } from "@/hooks";
 import api from "@/lib/api";
 import { useSocket } from "@/lib/context";
-import { changePasswordSchema, profileUpdateSchema, genders } from "@/lib/schema";
+import {
+  changePasswordSchema,
+  profileUpdateSchema,
+  genders,
+  type ChangePasswordType,
+  type ProfileUpdateType,
+} from "@/lib/schema";
 import { useAuthStore } from "@/lib/zustand";
 
 type ProfileState = {
@@ -156,7 +160,7 @@ const Profile = () => {
   };
 
   /**  Hookform Zod Resolver - Change Password */
-  const changePasswordForm = useForm<z.infer<typeof changePasswordSchema>>({
+  const changePasswordForm = useForm<ChangePasswordType>({
     resolver: zodResolver(changePasswordSchema),
     defaultValues: {
       old_password: "",
@@ -165,7 +169,7 @@ const Profile = () => {
     },
   });
 
-  const changePasswordSubmit = async (values: z.infer<typeof changePasswordSchema>) => {
+  const changePasswordSubmit = async (values: ChangePasswordType) => {
     dispatch({ type: "SET_UPDATING", payload: true });
 
     try {
@@ -181,7 +185,7 @@ const Profile = () => {
   };
 
   /**  Hookform Zod Resolver - Profile Update */
-  const profileUpdateForm = useForm<z.infer<typeof profileUpdateSchema>>({
+  const profileUpdateForm = useForm<ProfileUpdateType>({
     resolver: zodResolver(profileUpdateSchema),
     defaultValues: {
       name: userInfo?.name || "",
@@ -191,7 +195,7 @@ const Profile = () => {
     },
   });
 
-  const profileUpdateSubmit = async (values: z.infer<typeof profileUpdateSchema>) => {
+  const profileUpdateSubmit = async (values: ProfileUpdateType) => {
     dispatch({ type: "SET_UPDATING", payload: true });
 
     try {

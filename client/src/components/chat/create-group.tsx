@@ -4,8 +4,6 @@ import { useForm } from "react-hook-form";
 import { useHotkeys } from "react-hotkeys-hook";
 import { HiOutlineUsers } from "react-icons/hi2";
 import { toast } from "sonner";
-import * as z from "zod";
-
 import { TooltipElement } from "@/components/chat/tooltip-element";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,7 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import { useContacts } from "@/hooks";
 import api from "@/lib/api";
-import { createGroupSchema } from "@/lib/schema";
+import { createGroupSchema, type CreateGroupType } from "@/lib/schema";
 import { cn, getAvatar } from "@/lib/utils";
 import { useAuthStore, useChatStore } from "@/lib/zustand";
 
@@ -60,7 +58,7 @@ const CreateGroup = () => {
   const { groupDialog, setGroupDialog } = useChatStore();
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
 
-  const createGroupForm = useForm<z.infer<typeof createGroupSchema>>({
+  const createGroupForm = useForm<CreateGroupType>({
     resolver: zodResolver(createGroupSchema),
     defaultValues: {
       name: "",
@@ -70,7 +68,7 @@ const CreateGroup = () => {
     },
   });
 
-  const createGroupSubmit = async (values: z.infer<typeof createGroupSchema>) => {
+  const createGroupSubmit = async (values: CreateGroupType) => {
     if (groups?.some((group) => group.name === values.name && group.admin === userInfo?._id)) {
       toast.info("You can't create groups with same name!");
       return;

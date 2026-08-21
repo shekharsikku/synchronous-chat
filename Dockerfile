@@ -1,5 +1,5 @@
-# ---------- Build ----------
-FROM node:24.19-alpine AS build
+# ---------- Builder ----------
+FROM node:24.19-alpine AS builder
 
 WORKDIR /app
 
@@ -28,8 +28,8 @@ ENV VITE_PEER_PATH=$VITE_PEER_PATH
 RUN npm run build
 RUN npm run build --prefix client
 
-# ---------- Production ----------
-FROM node:24.19-alpine AS production
+# ---------- Runtime ----------
+FROM node:24.19-alpine AS runtime
 
 WORKDIR /app
 
@@ -39,9 +39,9 @@ ENV LOG_LEVEL=info
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/public ./public
-COPY --from=build /app/client/dist ./client/dist
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/client/dist ./client/dist
 
 RUN chown -R node:node /app/public
 USER node
