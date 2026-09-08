@@ -41,6 +41,7 @@ RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/client/dist ./public/dist
 
 RUN chown -R node:node /app/public
 USER node
