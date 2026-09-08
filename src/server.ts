@@ -1,10 +1,8 @@
 import { createServer } from "node:http";
-import { parseCookie } from "cookie";
 import { Server } from "socket.io";
 import app from "#/app.js";
 import env from "#/configs/env.js";
 import logger from "#/configs/logger.js";
-import { parseToken } from "#/controllers/auth.js";
 import { verifyKeyPair } from "#/utilities/crypto.js";
 
 const server = createServer(app);
@@ -26,7 +24,7 @@ const hasSocket = (uid: string, sid: string) => {
 };
 
 export const getSockets = (uid: string) => {
-  const sockets = socketMap.get(uid) || new Set<string>();
+  const sockets = socketMap.get(uid) ?? new Set<string>();
   return Array.from(sockets);
 };
 
@@ -36,24 +34,12 @@ export const emitEvent = (sockets: string[], event: string, payload: any) => {
 };
 
 io.use((socket, next) => {
-  const { address: ip, auth, headers, query } = socket.handshake;
+  const { address: ip, auth, query } = socket.handshake;
   const uid = query["uid"] as string;
 
   try {
     if (!verifyKeyPair(auth["pk"])) {
       throw new Error("Invalid socket public key!");
-    }
-
-    const token = parseCookie(headers.cookie ?? "")?.["current"];
-
-    if (!token) {
-      throw new Error("Missing current auth token!");
-    }
-
-    const { userId } = parseToken(token);
-
-    if (!userId.equals(uid)) {
-      throw new Error("Socket client uid mismatch!");
     }
 
     socket.data.uid = uid;

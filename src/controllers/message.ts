@@ -1,4 +1,3 @@
-import { translate } from "bing-translate-api";
 import { Types } from "mongoose";
 import { fetchMembers } from "#/controllers/group.js";
 import type { ConversationDocument, MessageDocument, MessageType, MessageContent } from "#/models/index.js";
@@ -326,17 +325,5 @@ export const deleteMessages = asyncHandler<{}, {}, {}, { before?: string }>(asyn
 });
 
 export const translateMessage = asyncHandler<{}, {}, Translate>(async (req, res) => {
-  const { message, language } = req.body;
-
-  if (!message || !language) {
-    throw new HttpError(400, "Text message and language is required!");
-  }
-
-  const result = await translate(message, null, language);
-
-  if (!result) {
-    throw new HttpError(500, "Error while translating message!");
-  }
-
-  return HttpResponse.success(res, 200, "Text translated successfully!", result.translation);
+  return HttpResponse.success(res, 200, "Translation feature will be added!", req.body.message);
 });
