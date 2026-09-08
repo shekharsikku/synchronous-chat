@@ -75,7 +75,7 @@ app.use(
 
 app.use("/public/temp", express.static(resolve(__dirname, "../public/temp")));
 
-const __static = resolve(__dirname, "../client/dist");
+const __static = resolve(__dirname, "../public/dist");
 
 if (env.isProd) {
   app.use(
