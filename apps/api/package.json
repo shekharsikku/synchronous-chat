@@ -4,9 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsdown",
-    "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "build": "tsc --noEmit && tsdown",
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

@@ -2,8 +2,12 @@
 node_modules/
 
 # Editor dirs
+.zed/
 .idea/
 .vscode/
+
+# Tubro cache
+.turbo/
 
 # Env files
 .env

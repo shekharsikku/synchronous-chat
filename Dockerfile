@@ -3,13 +3,14 @@ FROM node:24.19-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci
+COPY apps/api/package.json ./api/
+RUN npm install --prefix api
 
-COPY client/package*.json ./client/
-RUN npm ci --prefix client
+COPY apps/web/package.json ./web/
+RUN npm install --prefix web
 
-COPY . .
+COPY apps/api/ ./api/
+RUN npm run build --prefix api
 
 ARG VITE_PUBLIC_KEY
 ARG VITE_SERVER_URL
@@ -25,8 +26,8 @@ ENV VITE_PEER_HOST=$VITE_PEER_HOST
 ENV VITE_PEER_PORT=$VITE_PEER_PORT
 ENV VITE_PEER_PATH=$VITE_PEER_PATH
 
-RUN npm run build
-RUN npm run build --prefix client
+COPY apps/web/ ./web/
+RUN npm run build --prefix web
 
 # ---------- Runtime ----------
 FROM node:24.19-alpine AS runtime
@@ -36,12 +37,12 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV LOG_LEVEL=info
 
-COPY package*.json ./
+COPY --from=builder /app/api/package*.json ./
 RUN npm ci --omit=dev
 
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/client/dist ./public/dist
+COPY --from=builder /app/api/dist ./dist
+COPY --from=builder /app/api/public ./public
+COPY --from=builder /app/web/dist ./public/dist
 
 RUN chown -R node:node /app/public
 USER node
