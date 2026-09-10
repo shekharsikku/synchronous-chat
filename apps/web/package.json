@@ -1,5 +1,5 @@
 {
-  "name": "synchronous-client",
+  "name": "@repo/web",
   "private": true,
   "type": "module",
   "scripts": {
