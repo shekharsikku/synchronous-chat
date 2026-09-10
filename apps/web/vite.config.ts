@@ -6,5 +6,5 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [tailwindcss(), react(), babel({ presets: [reactCompilerPreset()] })],
   resolve: { tsconfigPaths: true },
-  build: { outDir: "../public/dist", emptyOutDir: true, chunkSizeWarningLimit: 2000 },
+  build: { chunkSizeWarningLimit: 2000 },
 });
