@@ -18,10 +18,6 @@ class FilesService {
       },
     });
 
-    this.mongo.on("open", () => {
-      logger.info("Mongo connection success!");
-    });
-
     this.mongo.on("error", (err) => {
       logger.error({ err }, "Mongo connection error!");
     });
@@ -35,7 +31,13 @@ class FilesService {
   }
 
   async connect() {
-    return await this.mongo.connect();
+    await this.mongo.connect();
+    logger.info("Mongo connection success!");
+  }
+
+  async close() {
+    await this.mongo.close();
+    logger.info("Mongo connection closed!");
   }
 
   private createId(fileId: string) {
