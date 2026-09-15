@@ -46,7 +46,7 @@ const Auth = () => {
     setIsPending(true);
 
     try {
-      const { data: result } = await api.post("/api/auth/sign-up", values);
+      const { data: result } = await api.post("/api/auth/signup", values);
 
       if (!result.success) {
         toast.error("Sign up failed!");
@@ -91,7 +91,7 @@ const Auth = () => {
     }
 
     try {
-      const { data: result } = await api.post("/api/auth/sign-in", details);
+      const { data: result } = await api.post("/api/auth/signin", details);
 
       if (!result.success) {
         toast.error("Sign in failed!");

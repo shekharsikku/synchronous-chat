@@ -111,6 +111,8 @@ export interface MessageData {
 export interface AuthStore {
   userInfo: UserInfo | null;
   setUserInfo: (userInfo: UserInfo | null) => void;
+  accessToken: string | null;
+  setAccessToken: (accessToken: string | null) => void;
   isAuthenticated: boolean;
   setIsAuthenticated: (isAuthenticated: boolean) => void;
   isAuthResolved: boolean;

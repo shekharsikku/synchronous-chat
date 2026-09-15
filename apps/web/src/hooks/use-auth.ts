@@ -32,25 +32,31 @@ export const useAuthUser = () => {
 export const useSignOut = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
   const { closeChat } = useChatStore();
   const { setUserInfo, setIsAuthenticated } = useAuthStore();
   const { disconnectCalling, callingActive } = usePeer();
 
-  const handleSignOut = async (event: any) => {
-    event.preventDefault();
-    if (callingActive) disconnectCalling();
+  const handleSignOut = async (event?: React.MouseEvent) => {
+    event?.preventDefault();
+
     try {
-      const response = await api.delete("/api/auth/sign-out");
+      if (callingActive) {
+        disconnectCalling();
+      }
+
+      const response = await api.delete("/api/auth/signout");
+      toast.success(response.data.message);
+    } catch (error: any) {
+      toast.error(error.response.data.message);
+    } finally {
+      unsubscribeNotification().catch(() => {});
       closeChat();
       setUserInfo(null);
       setIsAuthenticated(false);
       queryClient.clear();
-      toast.success(response.data.message);
-    } catch (error: any) {
-      toast.error(error.response.data.message);
+      navigate("/auth", { replace: true });
     }
-    unsubscribeNotification().catch();
-    navigate("/auth", { replace: true });
   };
   return { handleSignOut };
 };

@@ -24,13 +24,18 @@ const processQueue = (error: any, refreshed = false) => {
   failedQueue = [];
 };
 
-const api = axios.create({
+export const api = axios.create({
   baseURL: env.serverUrl,
   withCredentials: true,
 });
 
 export const auth = axios.create({
   baseURL: env.serverUrl,
+  withCredentials: true,
+});
+
+export const bucket = axios.create({
+  baseURL: env.bucketUrl,
   withCredentials: true,
 });
 
@@ -41,7 +46,7 @@ api.interceptors.response.use(
   async function (error: AxiosError) {
     const originalRequest = error.config as RetryRequestConfig;
 
-    if (!originalRequest || originalRequest.url?.includes("/auth-refresh")) {
+    if (!originalRequest || originalRequest.url?.includes("/refresh")) {
       return Promise.reject(error);
     }
 
@@ -58,27 +63,13 @@ api.interceptors.response.use(
 
       isRefreshing = true;
 
-      const { setUserInfo, setIsAuthenticated } = useAuthStore.getState();
-
       try {
-        const response = await auth.get("/api/auth/auth-refresh");
-
-        if (response.data.success) {
-          processQueue(null, true);
-
-          setUserInfo(response.data.data);
-          setIsAuthenticated(true);
-
-          return api(originalRequest);
-        }
-
-        throw new Error("Refresh failed!");
+        const response = await auth.get("/api/auth/refresh");
+        processQueue(null, true);
+        console.log(`[Auth] ${response.data.message}`);
+        return api(originalRequest);
       } catch (error: any) {
         processQueue(error, false);
-
-        setUserInfo(null);
-        setIsAuthenticated(false);
-
         return Promise.reject(error);
       } finally {
         isRefreshing = false;
@@ -86,6 +77,45 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
+  }
+);
+
+bucket.interceptors.request.use((config) => {
+  const { accessToken } = useAuthStore.getState();
+
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  return config;
+});
+
+bucket.interceptors.response.use(
+  function (response) {
+    return response;
+  },
+  async function (error: AxiosError) {
+    const originalRequest = error.config as RetryRequestConfig;
+
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      const { setAccessToken } = useAuthStore.getState();
+
+      try {
+        const response = await api.get("/api/auth/retrieve");
+        setAccessToken(response.data.data);
+        console.log(`[Auth] ${response.data.message}`);
+        return bucket(originalRequest);
+      } catch (error) {
+        setAccessToken(null);
+        return Promise.reject(error);
+      }
+    }
   }
 );
 

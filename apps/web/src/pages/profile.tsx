@@ -131,7 +131,7 @@ const Profile = () => {
     dispatch({ type: "SET_UPDATING", payload: true });
 
     try {
-      const response = await api.patch("/api/user/profile-image", formData, {
+      const response = await api.patch("/api/user/profile/image", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       toast.success(response.data.message);
@@ -148,7 +148,7 @@ const Profile = () => {
     dispatch({ type: "SET_UPDATING", payload: true });
 
     try {
-      const response = await api.delete("/api/user/profile-image");
+      const response = await api.delete("/api/user/profile/image");
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
@@ -173,7 +173,7 @@ const Profile = () => {
     dispatch({ type: "SET_UPDATING", payload: true });
 
     try {
-      const response = await api.patch("/api/user/change-password", values);
+      const response = await api.patch("/api/user/password", values);
       toast.success(response.data.message);
       changePasswordForm.reset();
     } catch (error: any) {
@@ -199,7 +199,7 @@ const Profile = () => {
     dispatch({ type: "SET_UPDATING", payload: true });
 
     try {
-      const response = await api.patch("/api/user/profile-setup", values);
+      const response = await api.patch("/api/user/profile/update", values);
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);

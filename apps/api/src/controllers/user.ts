@@ -8,7 +8,6 @@ import { deleteFromCloudinary, uploadToCloudinary } from "#/utilities/cloudinary
 import { hasEmptyField, toUserInfo, type UserInfo } from "#/utilities/helpers.js";
 import { asyncHandler, HttpError, HttpResponse } from "#/utilities/response.js";
 import type { Profile, Password } from "#/utilities/schema.js";
-import { generateToken } from "#/utilities/tokens.js";
 
 export const requireUserId = (req: Request) => {
   if (!req.user || !Types.ObjectId.isValid(req.user)) {
@@ -38,7 +37,7 @@ const profileUpdateEvents = async (userInfo: UserInfo) => {
   emitEvent(sockets, "profile:update", userInfo);
 };
 
-export const profileSetup = asyncHandler<{}, {}, Profile>(async (req, res) => {
+export const profileUpdate = asyncHandler<{}, {}, Profile>(async (req, res) => {
   const { name, username, gender, bio } = req.body;
   const requestUser = await requireCurrentUser(req);
 
@@ -70,7 +69,6 @@ export const profileSetup = asyncHandler<{}, {}, Profile>(async (req, res) => {
     return HttpResponse.success(res, 200, "Complete your profile!");
   }
 
-  await generateToken(res, userInfo.id, "access");
   await profileUpdateEvents(userInfo);
 
   return HttpResponse.success(res, 200, "Profile updated successfully!");
@@ -97,10 +95,7 @@ export const updateImage = asyncHandler(async (req, res) => {
   requestUser.image = uploadImage.secure_url;
   await requestUser.save();
 
-  const userInfo = toUserInfo(requestUser);
-
-  await generateToken(res, userInfo.id, "access");
-  await profileUpdateEvents(userInfo);
+  await profileUpdateEvents(toUserInfo(requestUser));
 
   return HttpResponse.success(res, 200, "Profile image updated successfully!");
 });
@@ -117,10 +112,7 @@ export const deleteImage = asyncHandler(async (req, res) => {
   requestUser.image = null;
   await requestUser.save();
 
-  const userInfo = toUserInfo(requestUser);
-
-  await generateToken(res, userInfo.id, "access");
-  await profileUpdateEvents(userInfo);
+  await profileUpdateEvents(toUserInfo(requestUser));
 
   return HttpResponse.success(res, 200, "Profile image deleted successfully!");
 });
@@ -141,8 +133,7 @@ export const changePassword = asyncHandler<{}, {}, Password>(async (req, res) =>
   requestUser.password = await hash(new_password, 12);
   await requestUser.save();
 
-  const userInfo = toUserInfo(requestUser);
-  await generateToken(res, userInfo.id, "access");
+  await profileUpdateEvents(toUserInfo(requestUser));
 
   return HttpResponse.success(res, 200, "Password changed successfully!");
 });

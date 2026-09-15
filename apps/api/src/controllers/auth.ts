@@ -128,5 +128,10 @@ export const authRefresh = asyncHandler(async (req, res) => {
 
   await generateToken(res, userInfo.id, "access");
 
-  return HttpResponse.success(res, 200, "Refreshed successfully!", userInfo);
+  return HttpResponse.success(res, 200, "Refreshed successfully!");
+});
+
+export const authRetrieve = asyncHandler(async (req, res) => {
+  const accessToken = req.cookies["access"];
+  return HttpResponse.success(res, 200, "Retrieved successfully!", accessToken);
 });
