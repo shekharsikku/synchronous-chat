@@ -1,10 +1,10 @@
 import { groupAvatar } from "@/assets/images";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, getAvatar } from "@/lib/utils";
-import type { ChatType } from "@/types";
+import type { ChatType, UserInfo, GroupInfo } from "@/types";
 
 interface ContactElementProps {
-  contact: any;
+  contact: UserInfo & { type?: "contact" };
   selectedChatData: any;
   onlineUsers: object;
   handleSelectChat: (chatType: ChatType, chatData: any) => void;
@@ -18,11 +18,10 @@ export const ContactElement: React.FC<ContactElementProps> = ({
 }) => {
   return (
     <div
-      key={contact?._id}
+      key={contact?.id}
       className={cn(
         "w-full flex items-center justify-between cursor-pointer transition-[transform,opacity,box-shadow] duration-0 rounded border py-2 px-4 xl:px-6 hover:transition-colors hover:duration-300 hover:bg-gray-100/80 dark:hover:bg-gray-100/5 dark:hover:border-gray-700",
-        selectedChatData?._id === contact._id &&
-          "bg-gray-100/80 dark:bg-gray-100/5 border-gray-300 dark:border-gray-700",
+        selectedChatData?.id === contact.id && "bg-gray-100/80 dark:bg-gray-100/5 border-gray-300 dark:border-gray-700",
         contact?.setup === false && "disabled"
       )}
       onClick={() => handleSelectChat("contact", contact)}
@@ -42,13 +41,13 @@ export const ContactElement: React.FC<ContactElementProps> = ({
           <h6 className="heading-uname">{contact?.username}</h6>
         </div>
       </div>
-      {onlineUsers.hasOwnProperty(contact?._id!) && <span className="size-2 rounded-full bg-green-500" />}
+      {onlineUsers.hasOwnProperty(contact?.id!) && <span className="size-2 rounded-full bg-green-500" />}
     </div>
   );
 };
 
 interface GroupElementProps {
-  group: any;
+  group: GroupInfo & { type?: "group" };
   selectedChatData: any;
   handleSelectChat: (chatType: ChatType, chatData: any) => void;
 }
@@ -56,10 +55,10 @@ interface GroupElementProps {
 export const GroupElement: React.FC<GroupElementProps> = ({ group, selectedChatData, handleSelectChat }) => {
   return (
     <div
-      key={group?._id}
+      key={group?.id}
       className={cn(
         "w-full flex items-center justify-between cursor-pointer transition-[transform,opacity,box-shadow] duration-0 rounded border py-2 px-4 xl:px-6 hover:transition-colors hover:duration-300 hover:bg-gray-100/80 dark:hover:bg-gray-100/5 dark:hover:border-gray-700",
-        selectedChatData?._id === group._id && "bg-gray-100/80 dark:bg-gray-100/5 border-gray-300 dark:border-gray-700"
+        selectedChatData?.id === group.id && "bg-gray-100/80 dark:bg-gray-100/5 border-gray-300 dark:border-gray-700"
       )}
       onClick={() => handleSelectChat("group", group)}
       role="button"

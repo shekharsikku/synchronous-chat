@@ -203,9 +203,9 @@ export const countMessages = (messages: Message[], selectedChat: any) => {
   let received = 0;
 
   messages.forEach((message: Message) => {
-    if (message.sender === selectedChat._id) {
+    if (message.sender === selectedChat.id) {
       received += 1;
-    } else if (message.recipient === selectedChat._id) {
+    } else if (message.recipient === selectedChat.id) {
       sent += 1;
     }
   });

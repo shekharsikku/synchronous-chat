@@ -106,7 +106,7 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
   const { replyMessage } = useReplyMessage(message);
   const { isLastMinutes: isLastMinForEdit } = useLastMinutes(message?.createdAt!);
   const { isLastMinutes: isLastMinForDelete } = useLastMinutes(message?.createdAt!, 60);
-  const isSender = message.sender === userInfo?._id;
+  const isSender = message.sender === userInfo?.id;
 
   return (
     <div
@@ -123,7 +123,7 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
               "border dark:border-gray-800 rounded p-2 text-xs",
               isSender ? "bg-gray-100 dark:bg-gray-100/5" : "bg-gray-50 dark:bg-gray-50/5"
             )}
-            onClick={() => scrollMessage(replyMessage._id)}
+            onClick={() => scrollMessage(replyMessage.id)}
             role="button"
           >
             {replyMessage.type === "deleted" ? (
@@ -153,7 +153,7 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
               ? "bg-gray-200 border-gray-300 dark:bg-gray-200/5 dark:hover:bg-gray-200/10"
               : "bg-gray-100 border-gray-200 dark:bg-gray-100/5 dark:hover:bg-gray-100/10"
           )}
-          onDoubleClick={() => handleEmojiReaction(message._id, "❤️")}
+          onDoubleClick={() => handleEmojiReaction(message.id, "❤️")}
         >
           {/* Right click here */}
           {message.type === "deleted" ? (
@@ -195,7 +195,7 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
                     <button
                       key={emoji}
                       className="hover:scale-125 transition-transform duration-200"
-                      onClick={() => handleEmojiReaction(message._id, emoji)}
+                      onClick={() => handleEmojiReaction(message.id, emoji)}
                     >
                       {emoji}
                     </button>
@@ -214,7 +214,7 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
                     message.content?.reactions
                       ?.filter((r) => r != null)
                       .reduce((acc: Record<string, number>, r) => {
-                        acc[r.emoji] = (acc[r.emoji] || 0) + 1;
+                        acc[r.emoji!] = (acc[r.emoji!] || 0) + 1;
                         return acc;
                       }, {})
                   ).map(([emoji, count]) => (
@@ -248,7 +248,7 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
                     onClick={() => {
                       setEditDialog(true);
                       setEditMessageDialog(true);
-                      setMessageForEdit(message._id, plainText(message));
+                      setMessageForEdit(message.id, plainText(message));
                     }}
                   >
                     <HiOutlinePencilSquare size={16} className="text-neutral-600 dark:text-neutral-100" /> Edit
@@ -271,7 +271,7 @@ const RenderDMMessages: React.FC<RenderDMMessagesProps> = ({ message, scrollMess
                   className="flex gap-2"
                   onClick={() => {
                     const { fileUrl } = parseFileSrc(message.content?.file!);
-                    handleDownload(`${fileUrl}?action=download`, message._id);
+                    handleDownload(`${fileUrl}?action=download`, message.id);
                   }}
                 >
                   <HiOutlineCloudArrowDown size={16} className="text-neutral-600 dark:text-neutral-100" /> Download

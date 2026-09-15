@@ -14,7 +14,7 @@ const MessagePreview = () => {
     enableOnFormTags: ["input", "textarea", "select"],
   });
 
-  const isReplyingToSelf = !!replyTo && !!selectedChatData && replyTo.sender === selectedChatData._id;
+  const isReplyingToSelf = !!replyTo && !!selectedChatData && replyTo.sender === selectedChatData.id;
   const replyName = isReplyingToSelf ? selectedChatData?.name : "Yourself";
   const previewText = replyTo?.content?.type === "text" ? plainText(replyTo) : "📎Attachment";
 

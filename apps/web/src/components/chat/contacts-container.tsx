@@ -80,7 +80,7 @@ const ContactsContainer = () => {
                   ) : (
                     <div className="flex flex-col gap-4">
                       {allChats.map((current) => (
-                        <Fragment key={current._id}>
+                        <Fragment key={current.id}>
                           {current.type === "contact" ? (
                             <ContactElement
                               contact={current}
@@ -109,7 +109,7 @@ const ContactsContainer = () => {
                     <div className="flex flex-col gap-4">
                       {contacts?.map((contact: UserInfo) => (
                         <ContactElement
-                          key={contact._id}
+                          key={contact.id}
                           contact={contact}
                           selectedChatData={selectedChatData}
                           onlineUsers={onlineUsers}
@@ -128,7 +128,7 @@ const ContactsContainer = () => {
                     <div className="flex flex-col gap-4">
                       {groups?.map((group: GroupInfo) => (
                         <GroupElement
-                          key={group._id}
+                          key={group.id}
                           group={group}
                           selectedChatData={selectedChatData}
                           handleSelectChat={handleSelectChat}

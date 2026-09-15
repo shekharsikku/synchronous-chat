@@ -108,10 +108,10 @@ export const usePlainText = () => {
 
       let messageKey = "";
 
-      if (message.sender === selectedChatData?._id) {
-        messageKey = userInfo?._id!;
+      if (message.sender === selectedChatData?.id) {
+        messageKey = userInfo?.id!;
       } else {
-        messageKey = selectedChatData?._id!;
+        messageKey = selectedChatData?.id!;
       }
 
       return decryptMessage(message?.content?.text!, messageKey);
@@ -158,7 +158,7 @@ export const useClipboard = (
 
 export const useReplyMessage = (message: Message) => {
   const { messages } = useChatStore();
-  return { replyMessage: messages.find((msg) => msg._id === message.reply) || null };
+  return { replyMessage: messages.find((msg) => msg.id === message.reply) || null };
 };
 
 export const useMessageActions = () => {
@@ -171,11 +171,11 @@ export const useMessageActions = () => {
       const { data: result } = await axios.post(`${env.bucketUrl}/api/files`, imageFormData, {
         headers: { "Content-Type": "multipart/form-data" },
         params: {
-          uid: userInfo?._id,
+          uid: userInfo?.id,
         },
       });
       const fileInfo = JSON.stringify({
-        id: result.data._id,
+        id: result.data.id,
         ...result.data.metadata.dimensions,
       });
       return fileInfo;
@@ -192,7 +192,7 @@ export const useMessageActions = () => {
 
           await axios.delete(`${env.bucketUrl}/api/files/${fileInfo.id}`, {
             params: {
-              uid: userInfo?._id,
+              uid: userInfo?.id,
             },
           });
         } catch {
@@ -200,7 +200,7 @@ export const useMessageActions = () => {
         }
       }
 
-      const response = await api.delete(`/api/message/delete/${message._id}`);
+      const response = await api.delete(`/api/message/delete/${message.id}`);
       toast.info(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
@@ -291,8 +291,8 @@ export const useGroupUpdate = () => {
   const handleGroupUpdate = (updated: GroupInfo, members?: string[]) => {
     const group = { ...updated, interaction: new Date().toISOString() };
 
-    queryClient.setQueryData<GroupInfo[]>(["groups", userInfo?._id], (older = []) => {
-      return older.map((old) => (old._id === group._id ? group : old));
+    queryClient.setQueryData<GroupInfo[]>(["groups", userInfo?.id], (older = []) => {
+      return older.map((old) => (old.id === group.id ? group : old));
     });
 
     setSelectedChatData(group);

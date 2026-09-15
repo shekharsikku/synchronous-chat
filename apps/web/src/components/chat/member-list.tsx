@@ -17,8 +17,8 @@ const GroupMembersList: React.FC<GroupMembersProps> = ({ selectedChatData }) => 
   const adminId = selectedChatData.admin;
 
   const sortedMembers = selectedChatData?.members.sort((a: any, b: any) => {
-    if (a === userInfo?._id) return -1;
-    if (b === userInfo?._id) return 1;
+    if (a === userInfo?.id) return -1;
+    if (b === userInfo?.id) return 1;
 
     if (a === adminId) return -1;
     if (b === adminId) return 1;
@@ -56,14 +56,14 @@ const GroupMemberManage: React.FC<GroupMemberManageProps> = ({
       <ScrollArea className="min-h-20 overflow-y-auto scrollbar-hide">
         <div className="flex flex-col gap-4">
           {contacts?.map((current) => {
-            const memberStatus = getMemberStatus(current._id!);
+            const memberStatus = getMemberStatus(current.id!);
 
             return (
-              <div key={current._id} className="w-full flex items-center gap-4 px-3 py-2 border rounded">
+              <div key={current.id} className="w-full flex items-center gap-4 px-3 py-2 border rounded">
                 <div className="flex-none size-max">
                   <img
                     src={getAvatar(current)}
-                    alt={current.name}
+                    alt={current.name ?? "Member"}
                     className="size-8 rounded-full object-cover border border-border"
                   />
                 </div>
@@ -75,7 +75,7 @@ const GroupMemberManage: React.FC<GroupMemberManageProps> = ({
                 </div>
 
                 <TooltipElement asChild content={tooltipMap[memberStatus]}>
-                  <button onClick={() => toggleMember(current._id!)} className="text-xl cursor-pointer">
+                  <button onClick={() => toggleMember(current.id!)} className="text-xl cursor-pointer">
                     {memberStatus === "member" && <HiOutlineMinusCircle className="text-red-500" />}
                     {memberStatus === "remove" && <HiOutlineCheckCircle className="text-orange-500" />}
                     {memberStatus === "add" && <HiOutlineCheckCircle className="text-green-500" />}

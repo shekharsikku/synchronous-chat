@@ -38,7 +38,7 @@ const EditMessage: React.FC<EditMessageProps> = ({ editMessageDialog, setEditMes
     setIsLoading(true);
 
     try {
-      const encryptedText = encryptMessage(newMessage, selectedChatData._id);
+      const encryptedText = encryptMessage(newMessage, selectedChatData.id);
       const response = await api.patch(`/api/message/edit/${messageForEdit.id}`, {
         text: encryptedText,
       });

@@ -57,53 +57,48 @@ export interface PeerInterface {
 export type TimeStamp = Date | string;
 
 export interface UserInfo {
-  _id?: string;
-  name?: string;
-  email?: string;
-  username?: string;
+  id: string;
+  email: string;
+  name?: string | null;
+  username?: string | null;
+  setup: boolean;
   gender?: "Male" | "Female" | "Other";
-  image?: string;
-  bio?: string;
-  setup?: boolean;
+  image?: string | null;
+  bio?: string | null;
   createdAt?: TimeStamp;
   updatedAt?: TimeStamp;
-  __v?: number;
   interaction?: TimeStamp;
 }
 
 export interface GroupInfo {
-  _id?: string;
-  name?: string;
-  description?: string;
-  avatar?: string;
-  admin?: string;
-  members?: string[];
-  createdAt?: TimeStamp;
-  updatedAt?: TimeStamp;
-  __v?: number;
-  interaction?: TimeStamp;
+  id: string;
+  name: string;
+  description: string;
+  avatar: string | null;
+  admin: string;
+  members: string[];
+  interaction: TimeStamp;
 }
 
 export interface Message {
-  _id: string;
+  id: string;
   sender: string;
-  recipient?: string;
-  group?: string;
+  recipient: string | undefined;
+  group: string | undefined;
   type: "default" | "edited" | "deleted";
   content?: {
     type: "text" | "file";
-    text?: string;
-    file?: string;
+    text?: string | null;
+    file?: string | null;
     reactions?: {
-      by: string;
-      emoji: string;
+      by?: string | null;
+      emoji?: string | null;
     }[];
   };
-  reply?: string;
-  deletedAt?: TimeStamp;
-  createdAt?: TimeStamp;
-  updatedAt?: TimeStamp;
-  __v?: number;
+  reply: string | undefined;
+  deletedAt: TimeStamp | undefined;
+  createdAt: TimeStamp;
+  updatedAt: TimeStamp;
 }
 
 export interface MessageData {

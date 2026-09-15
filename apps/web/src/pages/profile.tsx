@@ -233,7 +233,7 @@ const Profile = () => {
               <ContextMenuTrigger className="size-full">
                 <Avatar className="size-full rounded-full overflow-hidden">
                   <AvatarImage
-                    src={selectedImage || userInfo?.image}
+                    src={selectedImage || userInfo?.image || ""}
                     alt="profile"
                     className="object-cover size-full"
                   />

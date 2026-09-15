@@ -1,6 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-
 import api from "@/lib/api";
 import { useChatStore, useAuthStore } from "@/lib/zustand";
 
@@ -9,8 +8,8 @@ export const useMessages = () => {
   const { selectedChatData, selectedChatType } = useChatStore();
 
   const queryKey = useMemo(
-    () => ["messages", userInfo?._id!, selectedChatData?._id!],
-    [userInfo?._id, selectedChatData?._id]
+    () => ["messages", userInfo?.id!, selectedChatData?.id!],
+    [userInfo?.id, selectedChatData?.id]
   );
 
   const infiniteQuery = useInfiniteQuery({
@@ -21,9 +20,9 @@ export const useMessages = () => {
       });
 
       if (pageParam) params.append("before", pageParam);
-      if (selectedChatType === "group") params.append("group", "true");
+      if (selectedChatType === "group") params.append("member", userInfo?.id!);
 
-      const url = `/api/message/fetch/${selectedChatData?._id}?${params.toString()}`;
+      const url = `/api/message/fetch/${selectedChatData?.id}?${params.toString()}`;
       const response = await api.get(url);
       return response.data.data;
     },
@@ -35,7 +34,7 @@ export const useMessages = () => {
     refetchOnWindowFocus: false,
     staleTime: 6 * 60 * 60 * 1000,
     gcTime: 8 * 60 * 60 * 1000,
-    enabled: !!selectedChatData?._id,
+    enabled: !!selectedChatData?.id,
   });
 
   return infiniteQuery;
