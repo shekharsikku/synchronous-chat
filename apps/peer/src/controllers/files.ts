@@ -22,13 +22,18 @@ export const getFile = asyncHandler<{ fid: string }, any, any, { action: string 
   const fileId = req.params.fid;
   const action = req.query.action;
 
-  const { fileData, fileStream } = await filesService.getFile(fileId);
+  const { fileData, objectId } = await filesService.getFile(fileId);
+
+  const etag = `"${fileData._id.toString("base64")}"`;
+
+  if (req.headers["if-none-match"] === etag) {
+    return res.status(304).end();
+  }
+
+  const fileStream = await filesService.getStream(objectId);
 
   const disposition = action === "download" ? "attachment" : "inline";
   const filename = encodeURIComponent(fileData.filename);
-  const etag = `"${fileData._id.toString("base64")}"`;
-
-  if (req.headers["if-none-match"] === etag) return res.status(304).end();
 
   res.set({
     "Content-Type": fileData.metadata?.["contentType"] || "application/octet-stream",

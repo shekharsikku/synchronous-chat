@@ -95,9 +95,11 @@ class FilesService {
 
     const fileData = await this.findFile(objectId);
 
-    const fileStream = this.bucket.openDownloadStream(objectId);
+    return { fileData, objectId };
+  }
 
-    return { fileData, fileStream };
+  async getStream(objectId: ObjectId) {
+    return this.bucket.openDownloadStream(objectId);
   }
 
   async deleteFile(fileId: string, userId: string) {
