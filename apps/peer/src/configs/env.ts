@@ -5,6 +5,7 @@ const env = cleanEnv(process.env, {
   MONGODB_URL: url(),
   BUCKET_NAME: str(),
 
+  ACCESS_SECRET: str(),
   REDIRECT_URL: url(),
   CORS_ORIGIN: str(),
   BODY_LIMIT: str(),

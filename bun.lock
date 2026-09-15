@@ -61,6 +61,7 @@
         "envalid": "^8.2.0",
         "express": "^5.2.1",
         "express-rate-limit": "^8.6.2",
+        "jose": "^6.2.8",
         "mongodb": "^7.5.0",
         "multer": "2.2.0",
         "peer": "^1.0.2",

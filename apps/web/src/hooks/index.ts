@@ -2,8 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useCallback, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 import { toast } from "sonner";
-import axios from "axios";
-import api from "@/lib/api";
+import { api, bucket } from "@/lib/api";
 import env from "@/lib/env";
 import { useSocket } from "@/lib/context";
 import { decryptMessage } from "@/lib/noble";
@@ -73,6 +72,7 @@ export const useLastMinutes = (timestamp: Date | string | number, minutes = 10) 
     const timestampDate = new Date(timestamp);
 
     if (isNaN(timestampDate.getTime())) {
+      // oxlint-disable-next-line react/set-state-in-effect
       setIsLastMinutes(false);
       return;
     }
@@ -162,23 +162,14 @@ export const useReplyMessage = (message: Message) => {
 };
 
 export const useMessageActions = () => {
-  const { userInfo } = useAuthStore();
-
   const uploadMessageFile = async (imageFormData: FormData | null) => {
     if (!imageFormData) return null;
 
     try {
-      const { data: result } = await axios.post(`${env.bucketUrl}/api/files`, imageFormData, {
+      const response = await bucket.post("/api/files", imageFormData, {
         headers: { "Content-Type": "multipart/form-data" },
-        params: {
-          uid: userInfo?.id,
-        },
       });
-      const fileInfo = JSON.stringify({
-        id: result.data.id,
-        ...result.data.metadata.dimensions,
-      });
-      return fileInfo;
+      return JSON.stringify(response.data.data);
     } catch {
       return null;
     }
@@ -189,12 +180,7 @@ export const useMessageActions = () => {
       if (message.content?.type === "file") {
         try {
           const fileInfo = JSON.parse(message.content.file!);
-
-          await axios.delete(`${env.bucketUrl}/api/files/${fileInfo.id}`, {
-            params: {
-              uid: userInfo?.id,
-            },
-          });
+          await bucket.delete(`/api/files/${fileInfo.id}`);
         } catch {
           console.error("[Chat] Failed to delete file.");
         }
