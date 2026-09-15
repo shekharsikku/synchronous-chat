@@ -1,9 +1,11 @@
 import { createServer } from "node:http";
+import { parseCookie } from "cookie";
 import { Server } from "socket.io";
 import app from "#/app.js";
 import env from "#/configs/env.js";
 import logger from "#/configs/logger.js";
 import { verifyKeyPair } from "#/utilities/crypto.js";
+import { verifyToken } from "#/utilities/tokens.js";
 
 const server = createServer(app);
 
@@ -33,19 +35,26 @@ export const emitEvent = (sockets: string[], event: string, payload: any) => {
   io.to(sockets).emit(event, payload);
 };
 
-io.use((socket, next) => {
-  const { address: ip, auth, query } = socket.handshake;
-  const uid = query["uid"] as string;
+io.use(async (socket, next) => {
+  const { auth, headers } = socket.handshake;
 
   try {
     if (!verifyKeyPair(auth["pk"])) {
       throw new Error("Invalid socket public key!");
     }
 
-    socket.data.uid = uid;
+    const accessToken = parseCookie(headers.cookie ?? "")?.["access"];
+
+    if (!accessToken) {
+      throw new Error("No access token available!");
+    }
+
+    const { payload } = await verifyToken(accessToken, "access");
+
+    socket.data.uid = payload.uid;
     return next();
   } catch (err) {
-    logger.error({ err, ip, uid }, "Socket authentication failed!");
+    logger.error({ err }, "Socket authentication failed!");
     return next(new Error("Unauthorized socket!"));
   }
 });
