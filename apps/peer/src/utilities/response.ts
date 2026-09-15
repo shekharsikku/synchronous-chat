@@ -1,4 +1,4 @@
-import type { RequestHandler, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 
 type SuccessStatusCode = 200 | 201 | 202 | 204;
 type ErrorStatusCode = 400 | 401 | 403 | 404 | 409 | 413 | 422 | 429 | 500 | 502 | 503;
@@ -31,10 +31,14 @@ export class HttpResponse {
   }
 }
 
-export const asyncHandler = <P, ResBody, ReqBody, ReqQuery>(
-  fn: RequestHandler<P, ResBody, ReqBody, ReqQuery>
-): RequestHandler<P, ResBody, ReqBody, ReqQuery> => {
-  return (req, res, next) => {
-    Promise.try(() => fn(req, res, next)).catch(next);
+export const asyncHandler = <P = {}, ResBody = unknown, ReqBody = unknown, ReqQuery = {}>(
+  func: (
+    req: Request<P, ResBody, ReqBody, ReqQuery>,
+    res: Response<ResBody>,
+    next: NextFunction
+  ) => void | Response | Promise<void | Response>
+) => {
+  return (req: Request<P, ResBody, ReqBody, ReqQuery>, res: Response<ResBody>, next: NextFunction) => {
+    Promise.try(() => func(req, res, next)).catch(next);
   };
 };

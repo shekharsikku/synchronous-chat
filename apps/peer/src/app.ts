@@ -22,6 +22,7 @@ app.use(pinoHttp({ logger }));
 app.use(
   cors({
     origin: env.CORS_ORIGIN,
+    allowedHeaders: ["content-type", "authorization"],
     credentials: true,
     maxAge: 86400,
   })
