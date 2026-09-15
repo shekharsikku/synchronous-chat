@@ -1,86 +1,103 @@
-import { deflateSync } from "node:zlib";
-import { CompactEncrypt, SignJWT } from "jose";
-import type { UserDocument } from "#/models/index.js";
-import type { CookieOptions, Response } from "express";
-import { accessSecret, encryptAuth, refreshSecret } from "./crypto.js";
-import env from "#/configs/env.js";
+import type { GroupDocument, MessageDocument, UserDocument } from "#/models/index.js";
 
-export const cookieOptions: CookieOptions = {
-  httpOnly: true,
-  sameSite: "strict" as const,
-  secure: env.isProd,
-};
+export interface UserInfo {
+  id: string;
+  email: string;
+  name?: string | null;
+  username?: string | null;
+  setup: boolean;
+  gender?: string | null;
+  image?: string | null;
+  bio?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
-export const generateAccess = async (res: Response, user?: UserInfo) => {
-  const accessExpiry = env.ACCESS_EXPIRY;
-  const accessPayload = deflateSync(JSON.stringify(user));
-
-  const accessToken = await new CompactEncrypt(accessPayload)
-    .setProtectedHeader({ alg: "dir", enc: "A256GCM" })
-    .encrypt(accessSecret);
-
-  res.cookie("access", accessToken, {
-    maxAge: accessExpiry * 1000,
-    ...cookieOptions,
-  });
-
-  return accessToken;
-};
-
-export const generateRefresh = async (res: Response, uid: string, aid: string) => {
-  const refreshExpiry = env.REFRESH_EXPIRY;
-  const currentToken = encryptAuth(uid, aid);
-
-  const refreshToken = await new SignJWT({})
-    .setProtectedHeader({ alg: "HS512" })
-    .setSubject(uid)
-    .setJti(aid)
-    .setIssuedAt()
-    .setExpirationTime(`${refreshExpiry}sec`)
-    .sign(refreshSecret);
-
-  res.cookie("refresh", refreshToken, {
-    maxAge: refreshExpiry * 1000 * 2,
-    ...cookieOptions,
-  });
-
-  res.cookie("current", currentToken, {
-    maxAge: refreshExpiry * 1000 * 2,
-    ...cookieOptions,
-  });
-
-  return refreshToken;
-};
-
-export const hasEmptyField = (fields: object) => {
-  return Object.values(fields).some((value) => value === "" || value === undefined || value === null);
-};
-
-export const createUserInfo = (user: UserDocument) => {
+export const toUserInfo = (user: UserDocument): UserInfo => {
   if (!user.setup) {
     return {
-      _id: user._id,
+      id: user._id.toString(),
       email: user.email,
-      name: user.name ?? null,
-      username: user.username ?? null,
       setup: user.setup,
     };
   }
+
   return {
-    _id: user._id,
+    id: user._id.toString(),
     email: user.email,
+    setup: user.setup,
     name: user.name ?? null,
     username: user.username ?? null,
     gender: user.gender ?? null,
     image: user.image ?? null,
     bio: user.bio ?? null,
-    setup: user.setup,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
 };
 
-export type UserInfo = ReturnType<typeof createUserInfo>;
+export interface GroupInfo {
+  id: string;
+  name: string;
+  description: string;
+  avatar: string | null;
+  admin: string;
+  members: string[];
+  interaction: Date;
+}
+
+export const toGroupInfo = (group: GroupDocument & { interaction?: Date }): GroupInfo => ({
+  id: group._id.toString(),
+  name: group.name,
+  description: group.description,
+  avatar: group.avatar ?? null,
+  admin: group.admin.toString(),
+  members: group.members.map((member) => member.toString()),
+  interaction: group.interaction ?? group.updatedAt,
+});
+
+export interface MessageInfo {
+  id: string;
+  sender: string;
+  recipient: string | undefined;
+  group: string | undefined;
+  type: "default" | "edited" | "deleted";
+  content?: {
+    type: "text" | "file";
+    text?: string | null;
+    file?: string | null;
+    reactions?: {
+      by?: string | null;
+      emoji?: string | null;
+    }[];
+  };
+  reply: string | undefined;
+  deletedAt: Date | undefined;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export const toMessageInfo = (message: MessageDocument): MessageInfo => ({
+  id: message._id.toString(),
+  sender: message.sender.toString(),
+  recipient: message.recipient?.toString() ?? undefined,
+  group: message.group?.toString() ?? undefined,
+  type: message.type,
+  content: message.content,
+  reply: message.reply?.toString() ?? undefined,
+  deletedAt: message.deletedAt ?? undefined,
+  createdAt: message.createdAt,
+  updatedAt: message.updatedAt,
+});
+
+export const toContactInfo = (contact: Record<string, any>) => {
+  const { _id, ...rest } = contact;
+  return { id: _id.toString(), ...rest };
+};
+
+export const hasEmptyField = (fields: Record<string, unknown>): boolean => {
+  return Object.values(fields).some((value) => value == null || (typeof value === "string" && value.trim() === ""));
+};
 
 export function formatBytes(bytes: number) {
   const units = ["B", "KB", "MB", "GB", "TB"];

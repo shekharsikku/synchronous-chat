@@ -1,21 +1,46 @@
-import { genSalt, hash, compare } from "bcryptjs";
+import type { Request } from "express";
+import { hash, compare } from "bcryptjs";
+import { Types } from "mongoose";
 import { User } from "#/models/index.js";
 import { getSockets, emitEvent } from "#/server.js";
 import { eventsService } from "#/services/events.js";
 import { deleteFromCloudinary, uploadToCloudinary } from "#/utilities/cloudinary.js";
-import { hasEmptyField, createUserInfo, generateAccess, type UserInfo } from "#/utilities/helpers.js";
+import { hasEmptyField, toUserInfo, type UserInfo } from "#/utilities/helpers.js";
 import { asyncHandler, HttpError, HttpResponse } from "#/utilities/response.js";
 import type { Profile, Password } from "#/utilities/schema.js";
-import { revokeToken } from "./auth.js";
+import { generateToken } from "#/utilities/tokens.js";
 
-const profileUpdateEvents = async (userData: UserInfo) => {
-  const sockets = getSockets(userData._id.toString());
-  emitEvent(sockets, "profile:update", userData);
+export const requireUserId = (req: Request) => {
+  if (!req.user || !Types.ObjectId.isValid(req.user)) {
+    throw new HttpError(401, "Unauthorized request!");
+  }
+  return new Types.ObjectId(req.user);
+};
+
+const requireCurrentUser = async (req: Request, select?: string) => {
+  const query = User.findById(requireUserId(req));
+
+  if (select) {
+    query.select(select);
+  }
+
+  const current = await query;
+
+  if (!current) {
+    throw new HttpError(404, "User not found!");
+  }
+
+  return current;
+};
+
+const profileUpdateEvents = async (userInfo: UserInfo) => {
+  const sockets = getSockets(userInfo.id);
+  emitEvent(sockets, "profile:update", userInfo);
 };
 
 export const profileSetup = asyncHandler<{}, {}, Profile>(async (req, res) => {
   const { name, username, gender, bio } = req.body;
-  const requestUser = req.user!;
+  const requestUser = await requireCurrentUser(req);
 
   if (username !== requestUser?.username) {
     const existsUsername = await User.exists({ username });
@@ -25,39 +50,30 @@ export const profileSetup = asyncHandler<{}, {}, Profile>(async (req, res) => {
     }
   }
 
-  const wasSetup = requestUser?.setup;
-  const userDetails = { name, username, gender, bio, setup: false };
+  const wasSetup = requestUser.setup;
 
-  if (!hasEmptyField({ name, username, gender })) {
-    userDetails.setup = true;
-  }
+  requestUser.name = name;
+  requestUser.username = username;
+  requestUser.gender = gender;
+  requestUser.bio = bio;
+  requestUser.setup = !hasEmptyField({ name, username, gender });
 
-  const updatedProfile = await User.findByIdAndUpdate(requestUser?._id, userDetails, {
-    returnDocument: "after",
-  });
+  await requestUser.save();
 
-  if (!updatedProfile) {
-    const currentToken = req.cookies["current"];
-
-    if (currentToken) await revokeToken(res, currentToken);
-
-    throw new HttpError(401, "Please, sign in again!");
-  }
-
-  const userInfo = createUserInfo(updatedProfile);
+  const userInfo = toUserInfo(requestUser);
 
   if (!wasSetup && userInfo.setup) {
-    eventsService.send(requestUser._id.toString(), "profile-setup-complete", userInfo);
+    eventsService.send(userInfo.id, "profile-setup-complete", userInfo);
   }
 
   if (!userInfo.setup) {
-    return HttpResponse.success(res, 200, "Complete your profile!", userInfo);
+    return HttpResponse.success(res, 200, "Complete your profile!");
   }
 
-  await generateAccess(res, userInfo);
+  await generateToken(res, userInfo.id, "access");
   await profileUpdateEvents(userInfo);
 
-  return HttpResponse.success(res, 200, "Profile updated successfully!", userInfo);
+  return HttpResponse.success(res, 200, "Profile updated successfully!");
 });
 
 export const updateImage = asyncHandler(async (req, res) => {
@@ -67,63 +83,46 @@ export const updateImage = asyncHandler(async (req, res) => {
     throw new HttpError(400, "Profile image file required!");
   }
 
-  const requestUser = await User.findById(req.user?._id!);
-
-  if (!requestUser) {
-    const currentToken = req.cookies["current"];
-
-    if (currentToken) await revokeToken(res, currentToken);
-
-    throw new HttpError(401, "Please, sign in again!");
-  }
-
+  const requestUser = await requireCurrentUser(req);
   const uploadImage = await uploadToCloudinary(imagePath);
 
   if (!uploadImage?.secure_url) {
     throw new HttpError(500, "Error while uploading profile image!");
   }
 
-  if (requestUser?.image) {
-    deleteFromCloudinary(requestUser.image).catch(() => {});
+  if (requestUser.image) {
+    await deleteFromCloudinary(requestUser.image);
   }
 
   requestUser.image = uploadImage.secure_url;
-  await requestUser.save({ validateBeforeSave: false });
+  await requestUser.save();
 
-  const userInfo = createUserInfo(requestUser);
+  const userInfo = toUserInfo(requestUser);
 
-  await generateAccess(res, userInfo);
+  await generateToken(res, userInfo.id, "access");
   await profileUpdateEvents(userInfo);
 
-  return HttpResponse.success(res, 200, "Profile image updated successfully!", userInfo);
+  return HttpResponse.success(res, 200, "Profile image updated successfully!");
 });
 
 export const deleteImage = asyncHandler(async (req, res) => {
-  const requestUser = await User.findById(req.user?._id!);
-
-  if (!requestUser) {
-    const currentToken = req.cookies["current"];
-
-    if (currentToken) await revokeToken(res, currentToken);
-
-    throw new HttpError(401, "Please, sign in again!");
-  }
+  const requestUser = await requireCurrentUser(req);
 
   if (!requestUser.image) {
     throw new HttpError(400, "Profile image not available!");
   }
 
-  deleteFromCloudinary(requestUser.image).catch(() => {});
+  await deleteFromCloudinary(requestUser.image);
 
   requestUser.image = null;
-  await requestUser.save({ validateBeforeSave: false });
+  await requestUser.save();
 
-  const userInfo = createUserInfo(requestUser);
+  const userInfo = toUserInfo(requestUser);
 
-  await generateAccess(res, userInfo);
+  await generateToken(res, userInfo.id, "access");
   await profileUpdateEvents(userInfo);
 
-  return HttpResponse.success(res, 200, "Profile image deleted successfully!", userInfo);
+  return HttpResponse.success(res, 200, "Profile image deleted successfully!");
 });
 
 export const changePassword = asyncHandler<{}, {}, Password>(async (req, res) => {
@@ -133,30 +132,22 @@ export const changePassword = asyncHandler<{}, {}, Password>(async (req, res) =>
     throw new HttpError(400, "New password must be different!");
   }
 
-  const requestUser = await User.findById(req.user?._id!).select("+password");
-
-  if (!requestUser) {
-    const currentToken = req.cookies["current"];
-
-    if (currentToken) await revokeToken(res, currentToken);
-
-    throw new HttpError(401, "Please, sign in again!");
-  }
+  const requestUser = await requireCurrentUser(req, "+password");
 
   if (!(await compare(old_password, requestUser.password!))) {
     throw new HttpError(403, "Incorrect old password!");
   }
 
-  const hashSalt = await genSalt(12);
-  requestUser.password = await hash(new_password, hashSalt);
-  await requestUser.save({ validateBeforeSave: true });
+  requestUser.password = await hash(new_password, 12);
+  await requestUser.save();
 
-  const userInfo = createUserInfo(requestUser);
-  await generateAccess(res, userInfo);
+  const userInfo = toUserInfo(requestUser);
+  await generateToken(res, userInfo.id, "access");
 
-  return HttpResponse.success(res, 200, "Password changed successfully!", userInfo);
+  return HttpResponse.success(res, 200, "Password changed successfully!");
 });
 
 export const userInformation = asyncHandler(async (req, res) => {
-  return HttpResponse.success(res, 200, "User profile information!", req.user);
+  const userInfo = toUserInfo(await requireCurrentUser(req));
+  return HttpResponse.success(res, 200, "User profile information!", userInfo);
 });

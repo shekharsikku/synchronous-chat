@@ -1,23 +1,15 @@
 import { Types } from "mongoose";
-import { Group, User, Conversation, type GroupDocument } from "#/models/index.js";
+import { requireUserId } from "#/controllers/user.js";
+import { Group, User, Conversation } from "#/models/index.js";
 import { getSockets, emitEvent } from "#/server.js";
+import { toGroupInfo } from "#/utilities/helpers.js";
 import { deleteFromCloudinary, uploadToCloudinary } from "#/utilities/cloudinary.js";
 import { HttpError, HttpResponse, asyncHandler } from "#/utilities/response.js";
 import type { CreateGroup, UpdateDetails, UpdateMembers } from "#/utilities/schema.js";
 
-const createGroupInfo = (group: GroupDocument) => ({
-  _id: group._id,
-  name: group.name,
-  description: group.description,
-  avatar: group.avatar,
-  admin: group.admin,
-  members: group.members,
-  interaction: group.updatedAt,
-});
-
 export const createGroup = asyncHandler<{}, {}, CreateGroup>(async (req, res) => {
   const groupData = req.body;
-  const userId = req.user?._id;
+  const userId = requireUserId(req);
 
   if (groupData.admin !== userId?.toString()) {
     throw new HttpError(403, "Invalid group admin assignment!");
@@ -49,7 +41,7 @@ export const createGroup = asyncHandler<{}, {}, CreateGroup>(async (req, res) =>
     members: groupData.members.map((id) => new Types.ObjectId(id)),
   });
 
-  const groupInfo = createGroupInfo(newGroup);
+  const groupInfo = toGroupInfo(newGroup);
   const sockets = groupData.members.flatMap(getSockets).filter(Boolean);
 
   /** Notify to all members after group created */
@@ -66,7 +58,7 @@ export const createGroup = asyncHandler<{}, {}, CreateGroup>(async (req, res) =>
 export const updateDetails = asyncHandler<{ id: string }, {}, UpdateDetails>(async (req, res) => {
   const groupId = req.params.id;
   const updateData = req.body;
-  const userId = req.user?._id!;
+  const userId = requireUserId(req);
 
   if (updateData.name) {
     const existingGroup = await Group.exists({
@@ -90,8 +82,7 @@ export const updateDetails = asyncHandler<{ id: string }, {}, UpdateDetails>(asy
     throw new HttpError(404, "Group not found!");
   }
 
-  const groupInfo = createGroupInfo(updatedGroup);
-  return HttpResponse.success(res, 200, "Group details updated successfully!", groupInfo);
+  return HttpResponse.success(res, 200, "Group details updated successfully!", toGroupInfo(updatedGroup));
 });
 
 const toObjectIds = (ids: string[]) =>
@@ -105,7 +96,7 @@ const toObjectIds = (ids: string[]) =>
 export const updateMembers = asyncHandler<{ id: string }, {}, UpdateMembers>(async (req, res) => {
   const groupId = req.params.id;
   const { add, remove } = req.body;
-  const userId = req.user?._id!;
+  const userId = requireUserId(req);
 
   if (!add?.length && !remove?.length) {
     throw new HttpError(400, "Provide at least one member!");
@@ -149,14 +140,13 @@ export const updateMembers = asyncHandler<{ id: string }, {}, UpdateMembers>(asy
     throw new HttpError(404, "Group not found!");
   }
 
-  const groupInfo = createGroupInfo(updatedGroup);
-  return HttpResponse.success(res, 200, "Group members updated successfully!", groupInfo);
+  return HttpResponse.success(res, 200, "Group members updated successfully!", toGroupInfo(updatedGroup));
 });
 
 export const updateAvatar = asyncHandler<{ id: string }>(async (req, res) => {
   const groupId = req.params.id;
   const imagePath = req.file?.path;
-  const userId = req.user?._id!;
+  const userId = requireUserId(req);
 
   if (!imagePath) {
     throw new HttpError(400, "Group avatar file required!");
@@ -175,19 +165,18 @@ export const updateAvatar = asyncHandler<{ id: string }>(async (req, res) => {
   }
 
   if (currentGroup?.avatar) {
-    deleteFromCloudinary(currentGroup.avatar).catch(() => {});
+    await deleteFromCloudinary(currentGroup.avatar);
   }
 
   currentGroup.avatar = uploadImage.secure_url;
-  await currentGroup.save({ validateBeforeSave: false });
+  await currentGroup.save();
 
-  const groupInfo = createGroupInfo(currentGroup);
-  return HttpResponse.success(res, 200, "Group avatar updated successfully!", groupInfo);
+  return HttpResponse.success(res, 200, "Group avatar updated successfully!", toGroupInfo(currentGroup));
 });
 
 export const deleteAvatar = asyncHandler<{ id: string }>(async (req, res) => {
   const groupId = req.params.id;
-  const userId = req.user?._id!;
+  const userId = requireUserId(req);
 
   const currentGroup = await Group.findOne({ _id: groupId, admin: userId });
 
@@ -199,17 +188,16 @@ export const deleteAvatar = asyncHandler<{ id: string }>(async (req, res) => {
     throw new HttpError(400, "Group avatar not available!");
   }
 
-  deleteFromCloudinary(currentGroup.avatar).catch(() => {});
+  await deleteFromCloudinary(currentGroup.avatar);
 
   currentGroup.avatar = null;
-  await currentGroup.save({ validateBeforeSave: false });
+  await currentGroup.save();
 
-  const groupInfo = createGroupInfo(currentGroup);
-  return HttpResponse.success(res, 200, "Group avatar deleted successfully!", groupInfo);
+  return HttpResponse.success(res, 200, "Group avatar deleted successfully!", toGroupInfo(currentGroup));
 });
 
 export const fetchGroups = asyncHandler(async (req, res) => {
-  const userId = new Types.ObjectId(req.user?._id);
+  const userId = requireUserId(req);
 
   const groups = await Group.aggregate([
     { $match: { members: userId } },
@@ -250,10 +238,10 @@ export const fetchGroups = asyncHandler(async (req, res) => {
     },
   ]);
 
-  return HttpResponse.success(res, 200, "Groups fetched successfully!", groups);
+  return HttpResponse.success(res, 200, "Groups fetched successfully!", groups.map(toGroupInfo));
 });
 
-export const fetchMembers = async (groupId: Types.ObjectId) => {
-  const group = await Group.findById(groupId).select("members -_id").lean();
-  return group?.members.map(String) ?? [];
+export const fetchMembers = async (groupId: string) => {
+  const members = await Group.distinct("members", { _id: groupId });
+  return members.map((id) => id.toString());
 };

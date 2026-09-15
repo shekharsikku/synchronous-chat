@@ -1,50 +1,10 @@
-import type { Response } from "express";
-import { genSalt, hash, compare } from "bcryptjs";
-import { jwtVerify } from "jose";
-import { Types } from "mongoose";
-import env from "#/configs/env.js";
-import logger from "#/configs/logger.js";
+import { hash, compare } from "bcryptjs";
 import { User } from "#/models/index.js";
-import { generateHash, refreshSecret, decryptAuth } from "#/utilities/crypto.js";
-import { cookieOptions, generateAccess, generateRefresh, createUserInfo } from "#/utilities/helpers.js";
+import { generateHash } from "#/utilities/crypto.js";
+import { toUserInfo } from "#/utilities/helpers.js";
 import { HttpError, HttpResponse, asyncHandler } from "#/utilities/response.js";
 import type { SignUp, SignIn } from "#/utilities/schema.js";
-
-const parseToken = (token: string) => {
-  const { uid, aid } = decryptAuth(token);
-
-  if (!Types.ObjectId.isValid(uid) || !Types.ObjectId.isValid(aid)) {
-    throw new Error("Invalid authentication token!");
-  }
-
-  return { userId: new Types.ObjectId(uid), authId: new Types.ObjectId(aid) };
-};
-
-export const revokeToken = async (res: Response, token: string) => {
-  try {
-    const { userId, authId } = parseToken(token);
-
-    await User.updateOne(
-      {
-        _id: userId,
-        authentication: {
-          $elemMatch: { _id: authId },
-        },
-      },
-      {
-        $pull: {
-          authentication: { _id: authId },
-        },
-      }
-    );
-  } catch (err) {
-    logger.error({ err }, "Unknown error occurred!");
-  } finally {
-    res.clearCookie("access", cookieOptions);
-    res.clearCookie("refresh", cookieOptions);
-    res.clearCookie("current", cookieOptions);
-  }
-};
+import { cookieOptions, generateToken, verifyToken, revokeToken } from "#/utilities/tokens.js";
 
 export const signUpUser = asyncHandler<{}, {}, SignUp>(async (req, res) => {
   const { email, password } = req.body;
@@ -55,44 +15,41 @@ export const signUpUser = asyncHandler<{}, {}, SignUp>(async (req, res) => {
     throw new HttpError(409, "Email already exists!");
   }
 
-  const hashSalt = await genSalt(12);
-  const hashed = await hash(password, hashSalt);
-
+  const hashed = await hash(password, 12);
   const newUser = await User.create({ email, password: hashed });
-  const userInfo = createUserInfo(newUser);
-  await generateAccess(res, userInfo);
+  const userInfo = toUserInfo(newUser);
+  await generateToken(res, userInfo.id, "access");
 
   return HttpResponse.success(res, 201, "Signed up successfully!", userInfo);
 });
 
 export const signInUser = asyncHandler<{}, {}, SignIn>(async (req, res) => {
   const { email, username, password } = req.body;
-  const query = email ? { email } : username ? { username } : null;
 
-  if (!query) {
+  if (!email && !username) {
     throw new HttpError(400, "Email or Username required!");
   }
 
-  const existsUser = await User.findOne(query).select("+password +authentication");
+  const existsUser = await User.findOne({
+    $or: [...(email ? [{ email }] : []), ...(username ? [{ username }] : [])],
+  }).select("+password +authentication");
 
   if (!existsUser || !(await compare(password, existsUser.password))) {
     throw new HttpError(401, "Invalid credentials!");
   }
 
-  const userInfo = createUserInfo(existsUser);
-  await generateAccess(res, userInfo);
+  const userInfo = toUserInfo(existsUser);
+  await generateToken(res, userInfo.id, "access");
 
   if (!userInfo.setup) {
     return HttpResponse.success(res, 200, "Complete your profile!", userInfo);
   }
 
-  const authId = new Types.ObjectId();
-  const refreshToken = await generateRefresh(res, userInfo._id.toString(), authId.toString());
+  const jwtToken = await generateToken(res, userInfo.id, "refresh");
 
   existsUser.authentication?.push({
-    _id: authId,
-    token: generateHash(refreshToken),
-    expiry: new Date(Date.now() + env.REFRESH_EXPIRY * 1000),
+    token: jwtToken.hash,
+    expiry: jwtToken.expiry,
   });
 
   await existsUser.save();
@@ -101,82 +58,75 @@ export const signInUser = asyncHandler<{}, {}, SignIn>(async (req, res) => {
 });
 
 export const signOutUser = asyncHandler(async (req, res) => {
-  const currentToken = req.cookies["current"];
+  const refreshToken = req.cookies["refresh"];
 
-  if (currentToken) await revokeToken(res, currentToken);
+  if (refreshToken) {
+    await revokeToken(res, refreshToken);
+  }
 
   res.clearCookie("access", cookieOptions);
   res.clearCookie("refresh", cookieOptions);
-  res.clearCookie("current", cookieOptions);
 
   return HttpResponse.success(res, 200, "Signed out successfully!");
 });
 
 export const authRefresh = asyncHandler(async (req, res) => {
   const refreshToken = req.cookies["refresh"];
-  const currentToken = req.cookies["current"];
 
-  if (!refreshToken || !currentToken) {
+  if (!refreshToken) {
     throw new HttpError(401, "Unauthorized request!");
   }
 
-  const { userId, authId, shouldRotate } = await (async () => {
+  const { authFilter, shouldRotate } = await (async () => {
     try {
-      const { userId, authId } = parseToken(currentToken);
+      const { payload } = await verifyToken(refreshToken, "refresh");
 
-      const jwtResult = await jwtVerify(refreshToken, refreshSecret, {
-        algorithms: ["HS512"],
-      });
+      const halfTime = (payload.exp - payload.iat) / 2;
+      const shouldRotate = Math.floor(Date.now() / 1000) >= payload.iat + halfTime;
 
-      if (!userId.equals(jwtResult.payload.sub) || !authId.equals(jwtResult.payload.jti)) {
-        throw new Error("Refresh request mismatch!");
-      }
+      const authFilter = {
+        _id: payload.uid,
+        authentication: {
+          $elemMatch: {
+            token: generateHash(refreshToken),
+            expiry: { $gt: new Date() },
+          },
+        },
+      };
 
-      const issuedAt = jwtResult.payload.iat!;
-      const expiresAt = jwtResult.payload.exp!;
-      const currentTs = Math.floor(Date.now() / 1000);
-
-      const shouldRotate = currentTs >= issuedAt + (expiresAt - issuedAt) / 2;
-
-      return { userId, authId, shouldRotate };
+      return { authFilter, shouldRotate };
     } catch {
-      await revokeToken(res, currentToken);
+      await revokeToken(res, refreshToken);
       throw new HttpError(401, "Please, sign in again!");
     }
   })();
 
-  const authFilter = {
-    _id: userId,
-    authentication: {
-      $elemMatch: { _id: authId, token: generateHash(refreshToken), expiry: { $gt: new Date() } },
-    },
-  };
-
   const requestUser = await User.findOne(authFilter);
 
   if (!requestUser) {
+    await revokeToken(res, refreshToken);
     throw new HttpError(401, "Please, sign in again!");
   }
 
-  const userInfo = createUserInfo(requestUser);
+  const userInfo = toUserInfo(requestUser);
 
   if (shouldRotate) {
-    const refreshedToken = await generateRefresh(res, userId.toString(), authId.toString());
+    const jwtToken = await generateToken(res, userInfo.id, "refresh");
 
     const updatedResult = await User.updateOne(authFilter, {
       $set: {
-        "authentication.$.token": generateHash(refreshedToken),
-        "authentication.$.expiry": new Date(Date.now() + env.REFRESH_EXPIRY * 1000),
+        "authentication.$.token": jwtToken.hash,
+        "authentication.$.expiry": jwtToken.expiry,
       },
     });
 
     if (updatedResult.modifiedCount === 0) {
-      await revokeToken(res, currentToken);
+      await revokeToken(res, refreshToken);
       throw new HttpError(401, "Please, sign in again!");
     }
   }
 
-  await generateAccess(res, userInfo);
+  await generateToken(res, userInfo.id, "access");
 
   return HttpResponse.success(res, 200, "Refreshed successfully!", userInfo);
 });
