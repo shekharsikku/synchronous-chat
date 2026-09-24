@@ -267,35 +267,34 @@ const MessageBar = () => {
       type: isFile ? "file" : "text",
     };
 
-    if (isFile && message !== "") {
-      if (selectedImage) dispatch({ type: "SET_MESSAGE", payload: "Uploading..." });
+    try {
+      if (isFile) {
+        dispatch({ type: "SET_MESSAGE", payload: "Uploading..." });
 
-      const uploadResult = await uploadMessageFile(imageFormData);
+        const uploadResult = await uploadMessageFile(imageFormData);
 
-      if (!uploadResult) {
-        toast.error("Can't able to send image file!");
-        handleClearMessage(!!replyTo);
-        return;
+        if (!uploadResult) {
+          toast.error("Can't able to send image file!");
+          handleClearMessage(!!replyTo);
+          return;
+        }
+
+        messageData.file = uploadResult;
+      } else {
+        messageData.text = encryptMessage(message, chatId);
       }
 
-      messageData.file = uploadResult;
-    } else {
-      messageData.text = encryptMessage(message, chatId);
-    }
-
-    if (replyTo) messageData.reply = replyTo.id;
-
-    try {
-      if (selectedImage) dispatch({ type: "SET_MESSAGE", payload: "Sending..." });
+      if (replyTo) messageData.reply = replyTo.id;
+      if (isFile) dispatch({ type: "SET_MESSAGE", payload: "Sending..." });
 
       await api.post(`/api/message/send/${chatId}?type=${selectedChatType}`, messageData);
 
       handleClearMessage(!!replyTo);
-    } catch (error: any) {
-      toast.error(error.response.data.message ?? "Failed to send message");
+    } catch {
+      toast.error("Failed to send message!");
+    } finally {
+      dispatch({ type: "SET_SENDING", payload: false });
     }
-
-    dispatch({ type: "SET_SENDING", payload: false });
   };
 
   const handleEnterKeyDown: KeyboardEventHandler<HTMLInputElement> = (e) => {
