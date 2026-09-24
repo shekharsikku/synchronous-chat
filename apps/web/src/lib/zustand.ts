@@ -7,6 +7,9 @@ export const useAuthStore = create<AuthStore>((set) => ({
   userInfo: null,
   setUserInfo: (userInfo: UserInfo | null) => set({ userInfo }),
 
+  accessToken: null,
+  setAccessToken: (accessToken) => set({ accessToken }),
+
   isAuthenticated: false,
   setIsAuthenticated: (isAuthenticated: boolean) => set({ isAuthenticated }),
 
@@ -15,7 +18,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   getUserInfo: async () => {
     try {
-      const response = await api.get("/api/user/user-information");
+      const response = await api.get("/api/user/profile");
       const result = response.data.data;
       set({
         userInfo: result,

@@ -1,28 +1,36 @@
 import { filesService } from "#/services/files.js";
+import { requireUser } from "#/utilities/helpers.js";
 import { HttpError, HttpResponse, asyncHandler } from "#/utilities/response.js";
 
-export const uploadFile = asyncHandler<any, any, any, { uid: string }>(async (req, res) => {
+export const uploadFile = asyncHandler(async (req, res) => {
   const fileData = req.file;
-  const userId = req.query.uid;
+  const userId = requireUser(req);
 
   if (!fileData) {
     throw new HttpError(400, "Invalid file for upload!");
   }
 
-  if (!userId) {
-    throw new HttpError(400, "User id required!");
-  }
-
   const uploadResult = await filesService.uploadFile(fileData, userId);
 
-  return HttpResponse.success(res, 200, "File uploaded successfully!", uploadResult);
+  return HttpResponse.success(res, 200, "File uploaded successfully!", {
+    id: uploadResult._id.toString(),
+    ...uploadResult.metadata?.["dimensions"],
+  });
 });
 
 export const getFile = asyncHandler<{ fid: string }, any, any, { action: string }>(async (req, res, next) => {
   const fileId = req.params.fid;
   const action = req.query.action;
 
-  const { fileData, fileStream } = await filesService.getFile(fileId);
+  const { fileData, objectId } = await filesService.getFile(fileId);
+
+  const etag = `"${fileData._id.toString("base64")}"`;
+
+  if (req.headers["if-none-match"] === etag) {
+    return res.status(304).end();
+  }
+
+  const fileStream = await filesService.getStream(objectId);
 
   const disposition = action === "download" ? "attachment" : "inline";
   const filename = encodeURIComponent(fileData.filename);
@@ -31,7 +39,7 @@ export const getFile = asyncHandler<{ fid: string }, any, any, { action: string 
     "Content-Type": fileData.metadata?.["contentType"] || "application/octet-stream",
     "Content-Disposition": `${disposition}; filename="${filename}"`,
     "Cache-Control": "public, max-age=31536000, immutable",
-    ETag: fileData._id.toString(),
+    ETag: etag,
   });
 
   fileStream.once("error", (err) => {
@@ -44,11 +52,11 @@ export const getFile = asyncHandler<{ fid: string }, any, any, { action: string 
   return fileStream.pipe(res);
 });
 
-export const deleteFile = asyncHandler<{ fid: string }, any, any, { uid: string }>(async (req, res) => {
+export const deleteFile = asyncHandler<{ fid: string }>(async (req, res) => {
   const fileId = req.params.fid;
-  const userId = req.query.uid;
+  const userId = requireUser(req);
 
-  const deleteResult = await filesService.deleteFile(fileId, userId);
+  await filesService.deleteFile(fileId, userId);
 
-  return HttpResponse.success(res, 200, "File deleted successfully!", deleteResult);
+  return HttpResponse.success(res, 200, "File deleted successfully!");
 });

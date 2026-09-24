@@ -257,10 +257,10 @@ const MessageBar = () => {
   };
 
   const handleSendMessage = async () => {
-    if (isSending || message === "" || !selectedChatData?._id) return;
+    if (isSending || message === "" || !selectedChatData?.id) return;
     dispatch({ type: "SET_SENDING", payload: true });
 
-    const chatId = selectedChatData._id;
+    const chatId = selectedChatData.id;
     const isFile = !!selectedImage;
 
     const messageData: MessageData = {
@@ -283,7 +283,7 @@ const MessageBar = () => {
       messageData.text = encryptMessage(message, chatId);
     }
 
-    if (replyTo) messageData.reply = replyTo._id;
+    if (replyTo) messageData.reply = replyTo.id;
 
     try {
       if (selectedImage) dispatch({ type: "SET_MESSAGE", payload: "Sending..." });
@@ -308,7 +308,7 @@ const MessageBar = () => {
     if (selectedChatType === "group") return;
 
     const handleTypingUpdate = ({ selected, current, typing }: TypingUpdate) => {
-      if (selected === userInfo?._id && current === selectedChatData?._id) {
+      if (selected === userInfo?.id && current === selectedChatData?.id) {
         setIsPartnerTyping(typing);
       }
     };
@@ -318,17 +318,17 @@ const MessageBar = () => {
     return () => {
       socket?.off("typing:update", handleTypingUpdate);
     };
-  }, [socket, userInfo?._id, selectedChatData?._id, selectedChatType, setIsPartnerTyping]);
+  }, [socket, userInfo?.id, selectedChatData?.id, selectedChatType, setIsPartnerTyping]);
 
   const handleTyping = () => {
-    if (!selectedChatData?._id || !userInfo?._id) return;
+    if (!selectedChatData?.id || !userInfo?.id) return;
 
     if (!isTyping) {
       dispatch({ type: "SET_TYPING", payload: true });
 
       socket?.emit("typing:update", {
-        selected: selectedChatData?._id,
-        current: userInfo?._id,
+        selected: selectedChatData?.id,
+        current: userInfo?.id,
         typing: true,
       });
     }
@@ -341,8 +341,8 @@ const MessageBar = () => {
       dispatch({ type: "SET_TYPING", payload: false });
 
       socket?.emit("typing:update", {
-        selected: selectedChatData?._id,
-        current: userInfo?._id,
+        selected: selectedChatData?.id,
+        current: userInfo?.id,
         typing: false,
       });
     }, 2000);
@@ -350,7 +350,7 @@ const MessageBar = () => {
 
   const handleTypingBlur = () => {
     if (!isTyping) return;
-    if (!selectedChatData?._id || !userInfo?._id) return;
+    if (!selectedChatData?.id || !userInfo?.id) return;
 
     dispatch({ type: "SET_TYPING", payload: false });
 
@@ -360,8 +360,8 @@ const MessageBar = () => {
     }
 
     socket?.emit("typing:update", {
-      selected: selectedChatData?._id,
-      current: userInfo?._id,
+      selected: selectedChatData?.id,
+      current: userInfo?.id,
       typing: false,
     });
   };

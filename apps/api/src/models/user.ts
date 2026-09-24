@@ -1,6 +1,22 @@
 import { randomBytes } from "node:crypto";
 import { type InferSchemaType, type HydratedDocument, Schema, model } from "mongoose";
 
+const AuthSchema = new Schema(
+  {
+    token: {
+      type: String,
+      required: true,
+    },
+    expiry: {
+      type: Date,
+      required: true,
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
 const UserSchema = new Schema(
   {
     name: {
@@ -42,12 +58,7 @@ const UserSchema = new Schema(
       default: false,
     },
     authentication: {
-      type: [
-        {
-          token: String,
-          expiry: Date,
-        },
-      ],
+      type: [AuthSchema],
       select: false,
     },
   },
@@ -68,6 +79,8 @@ UserSchema.pre("save", function () {
     this.username = `${localPart}_${uniqueSuffix}`;
   }
 });
+
+UserSchema.index({ "authentication.token": 1 });
 
 export type UserType = InferSchemaType<typeof UserSchema>;
 export type UserDocument = HydratedDocument<UserType>;

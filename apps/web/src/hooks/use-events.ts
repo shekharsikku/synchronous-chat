@@ -22,7 +22,7 @@ export const useEvents = () => {
     const { url, sid } = event.data;
 
     if (sid) {
-      const details = contacts?.find((c) => c._id === sid);
+      const details = contacts?.find((c) => c.id === sid);
       if (details) {
         setSelectedChatType("contact");
         setSelectedChatData(details);
@@ -35,7 +35,7 @@ export const useEvents = () => {
     try {
       const updatedProfile: UserInfo = JSON.parse(event.data);
 
-      if (updatedProfile._id === userInfo?._id) {
+      if (updatedProfile.id === userInfo?.id) {
         setUserInfo(updatedProfile);
         if (updatedProfile.setup) navigate("/chat");
         if (env.isDev) console.info("[SSE] Profile setup completed.");
@@ -47,7 +47,7 @@ export const useEvents = () => {
 
   /** Effect for manage sse connection. */
   useEffect(() => {
-    if (!userInfo?._id) return;
+    if (!userInfo?.id) return;
 
     let isMounted = true;
 
@@ -111,17 +111,17 @@ export const useEvents = () => {
         eventSourceRef.current = null;
       }
     };
-  }, [userInfo?._id]);
+  }, [userInfo?.id]);
 
   /** Effect for manage push notification. */
   useEffect(() => {
     if (!("Notification" in window)) return;
     if (!("serviceWorker" in navigator)) return;
-    if (!userInfo?._id) return;
+    if (!userInfo?.id) return;
 
     subscribeNotification();
 
     navigator.serviceWorker.addEventListener("message", handleMessageEvent);
     return () => navigator.serviceWorker.removeEventListener("message", handleMessageEvent);
-  }, [userInfo?._id]);
+  }, [userInfo?.id]);
 };

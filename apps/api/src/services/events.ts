@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import logger from "#/configs/logger.js";
 
 class EventsService {
-  private clients = new Map<string, Response>();
+  private clients = new Map<string, Set<Response>>();
 
   connect(uid: string, req: Request, res: Response) {
     res.set({
@@ -16,7 +16,14 @@ class EventsService {
     res.flushHeaders();
     res.write(": connected\n\n");
 
-    this.clients.set(uid, res);
+    let clients = this.clients.get(uid);
+
+    if (!clients) {
+      clients = new Set();
+      this.clients.set(uid, clients);
+    }
+
+    clients.add(res);
     logger.info("Event user connected: %s", uid);
 
     const heartbeat = setInterval(() => {
@@ -26,28 +33,36 @@ class EventsService {
 
     req.on("close", () => {
       clearInterval(heartbeat);
-      this.clients.delete(uid);
+      clients.delete(res);
+
+      if (clients!.size === 0) {
+        this.clients.delete(uid);
+      }
+
       logger.info("Event user disconnected: %s", uid);
     });
   }
 
   send(uid: string, event: string, data: any) {
-    const client = this.clients.get(uid);
+    const clients = this.clients.get(uid);
 
-    if (!client) {
-      logger.info("Event client not found: %s", uid);
+    if (!clients) {
+      logger.info("Event clients not found: %s", uid);
       return;
     }
 
-    client.write(`event: ${event}\n`);
-    client.write(`data: ${JSON.stringify(data)}\n\n`);
+    const message = `event: ${event}\n` + `data: ${JSON.stringify(data)}\n\n`;
+
+    for (const client of clients) {
+      client.write(message);
+    }
   }
 }
 
 export const eventsService = new EventsService();
 
 export const connectEvents = (req: Request, res: Response) => {
-  const uid = req.user?._id;
+  const uid = req.user;
 
   if (!uid) {
     logger.info("Event user not authenticated!");
@@ -55,5 +70,5 @@ export const connectEvents = (req: Request, res: Response) => {
     return;
   }
 
-  eventsService.connect(uid.toString(), req, res);
+  eventsService.connect(uid, req, res);
 };

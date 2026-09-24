@@ -49,7 +49,7 @@ const SocketProvider = ({ children, ...props }: PropsWithChildren) => {
 
     const socket = io(env.serverUrl, {
       withCredentials: true,
-      query: { uid: userInfo._id },
+      query: { uid: userInfo.id },
       auth: { pk: env.publicKey },
     });
 
@@ -77,7 +77,7 @@ const SocketProvider = ({ children, ...props }: PropsWithChildren) => {
       socket.removeAllListeners();
       socket.close();
     };
-  }, [userInfo?._id, userInfo?.setup]);
+  }, [userInfo?.id, userInfo?.setup]);
 
   const contextValue = useMemo(() => {
     return {

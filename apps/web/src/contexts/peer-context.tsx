@@ -87,7 +87,7 @@ const PeerProvider = ({ children, ...props }: PropsWithChildren) => {
   }, []);
 
   useEffect(() => {
-    if (!userInfo?._id || !userInfo?.setup || !isConnected) {
+    if (!userInfo?.id || !userInfo?.setup || !isConnected) {
       console.info("[Peer] User not ready or disconnected.");
       return;
     }
@@ -119,7 +119,7 @@ const PeerProvider = ({ children, ...props }: PropsWithChildren) => {
           console.info("[Peer] ID:", id);
         }
 
-        setLocalInfo({ uid: userInfo._id!, name: userInfo.name!, pid: id, sid: socket?.id! });
+        setLocalInfo({ uid: userInfo.id, name: userInfo.name!, pid: id, sid: socket?.id! });
         setIsPeerReady(true);
       });
 
@@ -230,7 +230,7 @@ const PeerProvider = ({ children, ...props }: PropsWithChildren) => {
       cleanupPeer();
     };
     // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [userInfo?._id, userInfo?.setup, userInfo?.name, isConnected]);
+  }, [userInfo?.id, userInfo?.setup, userInfo?.name, isConnected]);
 
   useEffect(() => {
     if (!isPeerReady || !peerRef.current) return;

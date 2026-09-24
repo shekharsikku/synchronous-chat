@@ -12,10 +12,10 @@ interface GroupMembersDetails {
 }
 
 const MemberDetails: React.FC<GroupMembersDetails> = ({ contacts, userInfo, memberId, adminId }) => {
-  const isYou = userInfo._id === memberId;
+  const isYou = userInfo.id === memberId;
   const isAdmin = adminId === memberId;
 
-  const cachedContact = useMemo(() => contacts?.find((cur) => cur._id === memberId), [contacts, memberId]);
+  const cachedContact = useMemo(() => contacts?.find((cur) => cur.id === memberId), [contacts, memberId]);
 
   const { data: fetchedContact } = useQuery(
     contactQuery(memberId, {
@@ -27,7 +27,7 @@ const MemberDetails: React.FC<GroupMembersDetails> = ({ contacts, userInfo, memb
   const details = useMemo(() => {
     if (isYou && userInfo) {
       return {
-        id: userInfo._id,
+        id: userInfo.id,
         name: userInfo.name,
         image: getAvatar(userInfo),
         gender: userInfo?.gender,
@@ -39,7 +39,7 @@ const MemberDetails: React.FC<GroupMembersDetails> = ({ contacts, userInfo, memb
     if (!source) return undefined;
 
     return {
-      id: source._id,
+      id: source.id,
       name: source.name,
       image: getAvatar(source),
       gender: source.gender,
@@ -57,7 +57,7 @@ const MemberDetails: React.FC<GroupMembersDetails> = ({ contacts, userInfo, memb
       <div className="flex-none size-max">
         <img
           src={details?.image}
-          alt={details?.name}
+          alt={details?.name ?? "Member"}
           className="size-8 rounded-full object-cover border border-border"
         />
       </div>

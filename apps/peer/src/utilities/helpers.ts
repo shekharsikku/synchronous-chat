@@ -1,3 +1,13 @@
+import type { Request } from "express";
+import { HttpError } from "#/utilities/response.js";
+
+export const requireUser = (req: Request) => {
+  if (!req.user) {
+    throw new HttpError(401, "Unauthorized request!");
+  }
+  return req.user;
+};
+
 export function formatBytes(bytes: number) {
   const units = ["B", "KB", "MB", "GB", "TB"];
   let i = 0;

@@ -1,8 +1,10 @@
 import { Types } from "mongoose";
 import { fetchMembers } from "#/controllers/group.js";
-import type { ConversationDocument, MessageDocument, MessageType, MessageContent } from "#/models/index.js";
-import { Message, Conversation } from "#/models/index.js";
+import { requireUserId } from "#/controllers/user.js";
+import type { ConversationDocument, MessageContent } from "#/models/index.js";
+import { Message, Conversation, Group } from "#/models/index.js";
 import { getSockets, emitEvent } from "#/server.js";
+import { toMessageInfo, type MessageInfo } from "#/utilities/helpers.js";
 import { sendPushNotification } from "#/utilities/push.js";
 import { asyncHandler, HttpError, HttpResponse } from "#/utilities/response.js";
 import type { Message as MessageSchema, Translate } from "#/utilities/schema.js";
@@ -15,23 +17,20 @@ const buildContent = ({ type, text, file }: MessageContent) => {
 
 const emitMessage = (
   sockets: string[],
-  message: MessageDocument,
+  message: MessageInfo,
   targetId: string,
   targetType: "contact" | "group",
   interaction: Date
 ) => {
   emitEvent(sockets, "message:receive", message);
   emitEvent(sockets, "conversation:updated", {
-    _id: targetId,
+    id: targetId,
     type: targetType,
     interaction,
   });
 };
 
-const resolveMembers = async (
-  conversation: ConversationDocument | null,
-  groupId: Types.ObjectId
-): Promise<string[]> => {
+const resolveMembers = async (conversation: ConversationDocument | null, groupId: string): Promise<string[]> => {
   if (conversation) {
     const populated = await conversation.populate("participants");
     const members = (populated.participants?.[0] as { members?: Types.ObjectId[] })?.members ?? [];
@@ -41,7 +40,7 @@ const resolveMembers = async (
 };
 
 export const sendMessage = asyncHandler<{ id: string }, {}, MessageSchema, { type?: string }>(async (req, res) => {
-  const senderId = req.user?._id!;
+  const senderId = requireUserId(req);
   const receiverId = new Types.ObjectId(req.params.id);
   const isGroup = req.query.type === "group";
   const { type, text, file, reply } = req.body;
@@ -53,7 +52,7 @@ export const sendMessage = asyncHandler<{ id: string }, {}, MessageSchema, { typ
       ...(isGroup ? { group: receiverId } : { recipient: receiverId }),
       content: buildContent({ type, text, file }),
       ...(reply && { reply: new Types.ObjectId(reply) }),
-    }),
+    }).then((msg) => toMessageInfo(msg)),
     Conversation.findOneAndUpdate(
       {
         participants: isGroup ? { $size: 1, $all: [receiverId] } : { $all: [senderId, receiverId] },
@@ -72,13 +71,13 @@ export const sendMessage = asyncHandler<{ id: string }, {}, MessageSchema, { typ
     });
   }
 
-  if (isGroup) {
-    const groupMembers = await resolveMembers(conversation, receiverId);
+  if (isGroup && message.group) {
+    const groupMembers = await resolveMembers(conversation, message.group);
     const membersSockets = groupMembers.flatMap(getSockets).filter(Boolean);
     emitMessage(membersSockets, message, receiverId.toString(), "group", interaction);
   } else {
-    const messageSender = message.sender.toString();
-    const messageRecipient = message.recipient?.toString()!;
+    const messageSender = message.sender;
+    const messageRecipient = message.recipient!;
     const senderSockets = getSockets(messageSender);
     const recipientSockets = getSockets(messageRecipient);
 
@@ -90,31 +89,41 @@ export const sendMessage = asyncHandler<{ id: string }, {}, MessageSchema, { typ
       emitMessage(recipientSockets, message, messageSender, "contact", interaction);
     } else {
       sendPushNotification(receiverId, {
-        title: req.user?.name ?? req.user?.username ?? "Someone",
+        title: "Someone",
         body: "Sent you a new message.",
         data: { sid: messageSender },
-      }).catch(() => {});
+      });
     }
   }
 
-  return HttpResponse.success(res, 201, "Message sent successfully!", message);
+  return HttpResponse.success(res, 201, "Message sent successfully!");
 });
 
-/** Transform null → undefined in response payload only */
-const nullToUndefined = (obj: Record<string, any>) => {
-  for (const key in obj) {
-    if (obj[key] === null) obj[key] = undefined;
-    else if (typeof obj[key] === "object" && obj[key] !== null) nullToUndefined(obj[key]);
+// /** Transform null → undefined in response payload only */
+// const nullToUndefined = (obj: Record<string, any>) => {
+//   for (const key in obj) {
+//     if (obj[key] === null) obj[key] = undefined;
+//     else if (typeof obj[key] === "object" && obj[key] !== null) nullToUndefined(obj[key]);
+//   }
+//   return obj;
+// };
+
+const memberExists = async (group: string, member: string) => {
+  if (!(await Group.exists({ _id: group, members: member }))) {
+    throw new HttpError(400, "Group not found or not a member");
   }
-  return obj;
 };
 
-export const getMessages = asyncHandler<{ id: string }, {}, {}, { group?: string }>(async (req, res) => {
-  const sender = req.user?._id!;
+export const getMessages = asyncHandler<{ id: string }, {}, {}, { member?: string }>(async (req, res) => {
+  const sender = requireUserId(req);
   const target = req.params.id;
-  const isGroup = req.query.group === "true";
+  const member = req.query.member;
 
-  const query = isGroup
+  if (member) {
+    await memberExists(target, member);
+  }
+
+  const query: any = member
     ? { group: target }
     : {
         $or: [
@@ -123,22 +132,22 @@ export const getMessages = asyncHandler<{ id: string }, {}, {}, { group?: string
         ],
       };
 
-  const messages = await Message.find(query)
-    .sort({ createdAt: -1 })
-    .limit(20)
-    .lean({ transform: (doc) => nullToUndefined(doc) });
+  const messages = await Message.find(query).sort({ createdAt: -1 }).limit(20);
 
-  return HttpResponse.success(res, 200, "Messages fetched successfully!", messages.reverse());
+  return HttpResponse.success(res, 200, "Messages fetched successfully!", messages.reverse().map(toMessageInfo));
 });
 
-export const fetchMessages = asyncHandler<{ id: string }, {}, {}, { before?: string; group?: string; limit?: string }>(
+export const fetchMessages = asyncHandler<{ id: string }, {}, {}, { before?: string; member?: string; limit?: string }>(
   async (req, res) => {
-    const sender = req.user?._id!;
+    const sender = requireUserId(req);
     const target = req.params.id;
-    const { before, group, limit = 10 } = req.query;
-    const isGroup = group === "true";
+    const { before, member, limit = 20 } = req.query;
 
-    const query: any = isGroup
+    if (member) {
+      await memberExists(target, member);
+    }
+
+    const query: any = member
       ? { group: target }
       : {
           $or: [
@@ -151,29 +160,26 @@ export const fetchMessages = asyncHandler<{ id: string }, {}, {}, { before?: str
       query.createdAt = { $lt: new Date(before) };
     }
 
-    const messages = await Message.find(query)
-      .sort({ createdAt: -1 })
-      .limit(Number(limit))
-      .lean({ transform: (doc) => nullToUndefined(doc) });
+    const messages = await Message.find(query).sort({ createdAt: -1 }).limit(Number(limit));
 
     /* Reverse to show oldest → newest in UI */
-    return HttpResponse.success(res, 200, "Messages fetched successfully!", messages.reverse());
+    return HttpResponse.success(res, 200, "Messages fetched successfully!", messages.reverse().map(toMessageInfo));
   }
 );
 
-const messageActionsEvents = async (message: MessageType, event: string) => {
+const messageActionsEvents = async (message: MessageInfo, event = "message:update") => {
   if (message.group) {
     const members = await fetchMembers(message.group);
     const sockets = members.flatMap(getSockets).filter(Boolean);
     emitEvent(sockets, event, message);
   } else {
-    const sockets = [message.sender, message.recipient!].flatMap((uid) => getSockets(uid.toString())).filter(Boolean);
+    const sockets = [message.sender, message.recipient!].flatMap(getSockets).filter(Boolean);
     emitEvent(sockets, event, message);
   }
 };
 
 export const deleteMessage = asyncHandler<{ id: string }>(async (req, res) => {
-  const userId = req.user?._id!;
+  const userId = requireUserId(req);
   const msgId = req.params.id;
 
   const message = await Message.findOneAndUpdate(
@@ -184,19 +190,19 @@ export const deleteMessage = asyncHandler<{ id: string }>(async (req, res) => {
       $unset: { content: 1 },
     },
     { returnDocument: "after" }
-  ).lean({ transform: (doc) => nullToUndefined(doc) });
+  );
 
   if (!message) {
     throw new HttpError(400, "You can't delete this message!");
   }
 
-  await messageActionsEvents(message, "message:remove");
+  await messageActionsEvents(toMessageInfo(message));
 
-  return HttpResponse.success(res, 200, "Message deleted successfully!", message);
+  return HttpResponse.success(res, 200, "Message deleted successfully!");
 });
 
 export const editMessage = asyncHandler<{ id: string }, {}, { text: string }>(async (req, res) => {
-  const userId = req.user?._id!;
+  const userId = requireUserId(req);
   const msgId = req.params.id;
   const { text } = req.body;
 
@@ -211,19 +217,19 @@ export const editMessage = asyncHandler<{ id: string }, {}, { text: string }>(as
       "content.text": text,
     },
     { returnDocument: "after" }
-  ).lean({ transform: (doc) => nullToUndefined(doc) });
+  );
 
   if (!message) {
     throw new HttpError(400, "You can't edit this message!");
   }
 
-  await messageActionsEvents(message, "message:edited");
+  await messageActionsEvents(toMessageInfo(message));
 
-  return HttpResponse.success(res, 200, "Message edited successfully!", message);
+  return HttpResponse.success(res, 200, "Message edited successfully!");
 });
 
 export const reactMessage = asyncHandler<{ id: string }, {}, { emoji: string }>(async (req, res) => {
-  const by = req.user?._id!;
+  const by = requireUserId(req).toString();
   const mid = req.params.id;
   const { emoji } = req.body;
 
@@ -254,13 +260,11 @@ export const reactMessage = asyncHandler<{ id: string }, {}, { emoji: string }>(
                     updated: {
                       $cond: [
                         { $eq: [{ $size: "$$existing" }, 0] },
-                        // { $concatArrays: ["$content.reactions", [{ by, emoji }]] }, // add new
                         {
                           $concatArrays: [{ $ifNull: ["$content.reactions", []] }, [{ by, emoji }]],
                         },
                         {
                           $map: {
-                            // input: "$content.reactions",
                             input: { $ifNull: ["$content.reactions", []] },
                             as: "r",
                             in: {
@@ -298,19 +302,19 @@ export const reactMessage = asyncHandler<{ id: string }, {}, { emoji: string }>(
       },
     ],
     { returnDocument: "after", updatePipeline: true }
-  ).lean({ transform: (doc) => nullToUndefined(doc) });
+  );
 
   if (!message) {
     throw new HttpError(400, "Unable to react on this message!");
   }
 
-  await messageActionsEvents(message, "message:reacted");
+  await messageActionsEvents(toMessageInfo(message));
 
-  return HttpResponse.success(res, 200, "Message reacted successfully!", message);
+  return HttpResponse.success(res, 200, "Message reacted successfully!");
 });
 
 export const deleteMessages = asyncHandler<{}, {}, {}, { before?: string }>(async (req, res) => {
-  const userId = req.user?._id!;
+  const userId = requireUserId(req);
   const before = Number(req.query.before ?? 1) * 24;
 
   const hoursAgo = new Date();

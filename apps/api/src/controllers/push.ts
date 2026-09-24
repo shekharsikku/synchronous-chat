@@ -1,29 +1,26 @@
+import { requireUserId } from "#/controllers/user.js";
 import { Subscription } from "#/models/index.js";
-import { asyncHandler, HttpError, HttpResponse } from "#/utilities/response.js";
+import { asyncHandler, HttpResponse } from "#/utilities/response.js";
 import type { Subscribe, Unsubscribe } from "#/utilities/schema.js";
 
 export const subscribePush = asyncHandler<{}, {}, Subscribe>(async (req, res) => {
-  const userId = req.user?._id!;
+  const userId = requireUserId(req);
   const { endpoint, keys } = req.body;
 
-  const result = await Subscription.findOneAndUpdate(
+  await Subscription.updateOne(
     { userId, endpoint },
     { $set: { keys }, $setOnInsert: { userId, endpoint } },
-    { upsert: true, returnDocument: "after" }
+    { upsert: true }
   );
 
-  return HttpResponse.success(res, 200, "Subscribed successfully!", result);
+  return HttpResponse.success(res, 200, "Subscribed successfully!");
 });
 
 export const unsubscribePush = asyncHandler<{}, {}, Unsubscribe>(async (req, res) => {
-  const userId = req.user?._id!;
+  const userId = requireUserId(req);
   const { endpoint } = req.body;
 
-  const result = await Subscription.findOneAndDelete({ userId, endpoint });
+  await Subscription.deleteOne({ userId, endpoint });
 
-  if (!result) {
-    throw new HttpError(404, "No subscription found!");
-  }
-
-  return HttpResponse.success(res, 200, "Unsubscribed successfully!", result);
+  return HttpResponse.success(res, 200, "Unsubscribed successfully!");
 });

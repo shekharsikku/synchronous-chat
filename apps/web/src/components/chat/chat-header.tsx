@@ -165,7 +165,7 @@ const ChatHeader = () => {
   } = usePeer();
   const { socket, onlineUsers } = useSocket();
 
-  const isCurrentlyOnline = onlineUsers.hasOwnProperty(selectedChatData?._id!);
+  const isCurrentlyOnline = onlineUsers.hasOwnProperty(selectedChatData?.id!);
 
   const requestCalling = (userId: string, callType: CallType) => {
     if (callingActive || pendingRequest) {
@@ -207,7 +207,7 @@ const ChatHeader = () => {
 
   const handleDetailsSubmit = async () => {
     const nameAlreadyExists = groups?.some((group) => {
-      return group.name === detailsState.name && group._id !== selectedChatData?._id;
+      return group.name === detailsState.name && group.id !== selectedChatData?.id;
     });
 
     if (nameAlreadyExists) {
@@ -218,7 +218,7 @@ const ChatHeader = () => {
     setIsUpdatePending(true);
 
     try {
-      const response = await api.patch(`/api/group/update/${selectedChatData._id}/details`, detailsState);
+      const response = await api.patch(`/api/group/update/${selectedChatData.id}/details`, detailsState);
       const updated = response.data.data;
       handleGroupUpdate(updated, updated.members);
       toast.success(response.data.message);
@@ -234,7 +234,7 @@ const ChatHeader = () => {
     setIsUpdatePending(true);
 
     try {
-      const response = await api.patch(`/api/group/update/${selectedChatData._id}/members`, memberChanges);
+      const response = await api.patch(`/api/group/update/${selectedChatData.id}/members`, memberChanges);
       const updated = response.data.data;
       const members = new Set(memberChanges.remove.concat(updated.members));
       handleGroupUpdate(updated, Array.from(members));
@@ -273,7 +273,7 @@ const ChatHeader = () => {
     setIsUpdatePending(true);
 
     try {
-      const response = await api.patch(`/api/group/update/${selectedChatData._id}/avatar`, formData, {
+      const response = await api.patch(`/api/group/update/${selectedChatData.id}/avatar`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       const updated = response.data.data;
@@ -292,7 +292,7 @@ const ChatHeader = () => {
     setIsUpdatePending(true);
 
     try {
-      const response = await api.delete(`/api/group/delete/${selectedChatData._id}/avatar`);
+      const response = await api.delete(`/api/group/delete/${selectedChatData.id}/avatar`);
       const updated = response.data.data;
       handleGroupUpdate(updated, updated.members);
       toast.success(response.data.message);
@@ -495,7 +495,7 @@ const ChatHeader = () => {
 
         <div className="flex items-center justify-center gap-4">
           {/* Group Info & Setting */}
-          {selectedChatType === "group" && selectedChatData.admin === userInfo?._id && isDesktop && (
+          {selectedChatType === "group" && selectedChatData.admin === userInfo?.id && isDesktop && (
             <TooltipElement content="More Info">
               <LuInfo
                 size={18}
@@ -657,7 +657,7 @@ const ChatHeader = () => {
           {/* Voice & Video Stream Info */}
           {selectedChatType === "contact" && isCurrentlyOnline && (
             <>
-              {callingActive && callingInfo?.uid === selectedChatData?._id ? (
+              {callingActive && callingInfo?.uid === selectedChatData?.id ? (
                 <TooltipElement content="Call Info">
                   <LuAudioLines
                     size={20}
@@ -674,14 +674,14 @@ const ChatHeader = () => {
                   <TooltipElement content="Video Call" disabled={pendingRequest}>
                     <HiOutlineVideoCamera
                       size={20}
-                      onClick={() => requestCalling(selectedChatData?._id!, "video")}
+                      onClick={() => requestCalling(selectedChatData?.id!, "video")}
                       className="tooltip-icon"
                     />
                   </TooltipElement>
                   <TooltipElement content="Voice Call" disabled={pendingRequest}>
                     <HiOutlinePhone
                       size={18}
-                      onClick={() => requestCalling(selectedChatData?._id!, "audio")}
+                      onClick={() => requestCalling(selectedChatData?.id!, "audio")}
                       className="tooltip-icon"
                     />
                   </TooltipElement>

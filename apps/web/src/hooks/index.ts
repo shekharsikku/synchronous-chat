@@ -2,8 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useCallback, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 import { toast } from "sonner";
-import axios from "axios";
-import api from "@/lib/api";
+import { api, bucket } from "@/lib/api";
 import env from "@/lib/env";
 import { useSocket } from "@/lib/context";
 import { decryptMessage } from "@/lib/noble";
@@ -73,6 +72,7 @@ export const useLastMinutes = (timestamp: Date | string | number, minutes = 10) 
     const timestampDate = new Date(timestamp);
 
     if (isNaN(timestampDate.getTime())) {
+      // oxlint-disable-next-line react/set-state-in-effect
       setIsLastMinutes(false);
       return;
     }
@@ -108,10 +108,10 @@ export const usePlainText = () => {
 
       let messageKey = "";
 
-      if (message.sender === selectedChatData?._id) {
-        messageKey = userInfo?._id!;
+      if (message.sender === selectedChatData?.id) {
+        messageKey = userInfo?.id!;
       } else {
-        messageKey = selectedChatData?._id!;
+        messageKey = selectedChatData?.id!;
       }
 
       return decryptMessage(message?.content?.text!, messageKey);
@@ -158,27 +158,18 @@ export const useClipboard = (
 
 export const useReplyMessage = (message: Message) => {
   const { messages } = useChatStore();
-  return { replyMessage: messages.find((msg) => msg._id === message.reply) || null };
+  return { replyMessage: messages.find((msg) => msg.id === message.reply) || null };
 };
 
 export const useMessageActions = () => {
-  const { userInfo } = useAuthStore();
-
   const uploadMessageFile = async (imageFormData: FormData | null) => {
     if (!imageFormData) return null;
 
     try {
-      const { data: result } = await axios.post(`${env.bucketUrl}/api/files`, imageFormData, {
+      const response = await bucket.post("/api/files", imageFormData, {
         headers: { "Content-Type": "multipart/form-data" },
-        params: {
-          uid: userInfo?._id,
-        },
       });
-      const fileInfo = JSON.stringify({
-        id: result.data._id,
-        ...result.data.metadata.dimensions,
-      });
-      return fileInfo;
+      return JSON.stringify(response.data.data);
     } catch {
       return null;
     }
@@ -189,18 +180,13 @@ export const useMessageActions = () => {
       if (message.content?.type === "file") {
         try {
           const fileInfo = JSON.parse(message.content.file!);
-
-          await axios.delete(`${env.bucketUrl}/api/files/${fileInfo.id}`, {
-            params: {
-              uid: userInfo?._id,
-            },
-          });
+          await bucket.delete(`/api/files/${fileInfo.id}`);
         } catch {
           console.error("[Chat] Failed to delete file.");
         }
       }
 
-      const response = await api.delete(`/api/message/delete/${message._id}`);
+      const response = await api.delete(`/api/message/delete/${message.id}`);
       toast.info(response.data.message);
     } catch (error: any) {
       toast.error(error.response.data.message);
@@ -291,8 +277,8 @@ export const useGroupUpdate = () => {
   const handleGroupUpdate = (updated: GroupInfo, members?: string[]) => {
     const group = { ...updated, interaction: new Date().toISOString() };
 
-    queryClient.setQueryData<GroupInfo[]>(["groups", userInfo?._id], (older = []) => {
-      return older.map((old) => (old._id === group._id ? group : old));
+    queryClient.setQueryData<GroupInfo[]>(["groups", userInfo?.id], (older = []) => {
+      return older.map((old) => (old.id === group.id ? group : old));
     });
 
     setSelectedChatData(group);

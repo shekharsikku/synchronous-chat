@@ -1,18 +1,18 @@
-import { inflateSync } from "node:zlib";
-import { compactDecrypt } from "jose";
-
-import { accessSecret } from "#/utilities/crypto.js";
-import type { UserInfo } from "#/utilities/helpers.js";
-import { asyncHandler, HttpResponse } from "#/utilities/response.js";
 import type { NextFunction, Request, Response } from "express";
 import type { ZodType } from "zod";
+import { verifyToken } from "#/utilities/tokens.js";
+import { asyncHandler, HttpResponse } from "#/utilities/response.js";
 
-const authorizeAccess = async (req: Request): Promise<UserInfo> => {
+const authorizeAccess = async (req: Request) => {
   const accessToken = req.cookies["access"];
-  if (!accessToken) throw new Error("No access token available!");
 
-  const { plaintext } = await compactDecrypt(accessToken, accessSecret);
-  return JSON.parse(inflateSync(plaintext).toString());
+  if (!accessToken) {
+    throw new Error("No access token available!");
+  }
+
+  const { payload } = await verifyToken(accessToken, "access");
+
+  return payload.uid;
 };
 
 export const authAccess = asyncHandler(async (req, res, next) => {

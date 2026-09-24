@@ -190,7 +190,7 @@ const PeerShare = () => {
     dispatch({ type: "SET_STATUS", status: "pending" });
 
     socket?.emit("share:request", {
-      target: selectedChatData?._id,
+      target: selectedChatData?.id,
       details: localInfo,
       file: {
         name: file.name,

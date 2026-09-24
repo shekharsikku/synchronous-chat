@@ -21,16 +21,16 @@ export const useListeners = () => {
     if (message.group) {
       return message.group;
     } else {
-      return userInfo?._id === message.sender ? message.recipient : message.sender;
+      return userInfo?.id === message.sender && message.recipient ? message.recipient : message.sender;
     }
   });
 
   const getCurrentChat = useEffectEvent((chatKey?: string) => {
-    return allChats.find((current) => current._id === chatKey);
+    return allChats.find((current) => current.id === chatKey);
   });
 
   const showNotification = useEffectEvent((chatKey?: string) => {
-    if (Notification.permission !== "granted" || selectedChatData?._id || !notify) return;
+    if (Notification.permission !== "granted" || selectedChatData?.id || !notify) return;
 
     const messageFrom = getCurrentChat(chatKey)?.name;
     if (!messageFrom) return;
@@ -44,7 +44,7 @@ export const useListeners = () => {
   });
 
   const updateSelectedGroup = useEffectEvent((groupData: GroupInfo, isMember?: boolean) => {
-    if (selectedChatData?._id === groupData._id) {
+    if (selectedChatData?.id === groupData.id) {
       if (!isMember) {
         toast.info("You were removed from the group!");
         closeChat();
@@ -55,7 +55,7 @@ export const useListeners = () => {
   });
 
   const handleProfileUpdate = useEffectEvent((updatedProfile: UserInfo) => {
-    if (updatedProfile._id === userInfo?._id) {
+    if (updatedProfile.id === userInfo?.id) {
       setUserInfo(updatedProfile);
     }
   });
@@ -65,7 +65,7 @@ export const useListeners = () => {
 
     const handleMessageReceive = async (message: Message) => {
       const chatKey = getChatKey(message);
-      const chatQueryKey = ["messages", userInfo?._id, chatKey];
+      const chatQueryKey = ["messages", userInfo?.id, chatKey];
 
       /** Check if messages are already cached */
       let cachedMessages = queryClient.getQueryData<InfiniteData<Message[]>>(chatQueryKey);
@@ -83,7 +83,7 @@ export const useListeners = () => {
             });
 
             if (pageParam) params.append("before", pageParam);
-            if (chatType === "group") params.append("group", "true");
+            if (chatType === "group") params.append("member", userInfo?.id!);
 
             const response = await api.get(`/api/message/fetch/${chatKey}?${params.toString()}`);
             return response.data.data;
@@ -107,7 +107,7 @@ export const useListeners = () => {
         const first = newer[0];
 
         /** Avoid duplicates */
-        if (first.some((msg) => msg._id === message._id)) return older;
+        if (first.some((msg) => msg.id === message.id)) return older;
 
         /** Append message to the first page */
         newer[0] = [...first, message];
@@ -124,13 +124,13 @@ export const useListeners = () => {
 
     const handleMessageUpdate = (message: Message) => {
       const chatKey = getChatKey(message);
-      const chatQueryKey = ["messages", userInfo?._id, chatKey];
+      const chatQueryKey = ["messages", userInfo?.id, chatKey];
 
       queryClient.setQueryData<InfiniteData<Message[]>>(chatQueryKey, (existing) => {
         if (!existing) return { pages: [[message]], pageParams: [undefined] };
 
         const updated = existing.pages.map((page) => {
-          return page.map((msg) => (msg._id === message._id ? { ...msg, ...message } : msg));
+          return page.map((msg) => (msg.id === message.id ? { ...msg, ...message } : msg));
         });
 
         return {
@@ -141,19 +141,19 @@ export const useListeners = () => {
     };
 
     const handleGroupUpsert = (groupData: GroupInfo) => {
-      if (!userInfo?._id) return;
+      if (!userInfo?.id) return;
 
-      const isMember = groupData.members?.includes(userInfo._id!);
+      const isMember = groupData.members?.includes(userInfo.id);
 
-      queryClient.setQueryData<GroupInfo[]>(["groups", userInfo?._id], (older = []) => {
+      queryClient.setQueryData<GroupInfo[]>(["groups", userInfo?.id], (older = []) => {
         if (!isMember) {
-          return older.filter((group) => group._id !== groupData._id);
+          return older.filter((group) => group.id !== groupData.id);
         }
 
-        const exists = older.some((group) => group._id === groupData._id);
+        const exists = older.some((group) => group.id === groupData.id);
 
         if (exists) {
-          return older.map((group) => (group._id === groupData._id ? groupData : group));
+          return older.map((group) => (group.id === groupData.id ? groupData : group));
         }
 
         return [groupData, ...older];
@@ -164,9 +164,7 @@ export const useListeners = () => {
 
     const events: [string, (...args: any[]) => void][] = [
       ["message:receive", handleMessageReceive],
-      ["message:remove", handleMessageUpdate],
-      ["message:edited", handleMessageUpdate],
-      ["message:reacted", handleMessageUpdate],
+      ["message:update", handleMessageUpdate],
       ["group:created", handleGroupUpsert],
       ["profile:update", handleProfileUpdate],
       ["group:update", handleGroupUpsert],
@@ -181,5 +179,5 @@ export const useListeners = () => {
       events.forEach(([event, handler]) => socket.off(event, handler));
       messageListeners.current = false;
     };
-  }, [socket, queryClient, userInfo?._id]);
+  }, [socket, queryClient, userInfo?.id]);
 };

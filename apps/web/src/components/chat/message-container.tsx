@@ -64,9 +64,9 @@ const RenderMessages: React.FC<RenderMessagesProps> = React.memo(({ messages, me
 
     return (
       <div
-        key={message._id}
+        key={message.id}
         ref={(element) => {
-          if (element) messageRefs.current[message._id] = element;
+          if (element) messageRefs.current[message.id] = element;
         }}
         className="relative"
       >
@@ -117,12 +117,12 @@ const MessageContainer = () => {
     /** Create a flattened array with pages of message */
     const flattened = [...pages].reverse().flat();
 
-    /* Optional: dedupe by _id while preserving order */
+    /* Optional: dedupe by id while preserving order */
     const seen = new Set<string>();
 
     return flattened.filter((msg) => {
-      if (seen.has(msg._id)) return false;
-      seen.add(msg._id);
+      if (seen.has(msg.id)) return false;
+      seen.add(msg.id);
       return true;
     });
   }, [pages]);
@@ -179,13 +179,13 @@ const MessageContainer = () => {
   /** Reset when chat changes */
   const updateMessageStats = useEffectEvent(() => {
     setMessages(messages);
-    setMessageStats(messages, userInfo?._id!);
+    setMessageStats(messages, userInfo?.id!);
   });
 
   useEffect(() => {
-    if (selectedChatData?._id !== prevChatIdRef.current) {
+    if (selectedChatData?.id !== prevChatIdRef.current) {
       prevMsgCountRef.current = 0;
-      prevChatIdRef.current = selectedChatData?._id ?? null;
+      prevChatIdRef.current = selectedChatData?.id ?? null;
     }
 
     /** Scroll into view to the latest message */
@@ -208,7 +208,7 @@ const MessageContainer = () => {
 
     updateMessageStats();
     prevMsgCountRef.current = messages.length;
-  }, [selectedChatData?._id, messages]);
+  }, [selectedChatData?.id, messages]);
 
   /** Handle scroll fetching */
   useEffect(() => {
@@ -239,8 +239,8 @@ const MessageContainer = () => {
   }, [isFetchingNextPage, hasNextPage, fetchNextPage]);
 
   const getSender = (sid: string) => {
-    if (sid === userInfo?._id) return userInfo.name ?? "You";
-    const senderName = contacts?.find((contact) => contact._id === sid)?.name;
+    if (sid === userInfo?.id) return userInfo.name ?? "You";
+    const senderName = contacts?.find((contact) => contact.id === sid)?.name;
     return senderName ?? "Unknown";
   };
 

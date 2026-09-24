@@ -62,11 +62,11 @@ const AddNewChat = () => {
     setSelectedChatType("contact");
     setSelectedChatData(contact);
 
-    if (!userInfo?._id || contacts?.some((obj) => obj._id === contact._id)) return;
+    if (!userInfo?.id || contacts?.some((obj) => obj.id === contact.id)) return;
 
     const cleaned = cleanContact({ ...contact, interaction: new Date().toISOString() });
 
-    queryClient.setQueryData<UserInfo[]>(["contacts", userInfo?._id], (older = []) => [...older, cleaned]);
+    queryClient.setQueryData<UserInfo[]>(["contacts", userInfo?.id], (older = []) => [...older, cleaned]);
   };
 
   return (
@@ -102,7 +102,7 @@ const AddNewChat = () => {
                   <div className="flex flex-col gap-4 py-0.5">
                     {searchedContacts.map((contact) => (
                       <div
-                        key={contact._id}
+                        key={contact.id}
                         className="flex gap-4 border w-full p-2 lg:px-3 xl:px-6 rounded items-center hover:bg-gray-100/80  dark:hover:bg-gray-100/5 dark:hover:border-gray-700 transition-[transform,opacity,box-shadow] duration-0 hover:transition-colors hover:duration-300 cursor-pointer"
                         onClick={() => selectNewContact(contact)}
                         role="button"

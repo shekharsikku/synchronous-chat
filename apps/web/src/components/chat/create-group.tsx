@@ -63,13 +63,13 @@ const CreateGroup = () => {
     defaultValues: {
       name: "",
       description: "",
-      admin: userInfo?._id,
+      admin: userInfo?.id,
       members: [],
     },
   });
 
   const createGroupSubmit = async (values: CreateGroupType) => {
-    if (groups?.some((group) => group.name === values.name && group.admin === userInfo?._id)) {
+    if (groups?.some((group) => group.name === values.name && group.admin === userInfo?.id)) {
       toast.info("You can't create groups with same name!");
       return;
     }
@@ -182,11 +182,11 @@ const CreateGroup = () => {
               <div className="flex flex-col gap-1">
                 {contacts?.map((contact) => (
                   <ContactItem
-                    key={contact._id}
-                    id={contact._id!}
+                    key={contact.id}
+                    id={contact.id!}
                     name={contact.name!}
                     avatar={getAvatar(contact)}
-                    selected={selectedContacts.includes(contact._id!)}
+                    selected={selectedContacts.includes(contact.id!)}
                     onToggle={handleSelectToggle}
                   />
                 ))}
