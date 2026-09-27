@@ -12,24 +12,26 @@ const shutdown = async (signal: string) => {
 
   jobs.stop();
 
-  server.close(async (err) => {
-    if (err) {
-      logger.error({ err }, "Failed to close server!");
-      process.exit(1);
-    }
+  try {
+    await new Promise<void>((resolve, reject) => {
+      server.close((err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
 
     logger.info("Server shutdown completed!");
 
-    try {
-      await mongoose.connection.close();
+    await mongoose.connection.close();
 
-      logger.info("Database connection closed!");
-      process.exit(0);
-    } catch (err) {
-      logger.error({ err }, "Database connection close failed!");
-      process.exit(1);
-    }
-  });
+    logger.info("Database connection closed!");
+
+    logger.info("Graceful shutdown completed!");
+    process.exit(0);
+  } catch (err) {
+    logger.error({ err }, "Graceful shutdown failed!");
+    process.exit(1);
+  }
 };
 
 process.on("SIGINT", () => void shutdown("SIGINT"));
