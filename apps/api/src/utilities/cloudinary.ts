@@ -1,9 +1,8 @@
-import { randomUUID } from "node:crypto";
-import { existsSync, unlinkSync } from "node:fs";
-import { v2 as cloudinary } from "cloudinary";
+import { v2 as cloudinary, type UploadApiResponse } from "cloudinary";
+import sharp from "sharp";
 import env from "#/configs/env.js";
 import logger from "#/configs/logger.js";
-import { unlinkFiles } from "./unlink.js";
+import { HttpError } from "./response.js";
 
 cloudinary.config({
   cloud_name: env.CLOUDINARY_CLOUD_NAME,
@@ -11,26 +10,32 @@ cloudinary.config({
   api_secret: env.CLOUDINARY_API_SECRET,
 });
 
-export const uploadToCloudinary = async (filePath: string) => {
-  try {
-    if (!filePath) return null;
+const imageFormats = new Set(["gif", "jpg", "jpeg", "png", "webp"]);
 
-    const response = await cloudinary.uploader.upload(filePath, {
-      public_id: randomUUID(),
-      resource_type: "auto",
-    });
+export const uploadToCloudinary = async (fileData: Express.Multer.File) => {
+  const image = sharp(fileData.buffer, { failOn: "error" });
+  const { format } = await image.metadata();
 
-    logger.debug({ response }, "Image uploaded successfully!");
-    return response;
-  } catch (err) {
-    logger.error({ err }, "Error uploading image!");
-    return null;
-  } finally {
-    if (filePath && existsSync(filePath)) {
-      unlinkSync(filePath);
-    }
-    unlinkFiles();
+  if (!format || !imageFormats.has(format)) {
+    throw new HttpError(400, "Unsupported image format!");
   }
+
+  const buffer = await image.resize(256, null, { withoutEnlargement: true }).webp().toBuffer();
+
+  return new Promise<UploadApiResponse>((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream((error, response) => {
+        if (error || !response) {
+          logger.error({ err: error }, "Error uploading image!");
+          reject(new HttpError(500, "Failed to upload image!"));
+          return;
+        }
+
+        logger.debug({ response }, "Image uploaded successfully!");
+        resolve(response);
+      })
+      .end(buffer);
+  });
 };
 
 export const deleteFromCloudinary = async (imageUrl: string) => {
@@ -38,7 +43,7 @@ export const deleteFromCloudinary = async (imageUrl: string) => {
     const publicId = imageUrl.split("/").pop()?.split(".")[0];
     if (!publicId) return;
 
-    const response = await cloudinary.uploader.destroy(publicId).then((r) => ({ public_id: publicId, ...r }));
+    const response = await cloudinary.uploader.destroy(publicId);
     logger.debug({ response }, "Image deleted successfully!");
   } catch (err) {
     logger.error({ err }, "Error deleting image!");

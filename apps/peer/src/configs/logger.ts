@@ -6,7 +6,12 @@ const otherOptions = env.isDev ? { transport: { target: "pino-pretty", options: 
 const logger = pino({
   level: env.LOG_LEVEL,
   redact: {
-    paths: ["req.headers.cookie", "res.headers['set-cookie']", "res.headers['content-security-policy']"],
+    paths: [
+      "req.headers.authorization",
+      "req.headers.cookie",
+      "res.headers['set-cookie']",
+      "res.headers['content-security-policy']",
+    ],
     remove: true,
   },
   msgPrefix: "[SYNCHRONOUS] ",

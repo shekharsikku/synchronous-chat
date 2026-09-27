@@ -26,6 +26,7 @@
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
     "request-ip": "^3.3.0",
+    "sharp": "^0.35.3",
     "socket.io": "^4.8.3",
     "web-push": "^3.6.7",
     "zod": "^4.4.3"
@@ -45,6 +46,7 @@
     "typescript": "^7.0.2"
   },
   "allowScripts": {
-    "esbuild@0.28.2": true
+    "esbuild@0.28.2": true,
+    "sharp@0.35.3": true
   }
 }
