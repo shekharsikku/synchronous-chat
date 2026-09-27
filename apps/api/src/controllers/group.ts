@@ -145,10 +145,10 @@ export const updateMembers = asyncHandler<{ id: string }, {}, UpdateMembers>(asy
 
 export const updateAvatar = asyncHandler<{ id: string }>(async (req, res) => {
   const groupId = req.params.id;
-  const imagePath = req.file?.path;
+  const fileData = req.file;
   const userId = requireUserId(req);
 
-  if (!imagePath) {
+  if (!fileData) {
     throw new HttpError(400, "Group avatar file required!");
   }
 
@@ -158,11 +158,7 @@ export const updateAvatar = asyncHandler<{ id: string }>(async (req, res) => {
     throw new HttpError(404, "Group not found!");
   }
 
-  const uploadImage = await uploadToCloudinary(imagePath);
-
-  if (!uploadImage?.secure_url) {
-    throw new HttpError(500, "Error while uploading avatar!");
-  }
+  const uploadImage = await uploadToCloudinary(fileData);
 
   if (currentGroup?.avatar) {
     await deleteFromCloudinary(currentGroup.avatar);

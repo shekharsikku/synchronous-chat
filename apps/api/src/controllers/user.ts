@@ -75,18 +75,14 @@ export const profileUpdate = asyncHandler<{}, {}, Profile>(async (req, res) => {
 });
 
 export const updateImage = asyncHandler(async (req, res) => {
-  const imagePath = req.file?.path;
+  const fileData = req.file;
 
-  if (!imagePath) {
+  if (!fileData) {
     throw new HttpError(400, "Profile image file required!");
   }
 
   const requestUser = await requireCurrentUser(req);
-  const uploadImage = await uploadToCloudinary(imagePath);
-
-  if (!uploadImage?.secure_url) {
-    throw new HttpError(500, "Error while uploading profile image!");
-  }
+  const uploadImage = await uploadToCloudinary(fileData);
 
   if (requestUser.image) {
     await deleteFromCloudinary(requestUser.image);

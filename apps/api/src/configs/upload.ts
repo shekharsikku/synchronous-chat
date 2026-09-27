@@ -1,16 +1,8 @@
-import { extname } from "node:path";
 import multer from "multer";
 import { HttpError } from "#/utilities/response.js";
 
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: (_req, _file, cb) => {
-      cb(null, "./public/temp");
-    },
-    filename: (_req, file, cb) => {
-      cb(null, Date.now() + extname(file.originalname));
-    },
-  }),
+  storage: multer.memoryStorage(),
   fileFilter: (_req, file, cb) => {
     if (file.mimetype.startsWith("image/")) {
       cb(null, true);
