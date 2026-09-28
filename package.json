@@ -1,9 +1,6 @@
 {
   "name": "@repo/synchronous",
   "private": true,
-  "workspaces": [
-    "apps/*"
-  ],
   "type": "module",
   "scripts": {
     "dev": "turbo dev",
@@ -15,9 +12,9 @@
     "fmt:check": "oxfmt --check"
   },
   "devDependencies": {
-    "oxfmt": "^0.66.0",
-    "oxlint": "^1.81.0",
-    "turbo": "^2.10.12"
+    "oxfmt": "^0.70.0",
+    "oxlint": "^1.85.0",
+    "turbo": "^2.11.5"
   },
-  "packageManager": "bun@1.4.2"
+  "packageManager": "pnpm@12.6.0"
 }
