@@ -1,16 +1,37 @@
-# ---------- Builder ----------
-FROM node:24.19-alpine AS builder
+# ----------------------------------------
+# Base Image
+# ----------------------------------------
+FROM node:24.19-alpine AS base
+
+RUN corepack enable
 
 WORKDIR /app
 
-COPY apps/api/package.json ./api/
-RUN npm install --prefix api
 
-COPY apps/web/package.json ./web/
-RUN npm install --prefix web
+# ----------------------------------------
+# Prune Workspace
+# ----------------------------------------
+FROM base AS pruner
 
-COPY apps/api/ ./api/
-RUN npm run build --prefix api
+WORKDIR /app
+
+COPY . .
+
+RUN pnpm dlx turbo prune --docker '@repo/api' '@repo/web'
+
+
+# ----------------------------------------
+# Install + Build
+# ----------------------------------------
+FROM base AS builder
+
+WORKDIR /app
+
+COPY --from=pruner /app/out/json/ ./
+
+RUN pnpm install --frozen-lockfile
+
+COPY --from=pruner /app/out/full/ ./
 
 ARG VITE_PUBLIC_KEY
 ARG VITE_SERVER_URL
@@ -19,30 +40,34 @@ ARG VITE_PEER_HOST
 ARG VITE_PEER_PORT
 ARG VITE_PEER_PATH
 
-ENV VITE_PUBLIC_KEY=$VITE_PUBLIC_KEY
-ENV VITE_SERVER_URL=$VITE_SERVER_URL
-ENV VITE_BUCKET_URL=$VITE_BUCKET_URL
-ENV VITE_PEER_HOST=$VITE_PEER_HOST
-ENV VITE_PEER_PORT=$VITE_PEER_PORT
-ENV VITE_PEER_PATH=$VITE_PEER_PATH
+ENV VITE_PUBLIC_KEY=${VITE_PUBLIC_KEY} \
+    VITE_SERVER_URL=${VITE_SERVER_URL} \
+    VITE_BUCKET_URL=${VITE_BUCKET_URL} \
+    VITE_PEER_HOST=${VITE_PEER_HOST} \
+    VITE_PEER_PORT=${VITE_PEER_PORT} \
+    VITE_PEER_PATH=${VITE_PEER_PATH}
 
-COPY apps/web/ ./web/
-RUN npm run build --prefix web
+RUN pnpm run build
 
-# ---------- Runtime ----------
-FROM node:24.19-alpine AS runtime
+
+# ----------------------------------------
+# Production Dependencies
+# ----------------------------------------
+RUN pnpm --filter '@repo/api' deploy --prod ./prod
+
+
+# ----------------------------------------
+# Runtime Environment
+# ----------------------------------------
+FROM base AS runner
 
 WORKDIR /app
 
-ENV NODE_ENV=production
-ENV LOG_LEVEL=info
+ENV NODE_ENV=production \
+    LOG_LEVEL=info
 
-COPY --from=builder /app/api/package*.json ./
-RUN npm ci --omit=dev
-
-COPY --from=builder /app/api/dist ./dist
-COPY --from=builder /app/api/public ./public
-COPY --from=builder /app/web/dist ./public/dist
+COPY --from=builder /app/prod/ ./
+COPY --from=builder /app/apps/web/dist/ ./public/dist/
 
 RUN chown -R node:node /app/public
 USER node
