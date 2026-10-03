@@ -13,8 +13,6 @@ WORKDIR /app
 # ----------------------------------------
 FROM base AS pruner
 
-WORKDIR /app
-
 COPY . .
 
 RUN pnpm dlx turbo prune --docker '@repo/api' '@repo/web'
@@ -25,8 +23,6 @@ RUN pnpm dlx turbo prune --docker '@repo/api' '@repo/web'
 # ----------------------------------------
 FROM base AS builder
 
-WORKDIR /app
-
 COPY --from=pruner /app/out/json/ ./
 
 RUN pnpm install --frozen-lockfile
@@ -36,16 +32,10 @@ COPY --from=pruner /app/out/full/ ./
 ARG VITE_PUBLIC_KEY
 ARG VITE_SERVER_URL
 ARG VITE_BUCKET_URL
-ARG VITE_PEER_HOST
-ARG VITE_PEER_PORT
-ARG VITE_PEER_PATH
 
 ENV VITE_PUBLIC_KEY=${VITE_PUBLIC_KEY} \
     VITE_SERVER_URL=${VITE_SERVER_URL} \
-    VITE_BUCKET_URL=${VITE_BUCKET_URL} \
-    VITE_PEER_HOST=${VITE_PEER_HOST} \
-    VITE_PEER_PORT=${VITE_PEER_PORT} \
-    VITE_PEER_PATH=${VITE_PEER_PATH}
+    VITE_BUCKET_URL=${VITE_BUCKET_URL}
 
 RUN pnpm run build
 
@@ -60,8 +50,6 @@ RUN pnpm --filter '@repo/api' deploy --prod ./prod
 # Runtime Environment
 # ----------------------------------------
 FROM base AS runner
-
-WORKDIR /app
 
 ENV NODE_ENV=production \
     LOG_LEVEL=info
