@@ -100,13 +100,14 @@ const PeerProvider = ({ children, ...props }: PropsWithChildren) => {
         console.info("[Peer] Previous peer cleaned up.");
       }
 
+      const peerUrl = new URL("/synchronous", env.bucketUrl);
       console.info("[Peer] Creating new connection...");
 
       const peer = new Peer({
-        host: env.peerHost,
-        port: env.peerPort,
-        path: env.peerPath,
-        secure: env.isProd,
+        host: peerUrl.hostname,
+        port: peerUrl.port ? Number(peerUrl.port) : peerUrl.protocol === "https:" ? 443 : 80,
+        path: peerUrl.pathname.replace(/\/$/, ""),
+        secure: peerUrl.protocol === "https:",
       });
 
       peerRef.current = peer;

@@ -10,9 +10,6 @@ interface ImportMetaEnv {
   readonly VITE_BUCKET_URL: string;
   readonly VITE_SERVER_URL: string;
   readonly VITE_PUBLIC_KEY: string;
-  readonly VITE_PEER_HOST: string;
-  readonly VITE_PEER_PORT: string;
-  readonly VITE_PEER_PATH: string;
 }
 
 interface ImportMeta {

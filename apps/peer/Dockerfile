@@ -13,8 +13,6 @@ WORKDIR /app
 # ----------------------------------------
 FROM base AS pruner
 
-WORKDIR /app
-
 COPY . .
 
 RUN pnpm dlx turbo prune --docker '@repo/peer'
@@ -24,8 +22,6 @@ RUN pnpm dlx turbo prune --docker '@repo/peer'
 # Install + Build
 # ----------------------------------------
 FROM base AS builder
-
-WORKDIR /app
 
 COPY --from=pruner /app/out/json/ ./
 
@@ -46,8 +42,6 @@ RUN pnpm --filter '@repo/peer' deploy --prod ./prod
 # Runtime Environment
 # ----------------------------------------
 FROM base AS runner
-
-WORKDIR /app
 
 ENV NODE_ENV=production \
     LOG_LEVEL=info
