@@ -47,6 +47,7 @@ const StreamInfo = () => {
   /** Call timer */
   useEffect(() => {
     if (!callingActive) {
+      // oxlint-disable-next-line react/set-state-in-effect
       setCallTimer(0);
       return;
     }

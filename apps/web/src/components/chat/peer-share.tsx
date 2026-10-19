@@ -419,6 +419,7 @@ const PeerShare = () => {
     return () => {
       peerConn.off("connection", handleConnection);
     };
+    // oxlint-disable-next-line react/refs
   }, [peerRef, peerRef?.current]);
 
   useEffect(() => {

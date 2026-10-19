@@ -102,7 +102,7 @@ export const updateMembers = asyncHandler<{ id: string }, {}, UpdateMembers>(asy
     throw new HttpError(400, "Provide at least one member!");
   }
 
-  if (remove.includes(userId?.toString()!)) {
+  if (remove.includes(userId.toString())) {
     throw new HttpError(403, "Admin cannot be removed!");
   }
 

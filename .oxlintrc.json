@@ -5,10 +5,28 @@
     "correctness": "error"
   },
   "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }],
-    "typescript/no-non-null-asserted-optional-chain": "allow"
+    "no-console": "error",
+    "node/no-process-env": "error",
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error"
   },
+  "overrides": [
+    {
+      "files": ["apps/**/env.ts"],
+      "rules": {
+        "node/no-process-env": "allow"
+      }
+    },
+    {
+      "files": ["apps/web/**"],
+      "rules": {
+        "no-console": "allow",
+        "react/rules-of-hooks": "error",
+        "react/only-export-components": ["warn", { "allowConstantExport": true }],
+        "typescript/no-non-null-asserted-optional-chain": "allow"
+      }
+    }
+  ],
   "env": {
     "builtin": true
   },
