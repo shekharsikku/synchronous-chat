@@ -12,9 +12,9 @@
     "fmt:check": "oxfmt --check"
   },
   "devDependencies": {
-    "oxfmt": "^0.70.0",
-    "oxlint": "^1.85.0",
-    "turbo": "^2.11.5"
+    "oxfmt": "^0.79.0",
+    "oxlint": "^1.94.0",
+    "turbo": "^2.11.13"
   },
-  "packageManager": "pnpm@12.6.0"
+  "packageManager": "pnpm@12.21.0"
 }

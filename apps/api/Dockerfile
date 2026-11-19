@@ -1,26 +1,20 @@
-# ----------------------------------------
-# Base Image
-# ----------------------------------------
-FROM node:24.19-alpine AS base
+# syntax=docker/dockerfile:1
+
+# ---- Base Stage ----
+FROM node:24.22-alpine AS base
 
 RUN corepack enable
 
 WORKDIR /app
 
-
-# ----------------------------------------
-# Prune Workspace
-# ----------------------------------------
+# ---- Pruner Stage ----
 FROM base AS pruner
 
 COPY . .
 
-RUN pnpm dlx turbo prune --docker '@repo/api' '@repo/web'
+RUN pnpm dlx turbo@2.11.13 prune --docker @repo/api @repo/web
 
-
-# ----------------------------------------
-# Install + Build
-# ----------------------------------------
+# ---- Builder Stage ----
 FROM base AS builder
 
 COPY --from=pruner /app/out/json/ ./
@@ -39,17 +33,10 @@ ENV VITE_PUBLIC_KEY=${VITE_PUBLIC_KEY} \
 
 RUN pnpm run build
 
+RUN pnpm --filter @repo/api deploy --prod ./prod
 
-# ----------------------------------------
-# Production Dependencies
-# ----------------------------------------
-RUN pnpm --filter '@repo/api' deploy --prod ./prod
-
-
-# ----------------------------------------
-# Runtime Environment
-# ----------------------------------------
-FROM base AS runner
+# ---- Runtime Stage ----
+FROM base AS runtime
 
 ENV NODE_ENV=production \
     LOG_LEVEL=info
